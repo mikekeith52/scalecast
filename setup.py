@@ -1,7 +1,8 @@
-from distutils.core import setup, find_packages
+
+from setuptools import setup, find_packages
+
 setup(
   name = 'SCALECAST',
-  packages = ['Scalecast'],
   version = '0.1.4',
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   author = 'Michael Keith',
