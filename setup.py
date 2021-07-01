@@ -8,7 +8,7 @@ setup(
   author = 'Michael Keith',
   author_email = 'mikekeith52@gmail.com',
   url = 'https://github.com/mikekeith52/scalecast',
-  download_url = 'https://github.com/mikekeith52/scalecast/archive/v_01.tar.gz',
+  download_url = 'https://github.com/mikekeith52/scalecast/archive/refs/tags/0.1.tar.gz',
   keywords = ['FORECAST', 'SCALE', 'FLEXIBLE'],
   install_requires=[ 
           'sklearn',
