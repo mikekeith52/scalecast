@@ -83,7 +83,7 @@ f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
 ```
 
 ### combo
-- [src](https://github.com/mikekeith52/scalecast/blob/main/scalecast/Forecaster.py#L420)
+- [src](https://github.com/mikekeith52/scalecast/blob/main/src/scalecast/Forecaster.py#L420)
 - three combination models are available:
   - **simple** average of specified models
   - **weighted** average of specified models
