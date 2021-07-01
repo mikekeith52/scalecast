@@ -11,13 +11,13 @@ setup(
   download_url = 'https://github.com/mikekeith52/scalecast/archive/refs/tags/0.1.1.tar.gz',
   keywords = ['FORECAST', 'SCALE', 'FLEXIBLE'],
   install_requires=[ 
-          'sklearn',
+          'scikit-learn',
           'fbprophet',
           'pandas',
           'numpy',
           'seaborn',
           'matplotlib',
-          'pandas_datareader',
+          'pandas-datareader',
           'scipy',
           'statsmodels',
           'eli5'
