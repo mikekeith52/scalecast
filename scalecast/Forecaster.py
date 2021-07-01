@@ -418,21 +418,32 @@ class Forecaster:
             return fcst['yhat'].to_list()
 
     def _forecast_combo(self,how='simple',models='all',determine_best_by='ValidationMetricValue',rebalance_weights=.1,weights=None,splice_points=None):
-        """ how: {'simple','weighted','splice'}
-            models: 'all', model nickname, or list-like
-                - "top_" no longer supported as that leads to data leakage
-            determine_best_by: {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','InSampleMAPE','InSampleMAE','InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2',None}
-                - TestSetRMSE,TestSetMAPE,TestSetMAE,TestSetR2InSampleRMSE,LevelTestSetRMSE,LevelTestSetMAPE,LevelTestSetMAE,LevelTestSetR2 will probably lead to overfitting (data leakage)
-                - InSampleMAPE,InSampleMAE,InSampleR2 probably will lead to overfitting since in-sample includes the test set and overfitted models are weighted more highly
-                - ValidationMetricValue could be the safest option to avoid overfitting, but could lead to underfitting and only works if the validation metric was the same for all models
-            weights: (how='weighted' only) list-like
-                - overwrites determine_best_by with None and applies those weights, automatically rebalances weights to add up to one with a minmax scaler
-                - if weights already add up to one, will not rebalance anything
-            all test lengths must be the same
-            rebalance_weights: a minmax/maxmin scaler is used to perform the weighted average, but this method means the worst performing model on the test set is always weighted 0.
-                - to correct that so that all models have some weight in the final combo, you can rebalance the weights but specifying this parameter
-                - the higher this is, the closer to a simple average the weighted average becomes
-                - must be at least 0 -- 0 means the worst model is not given any weight
+        """ how: one of {'simple','weighted','splice'}, default 'simple'
+                the type of combination
+                all test lengths must be the same for all combined models
+            models: 'all', starts with "top_", or list-like, default 'all'
+                which models to combine
+                must be at least 2 in length
+                if using list-like object, elements must match model nicknames specified in call_me when forecasting
+            determine_best_by: one of {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','InSampleMAPE','InSampleMAE','InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2',None}, default 'ValidationMetricValue'
+                'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2' will probably lead to overfitting (data leakage)
+                'InSampleMAPE','InSampleMAE','InSampleR2' probably will lead to overfitting since in-sample includes the test set and overfitted models are weighted more highly
+                'ValidationMetricValue' is the safest option to avoid overfitting, but only works if all combined models were tuned and the validation metric was the same for all models
+            rebalance_weights: float, default 0.1
+                a minmax/maxmin scaler is used to perform the weighted average, but this method means the worst performing model on the test set is always weighted 0
+                to correct that so that all models have some weight in the final combo, you can rebalance the weights but specifying this parameter
+                the higher this is, the closer to a simple average the weighted average becomes
+                must be at least 0 -- 0 means the worst model is not given any weight
+            weights: list-like or None
+                only applicable when how='weighted'
+                overwrites determine_best_by with None and applies those weights, automatically rebalances weights to add to one with a minmax scaler unless they already add to one
+                if weights already add to one, rebalance_weights is ignored
+            splice_points: list-like
+                only applicable when how='splice'
+                elements in array must be str in yyyy-mm-dd or datetime object
+                must be exactly one less in length than the number of models
+                    models[0] --> :splice_points[0]
+                    models[-1] --> splice_points[-1]:
         """
         determine_best_by = determine_best_by if weights is None else None
         models = self._parse_models(models,determine_best_by)
@@ -465,7 +476,7 @@ class Forecaster:
                 fv = (fvs * weights.values[0]).sum(axis=1).to_list()
                 fcst = (fcsts * weights.values[0]).sum(axis=1).to_list()
             except ZeroDivisionError:
-                how = 'simple' # all models have the same test set metric value so it's a simple average
+                how = 'simple' # all models have the same test set metric value so it's a simple average (never seen this, but jic)
         if how in ('simple','splice'):
             pred = preds.mean(axis=1).to_list()
             fv = fvs.mean(axis=1).to_list()
@@ -504,7 +515,7 @@ class Forecaster:
             else:
                 models = list(models)
             if len(models) == 0:
-                raise ValueError(f'models argument returns no evaluated forecasts: {models}')
+                raise ValueError(f'models argument with determine_best_by={determine_best_by} returns no evaluated forecasts')
         else:
             all_models = [m for m,d in self.history.items() if determine_best_by in d.keys()]
             all_models = self.order_fcsts(all_models,determine_best_by)

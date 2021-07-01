@@ -81,6 +81,7 @@ f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
 ```
 
 ### combo
+- [src](https://github.com/mikekeith52/scalecast/blob/main/scalecast/Forecaster.py#L420)
 - three combination models are available:
   - **simple** average of specified models
   - **weighted** average of specified models
@@ -147,7 +148,7 @@ f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -175,7 +176,7 @@ f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -219,7 +220,7 @@ f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -245,7 +246,7 @@ f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -271,7 +272,7 @@ f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -315,7 +316,7 @@ f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -337,12 +338,12 @@ import pandas_datareader as pdr
 from Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -364,12 +365,12 @@ import pandas_datareader as pdr
 from Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -433,12 +434,12 @@ elasticnet_grid = {
 }
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -481,12 +482,12 @@ import pandas_datareader as pdr
 from Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -510,7 +511,11 @@ f.auto_forecast()
 ```
 
 ### limit_grid_size()
-- if you want to make a really big grid but just want to evaluate a certain random number of parameters, you can use `limit_grid_size()`
+- `Forecaster.limit_grid_size(n)`
+- use to limit big grids to a smaller size of randomly kept rows
+  - **n**: `int` or `float`
+    - if `int`, that many of random rows will be kept
+    - if `float`, must be 0 < n > 1 and that percentage of random rows will be kept
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -525,12 +530,12 @@ mlp = {
   }
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -548,7 +553,7 @@ f.auto_forecast()
 ```
 
 ### combo modeling
-- the only way to autamatically select and weight top models for the "combo" estimator is to use in conjunction with auto forecasating
+- the only safe way to autamatically select and weight top models for the "combo" estimator is to use in conjunction with auto forecasating
 - use `determine_best_by = 'ValidationMetricValue'` (its default)
 ```python
 # Grids.py
@@ -576,12 +581,12 @@ import pandas_datareader as pdr
 from Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -637,12 +642,12 @@ import pandas_datareader as pdr
 from Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
 f.add_ar_terms(4)
 f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
 f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
 f.add_time_trend()
@@ -672,7 +677,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```
 
 ## Xvars
-- all estimators except hwes and combo accept an Xvars argument
+- all estimators except hwes and combo accept an `Xvars` argument
 - accepted arguments are an array-like of named regressors, a `str` of a single regressor name, `'all'`, or `None`
   - for estimators that require Xvars (sklearn models), `None` and `'all'` will both use all Xvars
 - all Xvars must be numeric type
@@ -684,7 +689,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 [poly terms](#poly-terms)  
 [covid19](#covid19)  
 [ingesting a dataframe of x variables](#ingesting-a-dataframe-of-x-variables)  
-[holidays/other](#holidays/other)  
+[holidays/other](#other)  
 
 ### seasonal regressors
 - `Forecaster.add_seasonal_regressors(*args,raw=True,sincos=False,dummy=False,drop_first=False)`
@@ -736,7 +741,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 >>> from Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
->>> f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+>>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 >>> f.generate_future_dates(24) # forecast length
 >>> f.add_ar_terms(4)
 >>> f.add_AR_terms((2,12)) # seasonal AR terms
@@ -746,9 +751,9 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ['AR1', 'AR2', 'AR3', 'AR4', 'AR12', 'AR24']
 ```
 
-- the beautiful part of adding AR terms in this framework is that all metrics and forecasts use an iterative process that plugs in forecasted values to future AR terms, making all test set and validation predictions and forecasts dynamic
-- however, doing it this way means lots of loops, which means some models run very slowly
-- add AR terms before differencing (don't worry, they will be differenced as well)
+- the beautiful part of adding auto-regressive terms in this framework is that all metrics and forecasts use an iterative process that plugs in forecasted values to future terms, making all test set and validation predictions and forecasts dynamic
+- however, doing it this way means lots of loops in the evaluation process, which means some models run very slowly
+- add ar/AR terms before differencing (don't worry, they will be differenced as well)
 - don't begin any other regressor names you add with "AR" as it will confuse the forecasts
 
 ### time trend
@@ -761,7 +766,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 >>> from Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
->>> f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+>>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 >>> f.generate_future_dates(24) # forecast length
 >>> f.add_time_trend()
 >>> print(f)
@@ -781,7 +786,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 >>> from Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
->>> f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+>>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 >>> f.generate_future_dates(24) # forecast length
 >>> f.add_time_trend()
 >>> f.add_covid19_regressor()
@@ -804,7 +809,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 >>> from Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
->>> f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+>>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 >>> f.generate_future_dates(24) # forecast length
 >>> f.add_time_trend()
 >>> f.add_poly_terms('t',pwr=3)
@@ -830,7 +835,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 >>> from Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
->>> f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+>>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 >>> f.generate_future_dates(24) # forecast length
 >>> f.add_covid19_regressor()
 >>> print(f)
@@ -864,8 +869,8 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 >>> print(f.get_regressor_names())
 ['UNRATE']
 ```
-### holidays/other
-- `Forecaster.add_other_regressor(self,called,start,end)`
+### other
+- `Forecaster.add_other_regressor(called,start,end)`
 - adds dummy variable that is 1 during the specified time period, 0 otherwise
   - **called**: `str`
     - what to call the resulting time trend
@@ -877,7 +882,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 >>> from Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
->>> f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
+>>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 >>> f.generate_future_dates(24) # forecast length
 >>> f.add_other_regressor(called='Sept2001',start='2001-09-01',end='2001-09-01')
 >>> print(f)
@@ -950,21 +955,21 @@ dict(call_me =
 - if your manual weights do not add to one, they will be rebalanced to do so
 - if they do add to one, no rebalancing anywhere will be performed
 ```python
-import pandas as pd
-import pandas_datareader as pdr
-from Forecaster import Forecaster
+>>> import pandas as pd
+>>> import pandas_datareader as pdr
+>>> from Forecaster import Forecaster
 
-df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA']current_dates=df.index)
-f.set_test_length(12)
-f.generate_future_dates(24) # forecast length
-f.set_estimator('arima')
-f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
-f.set_estimator('hwes')
-f.manual_forecast(trend='mul',seasonal='add')
-f.set_estiamtor('combo')
-f.manual_forecast(how='weighted',models=['arima','hwes'],weights=(.75,.25))
-print(f.export('model_summaries'))
+>>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+>>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+>>> f.set_test_length(12)
+>>> f.generate_future_dates(24) # forecast length
+>>> f.set_estimator('arima')
+>>> f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
+>>> f.set_estimator('hwes')
+>>> f.manual_forecast(trend='mul',seasonal='add')
+>>> f.set_estiamtor('combo')
+>>> f.manual_forecast(how='weighted',models=['arima','hwes'],weights=(.75,.25))
+>>> print(f.export('model_summaries'))
   ModelNickname Estimator Xvars  ... LevelTestSetMAE LevelTestSetR2  best_model
 0         combo     combo  None  ...       29.327446      -7.696709        True
 1          hwes      hwes  None  ...       38.758404     -10.243523       False
