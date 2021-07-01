@@ -1,5 +1,7 @@
 # Scalecast: Forecast everything at scale
 
+`pip install scalecast`
+
 [pseudocode](#pseudocode)  
 [estimators](#estimators)  
 [error/accuracy metrics](#error-accuracy-metrics)  
