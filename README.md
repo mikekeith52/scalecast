@@ -20,9 +20,9 @@
 
 - A flexible, minimal-code forecasting object meant to be used with loops to forecast many series or to focus on one series for maximum accuracy
 - Flexible enough to support forecasts at different integration levels (albeit with some [caveats](#forecasting-at-different-levels)) 
-- See [housing.py](housing.py) for an example of forecasting one series
-- [avocados.ipynb](avocados.ipynb) for an example of forecasting many series
-- [housing_different_levels.py](housing_different_levels.py) for an example of forecasting one series at different levels
+- See [examples/housing.py](examples/housing.py) for an example of forecasting one series
+- [examples/avocados.ipynb](examples/avocados.ipynb) for an example of forecasting many series
+- [examples/housing_different_levels.py](examples/housing_different_levels.py) for an example of forecasting one series at different levels
 - All forecasting with auto-regressive terms uses an iterative process to fill in future values with forecasts so this can slow down the evaluation of many models but makes everything dynamic and reduces the chance of leakage
 
 ## pseudocode
@@ -1079,8 +1079,8 @@ for m in models:
 
 f.export(to_excel=True,excel_name='all_results.xlsx') # will write all five dataframes as separate sheets to excel in the local directory as "all_results.xlsx"
 ```
-- see [housing_results](housing_results.xlsx) for an example of all 5 dataframes
-- see [avocado_model_summaries.csv](avocado_model_summaries.csv) for an example of the `'model_summaries'` dataframe concatenated from the run of many series
+- see [examples/housing_results](examples/housing_results.xlsx) for an example of all 5 dataframes
+- see [examples/avocado_model_summaries.csv](examples/avocado_model_summaries.csv) for an example of the `'model_summaries'` dataframe concatenated from the run of many series
 
 ## plotting
 
