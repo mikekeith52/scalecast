@@ -644,16 +644,16 @@ class Forecaster:
         self.validation_length=n
 
     def adf_test(self,critical_pval=0.05,quiet=True,full_res=False,**kwargs):
-        res = adfuller(self.y,**kwargs)
+        res = adfuller(self.y.dropna(),**kwargs)
         if not full_res:
             if res[1] <= critical_pval:
                 if not quiet:
-                    print('series might not be stationary')
+                    print('series appears to be stationary')
                 self.adf_stationary = True
                 return True
             else:
                 if not quiet:
-                    print('series appears to be stationary')
+                    print('series might not be stationary')
                 self.adf_stationary = False
                 return False
         else:
@@ -948,7 +948,17 @@ class Forecaster:
             raise ValueError(f'the following regressors are in current_xreg but not future_xreg: {case1}\nthe following regressors are in future_xreg but not current_xreg {case2}')
 
     def plot(self,models='all',order_by=None,level=False,print_attr=[]):
-        models = self._parse_models(models,order_by)
+        try:
+            models = self._parse_models(models,order_by)
+        except ValueError:
+            sns.lineplot(x=self.current_dates.values,y=self.y.values,label='actuals')
+            plt.legend()
+            plt.xlabel('Date')
+            plt.ylabel('Values')
+            plt.title('Plot of y Vals')
+            plt.show()
+            return
+
         integration = set([d['Integration'] for m,d in self.history.items() if m in models])
         if len(integration) > 1:
             level = True

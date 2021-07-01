@@ -20,9 +20,9 @@
 
 - A flexible, minimal-code forecasting object meant to be used with loops to forecast many series or to focus on one series for maximum accuracy
 - Flexible enough to support forecasts at different integration levels (albeit with some [caveats](#forecasting-at-different-levels)) 
-- See [scalecast/housing.py](scalecast/housing.py) for an example of forecasting one series
-- [scalecast/avocados.ipynb](scalecast/avocados.ipynb) for an example of forecasting many series
-- [scalecast/housing_different_levels.py](scalecast/housing_different_levels.py) for an example of forecasting one series at different levels
+- See [housing.py](housing.py) for an example of forecasting one series
+- [avocados.ipynb](avocados.ipynb) for an example of forecasting many series
+- [housing_different_levels.py](housing_different_levels.py) for an example of forecasting one series at different levels
 - All forecasting with auto-regressive terms uses an iterative process to fill in future values with forecasts so this can slow down the evaluation of many models but makes everything dynamic and reduces the chance of leakage
 
 ## pseudocode
@@ -72,7 +72,7 @@ _estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'prophet', 'hwes'
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -96,7 +96,7 @@ f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -108,7 +108,7 @@ f.manual_forecast(trend='mul',seasonal='mul',call_me='hwes_mul')
 
 f.set_estimator('combo')
 f.manual_forecast(how='simple',models=['hwes_add','hwes_mul'])
-f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',mmodels=['hwes_add','hwes_mul']) # this leaks data -- see auto_forecast for better weighted average modeling
+f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',models=['hwes_add','hwes_mul']) # this leaks data -- see auto_forecast for better weighted average modeling
 f.manual_forecast(how='splice',models=['hwes_add','hwes_mul'],splice_points=['2022-01-01'])
 ```
 - the above weighted average model will probably overfit since determine_best_by is a metric that partly uses the test-set to be determined
@@ -116,7 +116,7 @@ f.manual_forecast(how='splice',models=['hwes_add','hwes_mul'],splice_points=['20
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -129,7 +129,7 @@ f.manual_forecast(trend=None,seasonal='add',call_me='hwes_add_no_trend')
 
 f.set_estimator('combo')
 f.manual_forecast(how='simple',models='top_2',determine_best_by='InSampleRMSE') # this leaks data
-f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',mmodels='top_2') # this leaks data
+f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',models='top_2') # this leaks data
 ```
 - again, both combo models in the above example include data leakage
 - see [tuning models](#combo-modeling) and [weighted average modeling](#weighted-average-modeling) for a way around this problem
@@ -142,7 +142,7 @@ f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',mmodels='top_2
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -170,7 +170,7 @@ f.manual_forecast(alpha=.5,l1_ratio=.5,normalizer='scale')
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -196,7 +196,7 @@ f.manual_forecast(max_depth=2,normalizer=None)
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -214,7 +214,7 @@ f.manual_forecast(trend='add',seasonal='mul')
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -240,7 +240,7 @@ f.manual_forecast(n_neigbors=5,weights='uniform')
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -266,7 +266,7 @@ f.manual_forecast(Xvars=['monthsin','monthcos','year','t'],solver=['lbfgs'])
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -292,7 +292,7 @@ f.manual_forecast(normalizer=None)
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -310,7 +310,7 @@ f.manual_forecast(n_changepoints=3)
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -337,7 +337,7 @@ f.manual_forecast(kernel='linear',gamma='scale',C=2,epsilon=0.01)
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -364,7 +364,7 @@ f.manual_forecast(n_estimators=1000,max_depth=6)
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -427,7 +427,7 @@ _determine_best_by_ = {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2','InS
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 elasticnet_grid = {
   'alpha':[i/10 for i in range(1,101)],
@@ -481,7 +481,7 @@ ridge = {
 # main.py
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -521,7 +521,7 @@ f.auto_forecast()
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 mlp = {
   'activation':['relu','tanh'],
@@ -580,7 +580,7 @@ ridge = {
 # main.py
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -641,7 +641,7 @@ ridge = {
 # main.py
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -714,7 +714,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -740,7 +740,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -765,7 +765,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -785,7 +785,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -808,7 +808,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -834,7 +834,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -860,7 +860,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1970-01-01',end='2021-03-01')
 >>> ur = pdr.get_data_fred('UNRATE',start='1970-01-01',end='2021-05-01').reset_index()
@@ -881,7 +881,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -959,7 +959,7 @@ dict(call_me =
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
@@ -989,7 +989,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1050,7 +1050,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1079,8 +1079,8 @@ for m in models:
 
 f.export(to_excel=True,excel_name='all_results.xlsx') # will write all five dataframes as separate sheets to excel in the local directory as "all_results.xlsx"
 ```
-- see [housing_results](scalecast/housing_results.xlsx) for an example of all 5 dataframes
-- see [avocado_model_summaries.csv](scalecast/avocado_model_summaries.csv) for an example of the `'model_summaries'` dataframe concatenated from the run of many series
+- see [housing_results](housing_results.xlsx) for an example of all 5 dataframes
+- see [avocado_model_summaries.csv](avocado_model_summaries.csv) for an example of the `'model_summaries'` dataframe concatenated from the run of many series
 
 ## plotting
 
@@ -1112,7 +1112,7 @@ f.export(to_excel=True,excel_name='all_results.xlsx') # will write all five data
 >>> import matplotlib.pyplot as plt
 >>> import seaborn as sns
 
->>> from Forecaster import Forecaster
+>>> from scalecast.Forecaster import Forecaster
 
 >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1180,7 +1180,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1229,7 +1229,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1278,7 +1278,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1302,7 +1302,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1325,7 +1325,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1349,7 +1349,7 @@ import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
@@ -1385,7 +1385,7 @@ see [call_me](#history)
 ```python
 import pandas as pd
 import pandas_datareader as pdr
-from Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
