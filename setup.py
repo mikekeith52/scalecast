@@ -1,7 +1,7 @@
 from distutils.core import setup
 setup(
   name = 'SCALECAST',
-  packages = ['Forecaster'],
+  packages = ['Scalecast'],
   version = '0.1',
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'A flexible, minimal-code forecasting object meant to be used with loops to forecast many series or to focus on one series for maximum accuracy.',   # Give a short description about your library
