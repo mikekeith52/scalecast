@@ -438,7 +438,7 @@ class Forecaster:
                 manually specifies weights
                 must be the same size as models
                 if None and how='weighted', weights are set automatically
-                if manually passed weights do not add to 1, will automatically rebalance weights to add to one with a minmax scaler
+                if manually passed weights do not add to 1, will rebalance them
             splice_points: (optional) list-like
                 only applicable when how='splice'
                 elements in array must be str in yyyy-mm-dd or datetime object
