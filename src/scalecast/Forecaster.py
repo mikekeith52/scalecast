@@ -77,9 +77,7 @@ class Forecaster:
         return whole_thing
 
     def __repr__(self):
-        if len(self.history.keys()) > 0:
-            return self.export('model_summaries')
-        return self.history
+        return self.__str__()
 
     def _adder(self):
         assert len(self.future_dates) > 0,'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)'
@@ -113,7 +111,7 @@ class Forecaster:
             self.history[call_me]['ValidationMetric'] = self.validation_metric
             self.history[call_me]['ValidationMetricValue'] = self.validation_metric_value
 
-        for attr in ('univariate','first_obs','first_dates','grid_evaluated','models'):
+        for attr in ('univariate','first_obs','first_dates','grid_evaluated','models','weights'):
             if hasattr(self,attr):
                 self.history[call_me][attr] = getattr(self,attr)
 
@@ -211,7 +209,7 @@ class Forecaster:
             return X
 
     def _clear_the_deck(self):
-        for attr in ('univariate','fitted_values','regr','X','feature_importance','summary_stats','models'):
+        for attr in ('univariate','fitted_values','regr','X','feature_importance','summary_stats','models','weights'):
             try:
                 delattr(self,attr)
             except AttributeError:
@@ -426,6 +424,7 @@ class Forecaster:
                 must be at least 2 in length
                 if using list-like object, elements must match model nicknames specified in call_me when forecasting
             determine_best_by: one of {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','InSampleMAPE','InSampleMAE','InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2',None}, default 'ValidationMetricValue'
+                if (models does not start with top_ and how is not weighted) or (how is weighted and manual weights are specified), this is ignored
                 'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2' will probably lead to overfitting (data leakage)
                 'InSampleMAPE','InSampleMAE','InSampleR2' probably will lead to overfitting since in-sample includes the test set and overfitted models are weighted more highly
                 'ValidationMetricValue' is the safest option to avoid overfitting, but only works if all combined models were tuned and the validation metric was the same for all models
@@ -434,18 +433,20 @@ class Forecaster:
                 to correct that so that all models have some weight in the final combo, you can rebalance the weights but specifying this parameter
                 the higher this is, the closer to a simple average the weighted average becomes
                 must be at least 0 -- 0 means the worst model is not given any weight
-            weights: list-like or None
+            weights: (optional) list-like
                 only applicable when how='weighted'
+                must be the same size as models
                 overwrites determine_best_by with None and applies those weights, automatically rebalances weights to add to one with a minmax scaler unless they already add to one
                 if weights already add to one, rebalance_weights is ignored
-            splice_points: list-like
+            splice_points: (optional) list-like
                 only applicable when how='splice'
                 elements in array must be str in yyyy-mm-dd or datetime object
                 must be exactly one less in length than the number of models
                     models[0] --> :splice_points[0]
                     models[-1] --> splice_points[-1]:
         """
-        determine_best_by = determine_best_by if weights is None else None
+        determine_best_by = determine_best_by if (weights is None) & ((models[:4] == 'top_') | (how == 'weighted')) else None if how != 'weighted' else determine_best_by
+        minmax = (str(determine_best_by).endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) | (weights is not None)
         models = self._parse_models(models,determine_best_by)
         assert len(models) > 1,f'need at least two models to average, got {models}'
         fcsts = pd.DataFrame({m:h['Forecast'] for m,h in self.history.items() if m in models})
@@ -455,7 +456,7 @@ class Forecaster:
         if how == 'weighted':
             scale = True
             if weights is None:
-                weights = pd.DataFrame({m:[h[determine_best_by]] for m,h in self.history.items() if m in models}) # always use r2 since higher is better (could use maxmin scale for other metrics?)
+                weights = pd.DataFrame({m:[self.history[m][determine_best_by]] for m in models}) # always use r2 since higher is better (could use maxmin scale for other metrics?)
             else:
                 assert len(weights) == len(models),'must pass as many weights as models'
                 assert not isinstance(weights,str),f'weights argument not recognized: {weights}'
@@ -466,7 +467,7 @@ class Forecaster:
             try:
                 assert rebalance_weights >= 0,'when using a weighted average, rebalance_weights must be numeric and at least 0 in value'
                 if scale:
-                    if (determine_best_by.endswith('R2') == 'R2') | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) | (weights is not None):
+                    if minmax:
                         weights = (weights - weights.min(axis=1).values[0])/(weights.max(axis=1).values[0] - weights.min(axis=1).values[0]) # minmax scaler
                     else:
                         weights = (weights - weights.max(axis=1).values[0])/(weights.min(axis=1).values[0] - weights.max(axis=1).values[0]) # maxmin scaler
@@ -497,6 +498,7 @@ class Forecaster:
 
         self._metrics(actuals,pred)
         self._clear_the_deck()
+        self.weights = tuple(weights.values[0]) if weights is not None else None
         self.models = models
         self.fitted_values = fv
         self.Xvars = None
@@ -1118,6 +1120,7 @@ class Forecaster:
                 'ValidationMetricValue',
                 'univariate',
                 'models',
+                'weights',
                 'integration',
                 'LevelTestSetRMSE',
                 'LevelTestSetMAPE',

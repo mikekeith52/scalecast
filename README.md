@@ -19,7 +19,7 @@
 [all functions](#all-functions)  
 
 - A flexible, minimal-code forecasting object meant to be used with loops to forecast many series or to focus on one series for maximum accuracy
-- Flexible enough to support forecasts at different integration levels (albeit with some [caveats](#forecasting-at-different-levels)) 
+- Flexible enough to support forecasts at different integration levels
 - See [examples/housing.py](examples/housing.py) for an example of forecasting one series
 - [examples/avocados.ipynb](examples/avocados.ipynb) for an example of forecasting many series
 - [examples/housing_different_levels.py](examples/housing_different_levels.py) for an example of forecasting one series at different levels
@@ -39,11 +39,16 @@ for m in estimators:
   f.auto_forecast() # uses best parameters from tuning process
 
 f.set_estimator('combo') # combination modeling
-f.manual_forecast(how='simple',models=[m1,m2,...],call_me='simple_avg')
-f.manual_forecast(how='weighted',models='all',determine_best_by='ValidationSetMetric',call_me='weighted_avg') # be careful when specifying determine_best_by to not overfit/leak
+f.manual_forecast(how='simple',models=[m1,m2,...],call_me='avg')
+f.manual_forecast(how='weighted',models='all',determine_best_by='ValidationSetMetric',call_me='weighted') # be careful when specifying determine_best_by to not overfit/leak
 
 f.plot(forecast,test_set,level_forecast,fitted_vals)
 f.export(to_excel=True) # summary stats, forecasts, test set, etc.
+```
+
+- for the examples below, pandas-datareader is necessary:
+```
+pip install pandas-datareader
 ```
 
 ## estimators
@@ -107,12 +112,13 @@ f.manual_forecast(trend='add',seasonal='add',call_me='hwes_add')
 f.manual_forecast(trend='mul',seasonal='mul',call_me='hwes_mul')
 
 f.set_estimator('combo')
-f.manual_forecast(how='simple',models=['hwes_add','hwes_mul'])
-f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',models=['hwes_add','hwes_mul']) # this leaks data -- see auto_forecast for better weighted average modeling
-f.manual_forecast(how='splice',models=['hwes_add','hwes_mul'],splice_points=['2022-01-01'])
+f.manual_forecast(how='simple',models=['hwes_add','hwes_mul'],call_me='avg')
+f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',models=['hwes_add','hwes_mul'],call_me='weighted') # this leaks data -- see auto_forecast for better weighted average modeling
+f.manual_forecast(how='splice',models=['hwes_add','hwes_mul'],determine_best_by='InSampleRMSE',splice_points=['2022-01-01'],call_me='splice')
 ```
 - the above weighted average model will probably overfit since determine_best_by is a metric that partly uses the test-set to be determined
 - the models argument can also be a str beginning with "top_" and that number of models will be averaged, determined by `determine_best_by`, see [export](#export)
+- when using multiple models of the same estimator, be sure to use the [`call_me`](#call_me) paramater to differentiate them--otherwise, you will not be able to access all of their statistics later
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -128,8 +134,8 @@ f.manual_forecast(trend='mul',seasonal='mul',call_me='hwes_mul')
 f.manual_forecast(trend=None,seasonal='add',call_me='hwes_add_no_trend')
 
 f.set_estimator('combo')
-f.manual_forecast(how='simple',models='top_2',determine_best_by='InSampleRMSE') # this leaks data
-f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',models='top_2') # this leaks data
+f.manual_forecast(how='simple',models='top_2',determine_best_by='InSampleRMSE',call_me='avg') # this leaks data
+f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',models='top_2',call_me='weighted') # this leaks data
 ```
 - again, both combo models in the above example include data leakage
 - see [tuning models](#combo-modeling) and [weighted average modeling](#weighted-average-modeling) for a way around this problem
@@ -289,6 +295,9 @@ f.manual_forecast(normalizer=None)
 - uses no Xvars by default but does accept the Xvars argument
 - does not accept the normalizer argument
 - whether it performs better on differenced or level data depends on the series but it should be okay with either
+```
+pip install fbprophet
+```
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -505,11 +514,11 @@ f.auto_forecast()
 
 f.ingest_grid('lasso') # ingests the lasso grid in Grids.py
 f.tune()
-f.auto_forecast()
+f.auto_forecast(call_me='lasso')
 
 f.ingest_grid('ridge') # ingests the ridge grid in Grids.py
 f.tune()
-f.auto_forecast()
+f.auto_forecast(call_me='ridge')
 ```
 
 ### limit_grid_size()
@@ -604,16 +613,16 @@ f.auto_forecast()
 
 f.ingest_grid('lasso') # ingests the lasso grid in Grids.py
 f.tune()
-f.auto_forecast()
+f.auto_forecast(call_me='lasso')
 
 f.ingest_grid('ridge') # ingests the ridge grid in Grids.py
 f.tune()
-f.auto_forecast()
+f.auto_forecast(call_me='ridge')
 
 # COMBO
 f.set_estimator(cobmo)
-f.manual_forecast(how='simple',models='top_2',call_me='simple_avg')
-f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
+f.manual_forecast(how='simple',models='top_2',call_me='avg')
+f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
 ```
 
 ### Validation metric
@@ -666,16 +675,16 @@ f.auto_forecast()
 
 f.ingest_grid('lasso') # ingests the lasso grid in Grids.py
 f.tune()
-f.auto_forecast()
+f.auto_forecast(call_me='lasso')
 
 f.ingest_grid('ridge') # ingests the ridge grid in Grids.py
 f.tune()
-f.auto_forecast()
+f.auto_forecast(call_me='ridge')
 
 # COMBO
 f.set_estimator(cobmo)
-f.manual_forecast(how='simple',models='top_2',call_me='simple_avg')
-f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
+f.manual_forecast(how='simple',models='top_2',call_me='avg')
+f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
 ```
 
 ## Xvars
@@ -899,8 +908,8 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted_avg')
 - `'scale'`: Normalizer from Sklearn
 
 ## call_me
-- in `manual_forecast()` and `auto_forecast()` you can use the call_me parameter to name the key in the history dict
-- by default, this will be the same as whatever the estimator is called
+- in `manual_forecast()` and `auto_forecast()` you can use the call_me parameter to specify the model nickname which is also the key stored in the object's [history](#history)
+- by default, this will be the same as whatever the estimator is called, so if you are using one of each kind of estimator, you don't need to worry about it
 
 ### history
 structure:  
@@ -934,18 +943,18 @@ dict(call_me =
     'first_dates' = list: the first date values from the undifferenced data, only set when `diff()` has been called
     'grid_evaluated' = pandas dataframe: the evaluated grid, only set when themodel has been tuned
     'models' = list: the models used in the combination, only set when the model is a 'combo' estimator
-    'LevelForecast' = list: the forecast in level (undifferenced terms), when data has not been differenced this is the same as the 'Forecast' key, always set
+    'weights' = tuple: the weights used in the weighted average modeling, only set for weighted average combo models
+    'LevelForecast' = list: the forecast in level (undifferenced terms), when data has not been differenced this is the same as 'Forecast', always set
     'LevelY' = list: the y value in level (undifferenced terms), when data has not been differenced this is the same as the y attribute, always set
-    'LevelFittedVals' = list: the fitted values in level (undifferenced terms), when data has not been differenced this is the same as the 'FittedVals' key, always set
-    'LevelTestSetPreds' = list: the test-set predictions in level (undifferenced terms), when data has not been differenced this is the same as the 'TestSetPredictions' key, always set
-    'LevelTestSetRMSE' = float: the RMSE of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as the 'TestSetRMSE' key, always set
-    'LevelTestSetMAPE' = float: the MAPE of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as the 'TestSetRMSE' key, None when there is a 0 in the level test-set actuals, always set
-    'LevelTestSetMAE' = float: the MAE of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as the 'TestSetRMSE' key, always set
-    'LevelTestSetR2' = float: the R2 of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as the 'TestSetRMSE' key, always set
-    'LevelInSampleRMSE' = float: the RMSE of the level fitted values vs. the level actuals, when data has not been differenced this is the same as the 'InSampleRMSE' key, always set
-    'LevelInSampleMAPE' = float: the MAPE of the level fitted values vs. the level actuals, when data has not been differenced this is the same as the 'InSampleRMSE' key, None if there is a 0 in the level actuals, always set
-    'LevelInSampleMAE' = float: the MAE of the level fitted values vs. the level actuals, when data has not been differenced this is the same as the 'InSampleRMSE' key, always set
-    'LevelInSampleR2' = float: the R2 of the level fitted values vs. the level actuals, when data has not been differenced this is the same as the 'InSampleRMSE' key, always set
+    'LevelTestSetPreds' = list: the test-set predictions in level (undifferenced terms), when data has not been differenced this is the same as 'TestSetPredictions', always set
+    'LevelTestSetRMSE' = float: the RMSE of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as 'TestSetRMSE', always set
+    'LevelTestSetMAPE' = float: the MAPE of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as 'TestSetRMSE', None when there is a 0 in the level test-set actuals, always set
+    'LevelTestSetMAE' = float: the MAE of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as 'TestSetRMSE', always set
+    'LevelTestSetR2' = float: the R2 of the level test-set predictions vs. the level actuals, when data has not been differenced this is the same as 'TestSetRMSE', always set
+    'LevelInSampleRMSE' = float: the RMSE of the level fitted values vs. the level actuals, when data has not been differenced this is the same as 'InSampleRMSE', always set
+    'LevelInSampleMAPE' = float: the MAPE of the level fitted values vs. the level actuals, when data has not been differenced this is the same as 'InSampleRMSE', None if there is a 0 in the level actuals, always set
+    'LevelInSampleMAE' = float: the MAE of the level fitted values vs. the level actuals, when data has not been differenced this is the same as 'InSampleRMSE', always set
+    'LevelInSampleR2' = float: the R2 of the level fitted values vs. the level actuals, when data has not been differenced this is the same as 'InSampleRMSE', always set
     'feature_importance' = pandas dataframe: eli5 feature importance information (based on change in accuracy when a certain feature is filled with random data), only set when save_feature_importance() is called
     'summary_stats' = pandas dataframe: statsmodels summary stats information, only set when save_summary_stats() is called
   )
@@ -988,7 +997,6 @@ import pandas as pd
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
@@ -1040,6 +1048,7 @@ f.manual_forecast(how='weighted',rebalance_weights=0)
   - **determine_best_by**: one of `_determine_best_by_`, default `'TestSetRMSE'`
   - **to_excel**: `bool`, default `False`
     - whether to save to excel
+    - if True, you may need to `pip install openpyxl`
   - **out_path**: `str`, default `'./'`
     - the path to save the excel file to (ignored when `to_excel=False`)
   - **excel_name**: `str`, default `'results.xlsx'`
@@ -1438,6 +1447,8 @@ Forecaster.drop_regressors(*args)
 Forecaster.export(dfs=['all_fcsts', 'model_summaries', 'best_fcst', 'test_set_predictions', 'lvl_fcsts'], models='all', best_model='auto', determine_best_by='TestSetRMSE', to_excel=False, out_path='./', excel_name='results.xlsx')
 Forecaster.export_feature_importance(model)
 Forecaster.export_summary_stats(model)
+Forecaster.export_Xvars_df()
+  # exports all dates and Xvars to a pandas dataframe
 Forecaster.export_validation_grid(model)
   # creates a pandas dataframe out of a validation grid for a given model with error/accuracy results saved to a column
 Forecaster.fillna_y(how='ffill')
