@@ -116,8 +116,8 @@ f.manual_forecast(how='simple',models=['hwes_add','hwes_mul'],call_me='avg')
 f.manual_forecast(how='weighted',determine_best_by='InSampleRMSE',models=['hwes_add','hwes_mul'],call_me='weighted') # this leaks data -- see auto_forecast for better weighted average modeling
 f.manual_forecast(how='splice',models=['hwes_add','hwes_mul'],determine_best_by='InSampleRMSE',splice_points=['2022-01-01'],call_me='splice')
 ```
-- the above weighted average model will probably overfit since determine_best_by is a metric that partly uses the test-set to be determined
-- the models argument can also be a str beginning with "top_" and that number of models will be averaged, determined by `determine_best_by`, see [export](#export)
+- the above weighted average model will probably overfit since `determine_best_by` is specified with an in-sample error metric that is partly calculated with the test-set
+- the models argument can be a str type beginning with "top_" and that number of models will be averaged, determined by `determine_best_by`, see [export](#export)
 - when using multiple models of the same estimator, be sure to use the [`call_me`](#call_me) paramater to differentiate them--otherwise, you will not be able to access all of their statistics later
 ```python
 import pandas as pd
