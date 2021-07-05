@@ -450,9 +450,9 @@ class Forecaster:
         minmax = (str(determine_best_by).endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) | (weights is not None)
         models = self._parse_models(models,determine_best_by)
         assert len(models) > 1,f'need at least two models to average, got {models}'
-        fcsts = pd.DataFrame({m:h['Forecast'] for m,h in self.history.items() if m in models})
-        preds = pd.DataFrame({m:h['TestSetPredictions'] for m,h in self.history.items() if m in models})
-        fvs = pd.DataFrame({m:h['FittedVals'] for m,h in self.history.items() if m in models})
+        fcsts = pd.DataFrame({m:self.history[m]['Forecast'] for m in models})
+        preds = pd.DataFrame({m:self.history[m]['TestSetPredictions'] for m in models})
+        fvs = pd.DataFrame({m:self.history[m]['FittedVals'] for m in models})
         actuals = self.y.values[-preds.shape[0]:]
         if how == 'weighted':
             scale = True

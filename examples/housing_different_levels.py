@@ -47,7 +47,7 @@ f.manual_forecast(how='weighted',models=level_models,determine_best_by='Validati
 
 f.plot(models='top_5',order_by='LevelTestSetMAPE',print_attr=['LevelTestSetRMSE','LevelTestSetR2','LevelTestSetMAPE','HyperParams','Xvars','models']) # will automatically plot levels for everything
 f.plot_test_set(models='top_5',order_by='LevelTestSetR2',include_train=60) # will automatically plot levels for everything
-f.plot_fitted(models=models,order_by='TestSetR2') # cannot plot fitted values of all models when levels were different during forecasting
-f.plot_fitted(models=level_models,order_by='TestSetR2')
+f.plot_fitted(models=models + ('avg','weighted'),order_by='TestSetR2') # cannot plot fitted values of all models when levels were different during forecasting
+f.plot_fitted(models=level_models + ('avg_level','weighted_level'),order_by='TestSetR2')
 
 f.export(to_excel=True,determine_best_by='LevelTestSetMAPE',excel_name='housing_different_levels_results.xlsx') # export interesting model metrics and forecasts (both level and non-level)

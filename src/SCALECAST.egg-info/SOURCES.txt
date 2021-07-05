@@ -37,6 +37,8 @@ examples/housing_different_levels_results.xlsx
 examples/housing_results.xlsx
 examples/test.py
 examples/warnings.log
+examples/.ipynb_checkpoints/avocados-checkpoint.ipynb
+examples/__pycache__/Grids.cpython-38.pyc
 src/SCALECAST.egg-info/PKG-INFO
 src/SCALECAST.egg-info/SOURCES.txt
 src/SCALECAST.egg-info/dependency_links.txt
