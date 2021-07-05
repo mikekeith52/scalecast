@@ -424,7 +424,7 @@ class Forecaster:
                 must be at least 2 in length
                 if using list-like object, elements must match model nicknames specified in call_me when forecasting
             determine_best_by: one of {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','InSampleMAPE','InSampleMAE','InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2',None}, default 'ValidationMetricValue'
-                if (models does not start with top_ and how is not weighted) or (how is weighted and manual weights are specified), this is ignored
+                if (models does not start with 'top_' and how is not 'weighted') or (how is 'weighted' and manual weights are specified), this is ignored
                 'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2' will probably lead to overfitting (data leakage)
                 'InSampleMAPE','InSampleMAE','InSampleR2' probably will lead to overfitting since in-sample includes the test set and overfitted models are weighted more highly
                 'ValidationMetricValue' is the safest option to avoid overfitting, but only works if all combined models were tuned and the validation metric was the same for all models
@@ -435,9 +435,10 @@ class Forecaster:
                 must be at least 0 -- 0 means the worst model is not given any weight
             weights: (optional) list-like
                 only applicable when how='weighted'
+                manually specifies weights
                 must be the same size as models
-                overwrites determine_best_by with None and applies those weights, automatically rebalances weights to add to one with a minmax scaler unless they already add to one
-                if weights already add to one, rebalance_weights is ignored
+                if None and how='weighted', weights are set automatically
+                if manually passed weights do not add to 1, will automatically rebalance weights to add to one with a minmax scaler
             splice_points: (optional) list-like
                 only applicable when how='splice'
                 elements in array must be str in yyyy-mm-dd or datetime object
