@@ -262,7 +262,7 @@ f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regres
 f.add_poly_terms('t') # t^2
 f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('mlp')
-f.manual_forecast(Xvars=['monthsin','monthcos','year','t'],solver=['lbfgs'])
+f.manual_forecast(Xvars=['monthsin','monthcos','year','t'],solver='lbfgs')
 ```
 ### mlr
 - [Sklearn Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html)
