@@ -526,7 +526,7 @@ f.auto_forecast(call_me='ridge')
 - use to limit big grids to a smaller size of randomly kept rows
   - **n**: `int` or `float`
     - if `int`, that many of random rows will be kept
-    - if `float`, must be 0 < n > 1 and that percentage of random rows will be kept
+    - if `float`, must be 0 < n < 1 and that percentage of random rows will be kept
 ```python
 import pandas as pd
 import pandas_datareader as pdr
