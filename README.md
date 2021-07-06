@@ -904,7 +904,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
 ## normalizer
 - `('minmax','scale',None)`
 - all Sklearn and XGBOOST models have a normalizer argument that can be optimized in `tune()`
-- `'minmax'`: ManMaxScaler from Sklearn
+- `'minmax'`: MinMaxScaler from Sklearn
 - `'scale'`: Normalizer from Sklearn
 
 ## call_me
