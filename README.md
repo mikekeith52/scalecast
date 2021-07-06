@@ -833,7 +833,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
 - `Forecaster.add_covid19_regressor(called='COVID19',start=datetime.datetime(2020,3,15),end=datetime.datetime(2021,5,13))`
 - adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise
   - **called**: `str`, default `'COVID19'`
-    - what to call the resulting time trend
+    - what to call the resulting variable
   - **start**: `str` or `datetime` object, default `datetime.datetime(2020,3,15)`
     - the start date (default is day Walt Disney World closed in the U.S.)
     - use format yyyy-mm-dd when passing strings
@@ -884,7 +884,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
 - `Forecaster.add_other_regressor(called,start,end)`
 - adds dummy variable that is 1 during the specified time period, 0 otherwise
   - **called**: `str`
-    - what to call the resulting time trend
+    - what to call the resulting variable
   - **start**: `str` or `datetime` object
   - **end**: `str` or `datetime` object
 ```python
