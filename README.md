@@ -400,7 +400,7 @@ f.manual_forecast(max_depth=2)
 _metrics_ = {'r2','rmse','mape','mae'}
 _determine_best_by_ = {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2','InSampleRMSE','InSampleMAPE','InSampleMAE',
                         'InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE',
-                        'LevelTestSetR2','LevelInSampleRMSE','LevelInSampleMAPE','LevelInSampleMAE','LevelInSampleR2',None}
+                        'LevelTestSetR2',None}
 ```
 
 ### in-sample metrics
