@@ -1,6 +1,7 @@
 # Scalecast: Forecast everything at scale
 
-`pip install scalecast`
+***DEVELOPER VERSION***
+`pip install scalecastdev`
 
 [pseudocode](#pseudocode)  
 [estimators](#estimators)  
@@ -63,6 +64,7 @@ pip install pandas-datareader
 [mlp](#mlp)  
 [prophet](#prophet)  
 [rf](#rf)  
+[silverkite](#silverkite)  
 [svr](#svr)  
 [xgboost](#xgboost)  
 ```python
@@ -363,6 +365,41 @@ f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('rf')
 f.manual_forecast(n_estimators=1000,max_depth=6)
 ```
+
+### silverkite
+- [GreyKite Documentation](https://linkedin.github.io/greykite/docs/0.1.0/html/index.html)
+- uses no Xvars by default but does accept the Xvars argument
+- does not accept the normalizer argument
+- All `**kwargs` passed to ModelComponentsParam
+  - default parameters with no Xvars should lead to good results most of the time as the library does a lot of under-the-hood optimization
+- whether it performs better on differenced or level data depends on the series but it should be okay with either
+```
+pip install greykite
+```
+```python
+import pandas as pd
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+f.set_test_length(12)
+f.generate_future_dates(24) # forecast length
+f.set_estimator('silverkite')
+f.manual_forecast()
+```
+- when plotting after evaluating a silverkite forecast, you need to use an appropriate matplotlib aggregator
+  - for Jupyter Notebooks:
+    ```python
+    matplotlib.use('nbAgg')
+    %matplotlib inline    
+    ```
+  - for command line interface or Pycharm:
+    ```python
+    matplotlib.use('QT5Agg') 
+    ```
+  - add these lines after calling the silverkite forecast but before plotting
+  - see other aggregators [here](https://matplotlib.org/stable/tutorials/introductory/usage.html)
 
 ### xgboost
 - [Xgboost Documentation](https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn)
@@ -1375,7 +1412,7 @@ see [call_me](#history)
 - the following models have `eli5` feature importance attributes that can be saved to the history as dataframes
   - `'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'elasticnet', 'svr', 'knn'`
 - the following models have summary stats:
-  - `'arima', 'hwes'`
+  - `'arima', 'hwes', 'silverkite'`
 - you can save these to history (run right after a forecast is created):
   - `Forecaster.save_feature_importance()`
   - `Forecaster.save_summary_stats()`

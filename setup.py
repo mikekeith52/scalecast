@@ -2,8 +2,8 @@
 from setuptools import setup, find_packages
 
 setup(
-  name = 'SCALECAST',
-  version = '0.1.8',
+  name = 'SCALECASTDEV',
+  version = '0.1.1',
   license='MIT',        # https://help.github.com/articles/licensing-a-repository
   short_description = 'A flexible, minimal-code forecasting object.',
   long_description='See the full documentation on [GitHub](https://github.com/mikekeith52/scalecast).',
@@ -25,6 +25,6 @@ setup(
     'matplotlib',
     'seaborn',
     'xgboost',
-    'openpyxl'
+    'openpyxl',
   ],
 )

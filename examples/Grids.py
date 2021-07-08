@@ -47,6 +47,10 @@ rf = {
 	'n_estimators':[100,500,1000]
 }
 
+silverkite = {
+	'changepoints':range(5)
+}
+
 svr={
 	'kernel':['linear'],
     'C':[.5,1,2,3],
