@@ -465,6 +465,7 @@ class Forecaster:
                 self.univariate = True
                 self.X = None
             self.Xvars = Xvars if Xvars != [] else None
+            self.regr = None
             result = _forecast_sk(df,Xvars,0,0,fcst_length)
             self.summary_stats = result[1]
             self.fitted_values = result[0][:-fcst_length]
