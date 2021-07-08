@@ -1,6 +1,6 @@
 # Scalecast: Forecast everything at scale
 
-***DEVELOPER VERSION***
+***DEVELOPER VERSION***  
 `pip install scalecastdev`
 
 [pseudocode](#pseudocode)  
