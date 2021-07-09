@@ -1,6 +1,6 @@
 # Scalecast: Forecast everything at scale
-
-`pip install scalecast`
+  
+`pip install scalecast`  
 
 [pseudocode](#pseudocode)  
 [estimators](#estimators)  
@@ -59,14 +59,16 @@ pip install pandas-datareader
 [gbt](#gbt)  
 [hwes](#hwes)  
 [knn](#knn)  
+[lightgbm](#lightgbm)  
 [mlr](#mlr)  
 [mlp](#mlp)  
 [prophet](#prophet)  
 [rf](#rf)  
+[silverkite](#silverkite)  
 [svr](#svr)  
 [xgboost](#xgboost)  
 ```python
-_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'prophet', 'hwes', 'elasticnet','svr','knn','combo'}
+_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lightgbm', 'rf', 'prophet', 'silverkite', 'hwes', 'elasticnet', 'svr', 'knn', 'combo'}
 ```
 
 ### arima
@@ -238,6 +240,31 @@ f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('knn')
 f.manual_forecast(n_neigbors=5,weights='uniform')
 ```
+### lightgbm
+- [LightGBM Documentation](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html)
+- light gradient boosted tree model
+- uses all Xvars and a MinMax normalizer by default
+- better on differenced data for non-stationary series
+`pip install lightgbm`
+```python
+import pandas as pd
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+f.set_test_length(12)
+f.generate_future_dates(24) # forecast length
+f.add_ar_terms(4)
+f.add_AR_terms((2,12)) # seasonal AR terms
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
+f.add_seasonal_regressors('year')
+f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
+f.add_time_trend()
+f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regressor
+f.diff() # non-stationary data forecasts better differenced with this model
+f.set_estimator('xgboost')
+f.manual_forecast(max_depth=3)
+```
 ### mlp
 - [Sklearn Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
 - Multi-Level Perceptron (neural network)
@@ -311,32 +338,6 @@ f.set_estimator('prophet')
 f.manual_forecast(n_changepoints=3)
 ```
 
-### svr
-- [Sklearn Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
-- Support Vector Regressor
-- uses all Xvars and a MinMax normalizer by default
-- better on differenced data for non-stationary series
-```python
-import pandas as pd
-import pandas_datareader as pdr
-from scalecast.Forecaster import Forecaster
-
-df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
-f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
-f.set_test_length(12)
-f.generate_future_dates(24) # forecast length
-f.add_ar_terms(4)
-f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
-f.add_seasonal_regressors('year')
-f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
-f.add_time_trend()
-f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regressor
-f.diff() # non-stationary data forecasts better differenced with this model
-f.set_estimator('svr')
-f.manual_forecast(kernel='linear',gamma='scale',C=2,epsilon=0.01)
-```
-
 ### rf
 - [Sklearn Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
 - Random Forest
@@ -362,6 +363,67 @@ f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regres
 f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('rf')
 f.manual_forecast(n_estimators=1000,max_depth=6)
+```
+
+### silverkite
+- [GreyKite Documentation](https://linkedin.github.io/greykite/docs/0.1.0/html/index.html)
+- uses no Xvars by default but does accept the Xvars argument
+- does not accept the normalizer argument
+- All `**kwargs` passed to ModelComponentsParam
+  - default parameters with no Xvars should lead to good results most of the time as the library does a lot of under-the-hood optimization
+- whether it performs better on differenced or level data depends on the series but it should be okay with either
+```
+pip install greykite
+```
+```python
+import pandas as pd
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+f.set_test_length(12)
+f.generate_future_dates(24) # forecast length
+f.set_estimator('silverkite')
+f.manual_forecast()
+```
+- when plotting after evaluating a silverkite forecast, you need to use an appropriate matplotlib aggregator
+  - for Jupyter Notebooks:
+    ```python
+    matplotlib.use('nbAgg')
+    %matplotlib inline    
+    ```
+  - for command line interface or Pycharm:
+    ```python
+    matplotlib.use('QT5Agg') 
+    ```
+  - add these lines after calling the silverkite forecast but before plotting
+  - see other aggregators [here](https://matplotlib.org/stable/tutorials/introductory/usage.html)
+
+### svr
+- [Sklearn Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
+- Support Vector Regressor
+- uses all Xvars and a MinMax normalizer by default
+- better on differenced data for non-stationary series
+```python
+import pandas as pd
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+f.set_test_length(12)
+f.generate_future_dates(24) # forecast length
+f.add_ar_terms(4)
+f.add_AR_terms((2,12)) # seasonal AR terms
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
+f.add_seasonal_regressors('year')
+f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
+f.add_time_trend()
+f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regressor
+f.diff() # non-stationary data forecasts better differenced with this model
+f.set_estimator('svr')
+f.manual_forecast(kernel='linear',gamma='scale',C=2,epsilon=0.01)
 ```
 
 ### xgboost
@@ -1375,7 +1437,7 @@ see [call_me](#history)
 - the following models have `eli5` feature importance attributes that can be saved to the history as dataframes
   - `'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'elasticnet', 'svr', 'knn'`
 - the following models have summary stats:
-  - `'arima', 'hwes'`
+  - `'arima', 'hwes', 'silverkite'`
 - you can save these to history (run right after a forecast is created):
   - `Forecaster.save_feature_importance()`
   - `Forecaster.save_summary_stats()`
@@ -1479,12 +1541,12 @@ Forecaster.pop(*args)
 Forecaster.save_feature_importance(quiet=True)
 Forecaster.save_summary_stats(quiet=True)
 Forecaster.seasonal_decompose(diffy=False, **kwargs)
-Forecaster.set_estimator(which)
+Forecaster.set_estimator(estimator)
 Forecaster.set_last_future_date(date)
   # another way to fill future dates by stopping at the last date you want forecasted
 Forecaster.set_test_length(n=1)
 Forecaster.set_validation_length(n=1)
-Forecaster.set_validation_metric(which='rmse')
+Forecaster.set_validation_metric(metric='rmse')
   # one of 'rmse','mape','mae','r2'
 Forecaster.tune()
 Forecaster.typ_set()

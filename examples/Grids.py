@@ -26,6 +26,10 @@ knn = {
 	'weights':['uniform','distance']
 }
 
+lightgbm = {
+	'max_depth':[i for i in range(5)] + [-1]
+}
+
 mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],
@@ -45,6 +49,10 @@ prophet = {
 rf = {
 	'max_depth':[5,10,None],
 	'n_estimators':[100,500,1000]
+}
+
+silverkite = {
+	'changepoints':range(5)
 }
 
 svr={

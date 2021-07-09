@@ -1,3 +1,4 @@
+import typing
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,11 +28,12 @@ def mae(y,pred):
 def r2(y,pred):
     return r2_score(y,pred)
 
-_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'prophet', 'hwes', 'elasticnet','svr','knn','combo'}
-_metrics_ = {'r2','rmse','mape','mae'}
-_determine_best_by_ = {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2','InSampleRMSE','InSampleMAPE','InSampleMAE',
-                        'InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE',
-                        'LevelTestSetR2',None}
+_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lightgbm', 'rf', 'prophet', 
+                'silverkite', 'hwes', 'elasticnet', 'svr', 'knn', 'combo'}
+_metrics_ = {'r2', 'rmse', 'mape', 'mae'}
+_determine_best_by_ = {'TestSetRMSE', 'TestSetMAPE', 'TestSetMAE', 'TestSetR2', 'InSampleRMSE', 'InSampleMAPE', 'InSampleMAE',
+                        'InSampleR2', 'ValidationMetricValue', 'LevelTestSetRMSE', 'LevelTestSetMAPE', 'LevelTestSetMAE',
+                        'LevelTestSetR2', None}
 _colors_ = [
     '#FFA500','#DC143C','#00FF7F','#808000','#BC8F8F','#A9A9A9',
     '#8B008B','#FF1493','#FFDAB9','#20B2AA','#7FFFD4','#A52A2A',
@@ -48,8 +50,8 @@ class ForecastError(Exception):
 
 class Forecaster:
     def __init__(self,
-        y=pd.Series([]),
-        current_dates=pd.Series([]),
+        y,
+        current_dates,
         **kwargs):
 
         self.y = y
@@ -296,6 +298,10 @@ class Forecaster:
         from xgboost import XGBRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
+    def _forecast_lightgbm(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+        from lightgbm import LGBMRegressor as fcster
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+
     def _forecast_gbt(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
         from sklearn.ensemble import GradientBoostingRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
@@ -414,6 +420,59 @@ class Forecaster:
             self.regr = regr
             fcst = regr.predict(p)
             return fcst['yhat'].to_list()
+
+    def _forecast_silverkite(self,tune=False,Xvars=None,**kwargs):
+        """ requires:
+                pip install greykite
+            kwargs: https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html
+        """
+        from greykite.framework.templates.autogen.forecast_config import ForecastConfig, MetadataParam, ModelComponentsParam, EvaluationPeriodParam
+        from greykite.framework.templates.forecaster import Forecaster as SKForecaster
+
+        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else Xvars if Xvars is not None else []
+        def _forecast_sk(df,Xvars,validation_length,test_length,forecast_length):
+            test_length = test_length if test_length > 0 else -(df.shape[0]+1)
+            validation_length = validation_length if validation_length > 0 else -(df.shape[0]+1)
+            pred_df = df.iloc[:-test_length,:]
+            if validation_length > 0:
+                pred_df.loc[:-validation_length,'y'] = None
+            metadata = MetadataParam(time_col="ts",value_col="y",freq=self.freq)
+            components = ModelComponentsParam(regressors={'regressor_cols':Xvars} if Xvars is not None else None,**kwargs)
+            forecaster = SKForecaster()
+            result = forecaster.run_forecast_config(
+                df=pred_df,
+                config=ForecastConfig(
+                    forecast_horizon=forecast_length,
+                    metadata_param=metadata,
+                    evaluation_period_param=EvaluationPeriodParam(cv_max_splits=0) # makes it very much faster
+                )
+            )
+            return (result.forecast.df['forecast'].to_list(),result.model[-1].summary().info_dict["coef_summary_df"])
+
+        fcst_length = len(self.future_dates)
+        ts_df = pd.DataFrame({'ts':self.current_dates.to_list() + self.future_dates.to_list(),'y':self.y.to_list() + [None]*fcst_length})
+        reg_df = pd.DataFrame({x:self.current_xreg[x].to_list() + self.future_xreg[x] for x in Xvars})
+        df = pd.concat([ts_df,reg_df],axis=1)
+        
+        if tune:
+            y_test = self.y.values[-(self.test_length + self.validation_length):-self.test_length]
+            pred = _forecast_sk(df,Xvars,self.validation_length,self.test_length,self.validation_length)[0]
+            self._metrics(y_test,pred[-self.validation_length:])
+            return self._tune()
+        else:
+            pred = _forecast_sk(df,Xvars,self.test_length,0,self.test_length)[0]
+            self._metrics(self.y.values[-self.test_length:],pred[-self.test_length:])
+            self._clear_the_deck()
+            self.X = df[Xvars]
+            if len(Xvars) == 0:
+                self.univariate = True
+                self.X = None
+            self.Xvars = Xvars if Xvars != [] else None
+            self.regr = None # placeholder to make feature importance work
+            result = _forecast_sk(df,Xvars,0,0,fcst_length)
+            self.summary_stats = result[1]
+            self.fitted_values = result[0][:-fcst_length]
+            return result[0][-fcst_length:]
 
     def _forecast_combo(self,how='simple',models='all',determine_best_by='ValidationMetricValue',rebalance_weights=.1,weights=None,splice_points=None):
         """ how: one of {'simple','weighted','splice'}, default 'simple'
@@ -731,9 +790,8 @@ class Forecaster:
                 for c,v in pd.get_dummies(stg_df_fut,drop_first=drop_first).to_dict(orient='list').items():
                     if c in all_dummies:
                         self.future_xreg[c] = v
-                for c in all_dummies:
-                    if c not in self.future_xreg.keys():
-                        self.future_xreg[c] = [0]*len(self.future_dates)
+                for c in [d for d in all_dummies if d not in self.future_xreg.keys()]:
+                    self.future_xreg[c] = [0]*len(self.future_dates)
 
     def add_time_trend(self,called='t'):
         self._adder()
@@ -807,18 +865,18 @@ class Forecaster:
         assert (len(self.current_dates) == len(self.y))
         self.integration = 0
         
-    def set_estimator(self,which):
-        """which: {arima, linear, logistic, boosted_tree, rf, mlp, nnetar, prophet, hwes}"""
-        assert which in _estimators_,f'which must be one of {_estimators_}'
+    def set_estimator(self,estimator):
+        """estimator: one of _estimators_"""
+        assert estimator in _estimators_,f'estimator must be one of {_estimators_}, got {estimator}'
         self.typ_set()
         if hasattr(self,'estimator'):
-            if which != self.estimator:
+            if estimator != self.estimator:
                 for attr in ('grid','grid_evaluated','best_params','validation_metric_value'):
                     if hasattr(self,attr):
                         delattr(self,attr)
-                self.estimator = which
+                self.estimator = estimator
         else:
-            self.estimator = which
+            self.estimator = estimator
 
     def ingest_grid(self,grid):
         from itertools import product
@@ -837,10 +895,11 @@ class Forecaster:
         else:
             raise ValueError(f'argment passed to n not usable: {n}')
 
-    def set_validation_metric(self,which='rmse'):
-        if (which == 'r2') & (self.validation_length < 2):
+    def set_validation_metric(self,metric='rmse'):
+        assert metric in _metrics_,f'metric must be one of {_metrics_}, got {metric}'
+        if (metric == 'r2') & (self.validation_length < 2):
             raise ValueError('can only validate with r2 if the validation length is at least 2, try set_validation_length()')
-        self.validation_metric = which
+        self.validation_metric = metric
 
     def tune(self):
         if not hasattr(self,'grid'):
