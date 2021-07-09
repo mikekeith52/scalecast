@@ -26,6 +26,10 @@ knn = {
 	'weights':['uniform','distance']
 }
 
+lightgbm = {
+	'max_depth':[i for i in range(5)] + [-1]
+}
+
 mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],

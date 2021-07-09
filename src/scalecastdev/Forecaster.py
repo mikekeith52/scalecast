@@ -29,7 +29,7 @@ def r2(y,pred):
     return r2_score(y,pred)
 
 # adding linkedin silverkite to the mix
-_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'prophet', 'silverkite', 'hwes', 'elasticnet','svr','knn','combo'}
+_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lightgbm', 'rf', 'prophet', 'silverkite', 'hwes', 'elasticnet','svr','knn','combo'}
 _metrics_ = {'r2','rmse','mape','mae'}
 _determine_best_by_ = {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2','InSampleRMSE','InSampleMAPE','InSampleMAE',
                         'InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE',
@@ -296,6 +296,10 @@ class Forecaster:
 
     def _forecast_xgboost(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
         from xgboost import XGBRegressor as fcster
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+
+    def _forecast_lightgbm(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+        from lightgbm import LGBMRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
     def _forecast_gbt(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
@@ -863,18 +867,18 @@ class Forecaster:
         assert (len(self.current_dates) == len(self.y))
         self.integration = 0
         
-    def set_estimator(self,which):
-        """which: {arima, linear, logistic, boosted_tree, rf, mlp, nnetar, prophet, hwes}"""
-        assert which in _estimators_,f'which must be one of {_estimators_}'
+    def set_estimator(self,estimator):
+        """estimator: {arima, linear, logistic, boosted_tree, rf, mlp, nnetar, prophet, hwes}"""
+        assert estimator in _estimators_,f'estimator must be one of {_estimators_}'
         self.typ_set()
         if hasattr(self,'estimator'):
-            if which != self.estimator:
+            if estimator != self.estimator:
                 for attr in ('grid','grid_evaluated','best_params','validation_metric_value'):
                     if hasattr(self,attr):
                         delattr(self,attr)
-                self.estimator = which
+                self.estimator = estimator
         else:
-            self.estimator = which
+            self.estimator = estimator
 
     def ingest_grid(self,grid):
         from itertools import product
@@ -893,10 +897,11 @@ class Forecaster:
         else:
             raise ValueError(f'argment passed to n not usable: {n}')
 
-    def set_validation_metric(self,which='rmse'):
-        if (which == 'r2') & (self.validation_length < 2):
+    def set_validation_metric(self,metric='rmse'):
+        assert metric in _metrics_,f'metric must be one of {_metrics_}'
+        if (metric == 'r2') & (self.validation_length < 2):
             raise ValueError('can only validate with r2 if the validation length is at least 2, try set_validation_length()')
-        self.validation_metric = which
+        self.validation_metric = metric
 
     def tune(self):
         if not hasattr(self,'grid'):

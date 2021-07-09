@@ -60,6 +60,7 @@ pip install pandas-datareader
 [gbt](#gbt)  
 [hwes](#hwes)  
 [knn](#knn)  
+[lightgbm](#lightgbm)  
 [mlr](#mlr)  
 [mlp](#mlp)  
 [prophet](#prophet)  
@@ -68,7 +69,7 @@ pip install pandas-datareader
 [svr](#svr)  
 [xgboost](#xgboost)  
 ```python
-_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'prophet', 'hwes', 'elasticnet','svr','knn','combo'}
+_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lightgbm', 'rf', 'prophet', 'hwes', 'elasticnet','svr','knn','combo'}
 ```
 
 ### arima
@@ -240,6 +241,33 @@ f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('knn')
 f.manual_forecast(n_neigbors=5,weights='uniform')
 ```
+### lightgbm
+- [LightGBM Documentation](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html)
+- light gradient boosted tree model
+- uses all Xvars and a MinMax normalizer by default
+- better on differenced data for non-stationary series
+`pip install lightgbm`
+```python
+import pandas as pd
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+f.set_test_length(12)
+f.generate_future_dates(24) # forecast length
+f.add_ar_terms(4)
+f.add_AR_terms((2,12)) # seasonal AR terms
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
+f.add_seasonal_regressors('year')
+f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
+f.add_time_trend()
+f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regressor
+f.diff() # non-stationary data forecasts better differenced with this model
+f.set_estimator('xgboost')
+f.manual_forecast(max_depth=3)
+```
+
 ### mlp
 - [Sklearn Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
 - Multi-Level Perceptron (neural network)
