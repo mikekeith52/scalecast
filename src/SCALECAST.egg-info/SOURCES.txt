@@ -26,6 +26,7 @@ assets/pt1/housing_level.png
 assets/pt1/pacf.png
 assets/pt1/pacf_diff.png
 assets/pt1/seasonal.png
+dist/SCALECAST-0.1.8.tar.gz
 examples/Grids.py
 examples/avocado.csv
 examples/avocado_model_summaries.csv
