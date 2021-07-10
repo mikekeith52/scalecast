@@ -3,7 +3,7 @@ import pandas_datareader as pdr
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scalecastdev.Forecaster import Forecaster
+from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
