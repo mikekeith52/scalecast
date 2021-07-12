@@ -245,6 +245,7 @@ f.manual_forecast(n_neigbors=5,weights='uniform')
 - light gradient boosted tree model
 - uses all Xvars and a MinMax normalizer by default
 - better on differenced data for non-stationary series  
+
 `pip install lightgbm`  
 ```python
 import pandas as pd
