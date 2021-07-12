@@ -35,7 +35,6 @@ assets/pt2/median_mape.png
 assets/pt2/pacf_plot.png
 assets/pt2/southeast-organic.png
 assets/pt2/southeast-organic_test.png
-dist/SCALECASTDEV-0.1.1.tar.gz
 examples/Grids.py
 examples/avocado.csv
 examples/avocado_model_summaries.csv
@@ -57,6 +56,7 @@ src/SCALECASTDEV.egg-info/top_level.txt
 src/scalecast/Forecaster.py
 src/scalecast/__init__.py
 src/scalecastdev/Forecaster.py
+src/scalecastdev/GridGenerator.py
 src/scalecastdev/__init__.py
 src/scalecastdev/__pycache__/Forecaster.cpython-38.pyc
 src/scalecastdev/__pycache__/Grids.cpython-38.pyc
