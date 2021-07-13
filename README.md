@@ -1436,7 +1436,7 @@ see [call_me](#history)
 
 ## feature analysis
 - the following models have `eli5` feature importance attributes that can be saved to the history as dataframes
-  - `'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'elasticnet', 'svr', 'knn'`
+  - `'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'elasticnet', 'svr', 'knn', 'lightgbm'`
 - the following models have summary stats:
   - `'arima', 'hwes', 'silverkite'`
 - you can save these to history (run right after a forecast is created):
