@@ -90,7 +90,7 @@ f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
 ```
 
 ### combo
-- [src](https://github.com/mikekeith52/scalecast/blob/main/src/scalecast/Forecaster.py#L477)
+- [src](https://github.com/mikekeith52/scalecast/blob/main/src/scalecast/Forecaster.py#L479)
 - three combination models are available:
   - **simple** average of specified models
   - **weighted** average of specified models
@@ -583,7 +583,13 @@ f.ingest_grid('ridge') # ingests the ridge grid in Grids.py
 f.tune()
 f.auto_forecast(call_me='ridge')
 ```
-
+### grid generator
+- you can write the Grids.py file in /examples/Grid.py to your working directory using `GridGenerator.get_example_grids()`
+- you can write empty grids using `GridGenerator.get_empty_grids()`
+```python
+from scalecast import GridGenerator
+GridGenerator.get_example_grids()
+```
 ### limit_grid_size()
 - `Forecaster.limit_grid_size(n)`
 - use to limit big grids to a smaller size of randomly kept rows
@@ -1555,4 +1561,6 @@ Forecaster.typ_set()
 Forecaster.undiff(suppress_error=False)
 Forecaster.validate_regressor_names()
   # validates that all variable names in current_xreg and future_xreg match
+GridGenerator.get_example_grids(overwrite=False)
+GridGenerator.get_empty_grids(overwrite=False)
 ```

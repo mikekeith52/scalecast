@@ -26,7 +26,16 @@ assets/pt1/housing_level.png
 assets/pt1/pacf.png
 assets/pt1/pacf_diff.png
 assets/pt1/seasonal.png
-dist/SCALECAST-0.1.8.tar.gz
+assets/pt2/baltimorewashington-organic_fcst.png
+assets/pt2/baltimorewashington-organic_test.png
+assets/pt2/best_model.png
+assets/pt2/mape_dist.png
+assets/pt2/mape_mean.png
+assets/pt2/mape_median.png
+assets/pt2/pacf.png
+assets/pt2/southeast-organic_fcst.png
+assets/pt2/southeast-organic_test.png
+dist/SCALECAST-0.1.9.tar.gz
 examples/Grids.py
 examples/avocado.csv
 examples/avocado_model_summaries.csv
@@ -46,6 +55,7 @@ src/SCALECAST.egg-info/dependency_links.txt
 src/SCALECAST.egg-info/requires.txt
 src/SCALECAST.egg-info/top_level.txt
 src/scalecast/Forecaster.py
+src/scalecast/GridGenerator.py
 src/scalecast/__init__.py
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
 src/scalecast/__pycache__/Grids.cpython-38.pyc

@@ -41,6 +41,8 @@ _colors_ = [
 ]*10
 
 class ForecastError(Exception):
+    class CannotDiff(Exception):
+        pass
     class CannotUndiff(Exception):
         pass
     class NoGrid(Exception):
@@ -633,7 +635,10 @@ class Forecaster:
 
     def diff(self,i=1):
         if hasattr(self,'first_obs'):
-            raise TypeError('series has already been differenced, if you want to difference again, use undiff() first, then diff(2)')
+            raise ForecastError.CannotDiff('series has already been differenced, if you want to difference again, use undiff() first, then diff(2)')
+
+        if i == 0:
+            return
 
         assert i in (1,2),f'only 1st and 2nd order integrations supported for now, got i={i}'
         self.first_obs = self.y.values[:i] # np array
@@ -836,6 +841,7 @@ class Forecaster:
         """ always drops all regressors (to make sure lengths are right) -- just re-add them if you still want them
             if the series hasn't been differenced yet, will do nothing else except raise an error -- in this case, use suppress_error to control exceptions
         """
+        self.typ_set()
         self.current_xreg = {}
         self.future_xreg = {}
         if self.integration == 0:
@@ -859,7 +865,7 @@ class Forecaster:
         y.append(first_obs[0])
         y = np.cumsum(y[::-1])
 
-        current_dates += first_dates
+        current_dates += first_dates[::-1] # correction 2021-07-14
         self.current_dates = pd.Series(current_dates[::-1])
         self.y = pd.Series(y)
         assert (len(self.current_dates) == len(self.y))
