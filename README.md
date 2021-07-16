@@ -528,7 +528,7 @@ f.auto_forecast()
 ```
 
 ### Grids.py
-- instead of placing grids inside your code, you can create (or copy/paste) a file called Grids.py to store your grids and they will be read in automatically
+- instead of placing grids inside your code, you can create, copy/paste, or use [GridGenerator][#grid-generator] functions to place a file called Grids.py to store your grids in the working directory and they will be read in automatically
 - you can pass the name of the grid as str to `ingest_grid()` but you can also skip straight to `tune()` and it will automatically search for a grid in Grids.py with the same name as the estimator
 ```python
 # Grids.py
@@ -588,7 +588,7 @@ f.auto_forecast(call_me='ridge')
 - you can write empty grids using `GridGenerator.get_empty_grids()`
 ```python
 from scalecast import GridGenerator
-GridGenerator.get_example_grids()
+GridGenerator.get_example_grids() # writes the Grids.py file from /examples in the working directory, to overwrite an existing grid use overwrite=True
 ```
 ### limit_grid_size()
 - `Forecaster.limit_grid_size(n)`
