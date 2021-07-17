@@ -132,17 +132,22 @@ class Forecaster:
             y.append(first_obs[0])
             y = list(np.cumsum(y[::-1]))
             
-            fcst.append(y[-1])
+            if integration == 2:
+                fcst.append(self.y.values[-2] + self.y.values[-1])
+                pred.append(self.y.values[-(len(pred) + 2)] + self.y.values[-(len(pred) + 1)])
+            else:
+                fcst.append(y[-1])
+                pred.append(y[-(len(pred) + 1)])
+
             fcst = list(np.cumsum(fcst[::-1]))[1:]
-            pred.append(y[-(len(pred) - 1)])
             pred = list(np.cumsum(pred[::-1]))[1:]
 
             if integration == 2:
                 fcst.reverse()
-                fcst.append(self.y.values[-2] + self.y.values[-1])
+                fcst.append(y[-1])
                 fcst = list(np.cumsum(fcst[::-1]))[1:]
                 pred.reverse()
-                pred.append(self.y.values[-(len(pred) - 2)] + self.y.values[-(len(pred) - 1)])
+                pred.append(y[-(len(pred) + 1)])
                 pred = list(np.cumsum(pred[::-1]))[1:]
 
             self.history[call_me]['LevelForecast'] = fcst[:]
@@ -592,6 +597,14 @@ class Forecaster:
             else:
                 models = [m for m in all_models if m in models]
         return models
+
+    def _diffy(self,n):
+        n = int(n)
+        assert (n <= 2) & (n >= 0),'diffy cannot be less than 0 or greater than 2'
+        y = self.y.copy()
+        for i in range(n):
+            y = y.diff().dropna()
+        return y
             
     def infer_freq(self):
         if not hasattr(self,'freq'):
@@ -729,28 +742,28 @@ class Forecaster:
     def plot_acf(self,diffy=False,**kwargs):
         """ https://www.statsmodels.org/dev/generated/statsmodels.graphics.tsaplots.plot_acf.html
         """
-        y = self.y.dropna() if not diffy else self.y.diff().dropna()
+        y = self._diffy(diffy)
         return plot_acf(y.values,**kwargs)
 
     def plot_pacf(self,diffy=False,**kwargs):
         """ https://www.statsmodels.org/dev/generated/statsmodels.graphics.tsaplots.plot_pacf.html
         """
-        y = self.y.dropna() if not diffy else self.y.diff().dropna()
+        y = self._diffy(diffy)
         return plot_pacf(y.values,**kwargs)
 
     def plot_periodogram(self,diffy=False):
         """ https://www.statsmodels.org/0.8.0/generated/statsmodels.tsa.stattools.periodogram.html
         """
         from scipy.signal import periodogram
-        y = self.y.dropna() if not diffy else self.y.diff().dropna()
+        y = self._diffy(diffy)
         return periodogram(y.values)
 
     def seasonal_decompose(self,diffy=False,**kwargs):
         """ https://www.statsmodels.org/stable/generated/statsmodels.tsa.seasonal.seasonal_decompose.html
         """
         self.infer_freq()
-        y = self.y if not diffy else self.y.diff()
-        X = pd.DataFrame({'y':y.values},index=self.current_dates)
+        y = self._diffy(diffy)
+        X = pd.DataFrame({'y':y.values},index=self.current_dates.values[-len(y):])
         X.index.freq = self.freq
         return seasonal_decompose(X.dropna(),**kwargs)
 

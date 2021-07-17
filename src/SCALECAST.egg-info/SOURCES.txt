@@ -35,7 +35,6 @@ assets/pt2/mape_median.png
 assets/pt2/pacf.png
 assets/pt2/southeast-organic_fcst.png
 assets/pt2/southeast-organic_test.png
-dist/SCALECAST-0.1.9.tar.gz
 examples/Grids.py
 examples/avocado.csv
 examples/avocado_model_summaries.csv
