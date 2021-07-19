@@ -7,7 +7,6 @@ import datetime
 import logging
 import warnings
 import os
-import pandas_datareader as pdr
 from collections import Counter
 from scipy import stats
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_percentage_error, mean_absolute_error

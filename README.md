@@ -882,7 +882,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
   - **pwr**: `int`, default `2`
     - the max power to add to each term in args (2 to this number will be added)
   - **sep**: `str`, default `"^"`
-    - - the separator between each term in arg and pwr to create the final vairable name
+    - the separator between each term in arg and pwr to create the final vairable name
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
