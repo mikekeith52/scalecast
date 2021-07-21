@@ -23,6 +23,7 @@
 - See [examples/housing.py](examples/housing.py) for an example of forecasting one series
 - [examples/avocados.ipynb](examples/avocados.ipynb) for an example of forecasting many series
 - [examples/housing_different_levels.py](examples/housing_different_levels.py) for an example of forecasting one series at different levels
+- [housing_prices binder app](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb) for an example of forecasting 5 series at 2nd differences
 - All forecasting with auto-regressive terms uses an iterative process to fill in future values with forecasts so this can slow down the evaluation of many models but makes everything dynamic and reduces the chance of leakage
 
 ## pseudocode
