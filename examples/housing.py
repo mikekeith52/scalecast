@@ -5,7 +5,7 @@ import seaborn as sns
 
 from scalecast.Forecaster import Forecaster
 
-df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
 f.plot()
 
