@@ -1118,7 +1118,6 @@ f.manual_forecast(how='weighted',rebalance_weights=0)
   - **determine_best_by**: one of `_determine_best_by_`, default `'TestSetRMSE'`
   - **to_excel**: `bool`, default `False`
     - whether to save to excel
-    - if True, you may need to `pip install openpyxl`
   - **out_path**: `str`, default `'./'`
     - the path to save the excel file to (ignored when `to_excel=False`)
   - **excel_name**: `str`, default `'results.xlsx'`

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scalecast.Forecaster import Forecaster
 
-df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
 
 f.set_test_length(12) # specify a test length for your models--it's a good idea to keep this the same for all forecasts
@@ -48,7 +48,7 @@ f.manual_forecast(how='weighted',models=level_models,determine_best_by='Validati
 matplotlib.use('QT5Agg')
 f.plot(models='all',order_by='LevelTestSetMAPE',print_attr=['LevelTestSetRMSE','LevelTestSetR2','LevelTestSetMAPE','HyperParams','Xvars','models']) # will automatically plot levels for everything
 f.plot_test_set(models='all',order_by='LevelTestSetMAPE',include_train=60) # will automatically plot levels for everything
-f.plot_fitted(models=models + ('avg','weighted'),order_by='LevelTestSetMAPE') # cannot plot fitted values of all models when levels were different during forecasting
-f.plot_fitted(models=level_models + ('avg_level','weighted_level'),order_by='LevelTestSetMAPE')
+f.plot_fitted(models=models,order_by='LevelTestSetMAPE') # cannot plot fitted values of all models when levels were different during forecasting
+f.plot_fitted(models=level_models,order_by='LevelTestSetMAPE')
 
-f.export(to_excel=True,determine_best_by='LevelTestSetMAPE',excel_name='housing_different_levels_results.xlsx') # export interesting model metrics and forecasts (both level and non-level)
+f.export(['model_summaries','lvl_fcsts'],to_excel=True,determine_best_by='LevelTestSetMAPE',excel_name='housing_different_levels_results.xlsx') # export interesting model metrics and forecasts (both level and non-level)

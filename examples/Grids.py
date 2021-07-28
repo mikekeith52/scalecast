@@ -1,6 +1,6 @@
 arima = {
 	'order':[(2,1,0),(0,1,2),(1,1,1)],
-	'seasonal_order':[(0,0,0,0),(0,1,1,12)],
+	'seasonal_order':[(0,1,1,12),(2,1,0,12)],
 	'trend':['n','c','t','ct']
 }
 
@@ -16,8 +16,8 @@ gbt = {
 }
 
 hwes = {
-	'trend':[None,'add','mul'],
-	'seasonal':[None,'add','mul'],
+	'trend':['add','mul'],
+	'seasonal':['add','mul'],
 	'damped_trend':[True,False]
 }
 
