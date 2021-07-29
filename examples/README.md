@@ -1,4 +1,10 @@
 # Examples
+
+- Example 1: [housing.py](/housing.py)
+- Example 2: [avocados.ipynb](/avocados.ipynb)
+- Example 3: [housing_different_levels.py](/housing_different_levels.py)
+- Example 4 (external repository): [housing_prices.ipynb](https://github.com/mikekeith52/housing_prices/blob/main/housing_prices.ipynb)
+
 ## See the blog posts:
 - [Forecasting one series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)
 - [Forecasting many series at scale](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
