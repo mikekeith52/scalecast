@@ -1,6 +1,6 @@
 # Examples
 
-- Example 1: [housing.py](/housing.py)
+- Example 1: [housing.py](examples/housing.py)
 - Example 2: [avocados.ipynb](/avocados.ipynb)
 - Example 3: [housing_different_levels.py](/housing_different_levels.py)
 - Example 4 (external repository): [housing_prices.ipynb](https://github.com/mikekeith52/housing_prices/blob/main/housing_prices.ipynb)
