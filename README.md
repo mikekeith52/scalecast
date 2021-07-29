@@ -761,7 +761,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
 - all estimators except hwes and combo accept an `Xvars` argument
 - accepted arguments are an array-like of named regressors, a `str` of a single regressor name, `'all'`, or `None`
   - for estimators that require Xvars (sklearn models), `None` and `'all'` will both use all Xvars
-- all Xvars must be numeric type
+- all regressors must be numeric type
 
 [seasonal regressors](#seasonal-regressors)  
 [ar terms](#ar-terms)  
