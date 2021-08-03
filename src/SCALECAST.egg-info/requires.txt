@@ -8,4 +8,5 @@ scipy
 matplotlib
 seaborn
 xgboost
+lightgbm
 openpyxl

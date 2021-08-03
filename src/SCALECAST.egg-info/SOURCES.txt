@@ -35,7 +35,12 @@ assets/pt2/mape_median.png
 assets/pt2/pacf.png
 assets/pt2/southeast-organic_fcst.png
 assets/pt2/southeast-organic_test.png
+assets/pt3/fitted.png
+assets/pt3/fitted_level.png
+assets/pt3/forecast.png
+assets/pt3/test_set.png
 examples/Grids.py
+examples/README.md
 examples/avocado.csv
 examples/avocado_model_summaries.csv
 examples/avocado_results.pckl
@@ -44,7 +49,6 @@ examples/housing.py
 examples/housing_different_levels.py
 examples/housing_different_levels_results.xlsx
 examples/housing_results.xlsx
-examples/test.py
 examples/warnings.log
 examples/.ipynb_checkpoints/avocados-checkpoint.ipynb
 examples/__pycache__/Grids.cpython-38.pyc
@@ -57,5 +61,6 @@ src/scalecast/Forecaster.py
 src/scalecast/GridGenerator.py
 src/scalecast/__init__.py
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
+src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/Grids.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
