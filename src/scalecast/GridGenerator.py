@@ -5,7 +5,7 @@ arima = {
 	'trend':['n','c','t','ct']
 }
 elasticnet = {
-	'alpha':[i/10 for i in range(1,101)],
+	'alpha':[i/10 for i in range(1,21)],
 	'l1_ratio':[0,0.25,0.5,0.75,1],
 	'normalizer':['scale','minmax',None]
 }

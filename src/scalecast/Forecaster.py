@@ -476,7 +476,7 @@ class Forecaster:
             self.Xvars = Xvars if Xvars != [] else None
             self.regr = None # placeholder to make feature importance work
             result = _forecast_sk(df,Xvars,0,0,fcst_length)
-            self.summary_stats = result[1]
+            self.summary_stats = result[1].set_index('Pred_col')
             self.fitted_values = result[0][:-fcst_length]
             return result[0][-fcst_length:]
 
@@ -979,6 +979,19 @@ class Forecaster:
         self.call_me = call_me
         self._bank_history(auto=len(self.best_params.keys()) > 0,**self.best_params)
 
+    def tune_test_forecast(self,models,summary_stats=False,feature_importance=False):
+        assert len([m for m in models if m not in _estimators_]) == 0,f'all models passed to models argument most be one of {_estimators_}'
+        assert os.path.isfile('./Grids.py'),'Grids.py not found in working directory'
+        for m in models:
+            self.set_estimator(m)
+            self.tune()
+            self.auto_forecast()
+
+            if summary_stats:
+                self.save_summary_stats()
+            if feature_importance:
+                self.save_feature_importance()
+
     def save_feature_importance(self,quiet=True):
         import eli5
         from eli5.sklearn import PermutationImportance
@@ -1199,7 +1212,6 @@ class Forecaster:
                 'univariate',
                 'models',
                 'weights',
-                'integration',
                 'LevelTestSetRMSE',
                 'LevelTestSetMAPE',
                 'LevelTestSetMAE',
@@ -1258,3 +1270,17 @@ class Forecaster:
 
     def export_validation_grid(self,model):
         return self.history[model]['grid_evaluated']
+
+    def all_feature_info_to_excel(self,out_path='./',excel_name='feature_info.xlsx'):
+        with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
+            for m in self.history.keys():
+                if 'summary_stats' in self.history[m].keys():
+                    self.history[m]['summary_stats'].to_excel(writer,sheet_name=f'{m}_summary_stats')
+                elif 'feature_importance' in self.history[m].keys():
+                    self.history[m]['feature_importance'].to_excel(writer,sheet_name=f'{m}_feature_importance')
+
+    def all_validation_grids_to_excel(self,out_path='./',excel_name='validation_grids.xlsx'):
+        with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
+            for m in self.history.keys():
+                if 'grid_evaluated' in self.history[m].keys():
+                    self.history[m]['grid_evaluated'].to_excel(writer,sheet_name=m)
