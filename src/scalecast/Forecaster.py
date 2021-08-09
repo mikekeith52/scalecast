@@ -82,10 +82,10 @@ class Forecaster:
     def __repr__(self):
         return self.__str__()
 
-    def _adder(self):
+    def _adder(self) -> None:
         assert len(self.future_dates) > 0,'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)'
         
-    def _bank_history(self,**kwargs):
+    def _bank_history(self,**kwargs) -> None:
         call_me = self.call_me
         self.history[call_me] = {
             'Estimator':self.estimator,
@@ -165,16 +165,16 @@ class Forecaster:
             self.history[call_me]['LevelTestSetMAE'] = self.mae
             self.history[call_me]['LevelTestSetR2'] = self.r2
 
-    def _set_summary_stats(self):
+    def _set_summary_stats(self) -> None:
         results_summary = self.regr.summary()
         results_as_html = results_summary.tables[1].as_html()
         self.summary_stats = pd.read_html(results_as_html, header=0, index_col=0)[0]
 
-    def _bank_fi_to_history(self):
+    def _bank_fi_to_history(self) -> None:
         call_me = self.call_me
         self.history[call_me]['feature_importance'] = self.feature_importance
 
-    def _bank_summary_stats_to_history(self):
+    def _bank_summary_stats_to_history(self) -> None:
         call_me = self.call_me
         self.history[call_me]['summary_stats'] = self.summary_stats
 
@@ -638,7 +638,7 @@ class Forecaster:
     def typ_set(self):
         self.y = pd.Series(self.y).dropna().astype(np.float64)
         self.current_dates = pd.to_datetime(pd.Series(list(self.current_dates)[-len(self.y):]),infer_datetime_format=True)
-        assert len(self.y) == len(self.current_dates)
+        assert len(self.y) == len(self.current_dates),f'y and current_dates must be same size -- y is {len(self.y)} and current_dates is {len(self.current_dates)}'
         self.future_dates = pd.to_datetime(pd.Series(self.future_dates),infer_datetime_format=True)
         for k,v in self.current_xreg.items():
             self.current_xreg[k] = pd.Series(list(v)[-len(self.y):]).astype(np.float64)
@@ -667,6 +667,21 @@ class Forecaster:
 
         if hasattr(self,'adf_stationary'):
             delattr(self,'adf_stationary')
+
+    def integrate(self,critical_pval=0.05):
+        """differences the series 0, 1, or 2 times based on ADF test"""
+        assert self.integration == 0,"can only run integrate() when series hasn't been differenced"
+        res0 = adfuller(self.y.dropna())
+        if res0[1] <= critical_pval:
+            return
+
+        res1 = adfuller(self.y.diff().dropna())
+        if res1[1] <= critical_pval:
+            self.diff()
+            return
+
+        self.diff(2)
+        self.adf_stationary = True
 
     def add_ar_terms(self,n):
         self._adder()
@@ -882,6 +897,8 @@ class Forecaster:
         self.y = pd.Series(y)
         assert (len(self.current_dates) == len(self.y))
         self.integration = 0
+        if hasattr(self,'adf_stationary'):
+            delattr(self,'adf_stationary')
         
     def set_estimator(self,estimator):
         """estimator: one of _estimators_"""
