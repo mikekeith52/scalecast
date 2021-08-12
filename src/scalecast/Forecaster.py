@@ -668,14 +668,15 @@ class Forecaster:
         if hasattr(self,'adf_stationary'):
             delattr(self,'adf_stationary')
 
-    def integrate(self,critical_pval=0.05):
+    def integrate(self,critical_pval=0.05,train_only=False):
         """differences the series 0, 1, or 2 times based on ADF test"""
         assert self.integration == 0,"can only run integrate() when series hasn't been differenced"
-        res0 = adfuller(self.y.dropna())
+        assert isinstance(train_only,bool),'train_only must be True or False'
+        res0 = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length])
         if res0[1] <= critical_pval:
             return
 
-        res1 = adfuller(self.y.diff().dropna())
+        res1 = adfuller(self.y.diff().dropna() if not train_only else self.y.diff().dropna().values[:-self.test_length])
         if res1[1] <= critical_pval:
             self.diff()
             return
@@ -737,8 +738,9 @@ class Forecaster:
             raise ValueError('can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()')
         self.validation_length=n
 
-    def adf_test(self,critical_pval=0.05,quiet=True,full_res=False,**kwargs):
-        res = adfuller(self.y.dropna(),**kwargs)
+    def adf_test(self,critical_pval=0.05,quiet=True,full_res=False,train_only=False,**kwargs):
+        assert isinstance(train_only,bool),'train_only must be True or False'
+        res = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length],**kwargs)
         if not full_res:
             if res[1] <= critical_pval:
                 if not quiet:
@@ -753,31 +755,40 @@ class Forecaster:
         else:
             return res
 
-    def plot_acf(self,diffy=False,**kwargs):
+    def plot_acf(self,diffy=False,train_only=False,**kwargs):
         """ https://www.statsmodels.org/dev/generated/statsmodels.graphics.tsaplots.plot_acf.html
         """
+        assert isinstance(train_only,bool),'train_only must be True or False'
         y = self._diffy(diffy)
-        return plot_acf(y.values,**kwargs)
+        y = y.values if not train_only else y.values[:-self.test_length]
+        return plot_acf(y,**kwargs)
 
-    def plot_pacf(self,diffy=False,**kwargs):
+    def plot_pacf(self,diffy=False,train_only=False,**kwargs):
         """ https://www.statsmodels.org/dev/generated/statsmodels.graphics.tsaplots.plot_pacf.html
         """
+        assert isinstance(train_only,bool),'train_only must be True or False'
         y = self._diffy(diffy)
-        return plot_pacf(y.values,**kwargs)
+        y = y.values if not train_only else y.values[:-self.test_length]
+        return plot_pacf(y,**kwargs)
 
-    def plot_periodogram(self,diffy=False):
+    def plot_periodogram(self,diffy=False,train_only=False):
         """ https://www.statsmodels.org/0.8.0/generated/statsmodels.tsa.stattools.periodogram.html
         """
         from scipy.signal import periodogram
+        assert isinstance(train_only,bool),'train_only must be True or False'
         y = self._diffy(diffy)
-        return periodogram(y.values)
+        y = y.values if not train_only else y.values[:-self.test_length]
+        return periodogram(y)
 
-    def seasonal_decompose(self,diffy=False,**kwargs):
+    def seasonal_decompose(self,diffy=False,train_only=False,**kwargs):
         """ https://www.statsmodels.org/stable/generated/statsmodels.tsa.seasonal.seasonal_decompose.html
         """
+        assert isinstance(train_only,bool),'train_only must be True or False'
         self.infer_freq()
         y = self._diffy(diffy)
-        X = pd.DataFrame({'y':y.values},index=self.current_dates.values[-len(y):])
+        current_dates = self.current_dates.values[-len(y):] if not train_only else self.current_dates.values[-len(y):-self.test_length]
+        y = y.values if not train_only else y.values[:-self.test_length]
+        X = pd.DataFrame({'y':y},index=current_dates)
         X.index.freq = self.freq
         return seasonal_decompose(X.dropna(),**kwargs)
 
@@ -869,14 +880,14 @@ class Forecaster:
             if the series hasn't been differenced yet, will do nothing else except raise an error -- in this case, use suppress_error to control exceptions
         """
         self.typ_set()
-        self.current_xreg = {}
-        self.future_xreg = {}
         if self.integration == 0:
             if suppress_error:
                 return
             else:
                 raise ForecastError.CannotUndiff('cannot undiff a series that was never differenced')
-
+        
+        self.current_xreg = {}
+        self.future_xreg = {}
         first_obs = self.first_obs.copy()
         first_dates = list(self.first_dates.copy())
         integration = self.integration

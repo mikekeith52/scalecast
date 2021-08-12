@@ -1,4 +1,6 @@
 # Scalecast: Forecast everything at scale
+
+![](assets/logo.png)  
   
 `pip install scalecast`  
 
@@ -18,6 +20,9 @@
 [warnings](#warnings)  
 [all functions](#all-functions)  
 
+***Support the project and help it get complete documentation on a proper website***  
+*Contact: mikekeith52@gmail.com*  
+
 - A flexible, minimal-code forecasting object meant to be used with loops to forecast many series or to focus on one series for maximum accuracy
 - Flexible enough to support forecasts at different integration levels
 - See [examples/housing.py](examples/housing.py) for an example of forecasting one series
@@ -31,11 +36,14 @@
 f = Forecaster(y=y_vals,current_dates=y_dates) # initialize object
 f.set_test_length(test_periods) # for accuracy metrics
 f.generate_future_dates(forecast_length)
-f.add_regressors(seasonal,ar,AR,combo,covid19,holidays,time_trend,polynomials,other)
+f.plot(acf,pacf,periodogram,train_only=True) # EDA
+f.add_regressors(autoregressive_terms) # add before differencing to lose minimal observations
+f.integrate() # automatically selects 0, 1, or 2 differences using ADF test (there are also ways to be more methodical about differencing)
+f.add_regressors(seasonal,combo,covid19,holidays,time_trend,polynomials,other)
 f.set_validation_length(validation_periods) # to tune models, a period of time before the test set
 for m in estimators:
   f.set_estimator(m)
-  f.ingest_grid(dict)
+  f.ingest_grid(dict) # can also use Grids.py to pull grids automatically with tune_test_forecast() method
   f.tune()
   f.auto_forecast() # uses best parameters from tuning process
 
@@ -44,7 +52,7 @@ f.manual_forecast(how='simple',models=[m1,m2,...],call_me='avg')
 f.manual_forecast(how='weighted',models='all',determine_best_by='ValidationSetMetric',call_me='weighted') # be careful when specifying determine_best_by to not overfit/leak
 
 f.plot(forecast,test_set,level_forecast,fitted_vals)
-f.export(to_excel=True) # summary stats, forecasts, test set, etc.
+f.export(to_excel=True) # feature info, forecasts, test set, etc.
 ```
 
 - for the examples below, pandas-datareader is necessary:
@@ -1345,10 +1353,13 @@ f.plot_fitted(order_by='TestSetR2') # plot fitted values of all models ordered b
 
 ### plot_acf
 
-- `Forecaster.plot_acf(diffy=False,**kwargs)`
+- `Forecaster.plot_acf(diffy=False,train_only=False,**kwargs)`
   - `plot_acf()` from `statsmodels`
-  - **diffy**: `bool`, default `False `
-    - whether to call the function on the first differenced `y` series
+  - **diffy**: `bool` or `int`, default `False `
+    - if bool, whether to call the function on the first differenced `y` series
+    - if int, will use that many differences in y before passing to plot function
+  - **train_only**: `bool`, default `False`
+    - whether to plot only training data (new in 0.2.6 to reduce data leakage chances)
   - `**kwargs` passed to the sm function
 ```python
 import pandas as pd
@@ -1360,19 +1371,23 @@ from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
+f.set_test_length(12)
 
 # time series exploration
-f.plot_acf()
+f.plot_acf(train_only=True)
 plt.show()
 ```
 ![](assets/plot_acf.png)
 
 ### plot_pacf
 
-- `Forecaster.plot_pacf(diffy=False,**kwargs)`
+- `Forecaster.plot_pacf(diffy=False,train_only=False,**kwargs)`
   - `plot_pacf()` from `statsmodels`
-  - **diffy**: `bool`, default `False `
-    - whether to call the function on the first differenced `y` series
+  - **diffy**: `bool` or `int`, default `False `
+    - if bool, whether to call the function on the first differenced `y` series
+    - if int, will use that many differences in y before passing to plot function
+  - **train_only**: `bool`, default `False`
+    - whether to plot only training data (new in 0.2.6 to reduce data leakage chances)
   - `**kwargs` passed to the sm function
 ```python
 import pandas as pd
@@ -1384,19 +1399,23 @@ from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
+f.set_test_length(12)
 
 # time series exploration
-f.plot_pacf(diffy=True)
+f.plot_pacf(diffy=True,train_only=True)
 plt.show()
 ```
 ![](assets/plot_pacf.png)
 
 ### plot_periodogram
 
-- `Forecaster.plot_periodogram(diffy=False)`
+- `Forecaster.plot_periodogram(diffy=False,train_only=False)`
   - `periodogram()` from `scipy`
-  - **diffy**: `bool`, default `False`
-    - whether to call the function on the first differenced `y` series
+  - **diffy**: `bool` or `int`, default `False `
+    - if bool, whether to call the function on the first differenced `y` series
+    - if int, will use that many differences in y before passing to plot function
+  - **train_only**: `bool`, default `False`
+    - whether to plot only training data (new in 0.2.6 to reduce data leakage chances)
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -1407,8 +1426,9 @@ from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
+f.set_test_length(12)
 
-a, b = f.plot_periodogram(diffy=True)
+a, b = f.plot_periodogram(diffy=True,train_only=True)
 plt.semilogy(a, b)
 plt.show()
 ```
@@ -1416,10 +1436,13 @@ plt.show()
 
 ### seasonal_decompose
 
-- `Forecaster.seasonal_decompose(diffy=False,**kwargs)`
+- `Forecaster.seasonal_decompose(diffy=False,train_only=False,**kwargs)`
   - `seasonal_decompose()` from `statsmodels`
-  - **diffy**: `bool`, default `False`
-    - whether to call the function on the first differenced `y` series
+  - **diffy**: `bool` or `int`, default `False `
+    - if bool, whether to call the function on the first differenced `y` series
+    - if int, will use that many differences in y before passing to plot function
+  - **train_only**: `bool`, default `False`
+    - whether to plot only training data (new in 0.2.6 to reduce data leakage chances)
   - `**kwargs` passed to the sm function
 ```python
 import pandas as pd
@@ -1431,8 +1454,9 @@ from scalecast.Forecaster import Forecaster
 
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
+f.set_test_length(12)
 
-f.seasonal_decompose().plot()
+f.seasonal_decompose(train_only=True).plot()
 plt.show()
 ```
 ![](assets/plot_seasonal_decompose.png)
@@ -1506,8 +1530,12 @@ Forecaster.add_other_regressor(called, start, end)
 Forecaster.add_poly_terms(*args, pwr=2, sep='^')
 Forecaster.add_seasonal_regressors(*args, raw=True, sincos=False, dummy=False, drop_first=False)
 Forecaster.add_time_trend(called='t')
-Forecaster.adf_test(critical_pval=0.05, quiet=True, full_res=False, **kwargs)
+Forecaster.adf_test(critical_pval=0.05, quiet=True, full_res=False, train_only=False, **kwargs)
   # from statsmodels: Augmented Dickey Fuller stationarity test, returns False if result is series is not stationary, True otherwise, full_res=True means the full output from sm will be returned, **kwargs passed to the statsmodel function
+Forecaster.all_feature_info_to_excel(out_path='./', excel_name='feature_info.xlsx')
+  # puts all saved feature importance and summary stats to Excel on separate tabs for each model where such info is available
+Forecaster.all_validation_grids_to_excel(out_path='./', excel_name='validation_grids.xlsx')
+  # puts all validation grids from tuned models to Excel on separate tabs for each tuned model
 Forecaster.auto_forecast(call_me=None)
 Forecaster.diff(i=1)
   # supports i = 1 | i = 2
@@ -1531,6 +1559,8 @@ Forecaster.infer_freq()
   # pandas.infer_freq()
 Forecaster.ingest_Xvars_df(df, date_col='Date', drop_first=False, use_future_dates=False)
 Forecaster.ingest_grid(grid)
+Forecaster.integrate(critical_pval=0.05, train_only=False)
+  # uses the Augmented Dickey Fuller test to difference data 0, 1, or 2 times
 Forecaster.keep_smaller_history(n)
   # reduces the amount of y observations, n can be a str in yyyy-mm-dd, and int representing the last number of obs to keep, or a datetime/pandas date object
 Forecaster.limit_grid_size(n)
@@ -1538,10 +1568,10 @@ Forecaster.manual_forecast(call_me=None, **kwargs)
 Forecaster.order_fcsts(models, determine_best_by='TestSetRMSE')
   # returns a list of model names (matching call_me) in order from best to worst according to the determine_best_by arg
 Forecaster.plot(models='all', order_by=None, level=False, print_attr=[])
-Forecaster.plot_acf(diffy=False, **kwargs)
+Forecaster.plot_acf(diffy=False, train_only=False, **kwargs)
 Forecaster.plot_fitted(models='all', order_by=None)
-Forecaster.plot_pacf(diffy=False, **kwargs)
-Forecaster.plot_periodogram(diffy=False)
+Forecaster.plot_pacf(diffy=False, train_only=False, **kwargs)
+Forecaster.plot_periodogram(diffy=False, train_only=False)
 Forecaster.plot_test_set(models='all', order_by=None, include_train=True, level=False)
 Forecaster.pop(*args)
   # *args are names of models (matching call_me) that will be deleted from history
@@ -1556,6 +1586,8 @@ Forecaster.set_validation_length(n=1)
 Forecaster.set_validation_metric(metric='rmse')
   # one of 'rmse','mape','mae','r2'
 Forecaster.tune()
+Forecaster.tune_test_forecast(models, feature_importance=False, summary_stats=False)
+  # loops through all models in models, tunes using Grids.py, and can set feature_importance/summary_stats
 Forecaster.typ_set()
   # sets data types of y, current_dates, etc. appropriately
 Forecaster.undiff(suppress_error=False)
