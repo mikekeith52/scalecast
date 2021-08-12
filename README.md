@@ -1,6 +1,6 @@
 # Scalecast: Forecast everything at scale
 
-![](assets/logo2.png)  
+<div style="text-align:center"><img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" /></div>
   
 `pip install scalecast`  
 
