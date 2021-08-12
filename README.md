@@ -1,6 +1,6 @@
 # Scalecast: Forecast everything at scale
 
-![](assets/logo.png)  
+![](assets/logo1.png)  
   
 `pip install scalecast`  
 
