@@ -6,6 +6,7 @@
   
 `pip install scalecast`  
 
+[blog posts](#blog-posts)  
 [pseudocode](#pseudocode)  
 [estimators](#estimators)  
 [error/accuracy metrics](#error-accuracy-metrics)  
@@ -32,6 +33,12 @@
 - [examples/housing_different_levels.py](examples/housing_different_levels.py) for an example of forecasting one series at different levels
 - [housing_prices binder app](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb) for an example of forecasting 5 series at 2nd differences
 - All forecasting with auto-regressive terms uses an iterative process to fill in future values with forecasts so this can slow down the evaluation of many models but makes everything dynamic and reduces the chance of leakage
+
+## blog posts:
+1. [Part 1](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)
+2. [Part 2](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
+3. [Part 3](https://towardsdatascience.com/forecast-on-3-levels-introducing-scalecast-pt-3-eb725e0be6c9)
+4. [Bonus](https://medium.com/codex/forecasting-home-prices-in-your-zip-code-ab9be2c33d0e)
 
 ## pseudocode
 ```python
