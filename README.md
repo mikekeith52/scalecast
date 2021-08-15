@@ -992,7 +992,7 @@ f.manual_forecast(how='weighted',models='top_2',call_me='weighted')
 - `('minmax','scale',None)`
 - all Sklearn and XGBOOST models have a normalizer argument that can be optimized in `tune()`
 - `'minmax'`: MinMaxScaler from Sklearn
-- `'scale'`: Normalizer from Sklearn
+- `'scale'`: StandardScaler from Sklearn
 
 ## call_me
 - in `manual_forecast()` and `auto_forecast()` you can use the call_me parameter to specify the model nickname which is also the key stored in the object's [history](#history)
