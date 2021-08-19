@@ -602,7 +602,7 @@ f.tune()
 f.auto_forecast(call_me='ridge')
 ```
 ### grid generator
-- you can write the Grids.py file in /examples/Grid.py to your working directory using `GridGenerator.get_example_grids()`
+- you can write the Grids.py file in [/examples/Grids.py](examples/Grids.py) to your working directory using `GridGenerator.get_example_grids()`
 - you can write empty grids using `GridGenerator.get_empty_grids()`
 ```python
 from scalecast import GridGenerator
