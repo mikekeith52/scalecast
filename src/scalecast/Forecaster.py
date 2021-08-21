@@ -1,4 +1,5 @@
 import typing
+from typing import Union, Tuple
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ import warnings
 import os
 from collections import Counter
 from scipy import stats
+import sklearn
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
@@ -33,6 +35,7 @@ _metrics_ = {'r2', 'rmse', 'mape', 'mae'}
 _determine_best_by_ = {'TestSetRMSE', 'TestSetMAPE', 'TestSetMAE', 'TestSetR2', 'InSampleRMSE', 'InSampleMAPE', 'InSampleMAE',
                         'InSampleR2', 'ValidationMetricValue', 'LevelTestSetRMSE', 'LevelTestSetMAPE', 'LevelTestSetMAE',
                         'LevelTestSetR2', None}
+_normalizer_ = {'minmax','normalize','scale',None}
 _colors_ = [
     '#FFA500','#DC143C','#00FF7F','#808000','#BC8F8F','#A9A9A9',
     '#8B008B','#FF1493','#FFDAB9','#20B2AA','#7FFFD4','#A52A2A',
@@ -83,9 +86,14 @@ class Forecaster:
         return self.__str__()
 
     def _adder(self) -> None:
+        """ makes sure future periods have been specified before adding regressors
+        """
         assert len(self.future_dates) > 0,'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)'
         
     def _bank_history(self,**kwargs) -> None:
+        """ places all relevant information from the last evaluated forecast into the history dictionary attribute
+            **kwargs are passed from each model, depending on how that model uses Xvars and normalizer args
+        """
         call_me = self.call_me
         self.history[call_me] = {
             'Estimator':self.estimator,
@@ -166,37 +174,66 @@ class Forecaster:
             self.history[call_me]['LevelTestSetR2'] = self.r2
 
     def _set_summary_stats(self) -> None:
+        """ for every model where summary stats are available, saves them to a pandas dataframe where index is the regressor name
+        """
         results_summary = self.regr.summary()
         results_as_html = results_summary.tables[1].as_html()
         self.summary_stats = pd.read_html(results_as_html, header=0, index_col=0)[0]
 
     def _bank_fi_to_history(self) -> None:
+        """ for every model where ELI5 permutation feature importance can be extracted, saves that info to a pandas dataframe wehre index is the regressor name
+        """
         call_me = self.call_me
         self.history[call_me]['feature_importance'] = self.feature_importance
 
     def _bank_summary_stats_to_history(self) -> None:
+        """ saves summary stats (where available) to history
+        """
         call_me = self.call_me
         self.history[call_me]['summary_stats'] = self.summary_stats
 
-    def _parse_normalizer(self,X_train,normalizer):
+    def _parse_normalizer(self,X_train,normalizer) -> Union[sklearn.preprocessing.MinMaxScaler,sklearn.preprocessing.Normalizer,sklearn.preprocessing.StandardScaler,None]:
+        """ fits an appropriate scaler to training data that will then be applied to test and future data
+            X_train: pandas dataframe
+            normalizer: one of {'minmax','normalize','scale',None}
+                if 'minmax', uses the MinMaxScaler from sklearn.preprocessing
+                if 'scale', uses the StandardScaler from sklearn.preprocessing
+                if 'normalize', uses the Normalizer from sklearn.preprocessing
+                if None, returns None
+        """
+        assert normalizer in _normalizer_,f'normalizer must be one of {_normalizer_}, got {normalizer}'
         if normalizer == 'minmax':
-            from sklearn.preprocessing import MinMaxScaler
-            scaler = MinMaxScaler()
-            scaler.fit(X_train)
+            from sklearn.preprocessing import MinMaxScaler as Scaler
+        elif normalizer == 'normalize':
+            from sklearn.preprocessing import Normalizer as Scaler
         elif normalizer == 'scale':
-            from sklearn.preprocessing import Normalizer
-            scaler = Normalizer()
-            scaler.fit(X_train)
+            from sklearn.preprocessing import StandardScaler as Scaler
         else:
-            scaler = None
+            return None
+        scaler = Scaler()
+        scaler.fit(X_train)
         return scaler
 
-    def _train_test_split(self,X,y,test_size):
+    def _train_test_split(self,X,y,test_size) -> Tuple[np.ndarray,np.ndarray,np.ndarray,np.ndarray]:
+        """ splits data chronologically into training and testing set--the last observations in order will be used in test set
+            X: numpy array or pandas dataframe
+                regressor values
+            y: numpy array or pandas series
+                dependent-variable values
+            test_size: int (no fractional splits)
+                size of resulting test set
+        """
         from sklearn.model_selection import train_test_split
         X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=test_size,shuffle=False)
         return X_train, X_test, y_train, y_test
 
-    def _metrics(self,y,pred):
+    def _metrics(self,y,pred) -> None:
+        """ creates the following attributes: test_set_actuals, test_set_pred, rmse, r2, mae, mape
+            y: list-like
+                the actual observations
+            pred: list-like
+                the predictions of y
+        """
         self.test_set_actuals = list(y)
         self.test_set_pred = list(pred)
         self.rmse = rmse(y,pred)
@@ -204,26 +241,44 @@ class Forecaster:
         self.mae = mae(y,pred)
         self.mape = mape(y,pred)
 
-    def _tune(self):
+    def _tune(self) -> float:
+        """ reads which validation metric to use in _metrics_ and pulls that attribute value to return from function
+            deletes: 'r2','rmse','mape','mae','test_set_pred', and 'test_set_actuals' attributes if they exist
+        """
         metric = getattr(self,getattr(self,'validation_metric'))
         for attr in ('r2','rmse','mape','mae','test_set_pred','test_set_actuals'):
             delattr(self,attr)
         return metric
 
-    def _scale(self,scaler,X):
+    def _scale(self,scaler,X) -> np.ndarray:
+        """ uses scaler parsed from _parse_normalizer() function to transform matrix passed to X
+            scaler: sklearn.preprocessing.MinMaxScaler | sklearn.preprocessing.Normalizer | sklearn.preprocessing.StandardScaler | None
+            X: numpy array or pandas dataframe
+                the matrix to transform
+        """
         if not scaler is None:
             return scaler.transform(X)
         else:
             return X
 
-    def _clear_the_deck(self):
+    def _clear_the_deck(self) -> None:
+        """ deletes the following attributes to prepare a new forecast:
+            'univariate','fitted_values','regr','X','feature_importance','summary_stats','models','weights'
+        """
         for attr in ('univariate','fitted_values','regr','X','feature_importance','summary_stats','models','weights'):
             try:
                 delattr(self,attr)
             except AttributeError:
                 pass
 
-    def _prepare_sklearn(self,tune,Xvars):
+    def _prepare_sklearn(self,tune,Xvars) -> Tuple[str,list,pd.DataFrame,int]:
+        """ returns objects specific to forecasting with sklearn
+            tune: bool
+                whether the forecasting interation is for tuning the model
+            Xvars: str or None
+                if None, uses all Xvars
+                if str, uses only those Xvars
+        """
         if Xvars is None:
             Xvars = list(self.current_xreg.keys())
         if tune:
@@ -238,7 +293,25 @@ class Forecaster:
         self.Xvars = Xvars
         return Xvars, y, X, test_size
 
-    def _forecast_sklearn(self,scaler,regr,X,y,Xvars,future_dates,future_xreg,true_forecast=False):
+    def _forecast_sklearn(self,scaler,regr,X,y,Xvars,future_dates,future_xreg,true_forecast=False) -> list:
+        """ forecasts an sklearn model into the unknown
+            uses loops to dynamically plug in AR values without leaking in either a tune/test process or true forecast
+            returns a list of forecasted values
+            scaler: sklearn.preprocessing.MinMaxScaler | sklearn.preprocessing.Normalizer | sklearn.preprocessing.StandardScaler | None
+                the scaling to use on the future xreg values if not None
+            regr: sklearn model
+                the regression model to forecast with
+            X: np.ndarray
+                a matrix of regressor values
+            y: np.ndarray
+                the known dependent-variable values
+            Xvars: str or None
+                the name of the regressors to use
+                must be stored in the current_xreg and future_xreg attributes
+            true_forecast: bool, default False
+                False if testing or tuning
+                if True, saves regr, X, and fitted_values attributes
+        """
         if true_forecast:
             self._clear_the_deck()
         X = self._scale(scaler,X)
@@ -274,7 +347,22 @@ class Forecaster:
             fcst = list(regr.predict(p))
         return fcst
 
-    def _full_sklearn(self,fcster,tune,Xvars,normalizer,**kwargs):
+    def _full_sklearn(self,fcster,tune,Xvars,normalizer,**kwargs) -> Union[float,list]:
+        """ runs an sklearn forecast start-to-finish
+            the following methods are called (in order):
+                1. _prepare_sklearn()
+                2. _train_test_split()
+                3. _parse_normalizer()
+                4. _scale(X_train)
+                6. _scale(X_test)
+                7. _forecast_sklearn(true_forecast=False) on test set for metrics
+                8. _tune() if tuning the model or _forecast_sklearn(true_forecast=True) if forecasting
+            fcster: an sklearn regression model (new ones can be added beyond what is currently supported)
+            tune: bool
+            Xvars: str or None
+            normalizer: one of _normalizer_
+            **kwargs: passed to the sklearn regression model when fitting and later referenced as hyperparameters in the Forecaster object's history
+        """
         assert len(self.current_xreg.keys()) > 0,f'need at least 1 Xvar to forecast with the {self.estimator} model'
         Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars)
         X_train, X_test, y_train, y_test = self._train_test_split(X,y,test_size)
@@ -290,45 +378,85 @@ class Forecaster:
         else:
             return self._forecast_sklearn(scaler,regr,X,y,Xvars,self.future_dates,self.future_xreg.copy(),true_forecast=True)
 
-    def _forecast_mlp(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
-        """ normalizer: {'scale','minmax',None}, default 'minmax'
+    def _forecast_mlp(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ multi-level perceptron from sklearn
+            tune: bool, default False
+                whether the function is being called for tuning or forecasting
+            Xvars: str or None
+                the names of the regressors to use
+                must match names in current_xreg and future_xreg
+                if None, uses all regressors
+            normalizer: one of _normalizer_, default 'minmax'
+                the type of scaling to perform on the model inputs
+            **kwargs: passed to the regression function when fitting model
         """
         from sklearn.neural_network import MLPRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_mlr(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_mlr(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ multi-linear regression from sklearn
+            for parameters, see _forecast_mlp()
+        """
         from sklearn.linear_model import LinearRegression as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_xgboost(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_xgboost(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ xgboost from xgboost -- uses sklearn api and same as any other sklearn model
+            for parameters, see _forecast_mlp()
+        """
         from xgboost import XGBRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_lightgbm(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_lightgbm(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ lightgbm from lightgbm -- uses sklearn api and same as any other sklearn model
+            for parameters, see _forecast_mlp()
+        """
         from lightgbm import LGBMRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_gbt(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_gbt(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ gradient boosted tree from sklearn
+            for parameters, see _forecast_mlp()
+        """
         from sklearn.ensemble import GradientBoostingRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_rf(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_rf(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ random forest from sklearn
+            for parameters, see _forecast_mlp()
+        """
         from sklearn.ensemble import RandomForestRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_elasticnet(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_elasticnet(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ elasticnet from sklearn
+            for parameters, see _forecast_mlp()
+        """ 
         from sklearn.linear_model import ElasticNet as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_svr(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_svr(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ support vector machine from sklearn
+            for parameters, see _forecast_mlp()
+        """
         from sklearn.svm import SVR as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
 
-    def _forecast_knn(self,tune=False,Xvars=None,normalizer='minmax',**kwargs):
+    def _forecast_knn(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+        """ k-nearest neighbors from sklearn
+            for parameters, see _forecast_mlp()
+        """
         from sklearn.neighbors import KNeighborsRegressor as fcster
         return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
     
-    def _forecast_hwes(self,tune=False,**kwargs):
+    def _forecast_hwes(self,tune=False,**kwargs) -> Union[float,list]:
+        """ forecasts with holt-winters exponential smoothing
+            tune: bool, default False
+                whether to tune the forecast
+                if True, returns a metric
+                if False, returns a list of forecasted values
+            **kwargs passed to the HWES() function from statsmodels
+        """
         from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
         y = self.y.to_list()
         if tune:
@@ -353,8 +481,16 @@ class Forecaster:
             self._set_summary_stats()
             return list(regr.predict(start=len(y),end=len(y) + len(self.future_dates) - 1))
 
-    def _forecast_arima(self,tune=False,Xvars=None,**kwargs):
-        """ Xvars = 'all' will use all Xvars except any "AR" terms since they are special and incorporated in the model already anyway
+    def _forecast_arima(self,tune=False,Xvars=None,**kwargs) -> Union[float,list]:
+        """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX)
+            tune: bool, default False
+                whether to tune the forecast
+                if True, returns a metric
+                if False, returns a list of forecasted values
+            Xvars: str or None, default None
+                the names of the regressors to use -- must match names in current_xreg and future_xreg
+                if None, unlike sklearn model, will use no regressors
+            **kwargs passed to the ARIMA() function from statsmodels
         """
         from statsmodels.tsa.arima.model import ARIMA
         Xvars_orig = Xvars
@@ -385,8 +521,20 @@ class Forecaster:
             fcst = regr.predict(exog=p,start=len(y),end=len(y) + len(self.future_dates) - 1, typ = 'levels', dynamic = True)
             return list(fcst)
 
-    def _forecast_prophet(self,tune=False,Xvars=None,cap=None,floor=None,**kwargs):
-        """ Xvars = 'all' will use all Xvars except any "AR" terms since they are special and incorporated in the model already anyway
+    def _forecast_prophet(self,tune=False,Xvars=None,cap=None,floor=None,**kwargs) -> Union[float,list]:
+        """ forecasts with the prophet model from facebook
+            tune: bool, default False
+                whether to tune the forecast
+                if True, returns a metric
+                if False, returns a list of forecasted values
+            Xvars: str or None, default None
+                the names of the regressors to use -- must match names in current_xreg and future_xreg
+                if None, unlike sklearn model, will use no regressors
+            cap: float or None, default None
+                specific to prophet when using logistic growth -- the largest amount the model is allowed to evaluate to
+            floor: float or None, default None
+                specific to prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to
+            **kwargs passed to the Prophet() function from fbprophet
         """
         from fbprophet import Prophet
         X = pd.DataFrame({k:v for k,v in self.current_xreg.items() if not k.startswith('AR')})
@@ -427,10 +575,16 @@ class Forecaster:
             fcst = regr.predict(p)
             return fcst['yhat'].to_list()
 
-    def _forecast_silverkite(self,tune=False,Xvars=None,**kwargs):
-        """ requires:
-                pip install greykite
-            kwargs: https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html
+    def _forecast_silverkite(self,tune=False,Xvars=None,**kwargs) -> Union[float,list]:
+        """ forecasts with the silverkte model from LinkedIn greykite library
+            tune: bool, default False
+                whether to tune the forecast
+                if True, returns a metric
+                if False, returns a list of forecasted values
+            Xvars: str or None, default None
+                the names of the regressors to use -- must match names in current_xreg and future_xreg
+                if None, unlike sklearn model, will use no regressors
+            **kwargs passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config
         """
         from greykite.framework.templates.autogen.forecast_config import ForecastConfig, MetadataParam, ModelComponentsParam, EvaluationPeriodParam
         from greykite.framework.templates.forecaster import Forecaster as SKForecaster
@@ -481,7 +635,8 @@ class Forecaster:
             return result[0][-fcst_length:]
 
     def _forecast_combo(self,how='simple',models='all',determine_best_by='ValidationMetricValue',rebalance_weights=.1,weights=None,splice_points=None):
-        """ how: one of {'simple','weighted','splice'}, default 'simple'
+        """ combines at least two previously evaluted forecasts to create a new estimator
+            how: one of {'simple','weighted','splice'}, default 'simple'
                 the type of combination
                 all test lengths must be the same for all combined models
             models: 'all', starts with "top_", or list-like, default 'all'
@@ -572,7 +727,12 @@ class Forecaster:
         self.regr = None
         return fcst
 
-    def _parse_models(self,models,determine_best_by):
+    def _parse_models(self,models,determine_best_by) -> list:
+        """ takes a list-like of models and orders them best-to-worst based on a given metric and returns the ordered list (of str type)
+            models: a list-like object where each element is one of _estimators_
+            determine_best_by: one of _determine_best_by_
+                if a model does not have the metric specified here (i.e. one of the passed models wasn't tuned and this is 'ValidationMetricValue'), it will be ignored silently, so be careful
+        """
         if determine_best_by is None:
             if models[:4] == 'top_':
                 raise ValueError('cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified and not None')
@@ -597,7 +757,10 @@ class Forecaster:
                 models = [m for m in all_models if m in models]
         return models
 
-    def _diffy(self,n):
+    def _diffy(self,n) -> pd.Series:
+        """ parses the argument fed to a diffy parameter
+            n: one of {True,False,0,1,2}
+        """
         n = int(n)
         assert (n <= 2) & (n >= 0),'diffy cannot be less than 0 or greater than 2'
         y = self.y.copy()
@@ -605,13 +768,18 @@ class Forecaster:
             y = y.diff().dropna()
         return y
             
-    def infer_freq(self):
+    def infer_freq(self) -> None:
+        """ uses pandas library to infer frequency of loaded dates
+        """
         if not hasattr(self,'freq'):
             self.freq = pd.infer_freq(self.current_dates)
             self.current_dates.freq = self.freq
 
-    def fillna_y(self,how='ffill'):
-        """ how: {'backfill', 'bfill', 'pad', 'ffill', None}
+    def fillna_y(self,how='ffill') -> None:
+        """ fills null values in the y attribute
+            how: {'backfill', 'bfill', 'pad', 'ffill', 'midpoint'}
+                midpoint is unique to this library and only works if there is not more than two missing values in a row
+                all other possible arguments are from pandas.DataFrame.fillna() method and will do the same
         """
         self.y = pd.Series(self.y)
         if how != 'midpoint': # only works if there aren't more than 2 na one after another
@@ -621,21 +789,29 @@ class Forecaster:
                 if val is None:
                     self.y.values[i] = (self.y.values[i-1] + self.y.values[i+1]) / 2 
 
-    def generate_future_dates(self,n):
-        """ way to specify future forecast dates by specifying a forecast period
+    def generate_future_dates(self,n) -> None:
+        """ generates a certain amount of future dates based on an inferred frequency
+            n: int
+                number of future dates to produce
+                this will also be the forecast length
         """
         self.infer_freq()
         self.future_dates = pd.Series(pd.date_range(start=self.current_dates.values[-1],periods=n+1,freq=self.freq).values[1:])
 
-    def set_last_future_date(self,date):
-        """ way to specify future forecast dates by specifying the last desired forecasted date and letting pandas infer the dates in between
+    def set_last_future_date(self,date) -> None:
+        """ generates future dates that ends on the passed date
+            date: datetime.datetime, pandas.Timestamp, or str ('%Y-%m-%d' format)
+                the date to end on
+                the number of future generated dates will be used as the forecast length
         """
         self.infer_freq()
         if isinstance(date,str):
             date = datetime.datetime.strptime(date,'%Y-%m-%d')
         self.future_dates = pd.Series(pd.date_range(start=self.current_dates.values[-1],end=date,freq=self.freq).values[1:])
 
-    def typ_set(self):
+    def typ_set(self) -> None:
+        """ converts all objects in y, current_dates, future_dates, current_xreg, and future_xreg to appropriate types if possible
+        """
         self.y = pd.Series(self.y).dropna().astype(np.float64)
         self.current_dates = pd.to_datetime(pd.Series(list(self.current_dates)[-len(self.y):]),infer_datetime_format=True)
         assert len(self.y) == len(self.current_dates),f'y and current_dates must be same size -- y is {len(self.y)} and current_dates is {len(self.current_dates)}'
@@ -645,7 +821,13 @@ class Forecaster:
             assert len(self.current_xreg[k]) == len(self.y)
             self.future_xreg[k] = [float(x) for x in self.future_xreg[k]]
 
-    def diff(self,i=1):
+    def diff(self,i=1) -> None:
+        """ differences the y attribute, as well as all regressor values stored in current_xreg and future_xreg
+            call this after adding all desired ar terms and those terms will be differenced too
+            if you add ar terms after differencing, an error will be raised
+            i: one of {0,1,2}, default 1
+                the number of differences to take
+        """
         if hasattr(self,'first_obs'):
             raise ForecastError.CannotDiff('series has already been differenced, if you want to difference again, use undiff() first, then diff(2)')
 
@@ -668,8 +850,13 @@ class Forecaster:
         if hasattr(self,'adf_stationary'):
             delattr(self,'adf_stationary')
 
-    def integrate(self,critical_pval=0.05,train_only=False):
-        """differences the series 0, 1, or 2 times based on ADF test"""
+    def integrate(self,critical_pval=0.05,train_only=False) -> None:
+        """differences the series 0, 1, or 2 times based on ADF test
+            critical_pval: float, default 0.05
+                the p-value threshold in the statistical test to accept the alternative hypothesis
+            train_only: bool, default False
+                if True, will exclude the test set from the test (a measure added to avoid leakage)
+        """
         assert self.integration == 0,"can only run integrate() when series hasn't been differenced"
         assert isinstance(train_only,bool),'train_only must be True or False'
         res0 = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length])
@@ -684,7 +871,11 @@ class Forecaster:
         self.diff(2)
         self.adf_stationary = True
 
-    def add_ar_terms(self,n):
+    def add_ar_terms(self,n) -> None:
+        """ add auto-regressive terms to forecast with
+            n: int
+                the number of terms to add (1 to this number will be added)
+        """
         self._adder()
         assert isinstance(n,int),f'n must be an int, got {n}'
         assert n > 0,f'n must be greater than 0, got {n}'
@@ -693,9 +884,13 @@ class Forecaster:
             self.current_xreg[f'AR{i}'] = pd.Series(np.roll(self.y,i))
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
 
-    def add_AR_terms(self,N):
-        """ seasonal AR terms
+    def add_AR_terms(self,N) -> None:
+        """ add seasonal AR terms
             N: tuple of len 2 (P,m)
+                P: int
+                    the number of terms to add
+                m: int
+                    the seasonal period (12 for monthly data, etc.)
         """
         self._adder()
         assert (len(N) == 2) & (not isinstance(N,str)),f'n must be an array-like of length 2 (P,m), got {N}'
@@ -704,7 +899,18 @@ class Forecaster:
             self.current_xreg[f'AR{i}'] = pd.Series(np.roll(self.y,i))
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
 
-    def ingest_Xvars_df(self,df,date_col='Date',drop_first=False,use_future_dates=False):
+    def ingest_Xvars_df(self,df,date_col='Date',drop_first=False,use_future_dates=False) -> None:
+        """ ingest a dataframe of regressors with names (don't start anything with AR!!!)
+            all non-numeric values will be dummied
+            df: pandas.DataFrame
+            date_col: str, default 'Date'
+                the name of the date column in the dataframe (use named index only if passing this column as an index)
+            drop_first: bool, default False
+                whether to drop the first observation of any dummied variables, irrelevant if passing all numeric values
+            use_future_dates: bool, default False
+                whether to use the future dates in the dataframe as the future_dates attribute in the object
+                if False, the dataframe must have at least the same number of observations as len(future_dates)
+        """
         assert df.shape[0] == len(df[date_col].unique()), 'each date supplied must be unique'
         df[date_col] = pd.to_datetime(df[date_col]).to_list()
         df = df.loc[df[date_col] >= self.current_dates.values[0]]
@@ -727,18 +933,38 @@ class Forecaster:
             if not len(v) == len(self.future_dates):
                 warnings.warn(f'warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(future_dates)}')
 
-    def set_test_length(self,n=1):
+    def set_test_length(self,n=1) -> None:
+        """ set the length of the test set (no fractional splits)
+            n: int, default 1
+                the length of the resulting test set
+        """
         assert isinstance(n,int),f'n must be an int, got {n}'
         self.test_length=n
 
-    def set_validation_length(self,n=1):
+    def set_validation_length(self,n=1) -> None:
+        """ set the length of the validation set (no fractional splits)
+            n: int, default 1
+                the length of the resulting validation set
+        """
         assert isinstance(n,int),f'n must be an int, got {n}'
         assert n > 0,f'n must be greater than 1, got {n}'
         if (self.validation_metric == 'r2') & (n == 1):
             raise ValueError('can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()')
         self.validation_length=n
 
-    def adf_test(self,critical_pval=0.05,quiet=True,full_res=False,train_only=False,**kwargs):
+    def adf_test(self,critical_pval=0.05,quiet=True,full_res=False,train_only=False,**kwargs) -> Union[dict,bool]:
+        """ tests the stationarity of the y series using augmented dickey fuller
+            critical_pval: float, default 0.05
+                the p-value threshold in the statistical test to accept the alternative hypothesis
+            quiet: bool, default True
+                if True, prints whether the tests suggests stationary or non-stationary data
+            full_res: bool, default False
+                if True, returns a dictionary with the pvalue, evaluated statistic, and other statistical information (returns what the adfuller() function from statsmodels does)
+                if False, returns a bool that matches whether the test indicates stationarity
+            train_only: bool, default False
+                if True, will exclude the test set from the test (a measure added to avoid leakage)
+            **kwargs passed to adfuller() function from statsmodels
+        """
         assert isinstance(train_only,bool),'train_only must be True or False'
         res = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length],**kwargs)
         if not full_res:
@@ -755,16 +981,26 @@ class Forecaster:
         else:
             return res
 
-    def plot_acf(self,diffy=False,train_only=False,**kwargs):
-        """ https://www.statsmodels.org/dev/generated/statsmodels.graphics.tsaplots.plot_acf.html
+    def plot_acf(self,diffy=False,train_only=False,**kwargs) -> plt:
+        """ plots an autocorrelation function of the y values
+            diffy: one of {True,False,0,1,2}, default False
+                whether to difference the data and how many times before passing the values to the function
+            train_only: bool, default False
+                if True, will exclude the test set from the test (a measure added to avoid leakage)
+            **kwargs passed to plot_acf() function from statsmodels
         """
         assert isinstance(train_only,bool),'train_only must be True or False'
         y = self._diffy(diffy)
         y = y.values if not train_only else y.values[:-self.test_length]
         return plot_acf(y,**kwargs)
 
-    def plot_pacf(self,diffy=False,train_only=False,**kwargs):
-        """ https://www.statsmodels.org/dev/generated/statsmodels.graphics.tsaplots.plot_pacf.html
+    def plot_pacf(self,diffy=False,train_only=False,**kwargs) -> plt:
+        """ plots a partial autocorrelation function of the y values
+            diffy: one of {True,False,0,1,2}, default False
+                whether to difference the data and how many times before passing the values to the function
+            train_only: bool, default False
+                if True, will exclude the test set from the test (a measure added to avoid leakage)
+            **kwargs passed to plot_pacf() function from statsmodels
         """
         assert isinstance(train_only,bool),'train_only must be True or False'
         y = self._diffy(diffy)
@@ -772,7 +1008,11 @@ class Forecaster:
         return plot_pacf(y,**kwargs)
 
     def plot_periodogram(self,diffy=False,train_only=False):
-        """ https://www.statsmodels.org/0.8.0/generated/statsmodels.tsa.stattools.periodogram.html
+        """ plots a periodogram of the y values (comes from scipy.signal)
+            diffy: one of {True,False,0,1,2}, default False
+                whether to difference the data and how many times before passing the values to the function
+            train_only: bool, default False
+                if True, will exclude the test set from the test (a measure added to avoid leakage)
         """
         from scipy.signal import periodogram
         assert isinstance(train_only,bool),'train_only must be True or False'
@@ -781,7 +1021,12 @@ class Forecaster:
         return periodogram(y)
 
     def seasonal_decompose(self,diffy=False,train_only=False,**kwargs):
-        """ https://www.statsmodels.org/stable/generated/statsmodels.tsa.seasonal.seasonal_decompose.html
+        """ plots a signal/seasonal decomposition of the y values
+            diffy: one of {True,False,0,1,2}, default False
+                whether to difference the data and how many times before passing the values to the function
+            train_only: bool, default False
+                if True, will exclude the test set from the test (a measure added to avoid leakage)
+            **kwargs passed to seasonal_decompose() function from statsmodels
         """
         assert isinstance(train_only,bool),'train_only must be True or False'
         self.infer_freq()
@@ -792,7 +1037,20 @@ class Forecaster:
         X.index.freq = self.freq
         return seasonal_decompose(X.dropna(),**kwargs)
 
-    def add_seasonal_regressors(self,*args,raw=True,sincos=False,dummy=False,drop_first=False):
+    def add_seasonal_regressors(self,*args,raw=True,sincos=False,dummy=False,drop_first=False) -> None:
+        """ adds seasonal regressors to the object
+            *args: each of str type
+                values that return a series of int type from pandas.dt and pandas.dt.isocalendar()
+            raw: bool, default True
+                whether to use the raw integer values
+            sincos: bool, default False
+                whether to use a sin/cos transformation of the raw integer values (estimates the cycle based on the max observed value)
+            dummy: bool, default False
+                whether to use dummy variables from the raw int values
+            drop_first: bool, default False
+                whether to drop the first observed dummy level (saves a degree of freedom when model estimates an intercept)
+                not relevant when dummy = False
+        """
         self._adder()
         if not (raw|sincos|dummy):
             raise ValueError('at least one of raw, sincos, dummy must be True')
@@ -836,13 +1094,23 @@ class Forecaster:
                 for c in [d for d in all_dummies if d not in self.future_xreg.keys()]:
                     self.future_xreg[c] = [0]*len(self.future_dates)
 
-    def add_time_trend(self,called='t'):
+    def add_time_trend(self,called='t') -> None:
+        """ adds a time trend from 0 to len(current_dates) + len(future_dates)
+            called: str, default 't'
+                what to call the resulting variable
+        """
         self._adder()
         self.current_xreg[called] = pd.Series(range(len(self.y)))
         self.future_xreg[called] = list(range(len(self.y) + 1,len(self.y) + 1 + len(self.future_dates)))
         assert len(self.future_xreg[called]) == len(self.future_dates)
 
-    def add_other_regressor(self,called,start,end):
+    def add_other_regressor(self,called,start,end) -> None:
+        """ adds dummy variable that is 1 during the specified time period, 0 otherwise
+            called: str
+                what to call the resulting variable
+            start: str, datetime, or pd.Timestamp object
+            end: str, datetime, or pd.Timestamp object
+        """
         self._adder()
         if isinstance(start,str):
             start = datetime.datetime.strptime(start,'%Y-%m-%d')
@@ -851,11 +1119,26 @@ class Forecaster:
         self.current_xreg[called] = pd.Series([1 if (x >= start) & (x <= end) else 0 for x in self.current_dates])
         self.future_xreg[called] = [1 if (x >= start) & (x <= end) else 0 for x in self.future_dates]
 
-    def add_covid19_regressor(self,called='COVID19',start=datetime.datetime(2020,3,15),end=datetime.datetime(2021,5,13)): # default is from when disney world closed to the end of the national (USA) mask mandate
+    def add_covid19_regressor(self,called='COVID19',start=datetime.datetime(2020,3,15),end=datetime.datetime(2021,5,13)) -> None: # default is from when disney world closed to the end of the national (USA) mask mandate
+        """ adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise
+            called str, default 'COVID19'
+               what to call the resulting variable
+            start: str, datetime, or pd.Timestamp object, default datetime.datetime(2020,3,15)
+                the start date (default is day Walt Disney World closed in the U.S.)
+                use format yyyy-mm-dd when passing strings
+           end: str, datetime, or pd.Timestamp object, default datetime.datetime(2021,5,13)
+               the end date (default is day the U.S. CDC dropped mask mandate/recommendation for vaccinated people)
+                use format yyyy-mm-dd when passing strings
+        """
         self._adder()
         self.add_other_regressor(called=called,start=start,end=end)
 
-    def add_combo_regressors(self,*args,sep='_'):
+    def add_combo_regressors(self,*args,sep='_') -> None:
+        """ combines all passed variables by multiplying their values together
+            *args: names of Xvars that aleady exist in the object
+            sep: str, default '_'
+                the separator between each term in arg to create the final variable name 
+        """
         self._adder()
         assert len(args) > 1,'need at least two variables to combine regressors'
         for i,a in enumerate(args):
@@ -867,7 +1150,14 @@ class Forecaster:
                 self.current_xreg[sep.join(args)] = pd.Series([a*b for a, b in zip(self.current_xreg[sep.join(args)],self.current_xreg[a])])
                 self.future_xreg[sep.join(args)] = [a*b for a, b in zip(self.future_xreg[sep.join(args)],self.future_xreg[a])]
 
-    def add_poly_terms(self,*args,pwr=2,sep='^'):
+    def add_poly_terms(self,*args,pwr=2,sep='^') -> None:
+        """ rases all passed variables to exponential powers
+            *args: names of Xvars that aleady exist in the object
+            pwr: int, default 2:
+                the max power to add to each term in args (2 to this number will be added)
+            sep: str, default '_'
+                the separator between each term in arg to create the final variable name 
+        """
         self._adder()
         for a in args:
             assert not a.startswith('AR'),'no polynomial AR terms at this time -- it confuses the forecasting mechanism'
@@ -875,9 +1165,10 @@ class Forecaster:
                 self.current_xreg[f'{a}{sep}{i}'] = self.current_xreg[a]**i
                 self.future_xreg[f'{a}{sep}{i}'] = [x**i for x in self.future_xreg[a]]
 
-    def undiff(self,suppress_error=False):
-        """ always drops all regressors (to make sure lengths are right) -- just re-add them if you still want them
-            if the series hasn't been differenced yet, will do nothing else except raise an error -- in this case, use suppress_error to control exceptions
+    def undiff(self,suppress_error=False) -> None:
+        """ undifferences y to original level and drops all regressors (such as AR terms)
+            suppress_error: bool, default False
+                whether to suppress an error that gets raised if the series was never differenced
         """
         self.typ_set()
         if self.integration == 0:
@@ -911,8 +1202,10 @@ class Forecaster:
         if hasattr(self,'adf_stationary'):
             delattr(self,'adf_stationary')
         
-    def set_estimator(self,estimator):
-        """estimator: one of _estimators_"""
+    def set_estimator(self,estimator) -> None:
+        """ sets the estimator to forecast with
+            estimator: one of _estimators_
+        """
         assert estimator in _estimators_,f'estimator must be one of {_estimators_}, got {estimator}'
         self.typ_set()
         if hasattr(self,'estimator'):
@@ -924,7 +1217,12 @@ class Forecaster:
         else:
             self.estimator = estimator
 
-    def ingest_grid(self,grid):
+    def ingest_grid(self,grid) -> None:
+        """ ingests a grid to tune the estimator
+            grid: dict or str
+                if dict, must be a user-created grid
+                if str, must match the name of a dict grid stored in Grids.py
+        """
         from itertools import product
         expand_grid = lambda d: pd.DataFrame([row for row in product(*d.values())],columns=d.keys())
         if isinstance(grid,str):
@@ -933,7 +1231,12 @@ class Forecaster:
         grid = expand_grid(grid)
         self.grid = grid
 
-    def limit_grid_size(self,n):
+    def limit_grid_size(self,n) -> None:
+        """ makes a grid smaller randomly
+            n: int or float
+                if int, randomly selects that many parameter combinations
+                if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations
+        """
         if n >= 1:
             self.grid = self.grid.sample(n=min(n,self.grid.shape[0])).reset_index(drop=True)
         elif (n < 1) & (n > 0):
@@ -941,13 +1244,20 @@ class Forecaster:
         else:
             raise ValueError(f'argment passed to n not usable: {n}')
 
-    def set_validation_metric(self,metric='rmse'):
+    def set_validation_metric(self,metric='rmse') -> None:
+        """ sets the metric that will be used to tune all subsequent models
+            not a good idea to change this if you are planning to combo model as weird things could happen
+            metric: one of _metrics_
+        """
         assert metric in _metrics_,f'metric must be one of {_metrics_}, got {metric}'
         if (metric == 'r2') & (self.validation_length < 2):
             raise ValueError('can only validate with r2 if the validation length is at least 2, try set_validation_length()')
         self.validation_metric = metric
 
-    def tune(self):
+    def tune(self) -> None:
+        """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as the estimator by default)
+            any parameters you can pass as **kwargs to manual_forecast() can be tuned with this process
+        """
         if not hasattr(self,'grid'):
             try:
                 self.ingest_grid(self.estimator)
@@ -990,14 +1300,25 @@ class Forecaster:
             warnings.warn(f'none of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model')
             self.best_params = {}
 
-    def manual_forecast(self,call_me=None,**kwargs):
+    def manual_forecast(self,call_me=None,**kwargs) -> None:
+        """ manually forecast with your own hyperparameters, Xvars, and normalizer selection passed as keywoords
+            call_me: str or None, default None
+                what to call the model when storing it in the object's history dictionary
+                duplicated names will be overwritten with the most recently called model
+            **kwargs are passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
+        """
         call_me = self.estimator if call_me is None else call_me
         assert isinstance(call_me,str),'call_me must be a str type or None'
         self.forecast = getattr(self,f'_forecast_{self.estimator}')(**kwargs)
         self.call_me = call_me
         self._bank_history(auto=False,**kwargs)
 
-    def auto_forecast(self,call_me=None):
+    def auto_forecast(self,call_me=None) -> None:
+        """ auto forecst with the best parameters indicated from the tuning process
+            call_me: str or None, default None
+                what to call the model when storing it in the object's history dictionary
+                duplicated names will be overwritten with the most recently called model
+        """
         call_me = self.estimator if call_me is None else call_me
         assert isinstance(call_me,str),'call_me must be a str type or None'
         if not hasattr(self,'best_params'):
@@ -1007,7 +1328,15 @@ class Forecaster:
         self.call_me = call_me
         self._bank_history(auto=len(self.best_params.keys()) > 0,**self.best_params)
 
-    def tune_test_forecast(self,models,summary_stats=False,feature_importance=False):
+    def tune_test_forecast(self,models,summary_stats=False,feature_importance=False) -> None:
+        """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information
+            models: list-like
+                each element must match an element in _estimators_ (except "combo", which cannot be tuned)
+            summary_stats: bool, default False
+                whether to save summary stats for the models that offer those
+            feature_importance: bool, default False
+                whether to save permutation feature importance information for the models that offer those
+        """
         assert len([m for m in models if m not in _estimators_]) == 0,f'all models passed to models argument most be one of {_estimators_}'
         assert os.path.isfile('./Grids.py'),'Grids.py not found in working directory'
         for m in models:
@@ -1020,7 +1349,12 @@ class Forecaster:
             if feature_importance:
                 self.save_feature_importance()
 
-    def save_feature_importance(self,quiet=True):
+    def save_feature_importance(self,quiet=True) -> None:
+        """ save feature info for models that offer it
+            will not raise errors if not available
+            quiet: bool, default True
+                whether to not print a message when feature importance is not available
+        """
         import eli5
         from eli5.sklearn import PermutationImportance
         try:
@@ -1031,13 +1365,23 @@ class Forecaster:
         self.feature_importance = eli5.explain_weights_df(perm,feature_names=self.history[self.call_me]['Xvars']).set_index('feature')
         self._bank_fi_to_history()
 
-    def save_summary_stats(self,quiet=True):
+    def save_summary_stats(self,quiet=True) -> None:
+        """ save summary stats for models that offer it
+            will not raise errors if not available
+            quiet: bool, default True
+                whether to not print a message when feature importance is not available
+        """
         if not hasattr(self,'summary_stats'):
             if not quiet: print('last model run does not have summary stats')
             return
         self._bank_summary_stats_to_history()
 
-    def keep_smaller_history(self,n):
+    def keep_smaller_history(self,n) -> None:
+        """ cuts the amount of observations in the object (trims the current_dates and current_xreg attributes as well)
+            n: int, str in '%Y-%m-%d' format, or datetime object
+                if int, the number of observations to keep
+                otherwise, the last observation to keep 
+        """
         if isinstance(n,str):
             n = datetime.datetime.strptime(n,'%Y-%m-%d')
         if (type(n) is datetime.datetime) or (type(n) is pd.Timestamp):
@@ -1048,19 +1392,27 @@ class Forecaster:
         for k, v in self.current_xreg.items():
             self.current_xreg[k] = v[-n:]
 
-    def order_fcsts(self,models,determine_best_by='TestSetRMSE'):
+    def order_fcsts(self,models,determine_best_by='TestSetRMSE') -> list:
+        """ returns a list of estiamated forecasts from best-to-worst
+            models: list-like
+                each element must match an element in _estimators_ (except "combo", which cannot be tuned)
+            determine_best_by: one of _determine_best_by_
+        """
         assert determine_best_by in _determine_best_by_,f'determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}'
         models_metrics = {m:self.history[m][determine_best_by] for m in models}
         x = [h[0] for h in Counter(models_metrics).most_common()]
         return x if (determine_best_by.endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) else x[::-1]
 
-    def get_regressor_names(self):
+    def get_regressor_names(self) -> list:
+        """returns a lit of regressor names stored in the object"""
         return [k for k in self.current_xreg.keys()]
 
-    def get_freq(self):
+    def get_freq(self) -> str:
+        """returns the pandas inferred date frequency"""
         return self.freq
 
-    def validate_regressor_names(self):
+    def validate_regressor_names(self) -> None:
+        """validates that all regressor names exist in both current_xregs and future_xregs"""
         try:
             assert sorted(self.current_xreg.keys()) == sorted(self.future_xreg.keys())
         except AssertionError:
@@ -1068,7 +1420,20 @@ class Forecaster:
             case2 = [k for k in self.future_xreg.keys() if k not in self.current_xreg.keys()]
             raise ValueError(f'the following regressors are in current_xreg but not future_xreg: {case1}\nthe following regressors are in future_xreg but not current_xreg {case2}')
 
-    def plot(self,models='all',order_by=None,level=False,print_attr=[]):
+    def plot(self,models='all',order_by=None,level=False,print_attr=[]) -> None:
+        """ plots all forecasts with the actuals, or just actuals if no forecasts available
+            models: list-like or str, default 'all'
+               the forecated models to plot
+               can start with "top_" and the metric specified in order_by will be used to order the models appropriately
+            order_by: one of _determine_best_by_, default None
+            level: bool, default False
+                if True, will always plot level forecasts
+                if False, will plot the forecasts at whatever level they were called on
+                if False and there are a mix of models passed with different integrations, will default to True
+            print_attr: list-like, default []
+                attributes from history dict to print to console
+                if the attribute doesn't exist for a passed model, will not raise error, will just skip that element
+        """
         try:
             models = self._parse_models(models,order_by)
         except ValueError:
@@ -1110,7 +1475,22 @@ class Forecaster:
         plt.title('Forecast Results')
         plt.show()
 
-    def plot_test_set(self,models='all',order_by=None,include_train=True,level=False):
+    def plot_test_set(self,models='all',order_by=None,include_train=True,level=False) -> None:
+        """ plots all test-set predictions with the actuals
+            models: list-like or str, default 'all'
+               the forecated models to plot
+               can start with "top_" and the metric specified in order_by will be used to order the models appropriately
+            order_by: one of _determine_best_by_, default None
+            include_train: bool or int, default True
+                use to zoom into training results
+                if True, plots the test results with the entire history in y
+                if False, matches y history to test results and only plots this
+                if int, plots that length of y to match to test results
+            level: bool, default False
+                if True, will always plot level forecasts
+                if False, will plot the forecasts at whatever level they were called on
+                if False and there are a mix of models passed with different integrations, will default to True
+        """
         models = self._parse_models(models,order_by)
         integration = set([d['Integration'] for m,d in self.history.items() if m in models])
         if len(integration) > 1:
@@ -1149,7 +1529,13 @@ class Forecaster:
         plt.title('Test Set Results')
         plt.show()
         
-    def plot_fitted(self,models='all',order_by=None):
+    def plot_fitted(self,models='all',order_by=None) -> None:
+        """ plots all fitted values with the actuals
+            models: list-like or str, default 'all'
+               the forecated models to plot
+               can start with "top_" and the metric specified in order_by will be used to order the models appropriately
+            order_by: one of _determine_best_by_, default None
+        """
         models = self._parse_models(models,order_by)
         integration = set([d['Integration'] for m,d in self.history.items() if m in models])
         if len(integration) > 1:
@@ -1176,12 +1562,18 @@ class Forecaster:
         plt.title('Fitted Values')
         plt.show()
 
-    def drop_regressors(self,*args):
+    def drop_regressors(self,*args) -> None:
+        """ drops regressors
+            *args are names of regressors to drop
+        """
         for a in args:
             self.current_xreg.pop(a)
             self.future_xreg.pop(a)
 
-    def pop(self,*args):
+    def pop(self,*args) -> None:
+        """ pops evaluated forecasts from the history dictionary
+            *args names of models matching what was passed to call_me (default is the same as the estimator name)
+        """
         for a in args:
             self.history.pop(a)
 
@@ -1192,7 +1584,26 @@ class Forecaster:
                determine_best_by='TestSetRMSE',
                to_excel=False,
                out_path='./',
-               excel_name='results.xlsx'):
+               excel_name='results.xlsx') -> Union[dict,pd.DataFrame]:
+        """ exports 1-all of 5 pandas dataframes, can write to excel with each dataframe on a separate sheet
+            will return either a dictionary with dataframes as values or a single dataframe if only one df is specified
+            dfs: list-like or str, default ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_fcsts']
+                a list or name of the specific dataframe(s) you want returned and/or written to excel
+                must be one of default
+            models: list-like or str, default 'all'
+                the models to write information for
+                can start with "top_" and the metric specified in `determine_best_by` will be used to order the models appropriately
+            best_model: str, default 'auto'
+                the name of the best model, if "auto", will determine this by the metric in determine_best_by
+                if not "auto", must match a model nickname of an already-evaluated model
+            determine_best_by: one of _determine_best_by_, default 'TestSetRMSE'
+            to_excel: bool, default False
+                whether to save to excel
+            out_path: str, default './'
+                the path to save the excel file to (ignored when `to_excel=False`)
+            excel_name: str, default 'results.xlsx'
+                the name to call the excel file (ignored when `to_excel=False`)
+        """
         if isinstance(dfs,str):
             dfs = [dfs]
         else:
@@ -1290,16 +1701,38 @@ class Forecaster:
         else:
             return output
 
-    def export_summary_stats(self,model):
+    def export_summary_stats(self,model) -> pd.DataFrame:
+        """ exports the summary stats from a model
+            raises an error if you never saved the model's summary stats
+            model: str
+                the name of them model to export for, matches what was passed to call_me when calling the forecast (default is estimator name)
+        """
         return self.history[model]['summary_stats']
 
-    def export_feature_importance(self,model):
+    def export_feature_importance(self,model) -> pd.DataFrame:
+        """ exports the feature importance from a model
+            raises an error if you never saved the model's feature importance
+            model: str
+                the name of them model to export for, matches what was passed to call_me when calling the forecast (default is estimator name)
+        """
         return self.history[model]['feature_importance']
 
-    def export_validation_grid(self,model):
+    def export_validation_grid(self,model) -> pd.DataFrame:
+        """ exports the validation from a model
+            raises an error if you never tuned the model
+            model: str
+                the name of them model to export for, matches what was passed to call_me when calling the forecast (default is estimator name)
+        """
         return self.history[model]['grid_evaluated']
 
-    def all_feature_info_to_excel(self,out_path='./',excel_name='feature_info.xlsx'):
+    def all_feature_info_to_excel(self,out_path='./',excel_name='feature_info.xlsx') -> None:
+        """ saves all feature importance and summary stats to excel
+            each model where such info is available for gets its own tab
+            out_path: str, default './'
+                the path to export to
+            excel_name: str, default 'feature_info.xlsx'
+                the name of the resulting excel file
+        """
         with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
             for m in self.history.keys():
                 if 'summary_stats' in self.history[m].keys():
@@ -1307,8 +1740,22 @@ class Forecaster:
                 elif 'feature_importance' in self.history[m].keys():
                     self.history[m]['feature_importance'].to_excel(writer,sheet_name=f'{m}_feature_importance')
 
-    def all_validation_grids_to_excel(self,out_path='./',excel_name='validation_grids.xlsx'):
+    def all_validation_grids_to_excel(self,out_path='./',excel_name='validation_grids.xlsx') -> None:
+        """ saves all validation grids to excel
+            each model where such info is available for gets its own tab
+            out_path: str, default './'
+                the path to export to
+            excel_name: str, default 'feature_info.xlsx'
+                the name of the resulting excel file
+        """
         with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
             for m in self.history.keys():
                 if 'grid_evaluated' in self.history[m].keys():
                     self.history[m]['grid_evaluated'].to_excel(writer,sheet_name=m)
+
+    def reset(self) -> None:
+        """ drops all regressors and reverts object to original (level) state when initiated
+        """
+        self.undiff(suppress_error=True)
+        self.current_xreg = {}
+        self.future_xreg = {}

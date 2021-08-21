@@ -5,9 +5,9 @@ arima = {
 }
 
 elasticnet = {
-	'alpha':[i/10 for i in range(1,101)],
+	'alpha':[i/10 for i in range(1,21)],
 	'l1_ratio':[0,0.25,0.5,0.75,1],
-	'normalizer':['scale','minmax',None]
+	'normalizer':['scale','minmax','normalize',None]
 }
 
 gbt = {
@@ -34,12 +34,12 @@ mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],
 	'solver':['lbfgs','adam'],
-	'normalizer':['scale','minmax',None],
+	'normalizer':['scale','minmax','normalize',None],
 	'random_state':[20]
 }
 
 mlr = {
-	'normalizer':['scale','minmax',None]
+	'normalizer':['scale','minmax','normalize',None]
 }
 
 prophet = {

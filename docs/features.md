@@ -1,0 +1,13 @@
+## feature analysis
+- the following models have `eli5` feature importance attributes that can be saved to the history as dataframes
+  - `'mlr', 'mlp', 'gbt', 'xgboost', 'rf', 'elasticnet', 'svr', 'knn', 'lightgbm'`
+- the following models have summary stats:
+  - `'arima', 'hwes', 'silverkite'`
+- you can save these to history (run right after a forecast is created):
+  - `Forecaster.save_feature_importance()`
+  - `Forecaster.save_summary_stats()`
+    - does not raise error if the last model run does not support feature importance/summary stats so that it won't break loops
+  - `Forecaster.export_feature_importance(model)`
+  - `Forecaster.export_summary_stats(model)`
+    - model should match what is passed to `call_me`)
+- you can also save them using `tune_test_forecast(models,feature_importance=True,summary_stats=True)`

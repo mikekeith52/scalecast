@@ -3,10 +3,9 @@ from setuptools import setup, find_packages
 
 setup(
   name = 'SCALECAST',
-  version = '0.2.6',
-  license='MIT',        # https://help.github.com/articles/licensing-a-repository
-  short_description = 'A flexible, minimal-code forecasting object.',
-  long_description='See the full documentation on [GitHub](https://github.com/mikekeith52/scalecast).',
+  version = '0.2.7',
+  license='MIT',
+  long_description='See the documentation on [GitHub](https://github.com/mikekeith52/scalecast).',
   long_description_content_type='text/markdown',
   author = 'Michael Keith',
   author_email = 'mikekeith52@gmail.com',
