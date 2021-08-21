@@ -45,7 +45,7 @@ All notable changes to this project will be documented in this file. We keep tra
 ### Fixed
 - fixed issues with two-level undifferencing where it was adding values exponentially because the level was being added to the first and second-level differences
 - fixed issues with two-level undifferencing where dates were being mixed up
-- fixed issues with one-level test-set evaluation where the incorrect initial value was set to undifference the values, causing miscalculation of metrics, although the bias was in both directions so when rerunning avocados.ipynb, for example, the results were virtually the same with different models now outperforming others but metrics remaining more or less the same on average
+- fixed issues with one-level test-set evaluation where the incorrect initial value was set to undifference values in the test-set only, causing miscalculation of metrics, although the bias was in both directions so when rerunning avocados.ipynb, for example, the results were virtually the same with different models now outperforming others but metrics remaining more or less the same on average; forecasted values did not change
 
 ## [0.1.9] - 2021-07-09
 
