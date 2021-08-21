@@ -1,3 +1,4 @@
+CODE_OF_CONDUCT.md
 MANIFEST
 README.md
 license.txt
@@ -8,6 +9,9 @@ __pycache__/Forecaster.cpython-37.pyc
 __pycache__/Forecaster.cpython-38.pyc
 __pycache__/Grids.cpython-37.pyc
 __pycache__/Grids.cpython-38.pyc
+assets/logo1.png
+assets/logo2.png
+assets/main_forecast.png
 assets/plot.png
 assets/plot_acf.png
 assets/plot_different_levels.png
@@ -39,7 +43,20 @@ assets/pt3/fitted.png
 assets/pt3/fitted_level.png
 assets/pt3/forecast.png
 assets/pt3/test_set.png
-dist/SCALECAST-0.2.5.tar.gz
+dist/SCALECAST-0.2.6.tar.gz
+docs/call_me_history.md
+docs/change_log.md
+docs/estimators.md
+docs/export.md
+docs/features.md
+docs/levels.md
+docs/metrics.md
+docs/normalizer.md
+docs/plotting.md
+docs/tune.md
+docs/warnings.md
+docs/weighted.md
+docs/xvars.md
 examples/Grids.py
 examples/README.md
 examples/avocado.csv
@@ -48,7 +65,9 @@ examples/avocado_results.pckl
 examples/avocados.ipynb
 examples/housing.py
 examples/housing_different_levels.py
+examples/housing_different_levels_feature_info.xlsx
 examples/housing_different_levels_results.xlsx
+examples/housing_feature_info.xlsx
 examples/housing_results.xlsx
 examples/warnings.log
 examples/.ipynb_checkpoints/avocados-checkpoint.ipynb
