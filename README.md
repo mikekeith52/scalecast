@@ -54,7 +54,7 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the forecast
 
 ## Contribute
 **The following contributions are needed (contact mikekeith52@gmail.com)**
-1. Documentation moved to a proper website with better organization5
+1. Documentation moved to a proper website with better organization
 2. Confidence intervals for all models (need to be consistently derived and able to toggle on/off or at different levels (95%, 80%, etc.)
 3. More built-in feature analysis
 4. More examples, blog posts, and getting the word out
