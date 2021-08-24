@@ -44,7 +44,7 @@ f.auto_forecast()
 ```
 
 ### Grids.py
-- instead of placing grids inside your code, you can create, copy/paste, or use [GridGenerator][#grid-generator] functions to place a file called Grids.py to store your grids in the working directory and they will be read in automatically
+- instead of placing grids inside your code, you can create, copy/paste, or use [GridGenerator](#grid-generator) functions to place a file called Grids.py to store your grids in the working directory and they will be read in automatically
 - you can pass the name of the grid as str to `ingest_grid()` but you can also skip straight to `tune()` and it will automatically search for a grid in Grids.py with the same name as the estimator
 ```python
 # Grids.py
