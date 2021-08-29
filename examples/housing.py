@@ -36,7 +36,6 @@ f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # dates are flexible, default is from when disney world closed to when US CDC lifted mask recommendations
 f.add_time_trend()
 f.add_combo_regressors('t','COVID19') # multiplies regressors together
-f.add_poly_terms('t',pwr=3) # by default, creates an order 2 regressor, n-order polynomial terms are allowed
 f.set_validation_length(6) # length, different than test_length, to tune the hyperparameters 
 f.tune_test_forecast(models,feature_importance=True,summary_stats=True)
 

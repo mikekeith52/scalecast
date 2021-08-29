@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.2.8] - 2021-08-27
+### Added
+- Added a descriptive error when all_feature_info_to_excel() or all_validation_grids_to_excel() fails
+### Changed
+- Using pd.shift() instead of np.roll() to create AR terms to avoid further issues with AR terms
+- Prophet, silverkite, and ARIMA have better Xvar validation mechanisms to ensure that autoregressive terms aren't fed to them, which could cause errors and doesn't add anything to the models that isn't already built into them. Now, even if a user tries to feed AR terms only, it will pass no Xvars to these models
+### Fixed
+- AR terms were not dropping the correct first observations before being estimated with SKLEARN models, so we fixed that but it didn't seem to make a noticeable difference in any of the examples 
+
 ## [0.2.7] - 2021-08-20
 ### Added
 - added reset() function that deletes all regressors and resets the object to how it was initiated
@@ -48,7 +57,6 @@ All notable changes to this project will be documented in this file. We keep tra
 - fixed issues with one-level test-set evaluation where the incorrect initial value was set to undifference values in the test-set only, causing miscalculation of metrics, although the bias was in both directions so when rerunning avocados.ipynb, for example, the results were virtually the same with different models now outperforming others but metrics remaining more or less the same on average; forecasted values did not change
 
 ## [0.1.9] - 2021-07-09
-
 ### Added
 - added lightgbm and silverkite as estimators
 ### Changed
@@ -57,9 +65,7 @@ All notable changes to this project will be documented in this file. We keep tra
 ### Fixed
 
 ## [0.1.8] - 2021-07-05
-
 ### Added
 ### Changed
 ### Fixed
 - fixed an error in combo modeling that was causing incorrect applications of weights in weighted averaging -- the weights were generating correctly but not being applied to the best-performing models in the correct order
-

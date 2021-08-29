@@ -43,7 +43,6 @@ assets/pt3/fitted.png
 assets/pt3/fitted_level.png
 assets/pt3/forecast.png
 assets/pt3/test_set.png
-dist/SCALECAST-0.2.6.tar.gz
 docs/call_me_history.md
 docs/change_log.md
 docs/estimators.md

@@ -13,7 +13,7 @@ elasticnet = {
 
 gbt = {
 	'max_depth':[2,3],
-	'n_estimators':[100,500]
+    'max_features':['sqrt',None]
 }
 
 hwes = {
@@ -28,14 +28,15 @@ knn = {
 }
 
 lightgbm = {
-	'max_depth':[i for i in range(5)] + [-1]
+	'max_depth':[-1,2,3],
+    'subsample':[.5,.75,1]
 }
 
 mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],
 	'solver':['lbfgs','adam'],
-	'normalizer':['scale','minmax','normalize',None],
+	'normalizer':['scale','minmax',None],
 	'random_state':[20]
 }
 
@@ -63,7 +64,8 @@ svr={
 }
 
 xgboost = {
-	'max_depth':[2,3,4,5,6]
+	'max_depth':[2,3],
+    'subsample':[.5,.75,1]
 }
 """
 

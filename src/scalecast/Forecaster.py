@@ -111,10 +111,10 @@ class Forecaster:
             'TestSetR2':self.r2,
             'TestSetPredictions':self.test_set_pred[:],
             'TestSetActuals':self.test_set_actuals[:],
-            'InSampleRMSE':rmse(self.y.values,self.fitted_values),
-            'InSampleMAPE':mape(self.y.values,self.fitted_values),
-            'InSampleMAE':mae(self.y.values,self.fitted_values),
-            'InSampleR2':r2(self.y.values,self.fitted_values),
+            'InSampleRMSE':rmse(self.y.values[-len(self.fitted_values):],self.fitted_values),
+            'InSampleMAPE':mape(self.y.values[-len(self.fitted_values):],self.fitted_values),
+            'InSampleMAE':mae(self.y.values[-len(self.fitted_values):],self.fitted_values),
+            'InSampleR2':r2(self.y.values[-len(self.fitted_values):],self.fitted_values),
         }
 
         if kwargs['auto']:
@@ -271,7 +271,7 @@ class Forecaster:
             except AttributeError:
                 pass
 
-    def _prepare_sklearn(self,tune,Xvars) -> Tuple[str,list,pd.DataFrame,int]:
+    def _prepare_sklearn(self,tune,Xvars,y,current_xreg) -> Tuple[str,list,pd.DataFrame,int]:
         """ returns objects specific to forecasting with sklearn
             tune: bool
                 whether the forecasting interation is for tuning the model
@@ -280,14 +280,14 @@ class Forecaster:
                 if str, uses only those Xvars
         """
         if Xvars is None:
-            Xvars = list(self.current_xreg.keys())
+            Xvars = list(current_xreg.keys())
         if tune:
-            y = self.y.to_list()[:-self.test_length]
-            X = pd.DataFrame({k:v.to_list() for k, v in self.current_xreg.items()}).iloc[:-self.test_length,:]
+            y = list(y)[:-self.test_length]
+            X = pd.DataFrame({k:list(v) for k, v in current_xreg.items()}).iloc[:-self.test_length,:]
             test_size = self.validation_length
         else:
-            y = self.y.to_list()
-            X = pd.DataFrame({k:v.to_list() for k, v in self.current_xreg.items()})
+            y = list(y)
+            X = pd.DataFrame({k:list(v) for k, v in current_xreg.items()})
             test_size = self.test_length
         X = X[Xvars]
         self.Xvars = Xvars
@@ -349,6 +349,7 @@ class Forecaster:
 
     def _full_sklearn(self,fcster,tune,Xvars,normalizer,**kwargs) -> Union[float,list]:
         """ runs an sklearn forecast start-to-finish
+            drops n/a AR observations
             the following methods are called (in order):
                 1. _prepare_sklearn()
                 2. _train_test_split()
@@ -364,7 +365,11 @@ class Forecaster:
             **kwargs: passed to the sklearn regression model when fitting and later referenced as hyperparameters in the Forecaster object's history
         """
         assert len(self.current_xreg.keys()) > 0,f'need at least 1 Xvar to forecast with the {self.estimator} model'
-        Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars)
+        ars = [int(x[2:]) for x in self.current_xreg.keys() if x.startswith('AR')]
+        obs_to_drop = max(ars) if len(ars) > 0 else 0
+        y = self.y.values[obs_to_drop:]
+        current_xreg = {xvar:x.values[obs_to_drop:] for xvar,x in self.current_xreg.items()}
+        Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars,y,current_xreg)
         X_train, X_test, y_train, y_test = self._train_test_split(X,y,test_size)
         scaler = self._parse_normalizer(X_train,normalizer)
         X_train = self._scale(scaler,X_train)
@@ -493,9 +498,9 @@ class Forecaster:
             **kwargs passed to the ARIMA() function from statsmodels
         """
         from statsmodels.tsa.arima.model import ARIMA
-        Xvars_orig = Xvars
-        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else Xvars
-        Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars)
+        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else Xvars
+        Xvars_orig = None if Xvars is None else None if len(Xvars) == 0 else Xvars
+        Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars,self.y,self.current_xreg)
         if len(self.current_xreg.keys()) > 0:
             X_train, X_test, y_train, y_test = self._train_test_split(X,y,test_size)
         else:
@@ -539,7 +544,7 @@ class Forecaster:
         from fbprophet import Prophet
         X = pd.DataFrame({k:v for k,v in self.current_xreg.items() if not k.startswith('AR')})
         p = pd.DataFrame({k:v for k,v in self.future_xreg.items() if not k.startswith('AR')})
-        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else Xvars if Xvars is not None else []
+        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else []
         if cap is not None: X['cap'] = cap
         if floor is not None: x['floor'] = floor
         X['y'] = self.y.to_list()
@@ -588,8 +593,7 @@ class Forecaster:
         """
         from greykite.framework.templates.autogen.forecast_config import ForecastConfig, MetadataParam, ModelComponentsParam, EvaluationPeriodParam
         from greykite.framework.templates.forecaster import Forecaster as SKForecaster
-
-        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else Xvars if Xvars is not None else []
+        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else []
         def _forecast_sk(df,Xvars,validation_length,test_length,forecast_length):
             test_length = test_length if test_length > 0 else -(df.shape[0]+1)
             validation_length = validation_length if validation_length > 0 else -(df.shape[0]+1)
@@ -672,7 +676,8 @@ class Forecaster:
         assert len(models) > 1,f'need at least two models to average, got {models}'
         fcsts = pd.DataFrame({m:self.history[m]['Forecast'] for m in models})
         preds = pd.DataFrame({m:self.history[m]['TestSetPredictions'] for m in models})
-        fvs = pd.DataFrame({m:self.history[m]['FittedVals'] for m in models})
+        obs_to_keep = min(len(self.history[m]['FittedVals']) for m in models)
+        fvs = pd.DataFrame({m:self.history[m]['FittedVals'][-obs_to_keep:] for m in models})
         actuals = self.y.values[-preds.shape[0]:]
         if how == 'weighted':
             scale = True
@@ -881,7 +886,7 @@ class Forecaster:
         assert n > 0,f'n must be greater than 0, got {n}'
         assert self.integration == 0,"AR terms must be added before differencing (don't worry, they will be differenced too)"
         for i in range(1,n+1):
-            self.current_xreg[f'AR{i}'] = pd.Series(np.roll(self.y,i))
+            self.current_xreg[f'AR{i}'] = pd.Series(self.y).shift(i)
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
 
     def add_AR_terms(self,N) -> None:
@@ -896,7 +901,7 @@ class Forecaster:
         assert (len(N) == 2) & (not isinstance(N,str)),f'n must be an array-like of length 2 (P,m), got {N}'
         assert self.integration == 0,"AR terms must be added before differencing (don't worry, they will be differenced too)"
         for i in range(N[1],N[1]*N[0] + 1,N[1]):
-            self.current_xreg[f'AR{i}'] = pd.Series(np.roll(self.y,i))
+            self.current_xreg[f'AR{i}'] = pd.Series(self.y).shift(i)
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
 
     def ingest_Xvars_df(self,df,date_col='Date',drop_first=False,use_future_dates=False) -> None:
@@ -1358,7 +1363,7 @@ class Forecaster:
         import eli5
         from eli5.sklearn import PermutationImportance
         try:
-            perm = PermutationImportance(self.regr).fit(self.X,self.y)
+            perm = PermutationImportance(self.regr).fit(self.X,self.y.values[-len(self.X):])
         except TypeError:
             if not quiet: print(f'cannot set feature importance on the {self.estimator} model')
             return
@@ -1733,12 +1738,15 @@ class Forecaster:
             excel_name: str, default 'feature_info.xlsx'
                 the name of the resulting excel file
         """
-        with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
-            for m in self.history.keys():
-                if 'summary_stats' in self.history[m].keys():
-                    self.history[m]['summary_stats'].to_excel(writer,sheet_name=f'{m}_summary_stats')
-                elif 'feature_importance' in self.history[m].keys():
-                    self.history[m]['feature_importance'].to_excel(writer,sheet_name=f'{m}_feature_importance')
+        try:
+            with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
+                for m in self.history.keys():
+                    if 'summary_stats' in self.history[m].keys():
+                        self.history[m]['summary_stats'].to_excel(writer,sheet_name=f'{m}_summary_stats')
+                    elif 'feature_importance' in self.history[m].keys():
+                        self.history[m]['feature_importance'].to_excel(writer,sheet_name=f'{m}_feature_importance')
+        except IndexError:
+            raise ForecastError("no saved feature importance or summary stats could be found")
 
     def all_validation_grids_to_excel(self,out_path='./',excel_name='validation_grids.xlsx') -> None:
         """ saves all validation grids to excel
@@ -1748,10 +1756,13 @@ class Forecaster:
             excel_name: str, default 'feature_info.xlsx'
                 the name of the resulting excel file
         """
-        with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
-            for m in self.history.keys():
-                if 'grid_evaluated' in self.history[m].keys():
-                    self.history[m]['grid_evaluated'].to_excel(writer,sheet_name=m)
+        try:
+            with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
+                for m in self.history.keys():
+                    if 'grid_evaluated' in self.history[m].keys():
+                        self.history[m]['grid_evaluated'].to_excel(writer,sheet_name=m)
+        except IndexError:
+            raise ForecastError("no validation grids could be found")
 
     def reset(self) -> None:
         """ drops all regressors and reverts object to original (level) state when initiated
