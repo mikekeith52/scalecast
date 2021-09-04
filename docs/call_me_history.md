@@ -1,5 +1,5 @@
 ## call_me
-- in `manual_forecast()` and `auto_forecast()` you can use the call_me parameter to specify the model nickname which is also the key stored in the object's histor
+- in `manual_forecast()` and `auto_forecast()` you can use the call_me parameter to specify the model nickname which is also the key stored in the object's history
 - by default, this will be the same as whatever the estimator is called, so if you are using one of each kind of estimator, you don't need to worry about it
 
 ## history
