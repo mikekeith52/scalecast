@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.2.9] - 2021-09-27
+### Added
+### Changed
+- In plot() method, `models=None` is now accepted and will plot only actual values
+- Example grids are modified to prevent overfitting in some models
+### Fixed
+- Fixed the add_time_trend() method to not skip a time step in the first observation
+
 ## [0.2.8] - 2021-08-27
 ### Added
 - Added a descriptive error when all_feature_info_to_excel() or all_validation_grids_to_excel() fails

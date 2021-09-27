@@ -4,7 +4,6 @@ README.md
 license.txt
 setup.cfg
 setup.py
-.ipynb_checkpoints/avocados-checkpoint.ipynb
 __pycache__/Forecaster.cpython-37.pyc
 __pycache__/Forecaster.cpython-38.pyc
 __pycache__/Grids.cpython-37.pyc
@@ -69,6 +68,7 @@ examples/housing_different_levels_results.xlsx
 examples/housing_feature_info.xlsx
 examples/housing_results.xlsx
 examples/warnings.log
+examples/.ipynb_checkpoints/Grids-checkpoint.py
 examples/.ipynb_checkpoints/avocados-checkpoint.ipynb
 examples/__pycache__/Grids.cpython-38.pyc
 src/SCALECAST.egg-info/PKG-INFO

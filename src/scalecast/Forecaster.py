@@ -1106,7 +1106,7 @@ class Forecaster:
         """
         self._adder()
         self.current_xreg[called] = pd.Series(range(len(self.y)))
-        self.future_xreg[called] = list(range(len(self.y) + 1,len(self.y) + 1 + len(self.future_dates)))
+        self.future_xreg[called] = list(range(len(self.y),len(self.y) + len(self.future_dates)))
         assert len(self.future_xreg[called]) == len(self.future_dates)
 
     def add_other_regressor(self,called,start,end) -> None:
@@ -1427,9 +1427,10 @@ class Forecaster:
 
     def plot(self,models='all',order_by=None,level=False,print_attr=[]) -> None:
         """ plots all forecasts with the actuals, or just actuals if no forecasts available
-            models: list-like or str, default 'all'
+            models: list-like, str, or None; default 'all'
                the forecated models to plot
                can start with "top_" and the metric specified in order_by will be used to order the models appropriately
+               if None or models/order_by combo invalid, will plot only actual values
             order_by: one of _determine_best_by_, default None
             level: bool, default False
                 if True, will always plot level forecasts
@@ -1442,6 +1443,9 @@ class Forecaster:
         try:
             models = self._parse_models(models,order_by)
         except ValueError:
+            models = None
+
+        if models is None:
             sns.lineplot(x=self.current_dates.values,y=self.y.values,label='actuals')
             plt.legend()
             plt.xlabel('Date')
