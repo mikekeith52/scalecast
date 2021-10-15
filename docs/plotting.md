@@ -10,18 +10,7 @@
 
 ### plot
 
-- `Forecaster.plot(models='all',order_by=None,level=False,print_attr=[])`
-  - **models**: list-like or `str`, default `'all'`
-    - the models to plot
-    - can start with `"top_"` and the metric specified in `order_by` will be used to order the models appropriately
-  - **order_by**: one of `_determine_best_by_`, default `None`
-  - **level**: `bool`, default `False`
-    - if `True`, will always plot level forecasts
-    - if `False`, will plot the forecasts at whatever level they were called on
-    - if `False` and there are a mix of models passed with different integrations, will default to `True`
-  - **print_attr**: list-like, default `[]`
-    - attributes from history dict to print to console
-    - if the attribute doesn't exist for a passed model, will not raise error, will just skip that element
+- `Forecaster.plot()`
 ```python
 >>> import pandas as pd
 >>> import pandas_datareader as pdr
@@ -76,20 +65,7 @@ elasticnet Xvars: ['AR1', 'AR2', 'AR3', 'AR4', 'AR12', 'AR24', 'monthsin', 'mont
 
 ### plot_test_set
 
-- `Forecaster.plot_test_set(models='all',order_by=None,include_train=True,level=False)`
-  - **models**: list-like or `str`, default `'all'`
-    - the models to plot
-    - can start with `"top_"` and the metric specified in `order_by` will be used to order the models appropriately
-  - **order_by**: one of `_determine_best_by_`, default `None`
-  - **include_train**: `bool` or `int`, default `True`
-    - use to zoom into training results
-    - if `True`, plots the test results with the entire history in `y`
-    - if `False`, matches `y` history to test results and only plots this
-    - if `int`, plots that length of `y` to match to test results
-  - **level**: `bool`, default `False`
-    - if `True`, will always plot level forecasts
-    - if `False`, will plot the forecasts at whatever level they were called on
-    - if `False` and there are a mix of models passed with different integrations, will default to `True`
+- `Forecaster.plot_test_set()`
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -134,11 +110,7 @@ f.plot_test_set(models='top_5',order_by='TestSetR2',include_train=60) # see test
 
 ### plot_fitted
 
-- `Forecaster.plot_fitted(models='all',order_by=None)`
-  - **models**: list-like or `str`, default `'all'`
-    - the models to plot
-    - can start with `"top_"` and the metric specified in `order_by` will be used to order the models appropriately
-  - **order_by**: one of `_determine_best_by_`, default `None`
+- `Forecaster.plot_fitted()`
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -211,14 +183,7 @@ plt.show()
 
 ### plot_pacf
 
-- `Forecaster.plot_pacf(diffy=False,train_only=False,**kwargs)`
-  - `plot_pacf()` from `statsmodels`
-  - **diffy**: `bool` or `int`, default `False `
-    - if bool, whether to call the function on the first differenced `y` series
-    - if int, will use that many differences in y before passing to plot function
-  - **train_only**: `bool`, default `False`
-    - whether to plot only training data (new in 0.2.6 to reduce data leakage chances)
-  - `**kwargs` passed to the sm function
+- `Forecaster.plot_pacf()`
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -239,13 +204,7 @@ plt.show()
 
 ### plot_periodogram
 
-- `Forecaster.plot_periodogram(diffy=False,train_only=False)`
-  - `periodogram()` from `scipy`
-  - **diffy**: `bool` or `int`, default `False `
-    - if bool, whether to call the function on the first differenced `y` series
-    - if int, will use that many differences in y before passing to plot function
-  - **train_only**: `bool`, default `False`
-    - whether to plot only training data (new in 0.2.6 to reduce data leakage chances)
+- `Forecaster.plot_periodogram()`
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -266,14 +225,7 @@ plt.show()
 
 ### seasonal_decompose
 
-- `Forecaster.seasonal_decompose(diffy=False,train_only=False,**kwargs)`
-  - `seasonal_decompose()` from `statsmodels`
-  - **diffy**: `bool` or `int`, default `False `
-    - if bool, whether to call the function on the first differenced `y` series
-    - if int, will use that many differences in y before passing to plot function
-  - **train_only**: `bool`, default `False`
-    - whether to plot only training data (new in 0.2.6 to reduce data leakage chances)
-  - `**kwargs` passed to the sm function
+- `Forecaster.seasonal_decompose()`
 ```python
 import pandas as pd
 import pandas_datareader as pdr

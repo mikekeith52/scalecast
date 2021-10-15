@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.0] - 2021-10-15
+### Added
+- Added an option to save to png in plot(), plot_test_set(), and plot_fitted() methods using plt.savefig() from matplotlib and calling with `to_png = True`
+### Changed
+- Made errors more descriptive, stripping out AssertionError types 
+### Fixed
+- fixed typos in doc strings
+
 ## [0.2.9] - 2021-09-27
 ### Added
 ### Changed

@@ -28,6 +28,11 @@ def mae(y,pred):
     return mean_absolute_error(y,pred)
 def r2(y,pred):
     return r2_score(y,pred)
+def my_assert(statement,ErrorType,error_message):
+    try:
+        assert statement
+    except:
+        raise ErrorType(error_message)
 
 _estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lightgbm', 'rf', 'prophet', 
                 'silverkite', 'hwes', 'elasticnet', 'svr', 'knn', 'combo'}
@@ -88,7 +93,7 @@ class Forecaster:
     def _adder(self) -> None:
         """ makes sure future periods have been specified before adding regressors
         """
-        assert len(self.future_dates) > 0,'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)'
+        my_assert(len(self.future_dates) > 0,ForecastError,'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)')
         
     def _bank_history(self,**kwargs) -> None:
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
@@ -201,7 +206,7 @@ class Forecaster:
                 if 'normalize', uses the Normalizer from sklearn.preprocessing
                 if None, returns None
         """
-        assert normalizer in _normalizer_,f'normalizer must be one of {_normalizer_}, got {normalizer}'
+        my_assert(normalizer in _normalizer_,ForecastError,f'normalizer must be one of {_normalizer_}, got {normalizer}')
         if normalizer == 'minmax':
             from sklearn.preprocessing import MinMaxScaler as Scaler
         elif normalizer == 'normalize':
@@ -364,7 +369,7 @@ class Forecaster:
             normalizer: one of _normalizer_
             **kwargs: passed to the sklearn regression model when fitting and later referenced as hyperparameters in the Forecaster object's history
         """
-        assert len(self.current_xreg.keys()) > 0,f'need at least 1 Xvar to forecast with the {self.estimator} model'
+        my_assert(len(self.current_xreg.keys()) > 0,ForecastError,f'need at least 1 Xvar to forecast with the {self.estimator} model')
         ars = [int(x[2:]) for x in self.current_xreg.keys() if x.startswith('AR')]
         obs_to_drop = max(ars) if len(ars) > 0 else 0
         y = self.y.values[obs_to_drop:]
@@ -673,7 +678,7 @@ class Forecaster:
         determine_best_by = determine_best_by if (weights is None) & ((models[:4] == 'top_') | (how == 'weighted')) else None if how != 'weighted' else determine_best_by
         minmax = (str(determine_best_by).endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) | (weights is not None)
         models = self._parse_models(models,determine_best_by)
-        assert len(models) > 1,f'need at least two models to average, got {models}'
+        my_assert(len(models) > 1,ForecastError,f'need at least two models to average, got {len(models)}')
         fcsts = pd.DataFrame({m:self.history[m]['Forecast'] for m in models})
         preds = pd.DataFrame({m:self.history[m]['TestSetPredictions'] for m in models})
         obs_to_keep = min(len(self.history[m]['FittedVals']) for m in models)
@@ -684,14 +689,14 @@ class Forecaster:
             if weights is None:
                 weights = pd.DataFrame({m:[self.history[m][determine_best_by]] for m in models}) # always use r2 since higher is better (could use maxmin scale for other metrics?)
             else:
-                assert len(weights) == len(models),'must pass as many weights as models'
-                assert not isinstance(weights,str),f'weights argument not recognized: {weights}'
+                my_assert(len(weights) == len(models),ForecastError,'must pass as many weights as models')
+                my_assert(not isinstance(weights,str),TypeError,f'weights argument not recognized: {weights}')
                 weights = pd.DataFrame(zip(models,weights)).set_index(0).transpose()
                 if weights.sum(axis=1).values[0] == 1:
                     scale = False
                     rebalance_weights=0
             try:
-                assert rebalance_weights >= 0,'when using a weighted average, rebalance_weights must be numeric and at least 0 in value'
+                my_assert(rebalance_weights >= 0,ValueError,'when using a weighted average, rebalance_weights must be numeric and at least 0 in value')
                 if scale:
                     if minmax:
                         weights = (weights - weights.min(axis=1).values[0])/(weights.max(axis=1).values[0] - weights.min(axis=1).values[0]) # minmax scaler
@@ -710,10 +715,10 @@ class Forecaster:
             if how == 'simple':
                 fcst = fcsts.mean(axis=1).to_list()
             elif how == 'splice':
-                assert len(models) == len(splice_points) + 1,'must have exactly 1 more model passed to models as splice points passed to splice_points'
+                my_assert(len(models) == len(splice_points) + 1,ForecastError,'must have exactly 1 more model passed to models as splice points')
                 splice_points = pd.to_datetime(sorted(splice_points)).to_list()
                 future_dates = self.future_dates.to_list()
-                assert np.array([p in future_dates for p in splice_points]).all(), 'all elements in splice_points must be datetime objects or str in yyyy-mm-dd format and must be in future_dates attribute'
+                my_assert(np.array([p in future_dates for p in splice_points]).all(),TypeError,'all elements in splice_points must be datetime objects or str in yyyy-mm-dd format and must be present in future_dates attribute')
                 fcst = [None]*len(future_dates)
                 start = 0
                 for i, _ in enumerate(splice_points):
@@ -740,7 +745,7 @@ class Forecaster:
         """
         if determine_best_by is None:
             if models[:4] == 'top_':
-                raise ValueError('cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified and not None')
+                raise ValueError('cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified')
             elif models == 'all':
                 models = list(self.history.keys())
             elif isinstance(models,str):
@@ -767,7 +772,7 @@ class Forecaster:
             n: one of {True,False,0,1,2}
         """
         n = int(n)
-        assert (n <= 2) & (n >= 0),'diffy cannot be less than 0 or greater than 2'
+        my_assert((n <= 2) & (n >= 0),ValueError,'diffy cannot be less than 0 or greater than 2')
         y = self.y.copy()
         for i in range(n):
             y = y.diff().dropna()
@@ -819,11 +824,11 @@ class Forecaster:
         """
         self.y = pd.Series(self.y).dropna().astype(np.float64)
         self.current_dates = pd.to_datetime(pd.Series(list(self.current_dates)[-len(self.y):]),infer_datetime_format=True)
-        assert len(self.y) == len(self.current_dates),f'y and current_dates must be same size -- y is {len(self.y)} and current_dates is {len(self.current_dates)}'
+        my_assert(len(self.y) == len(self.current_dates),ValueError,f'y and current_dates must be same size -- y is {len(self.y)} and current_dates is {len(self.current_dates)}')
         self.future_dates = pd.to_datetime(pd.Series(self.future_dates),infer_datetime_format=True)
         for k,v in self.current_xreg.items():
             self.current_xreg[k] = pd.Series(list(v)[-len(self.y):]).astype(np.float64)
-            assert len(self.current_xreg[k]) == len(self.y)
+            my_assert(len(self.current_xreg[k]) == len(self.y),ForecastError,'something went wrong when setting covariate values--try resetting the object and trying again')
             self.future_xreg[k] = [float(x) for x in self.future_xreg[k]]
 
     def diff(self,i=1) -> None:
@@ -839,7 +844,7 @@ class Forecaster:
         if i == 0:
             return
 
-        assert i in (1,2),f'only 1st and 2nd order integrations supported for now, got i={i}'
+        my_assert(i in (1,2),ValueError,f'only 1st and 2nd order integrations supported for now, got i={i}')
         self.first_obs = self.y.values[:i] # np array
         self.first_dates = self.current_dates.values[:i] # np array
         self.integration = i
@@ -862,8 +867,8 @@ class Forecaster:
             train_only: bool, default False
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
         """
-        assert self.integration == 0,"can only run integrate() when series hasn't been differenced"
-        assert isinstance(train_only,bool),'train_only must be True or False'
+        my_assert(self.integration == 0,ForecastError,"can only run integrate() when series hasn't been differenced")
+        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         res0 = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length])
         if res0[1] <= critical_pval:
             return
@@ -882,9 +887,9 @@ class Forecaster:
                 the number of terms to add (1 to this number will be added)
         """
         self._adder()
-        assert isinstance(n,int),f'n must be an int, got {n}'
-        assert n > 0,f'n must be greater than 0, got {n}'
-        assert self.integration == 0,"AR terms must be added before differencing (don't worry, they will be differenced too)"
+        my_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
+        my_assert(n > 0,ValueError,f'n must be greater than 0, got {n}')
+        my_assert(self.integration == 0,ForecastError,"AR terms must be added before differencing (don't worry, they will be differenced too)")
         for i in range(1,n+1):
             self.current_xreg[f'AR{i}'] = pd.Series(self.y).shift(i)
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
@@ -898,8 +903,8 @@ class Forecaster:
                     the seasonal period (12 for monthly data, etc.)
         """
         self._adder()
-        assert (len(N) == 2) & (not isinstance(N,str)),f'n must be an array-like of length 2 (P,m), got {N}'
-        assert self.integration == 0,"AR terms must be added before differencing (don't worry, they will be differenced too)"
+        my_assert((len(N) == 2) & (not isinstance(N,str)),ValueError,f'n must be an array-like of length 2 (P,m), got {N}')
+        my_assert(self.integration == 0,ForecastError,"AR terms must be added before differencing (don't worry, they will be differenced too)")
         for i in range(N[1],N[1]*N[0] + 1,N[1]):
             self.current_xreg[f'AR{i}'] = pd.Series(self.y).shift(i)
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
@@ -916,15 +921,15 @@ class Forecaster:
                 whether to use the future dates in the dataframe as the future_dates attribute in the object
                 if False, the dataframe must have at least the same number of observations as len(future_dates)
         """
-        assert df.shape[0] == len(df[date_col].unique()), 'each date supplied must be unique'
+        my_assert(df.shape[0] == len(df[date_col].unique()),ValueError,'each date supplied must be unique')
         df[date_col] = pd.to_datetime(df[date_col]).to_list()
         df = df.loc[df[date_col] >= self.current_dates.values[0]]
         df = pd.get_dummies(df,drop_first=drop_first)
         current_df = df.loc[df[date_col].isin(self.current_dates)]
         future_df = df.loc[df[date_col] > self.current_dates.values[-1]]
-        assert current_df.shape[0] == len(self.y), 'something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future and specify a date column in date_col parameter'
+        my_assert(current_df.shape[0] == len(self.y),ForecastError,'something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future and specify a date column in date_col parameter')
         if not use_future_dates:
-            assert future_df.shape[0] >= len(self.future_dates),'the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object. if you desire to use the dataframe to set the future dates for the object, use use_future_dates=True'
+            my_assert(future_df.shape[0] >= len(self.future_dates),ValueError,'the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object. if you desire to use the dataframe to set the future dates for the object, use use_future_dates=True')
         else:
             self.infer_freq()
             self.future_dates = future_df[date_col]
@@ -943,7 +948,7 @@ class Forecaster:
             n: int, default 1
                 the length of the resulting test set
         """
-        assert isinstance(n,int),f'n must be an int, got {n}'
+        my_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
         self.test_length=n
 
     def set_validation_length(self,n=1) -> None:
@@ -951,8 +956,8 @@ class Forecaster:
             n: int, default 1
                 the length of the resulting validation set
         """
-        assert isinstance(n,int),f'n must be an int, got {n}'
-        assert n > 0,f'n must be greater than 1, got {n}'
+        my_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
+        my_assert(n > 0,ValueError,f'n must be greater than 1, got {n}')
         if (self.validation_metric == 'r2') & (n == 1):
             raise ValueError('can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()')
         self.validation_length=n
@@ -970,7 +975,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to adfuller() function from statsmodels
         """
-        assert isinstance(train_only,bool),'train_only must be True or False'
+        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         res = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length],**kwargs)
         if not full_res:
             if res[1] <= critical_pval:
@@ -994,7 +999,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to plot_acf() function from statsmodels
         """
-        assert isinstance(train_only,bool),'train_only must be True or False'
+        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         y = self._diffy(diffy)
         y = y.values if not train_only else y.values[:-self.test_length]
         return plot_acf(y,**kwargs)
@@ -1007,7 +1012,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to plot_pacf() function from statsmodels
         """
-        assert isinstance(train_only,bool),'train_only must be True or False'
+        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         y = self._diffy(diffy)
         y = y.values if not train_only else y.values[:-self.test_length]
         return plot_pacf(y,**kwargs)
@@ -1020,7 +1025,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
         """
         from scipy.signal import periodogram
-        assert isinstance(train_only,bool),'train_only must be True or False'
+        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         y = self._diffy(diffy)
         y = y.values if not train_only else y.values[:-self.test_length]
         return periodogram(y)
@@ -1033,7 +1038,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to seasonal_decompose() function from statsmodels
         """
-        assert isinstance(train_only,bool),'train_only must be True or False'
+        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         self.infer_freq()
         y = self._diffy(diffy)
         current_dates = self.current_dates.values[-len(y):] if not train_only else self.current_dates.values[-len(y):-self.test_length]
@@ -1107,7 +1112,6 @@ class Forecaster:
         self._adder()
         self.current_xreg[called] = pd.Series(range(len(self.y)))
         self.future_xreg[called] = list(range(len(self.y),len(self.y) + len(self.future_dates)))
-        assert len(self.future_xreg[called]) == len(self.future_dates)
 
     def add_other_regressor(self,called,start,end) -> None:
         """ adds dummy variable that is 1 during the specified time period, 0 otherwise
@@ -1145,9 +1149,9 @@ class Forecaster:
                 the separator between each term in arg to create the final variable name 
         """
         self._adder()
-        assert len(args) > 1,'need at least two variables to combine regressors'
+        my_assert(len(args) > 1,ForecastError,'need at least two variables to combine regressors')
         for i,a in enumerate(args):
-            assert not a.startswith('AR'),'no combining AR terms at this time -- it confuses the forecasting mechanism'
+            my_assert(not a.startswith('AR'),ForecastError,'no combining AR terms at this time -- it confuses the forecasting mechanism')
             if i == 0:
                 self.current_xreg[sep.join(args)] = self.current_xreg[a]
                 self.future_xreg[sep.join(args)] = self.future_xreg[a]
@@ -1165,7 +1169,7 @@ class Forecaster:
         """
         self._adder()
         for a in args:
-            assert not a.startswith('AR'),'no polynomial AR terms at this time -- it confuses the forecasting mechanism'
+            my_assert(not a.startswith('AR'),ForecastError,'no polynomial AR terms at this time -- it confuses the forecasting mechanism')
             for i in range(2,pwr+1):
                 self.current_xreg[f'{a}{sep}{i}'] = self.current_xreg[a]**i
                 self.future_xreg[f'{a}{sep}{i}'] = [x**i for x in self.future_xreg[a]]
@@ -1202,7 +1206,6 @@ class Forecaster:
         current_dates += first_dates[::-1] # correction 2021-07-14
         self.current_dates = pd.Series(current_dates[::-1])
         self.y = pd.Series(y)
-        assert (len(self.current_dates) == len(self.y))
         self.integration = 0
         if hasattr(self,'adf_stationary'):
             delattr(self,'adf_stationary')
@@ -1211,7 +1214,7 @@ class Forecaster:
         """ sets the estimator to forecast with
             estimator: one of _estimators_
         """
-        assert estimator in _estimators_,f'estimator must be one of {_estimators_}, got {estimator}'
+        my_assert(estimator in _estimators_,ValueError,f'estimator must be one of {_estimators_}, got {estimator}')
         self.typ_set()
         if hasattr(self,'estimator'):
             if estimator != self.estimator:
@@ -1252,9 +1255,10 @@ class Forecaster:
     def set_validation_metric(self,metric='rmse') -> None:
         """ sets the metric that will be used to tune all subsequent models
             not a good idea to change this if you are planning to combo model as weird things could happen
-            metric: one of _metrics_
+            metric: one of _metrics_, default 'rmse'
+                the metric to optimize the models on using the validation set
         """
-        assert metric in _metrics_,f'metric must be one of {_metrics_}, got {metric}'
+        my_assert(metric in _metrics_,ValueError,f'metric must be one of {_metrics_}, got {metric}')
         if (metric == 'r2') & (self.validation_length < 2):
             raise ValueError('can only validate with r2 if the validation length is at least 2, try set_validation_length()')
         self.validation_metric = metric
@@ -1306,26 +1310,26 @@ class Forecaster:
             self.best_params = {}
 
     def manual_forecast(self,call_me=None,**kwargs) -> None:
-        """ manually forecast with your own hyperparameters, Xvars, and normalizer selection passed as keywoords
+        """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywoords
             call_me: str or None, default None
                 what to call the model when storing it in the object's history dictionary
                 duplicated names will be overwritten with the most recently called model
             **kwargs are passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
         """
         call_me = self.estimator if call_me is None else call_me
-        assert isinstance(call_me,str),'call_me must be a str type or None'
+        my_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
         self.forecast = getattr(self,f'_forecast_{self.estimator}')(**kwargs)
         self.call_me = call_me
         self._bank_history(auto=False,**kwargs)
 
     def auto_forecast(self,call_me=None) -> None:
-        """ auto forecst with the best parameters indicated from the tuning process
+        """ auto forecast with the best parameters indicated from the tuning process
             call_me: str or None, default None
                 what to call the model when storing it in the object's history dictionary
                 duplicated names will be overwritten with the most recently called model
         """
         call_me = self.estimator if call_me is None else call_me
-        assert isinstance(call_me,str),'call_me must be a str type or None'
+        my_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
         if not hasattr(self,'best_params'):
             warnings.warn(f'since tune() has not been called, {self.estimator} model will be run with default parameters')
             self.best_params = {}
@@ -1342,8 +1346,8 @@ class Forecaster:
             feature_importance: bool, default False
                 whether to save permutation feature importance information for the models that offer those
         """
-        assert len([m for m in models if m not in _estimators_]) == 0,f'all models passed to models argument most be one of {_estimators_}'
-        assert os.path.isfile('./Grids.py'),'Grids.py not found in working directory'
+        my_assert(len([m for m in models if m not in _estimators_]) == 0,ValueError,f'all models passed to models argument most be one of {_estimators_}')
+        my_assert(os.path.isfile('./Grids.py'),FileNotFoundError,'Grids.py not found in working directory')
         for m in models:
             self.set_estimator(m)
             self.tune()
@@ -1391,7 +1395,7 @@ class Forecaster:
             n = datetime.datetime.strptime(n,'%Y-%m-%d')
         if (type(n) is datetime.datetime) or (type(n) is pd.Timestamp):
             n = len([i for i in self.current_dates if i >= n])
-        assert (isinstance(n,int)) & (n > 2), 'n must be an int, datetime object, or str in yyyy-mm-dd format and there must be more than 2 observations to keep'
+        my_assert((isinstance(n,int)) & (n > 2),ValueError,'n must be an int, datetime object, or str in yyyy-mm-dd format and there must be more than 2 observations to keep')
         self.y = self.y[-n:]
         self.current_dates = self.current_dates[-n:]
         for k, v in self.current_xreg.items():
@@ -1403,7 +1407,7 @@ class Forecaster:
                 each element must match an element in _estimators_ (except "combo", which cannot be tuned)
             determine_best_by: one of _determine_best_by_
         """
-        assert determine_best_by in _determine_best_by_,f'determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}'
+        my_assert(determine_best_by in _determine_best_by_,ValueError,f'determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}')
         models_metrics = {m:self.history[m][determine_best_by] for m in models}
         x = [h[0] for h in Counter(models_metrics).most_common()]
         return x if (determine_best_by.endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) else x[::-1]
@@ -1425,7 +1429,7 @@ class Forecaster:
             case2 = [k for k in self.future_xreg.keys() if k not in self.current_xreg.keys()]
             raise ValueError(f'the following regressors are in current_xreg but not future_xreg: {case1}\nthe following regressors are in future_xreg but not current_xreg {case2}')
 
-    def plot(self,models='all',order_by=None,level=False,print_attr=[]) -> None:
+    def plot(self,models='all',order_by=None,level=False,print_attr=[],to_png=False,out_path='./',png_name='plot.png') -> None:
         """ plots all forecasts with the actuals, or just actuals if no forecasts available
             models: list-like, str, or None; default 'all'
                the forecated models to plot
@@ -1439,6 +1443,12 @@ class Forecaster:
             print_attr: list-like, default []
                 attributes from history dict to print to console
                 if the attribute doesn't exist for a passed model, will not raise error, will just skip that element
+            to_png: bool, default False
+                whether to save the resulting image to a png file
+            out_path: str, default './'
+                the path to save the png file to (ignored when `to_png=False`)
+            png_name: str, default './plot.png'
+                the name of the resulting png image (ignored when `to_png=False`)
         """
         try:
             models = self._parse_models(models,order_by)
@@ -1482,9 +1492,11 @@ class Forecaster:
         plt.xlabel('Date')
         plt.ylabel('Values')
         plt.title('Forecast Results')
+        if to_png:
+            plt.savefig(os.path.join(out_path,png_name))
         plt.show()
 
-    def plot_test_set(self,models='all',order_by=None,include_train=True,level=False) -> None:
+    def plot_test_set(self,models='all',order_by=None,include_train=True,level=False,to_png=False,out_path='./',png_name='./plot.png') -> None:
         """ plots all test-set predictions with the actuals
             models: list-like or str, default 'all'
                the forecated models to plot
@@ -1499,6 +1511,12 @@ class Forecaster:
                 if True, will always plot level forecasts
                 if False, will plot the forecasts at whatever level they were called on
                 if False and there are a mix of models passed with different integrations, will default to True
+            to_png: bool, default False
+                whether to save the resulting image to a png file
+            out_path: str, default './'
+                the path to save the png file to (ignored when `to_png=False`)
+            png_name: str, default './plot.png'
+                the name of the resulting png image (ignored when `to_png=False`)
         """
         models = self._parse_models(models,order_by)
         integration = set([d['Integration'] for m,d in self.history.items() if m in models])
@@ -1515,7 +1533,7 @@ class Forecaster:
             'actuals':y.dropna().to_list() if not level else self.history[models[0]]['LevelY'],
         }
         if str(include_train).isnumeric():
-            assert (include_train > 1) & isinstance(include_train,int), f'include_train must be a bool type or an int greater than 1, got {include_train}'
+            my_assert((include_train > 1) & isinstance(include_train,int),ValueError,f'include_train must be a bool type or an int greater than 1, got {include_train}')
             plot['actuals'] = plot['actuals'][-include_train:]
             plot['date'] = plot['date'][-include_train:]
         elif isinstance(include_train,bool):
@@ -1536,14 +1554,22 @@ class Forecaster:
         plt.xlabel('Date')
         plt.ylabel('Values')
         plt.title('Test Set Results')
+        if to_png:
+            plt.savefig(os.path.join(out_path,png_name))
         plt.show()
         
-    def plot_fitted(self,models='all',order_by=None) -> None:
+    def plot_fitted(self,models='all',order_by=None,to_png=False,out_path='./',png_name='./plot.png') -> None:
         """ plots all fitted values with the actuals
             models: list-like or str, default 'all'
                the forecated models to plot
                can start with "top_" and the metric specified in order_by will be used to order the models appropriately
             order_by: one of _determine_best_by_, default None
+            to_png: bool, default False
+                whether to save the resulting image to a png file
+            out_path: str, default './'
+                the path to save the png file to (ignored when `to_png=False`)
+            png_name: str, default './plot.png'
+                the name of the resulting png image (ignored when `to_png=False`)
         """
         models = self._parse_models(models,order_by)
         integration = set([d['Integration'] for m,d in self.history.items() if m in models])
@@ -1569,6 +1595,8 @@ class Forecaster:
         plt.xlabel('Date')
         plt.ylabel('Values')
         plt.title('Fitted Values')
+        if to_png:
+            plt.savefig(os.path.join(out_path,png_name))
         plt.show()
 
     def drop_regressors(self,*args) -> None:
@@ -1580,8 +1608,8 @@ class Forecaster:
             self.future_xreg.pop(a)
 
     def pop(self,*args) -> None:
-        """ pops evaluated forecasts from the history dictionary
-            *args names of models matching what was passed to call_me (default is the same as the estimator name)
+        """ deletes evaluated forecasts from the history dictionary
+            *args names of models matching what was passed to call_me (default for call_me in a given model is the same as the estimator name)
         """
         for a in args:
             self.history.pop(a)
@@ -1595,10 +1623,10 @@ class Forecaster:
                out_path='./',
                excel_name='results.xlsx') -> Union[dict,pd.DataFrame]:
         """ exports 1-all of 5 pandas dataframes, can write to excel with each dataframe on a separate sheet
-            will return either a dictionary with dataframes as values or a single dataframe if only one df is specified
+            will return either a dictionary with dataframes as values (dfs argument as keys) or a single dataframe if only one df is specified
             dfs: list-like or str, default ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_fcsts']
                 a list or name of the specific dataframe(s) you want returned and/or written to excel
-                must be one of default
+                must be one of or multiple of default
             models: list-like or str, default 'all'
                 the models to write information for
                 can start with "top_" and the metric specified in `determine_best_by` will be used to order the models appropriately
@@ -1737,6 +1765,7 @@ class Forecaster:
     def all_feature_info_to_excel(self,out_path='./',excel_name='feature_info.xlsx') -> None:
         """ saves all feature importance and summary stats to excel
             each model where such info is available for gets its own tab
+            be sure to call save_summary_stats() and save_feature_importance() before using this function
             out_path: str, default './'
                 the path to export to
             excel_name: str, default 'feature_info.xlsx'
