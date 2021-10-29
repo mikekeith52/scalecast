@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.1] - 2021-10-29
+### Added
+- Added the eCommerce example
+- In `limit_grid_size()`, users can now set random_seed parameter for consistent results
+### Changed
+### Fixed
+- Scikit-learn models were not accepting `Xvars='all'` as an arguments
+- Fixed an issue causing models run at different levels to error out sometimes when plotted
+- Fixed a plotting error that occured sometimes when setting models parameter to `None`
+
 ## [0.3.0] - 2021-10-15
 ### Added
 - Added an option to save to png in plot(), plot_test_set(), and plot_fitted() methods using plt.savefig() from matplotlib and calling with `to_png = True`

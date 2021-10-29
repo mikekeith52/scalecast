@@ -28,14 +28,13 @@ def mae(y,pred):
     return mean_absolute_error(y,pred)
 def r2(y,pred):
     return r2_score(y,pred)
-def my_assert(statement,ErrorType,error_message):
+def descriptive_assert(statement,ErrorType,error_message):
     try:
         assert statement
-    except:
+    except AssertionError:
         raise ErrorType(error_message)
 
-_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lightgbm', 'rf', 'prophet', 
-                'silverkite', 'hwes', 'elasticnet', 'svr', 'knn', 'combo'}
+_estimators_ = {'arima','mlr','mlp','gbt','xgboost','lightgbm','rf','prophet','silverkite','hwes','elasticnet','svr','knn','combo'}
 _metrics_ = {'r2', 'rmse', 'mape', 'mae'}
 _determine_best_by_ = {'TestSetRMSE', 'TestSetMAPE', 'TestSetMAE', 'TestSetR2', 'InSampleRMSE', 'InSampleMAPE', 'InSampleMAE',
                         'InSampleR2', 'ValidationMetricValue', 'LevelTestSetRMSE', 'LevelTestSetMAPE', 'LevelTestSetMAE',
@@ -93,7 +92,7 @@ class Forecaster:
     def _adder(self) -> None:
         """ makes sure future periods have been specified before adding regressors
         """
-        my_assert(len(self.future_dates) > 0,ForecastError,'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)')
+        descriptive_assert(len(self.future_dates) > 0,ForecastError,'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)')
         
     def _bank_history(self,**kwargs) -> None:
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
@@ -206,7 +205,7 @@ class Forecaster:
                 if 'normalize', uses the Normalizer from sklearn.preprocessing
                 if None, returns None
         """
-        my_assert(normalizer in _normalizer_,ForecastError,f'normalizer must be one of {_normalizer_}, got {normalizer}')
+        descriptive_assert(normalizer in _normalizer_,ForecastError,f'normalizer must be one of {_normalizer_}, got {normalizer}')
         if normalizer == 'minmax':
             from sklearn.preprocessing import MinMaxScaler as Scaler
         elif normalizer == 'normalize':
@@ -284,7 +283,7 @@ class Forecaster:
                 if None, uses all Xvars
                 if str, uses only those Xvars
         """
-        if Xvars is None:
+        if Xvars is None or Xvars == 'all':
             Xvars = list(current_xreg.keys())
         if tune:
             y = list(y)[:-self.test_length]
@@ -369,7 +368,7 @@ class Forecaster:
             normalizer: one of _normalizer_
             **kwargs: passed to the sklearn regression model when fitting and later referenced as hyperparameters in the Forecaster object's history
         """
-        my_assert(len(self.current_xreg.keys()) > 0,ForecastError,f'need at least 1 Xvar to forecast with the {self.estimator} model')
+        descriptive_assert(len(self.current_xreg.keys()) > 0,ForecastError,f'need at least 1 Xvar to forecast with the {self.estimator} model')
         ars = [int(x[2:]) for x in self.current_xreg.keys() if x.startswith('AR')]
         obs_to_drop = max(ars) if len(ars) > 0 else 0
         y = self.y.values[obs_to_drop:]
@@ -678,7 +677,7 @@ class Forecaster:
         determine_best_by = determine_best_by if (weights is None) & ((models[:4] == 'top_') | (how == 'weighted')) else None if how != 'weighted' else determine_best_by
         minmax = (str(determine_best_by).endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) | (weights is not None)
         models = self._parse_models(models,determine_best_by)
-        my_assert(len(models) > 1,ForecastError,f'need at least two models to average, got {len(models)}')
+        descriptive_assert(len(models) > 1,ForecastError,f'need at least two models to average, got {len(models)}')
         fcsts = pd.DataFrame({m:self.history[m]['Forecast'] for m in models})
         preds = pd.DataFrame({m:self.history[m]['TestSetPredictions'] for m in models})
         obs_to_keep = min(len(self.history[m]['FittedVals']) for m in models)
@@ -689,14 +688,14 @@ class Forecaster:
             if weights is None:
                 weights = pd.DataFrame({m:[self.history[m][determine_best_by]] for m in models}) # always use r2 since higher is better (could use maxmin scale for other metrics?)
             else:
-                my_assert(len(weights) == len(models),ForecastError,'must pass as many weights as models')
-                my_assert(not isinstance(weights,str),TypeError,f'weights argument not recognized: {weights}')
+                descriptive_assert(len(weights) == len(models),ForecastError,'must pass as many weights as models')
+                descriptive_assert(not isinstance(weights,str),TypeError,f'weights argument not recognized: {weights}')
                 weights = pd.DataFrame(zip(models,weights)).set_index(0).transpose()
                 if weights.sum(axis=1).values[0] == 1:
                     scale = False
                     rebalance_weights=0
             try:
-                my_assert(rebalance_weights >= 0,ValueError,'when using a weighted average, rebalance_weights must be numeric and at least 0 in value')
+                descriptive_assert(rebalance_weights >= 0,ValueError,'when using a weighted average, rebalance_weights must be numeric and at least 0 in value')
                 if scale:
                     if minmax:
                         weights = (weights - weights.min(axis=1).values[0])/(weights.max(axis=1).values[0] - weights.min(axis=1).values[0]) # minmax scaler
@@ -715,10 +714,10 @@ class Forecaster:
             if how == 'simple':
                 fcst = fcsts.mean(axis=1).to_list()
             elif how == 'splice':
-                my_assert(len(models) == len(splice_points) + 1,ForecastError,'must have exactly 1 more model passed to models as splice points')
+                descriptive_assert(len(models) == len(splice_points) + 1,ForecastError,'must have exactly 1 more model passed to models as splice points')
                 splice_points = pd.to_datetime(sorted(splice_points)).to_list()
                 future_dates = self.future_dates.to_list()
-                my_assert(np.array([p in future_dates for p in splice_points]).all(),TypeError,'all elements in splice_points must be datetime objects or str in yyyy-mm-dd format and must be present in future_dates attribute')
+                descriptive_assert(np.array([p in future_dates for p in splice_points]).all(),TypeError,'all elements in splice_points must be datetime objects or str in yyyy-mm-dd format and must be present in future_dates attribute')
                 fcst = [None]*len(future_dates)
                 start = 0
                 for i, _ in enumerate(splice_points):
@@ -772,7 +771,7 @@ class Forecaster:
             n: one of {True,False,0,1,2}
         """
         n = int(n)
-        my_assert((n <= 2) & (n >= 0),ValueError,'diffy cannot be less than 0 or greater than 2')
+        descriptive_assert((n <= 2) & (n >= 0),ValueError,'diffy cannot be less than 0 or greater than 2')
         y = self.y.copy()
         for i in range(n):
             y = y.diff().dropna()
@@ -788,7 +787,7 @@ class Forecaster:
     def fillna_y(self,how='ffill') -> None:
         """ fills null values in the y attribute
             how: {'backfill', 'bfill', 'pad', 'ffill', 'midpoint'}
-                midpoint is unique to this library and only works if there is not more than two missing values in a row
+                midpoint is unique to this library and only works if there is not more than two missing values sequentially
                 all other possible arguments are from pandas.DataFrame.fillna() method and will do the same
         """
         self.y = pd.Series(self.y)
@@ -824,11 +823,11 @@ class Forecaster:
         """
         self.y = pd.Series(self.y).dropna().astype(np.float64)
         self.current_dates = pd.to_datetime(pd.Series(list(self.current_dates)[-len(self.y):]),infer_datetime_format=True)
-        my_assert(len(self.y) == len(self.current_dates),ValueError,f'y and current_dates must be same size -- y is {len(self.y)} and current_dates is {len(self.current_dates)}')
+        descriptive_assert(len(self.y) == len(self.current_dates),ValueError,f'y and current_dates must be same size -- y is {len(self.y)} and current_dates is {len(self.current_dates)}')
         self.future_dates = pd.to_datetime(pd.Series(self.future_dates),infer_datetime_format=True)
         for k,v in self.current_xreg.items():
             self.current_xreg[k] = pd.Series(list(v)[-len(self.y):]).astype(np.float64)
-            my_assert(len(self.current_xreg[k]) == len(self.y),ForecastError,'something went wrong when setting covariate values--try resetting the object and trying again')
+            descriptive_assert(len(self.current_xreg[k]) == len(self.y),ForecastError,'something went wrong when setting covariate values--try resetting the object and trying again')
             self.future_xreg[k] = [float(x) for x in self.future_xreg[k]]
 
     def diff(self,i=1) -> None:
@@ -844,7 +843,7 @@ class Forecaster:
         if i == 0:
             return
 
-        my_assert(i in (1,2),ValueError,f'only 1st and 2nd order integrations supported for now, got i={i}')
+        descriptive_assert(i in (1,2),ValueError,f'only 1st and 2nd order integrations supported for now, got i={i}')
         self.first_obs = self.y.values[:i] # np array
         self.first_dates = self.current_dates.values[:i] # np array
         self.integration = i
@@ -867,8 +866,8 @@ class Forecaster:
             train_only: bool, default False
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
         """
-        my_assert(self.integration == 0,ForecastError,"can only run integrate() when series hasn't been differenced")
-        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
+        descriptive_assert(self.integration == 0,ForecastError,"can only run integrate() when series hasn't been differenced")
+        descriptive_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         res0 = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length])
         if res0[1] <= critical_pval:
             return
@@ -887,9 +886,9 @@ class Forecaster:
                 the number of terms to add (1 to this number will be added)
         """
         self._adder()
-        my_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
-        my_assert(n > 0,ValueError,f'n must be greater than 0, got {n}')
-        my_assert(self.integration == 0,ForecastError,"AR terms must be added before differencing (don't worry, they will be differenced too)")
+        descriptive_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
+        descriptive_assert(n > 0,ValueError,f'n must be greater than 0, got {n}')
+        descriptive_assert(self.integration == 0,ForecastError,"AR terms must be added before differencing (don't worry, they will be differenced too)")
         for i in range(1,n+1):
             self.current_xreg[f'AR{i}'] = pd.Series(self.y).shift(i)
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
@@ -903,8 +902,8 @@ class Forecaster:
                     the seasonal period (12 for monthly data, etc.)
         """
         self._adder()
-        my_assert((len(N) == 2) & (not isinstance(N,str)),ValueError,f'n must be an array-like of length 2 (P,m), got {N}')
-        my_assert(self.integration == 0,ForecastError,"AR terms must be added before differencing (don't worry, they will be differenced too)")
+        descriptive_assert((len(N) == 2) & (not isinstance(N,str)),ValueError,f'n must be an array-like of length 2 (P,m), got {N}')
+        descriptive_assert(self.integration == 0,ForecastError,"AR terms must be added before differencing (don't worry, they will be differenced too)")
         for i in range(N[1],N[1]*N[0] + 1,N[1]):
             self.current_xreg[f'AR{i}'] = pd.Series(self.y).shift(i)
             self.future_xreg[f'AR{i}'] = [self.y.values[-i]]
@@ -921,15 +920,15 @@ class Forecaster:
                 whether to use the future dates in the dataframe as the future_dates attribute in the object
                 if False, the dataframe must have at least the same number of observations as len(future_dates)
         """
-        my_assert(df.shape[0] == len(df[date_col].unique()),ValueError,'each date supplied must be unique')
+        descriptive_assert(df.shape[0] == len(df[date_col].unique()),ValueError,'each date supplied must be unique')
         df[date_col] = pd.to_datetime(df[date_col]).to_list()
         df = df.loc[df[date_col] >= self.current_dates.values[0]]
         df = pd.get_dummies(df,drop_first=drop_first)
         current_df = df.loc[df[date_col].isin(self.current_dates)]
         future_df = df.loc[df[date_col] > self.current_dates.values[-1]]
-        my_assert(current_df.shape[0] == len(self.y),ForecastError,'something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future and specify a date column in date_col parameter')
+        descriptive_assert(current_df.shape[0] == len(self.y),ForecastError,'something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future and specify a date column in date_col parameter')
         if not use_future_dates:
-            my_assert(future_df.shape[0] >= len(self.future_dates),ValueError,'the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object. if you desire to use the dataframe to set the future dates for the object, use use_future_dates=True')
+            descriptive_assert(future_df.shape[0] >= len(self.future_dates),ValueError,'the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object. if you desire to use the dataframe to set the future dates for the object, use use_future_dates=True')
         else:
             self.infer_freq()
             self.future_dates = future_df[date_col]
@@ -948,7 +947,7 @@ class Forecaster:
             n: int, default 1
                 the length of the resulting test set
         """
-        my_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
+        descriptive_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
         self.test_length=n
 
     def set_validation_length(self,n=1) -> None:
@@ -956,8 +955,8 @@ class Forecaster:
             n: int, default 1
                 the length of the resulting validation set
         """
-        my_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
-        my_assert(n > 0,ValueError,f'n must be greater than 1, got {n}')
+        descriptive_assert(isinstance(n,int),ValueError,f'n must be an int, got {n}')
+        descriptive_assert(n > 0,ValueError,f'n must be greater than 1, got {n}')
         if (self.validation_metric == 'r2') & (n == 1):
             raise ValueError('can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()')
         self.validation_length=n
@@ -975,7 +974,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to adfuller() function from statsmodels
         """
-        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
+        descriptive_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         res = adfuller(self.y.dropna() if not train_only else self.y.dropna().values[:-self.test_length],**kwargs)
         if not full_res:
             if res[1] <= critical_pval:
@@ -999,7 +998,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to plot_acf() function from statsmodels
         """
-        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
+        descriptive_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         y = self._diffy(diffy)
         y = y.values if not train_only else y.values[:-self.test_length]
         return plot_acf(y,**kwargs)
@@ -1012,7 +1011,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to plot_pacf() function from statsmodels
         """
-        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
+        descriptive_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         y = self._diffy(diffy)
         y = y.values if not train_only else y.values[:-self.test_length]
         return plot_pacf(y,**kwargs)
@@ -1025,7 +1024,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
         """
         from scipy.signal import periodogram
-        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
+        descriptive_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         y = self._diffy(diffy)
         y = y.values if not train_only else y.values[:-self.test_length]
         return periodogram(y)
@@ -1038,7 +1037,7 @@ class Forecaster:
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
             **kwargs passed to seasonal_decompose() function from statsmodels
         """
-        my_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
+        descriptive_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
         self.infer_freq()
         y = self._diffy(diffy)
         current_dates = self.current_dates.values[-len(y):] if not train_only else self.current_dates.values[-len(y):-self.test_length]
@@ -1149,9 +1148,9 @@ class Forecaster:
                 the separator between each term in arg to create the final variable name 
         """
         self._adder()
-        my_assert(len(args) > 1,ForecastError,'need at least two variables to combine regressors')
+        descriptive_assert(len(args) > 1,ForecastError,'need at least two variables to combine regressors')
         for i,a in enumerate(args):
-            my_assert(not a.startswith('AR'),ForecastError,'no combining AR terms at this time -- it confuses the forecasting mechanism')
+            descriptive_assert(not a.startswith('AR'),ForecastError,'no combining AR terms at this time -- it confuses the forecasting mechanism')
             if i == 0:
                 self.current_xreg[sep.join(args)] = self.current_xreg[a]
                 self.future_xreg[sep.join(args)] = self.future_xreg[a]
@@ -1169,7 +1168,7 @@ class Forecaster:
         """
         self._adder()
         for a in args:
-            my_assert(not a.startswith('AR'),ForecastError,'no polynomial AR terms at this time -- it confuses the forecasting mechanism')
+            descriptive_assert(not a.startswith('AR'),ForecastError,'no polynomial AR terms at this time -- it confuses the forecasting mechanism')
             for i in range(2,pwr+1):
                 self.current_xreg[f'{a}{sep}{i}'] = self.current_xreg[a]**i
                 self.future_xreg[f'{a}{sep}{i}'] = [x**i for x in self.future_xreg[a]]
@@ -1214,7 +1213,7 @@ class Forecaster:
         """ sets the estimator to forecast with
             estimator: one of _estimators_
         """
-        my_assert(estimator in _estimators_,ValueError,f'estimator must be one of {_estimators_}, got {estimator}')
+        descriptive_assert(estimator in _estimators_,ValueError,f'estimator must be one of {_estimators_}, got {estimator}')
         self.typ_set()
         if hasattr(self,'estimator'):
             if estimator != self.estimator:
@@ -1239,12 +1238,16 @@ class Forecaster:
         grid = expand_grid(grid)
         self.grid = grid
 
-    def limit_grid_size(self,n) -> None:
+    def limit_grid_size(self,n,random_seed=None) -> None:
         """ makes a grid smaller randomly
             n: int or float
                 if int, randomly selects that many parameter combinations
                 if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations
         """
+        if random_seed is not None:
+            import random
+            random.seed(random_seed)
+            
         if n >= 1:
             self.grid = self.grid.sample(n=min(n,self.grid.shape[0])).reset_index(drop=True)
         elif (n < 1) & (n > 0):
@@ -1258,7 +1261,7 @@ class Forecaster:
             metric: one of _metrics_, default 'rmse'
                 the metric to optimize the models on using the validation set
         """
-        my_assert(metric in _metrics_,ValueError,f'metric must be one of {_metrics_}, got {metric}')
+        descriptive_assert(metric in _metrics_,ValueError,f'metric must be one of {_metrics_}, got {metric}')
         if (metric == 'r2') & (self.validation_length < 2):
             raise ValueError('can only validate with r2 if the validation length is at least 2, try set_validation_length()')
         self.validation_metric = metric
@@ -1317,7 +1320,7 @@ class Forecaster:
             **kwargs are passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
         """
         call_me = self.estimator if call_me is None else call_me
-        my_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
+        descriptive_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
         self.forecast = getattr(self,f'_forecast_{self.estimator}')(**kwargs)
         self.call_me = call_me
         self._bank_history(auto=False,**kwargs)
@@ -1329,7 +1332,7 @@ class Forecaster:
                 duplicated names will be overwritten with the most recently called model
         """
         call_me = self.estimator if call_me is None else call_me
-        my_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
+        descriptive_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
         if not hasattr(self,'best_params'):
             warnings.warn(f'since tune() has not been called, {self.estimator} model will be run with default parameters')
             self.best_params = {}
@@ -1346,8 +1349,8 @@ class Forecaster:
             feature_importance: bool, default False
                 whether to save permutation feature importance information for the models that offer those
         """
-        my_assert(len([m for m in models if m not in _estimators_]) == 0,ValueError,f'all models passed to models argument most be one of {_estimators_}')
-        my_assert(os.path.isfile('./Grids.py'),FileNotFoundError,'Grids.py not found in working directory')
+        descriptive_assert(len([m for m in models if m not in _estimators_]) == 0,ValueError,f'all models passed to models argument most be one of {_estimators_}')
+        descriptive_assert(os.path.isfile('./Grids.py'),FileNotFoundError,'Grids.py not found in working directory')
         for m in models:
             self.set_estimator(m)
             self.tune()
@@ -1395,7 +1398,7 @@ class Forecaster:
             n = datetime.datetime.strptime(n,'%Y-%m-%d')
         if (type(n) is datetime.datetime) or (type(n) is pd.Timestamp):
             n = len([i for i in self.current_dates if i >= n])
-        my_assert((isinstance(n,int)) & (n > 2),ValueError,'n must be an int, datetime object, or str in yyyy-mm-dd format and there must be more than 2 observations to keep')
+        descriptive_assert((isinstance(n,int)) & (n > 2),ValueError,'n must be an int, datetime object, or str in yyyy-mm-dd format and there must be more than 2 observations to keep')
         self.y = self.y[-n:]
         self.current_dates = self.current_dates[-n:]
         for k, v in self.current_xreg.items():
@@ -1407,7 +1410,7 @@ class Forecaster:
                 each element must match an element in _estimators_ (except "combo", which cannot be tuned)
             determine_best_by: one of _determine_best_by_
         """
-        my_assert(determine_best_by in _determine_best_by_,ValueError,f'determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}')
+        descriptive_assert(determine_best_by in _determine_best_by_,ValueError,f'determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}')
         models_metrics = {m:self.history[m][determine_best_by] for m in models}
         x = [h[0] for h in Counter(models_metrics).most_common()]
         return x if (determine_best_by.endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) else x[::-1]
@@ -1452,7 +1455,7 @@ class Forecaster:
         """
         try:
             models = self._parse_models(models,order_by)
-        except ValueError:
+        except (ValueError,TypeError):
             models = None
 
         if models is None:
@@ -1477,8 +1480,10 @@ class Forecaster:
             'date':self.current_dates.to_list()[-len(y.dropna()):] if not level else self.current_dates.to_list()[-len(self.history[models[0]]['LevelY']):],
             'actuals':y.dropna().to_list() if not level else self.history[models[0]]['LevelY'],
         }
+        plot['actuals_len'] = min(len(plot['date']),len(plot['actuals']))
+
         print_attr_map = {}
-        sns.lineplot(x=plot['date'],y=plot['actuals'],label='actuals')
+        sns.lineplot(x=plot['date'][-plot['actuals_len']:],y=plot['actuals'][-plot['actuals_len']:],label='actuals')
         for i, m in enumerate(models):
             plot[m] = self.history[m]['Forecast'] if not level else self.history[m]['LevelForecast'] 
             sns.lineplot(x=self.future_dates.to_list(),y=plot[m],color=_colors_[i],label=m)
@@ -1532,8 +1537,10 @@ class Forecaster:
             'date':self.current_dates.to_list()[-len(y.dropna()):] if not level else self.current_dates.to_list()[-len(self.history[models[0]]['LevelY']):],
             'actuals':y.dropna().to_list() if not level else self.history[models[0]]['LevelY'],
         }
+        plot['actuals_len'] = min(len(plot['date']),len(plot['actuals']))
+
         if str(include_train).isnumeric():
-            my_assert((include_train > 1) & isinstance(include_train,int),ValueError,f'include_train must be a bool type or an int greater than 1, got {include_train}')
+            descriptive_assert((include_train > 1) & isinstance(include_train,int),ValueError,f'include_train must be a bool type or an int greater than 1, got {include_train}')
             plot['actuals'] = plot['actuals'][-include_train:]
             plot['date'] = plot['date'][-include_train:]
         elif isinstance(include_train,bool):
@@ -1543,7 +1550,7 @@ class Forecaster:
         else:
             raise ValueError(f'include_train argument not recognized: ({include_train})')
 
-        sns.lineplot(x=plot['date'],y=plot['actuals'],label='actuals')
+        sns.lineplot(x=plot['date'][-plot['actuals_len']:],y=plot['actuals'][-plot['actuals_len']:],label='actuals')
 
         for i, m in enumerate(models):
             plot[m] = self.history[m]['TestSetPredictions'] if not level else self.history[m]['LevelTestSetPreds']

@@ -7,7 +7,7 @@ arima = {
 elasticnet = {
 	'alpha':[i/10 for i in range(1,21)],
 	'l1_ratio':[0,0.25,0.5,0.75,1],
-	'normalizer':['scale','minmax','normalize',None]
+	'normalizer':['scale','minmax',None]
 }
 
 gbt = {
@@ -22,13 +22,13 @@ hwes = {
 }
 
 knn = {
-	'n_neighbors':range(2,20),
+	'n_neighbors':range(2,21),
 	'weights':['uniform','distance']
 }
 
+
 lightgbm = {
-	'max_depth':[-1,2,3],
-    'subsample':[.5,.75,1]
+	'max_depth':[-1,2,3]
 }
 
 mlp = {
@@ -63,6 +63,5 @@ svr={
 }
 
 xgboost = {
-	'max_depth':[2,3],
-    'subsample':[.5,.75,1]
+	'max_depth':[2,3]
 }
