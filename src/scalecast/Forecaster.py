@@ -550,7 +550,7 @@ class Forecaster:
         p = pd.DataFrame({k:v for k,v in self.future_xreg.items() if not k.startswith('AR')})
         Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else []
         if cap is not None: X['cap'] = cap
-        if floor is not None: x['floor'] = floor
+        if floor is not None: X['floor'] = floor
         X['y'] = self.y.to_list()
         X['ds'] = self.current_dates.to_list()
         p['ds'] = self.future_dates.to_list()

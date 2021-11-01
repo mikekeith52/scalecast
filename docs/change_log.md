@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.2] - 2021-11-01
+### Added
+### Changed
+### Fixed
+- Found an issue when using `floor` in Prophet
+
 ## [0.3.1] - 2021-10-29
 ### Added
 - Added the eCommerce example
