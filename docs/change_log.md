@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.3] - 2021-11-26
+## Added
+## Changed
+- Now reloads Grids file each time `ingest_grid()` is called so that notebooks do not have to be rerun when a grid cannot be found
+## Fixed
+- Fixed an issue with some sklearn estimators that occurs when passing a subset of regressors in a list to the forecast function
+
 ## [0.3.2] - 2021-11-01
 ### Added
 ### Changed

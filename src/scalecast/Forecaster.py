@@ -380,12 +380,12 @@ class Forecaster:
         X_test = self._scale(scaler,X_test)
         regr = fcster(**kwargs)
         regr.fit(X_train,y_train)
-        pred = self._forecast_sklearn(scaler,regr,X_train,y_train,Xvars,self.current_dates.values[-test_size:], {x:v.values[-test_size:] for x,v in self.current_xreg.items()})
+        pred = self._forecast_sklearn(scaler,regr,X_train,y_train,Xvars,self.current_dates.values[-test_size:], {x:v.values[-test_size:] for x,v in self.current_xreg.items() if x in self.Xvars})
         self._metrics(y_test,pred)
         if tune:
             return self._tune()
         else:
-            return self._forecast_sklearn(scaler,regr,X,y,Xvars,self.future_dates,self.future_xreg.copy(),true_forecast=True)
+            return self._forecast_sklearn(scaler,regr,X,y,Xvars,self.future_dates,{x: v for x, v in self.future_xreg.items() if x in self.Xvars},true_forecast=True)
 
     def _forecast_mlp(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
         """ multi-level perceptron from sklearn
@@ -1233,7 +1233,9 @@ class Forecaster:
         from itertools import product
         expand_grid = lambda d: pd.DataFrame([row for row in product(*d.values())],columns=d.keys())
         if isinstance(grid,str):
+            import importlib
             import Grids
+            importlib.reload(Grids)
             grid = getattr(Grids,grid)
         grid = expand_grid(grid)
         self.grid = grid
