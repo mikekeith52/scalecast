@@ -86,8 +86,7 @@ src/SCALECAST.egg-info/top_level.txt
 src/scalecast/Forecaster.py
 src/scalecast/GridGenerator.py
 src/scalecast/__init__.py
-src/scalecast/.ipynb_checkpoints/Forecaster-checkpoint.py
-src/scalecast/.ipynb_checkpoints/eCommerce-checkpoint.ipynb
+src/scalecast/notebook.py
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
 src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/Grids.cpython-38.pyc

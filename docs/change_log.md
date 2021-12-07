@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.5] - 2021-12-07
+## Added
+- added `include_traing` parameter to `notebook.results_vis()` function
+## Changed
+## Fixed
+- fixed `print_attr` parameter default in `notebook.results_vis()`
+
+## [0.3.4] - 2021-12-07
+## Added
+- added `results_vis()` notebook function (requires ipywidgets)
+- added `Forecaster.export_Xvars_df()` function
+- added `max_integration` argument to the `Forecaster.integrate()` function
+## Changed
+## Fixed
+
 ## [0.3.3] - 2021-11-26
 ## Added
 ## Changed

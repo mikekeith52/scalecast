@@ -859,12 +859,15 @@ class Forecaster:
         if hasattr(self,'adf_stationary'):
             delattr(self,'adf_stationary')
 
-    def integrate(self,critical_pval=0.05,train_only=False) -> None:
+    def integrate(self,critical_pval=0.05,train_only=False,max_integration=2) -> None:
         """differences the series 0, 1, or 2 times based on ADF test
             critical_pval: float, default 0.05
                 the p-value threshold in the statistical test to accept the alternative hypothesis
             train_only: bool, default False
                 if True, will exclude the test set from the test (a measure added to avoid leakage)
+            max_integration: int, one of {1,2}, default 2
+                if 1, will only difference data up to one time even if the results of the test indicate two integrations
+                if 2, behaves how you would expect
         """
         descriptive_assert(self.integration == 0,ForecastError,"can only run integrate() when series hasn't been differenced")
         descriptive_assert(isinstance(train_only,bool),ValueError,'train_only must be True or False')
@@ -873,7 +876,7 @@ class Forecaster:
             return
 
         res1 = adfuller(self.y.diff().dropna() if not train_only else self.y.diff().dropna().values[:-self.test_length])
-        if res1[1] <= critical_pval:
+        if (res1[1] <= critical_pval) | (max_integration == 1):
             self.diff()
             return
 
@@ -1812,3 +1815,19 @@ class Forecaster:
         self.undiff(suppress_error=True)
         self.current_xreg = {}
         self.future_xreg = {}
+
+    def export_Xvars_df(self,dropna=False):
+        """ returns a pandas dataframe with all utilized regressors and values
+            dropna: bool, default False
+                whether to drop null values from the resulting dataframe
+        """
+        df = pd.concat([
+            pd.concat([
+                pd.DataFrame({'DATE':self.current_dates.to_list()}),pd.DataFrame(self.current_xreg)
+            ],axis=1),
+            pd.concat([
+                 pd.DataFrame({'DATE':self.future_dates.to_list()}),pd.DataFrame(self.future_xreg)
+            ],axis=1)
+        ],ignore_index=True)
+
+        return df.dropna() if dropna else df

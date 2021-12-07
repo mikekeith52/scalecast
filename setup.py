@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
   name = 'SCALECAST',
-  version = '0.3.3',
+  version = '0.3.5',
   license='MIT',
   long_description='Dynamic forecasting at scale. See the documentation on [GitHub](https://github.com/mikekeith52/scalecast).',
   long_description_content_type='text/markdown',

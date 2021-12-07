@@ -42,6 +42,12 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the forecast
     - to resolve a common installation issue, see this [Stack Overflow post](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet)
 3. `pip install greykite`
     - only necessary if you plan to forecast with LinkedIn Silverkite
+4. If using notebook functions:
+    - `pip install ipython`
+    - `pip install ipywidgets`
+    - `jupyter nbextension enable --py widgetsnbextension`
+    - if using Jupyter Lab: `jupyter labextension install @jupyter-widgets/jupyterlab-manager`
+
 
 ## Documentation
 |Documentation||
