@@ -21,7 +21,7 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
                 passed to print_attr parameter when plot_type = 'forecast'
                 ignored when plot_type = 'test'
             include_train: bool or int, optional
-                whether to include the complete training set in the results or how many traning-set observations to include
+                whether to include the complete training set in the plot or how many traning-set observations to include
                 passed to include_train parameter when plot_type = 'test'
                 ignored when plot_type = 'forecast'
     """
@@ -33,6 +33,8 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
                                print_attr=print_attr)
         elif plot_type == 'test':
             selected_data.plot_test_set(models=f'top_{mo_selection}',order_by=me_selection,include_train=include_train,level=lv_selection)
+        else:
+            raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
 
     def on_button_clicked(b):
         mo_selection = mo_dd.value
