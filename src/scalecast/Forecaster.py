@@ -389,6 +389,7 @@ class Forecaster:
 
     def _forecast_mlp(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
         """ multi-level perceptron from sklearn
+            returns an error/accuracy metric if tune is True, a list of future forecasted value if tune is False
             tune: bool, default False
                 whether the function is being called for tuning or forecasting
             Xvars: str or None
