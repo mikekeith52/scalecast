@@ -68,6 +68,7 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
 def tune_test_forecast(forecaster,models,summary_stats=False,feature_importance=False):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm
         Paramaters:
+            forecaster: Forecaster.Forecaster object
             models: list-like
                 each element must match an element in scalecast.Forecaster._estimators_ (except "combo", which cannot be tuned)
             summary_stats: bool, default False
