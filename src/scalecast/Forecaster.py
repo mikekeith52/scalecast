@@ -943,7 +943,7 @@ class Forecaster:
         for x,v in self.future_xreg.items():
             self.future_xreg[x] = v[:len(self.future_dates)]
             if not len(v) == len(self.future_dates):
-                warnings.warn(f'warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(future_dates)}')
+                warnings.warn(f'warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(self.future_dates)}')
 
     def set_test_length(self,n=1) -> None:
         """ set the length of the test set (no fractional splits)

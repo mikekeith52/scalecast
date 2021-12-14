@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.6] - 2021-12-14
+## Added
+- added `tune_test_forecast()` function to notebook module to create a progress bar when using a notebook
+## Changed
+## Fixed
+- fixed an issue with `Forecaster.ingest_Xvars_df()` when `use_future_dates=False` causing an error to be raised
+
 ## [0.3.5] - 2021-12-07
 ## Added
 - added `include_traing` parameter to `notebook.results_vis()` function

@@ -43,6 +43,7 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the forecast
 3. `pip install greykite`
     - only necessary if you plan to forecast with LinkedIn Silverkite
 4. If using notebook functions:
+    - `pip install tqdm`
     - `pip install ipython`
     - `pip install ipywidgets`
     - `jupyter nbextension enable --py widgetsnbextension`

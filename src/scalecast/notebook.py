@@ -10,6 +10,8 @@ from scalecast.Forecaster import _determine_best_by_
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from tqdm.notebook import tqdm as log_progress
+
 def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_attr: list = [], include_train: Union[bool,int] = True) -> None:
     """ visualize the forecast results leveraging widgets
         Parameters:
@@ -62,3 +64,23 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     display(button, output)
     
     button.on_click(on_button_clicked)
+
+def tune_test_forecast(forecaster,models,summary_stats=False,feature_importance=False):
+    """ tunes, tests, and forecasts a series of models with a progress bar through tqdm
+        Paramaters:
+            models: list-like
+                each element must match an element in scalecast.Forecaster._estimators_ (except "combo", which cannot be tuned)
+            summary_stats: bool, default False
+                whether to save summary stats for the models that offer those
+            feature_importance: bool, default False
+                whether to save permutation feature importance information for the models that offer those
+    """
+    for m in log_progress(models):
+        forecaster.set_estimator(m)
+        forecaster.tune()
+        forecaster.auto_forecast()
+
+        if summary_stats:
+            forecaster.save_summary_stats()
+        if feature_importance:
+            forecaster.save_feature_importance()

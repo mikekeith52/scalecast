@@ -91,3 +91,4 @@ src/scalecast/__pycache__/Forecaster.cpython-38.pyc
 src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/Grids.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
+src/scalecast/__pycache__/notebook.cpython-38.pyc
