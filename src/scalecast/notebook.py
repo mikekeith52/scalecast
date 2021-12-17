@@ -4,8 +4,7 @@ from typing import Dict, Union
 from ipywidgets import widgets
 from IPython.display import display, clear_output
 
-from scalecast.Forecaster import Forecaster
-from scalecast.Forecaster import _determine_best_by_
+from scalecast.Forecaster import Forecaster, _determine_best_by_, _estimators_
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -27,17 +26,18 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
                 passed to include_train parameter when plot_type = 'test'
                 ignored when plot_type = 'forecast'
     """
+    if plot_type not in {'forecast','test'}:
+        raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
+
     def display_user_selections(ts_selection,mo_selection,lv_selection,me_selection):
         selected_data = f_dict[ts_selection]
         print(ts_selection)
         if plot_type == 'forecast':
             selected_data.plot(models=f'top_{mo_selection}',order_by=me_selection,level=lv_selection,
                                print_attr=print_attr)
-        elif plot_type == 'test':
-            selected_data.plot_test_set(models=f'top_{mo_selection}',order_by=me_selection,include_train=include_train,level=lv_selection)
         else:
-            raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
-
+            selected_data.plot_test_set(models=f'top_{mo_selection}',order_by=me_selection,include_train=include_train,level=lv_selection)
+            
     def on_button_clicked(b):
         mo_selection = mo_dd.value
         ts_selection = ts_dd.value
@@ -76,6 +76,8 @@ def tune_test_forecast(forecaster,models,summary_stats=False,feature_importance=
             feature_importance: bool, default False
                 whether to save permutation feature importance information for the models that offer those
     """
+    if len([m for m in models if m not in [m for m in _estimators_ if m != 'combo']]) > 0:
+        raise ValueError('values passed to models must be list-like and in {}'.format([m for m in _estimators_ if m != 'combo']))
     for m in log_progress(models):
         forecaster.set_estimator(m)
         forecaster.tune()

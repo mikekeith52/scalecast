@@ -1357,6 +1357,7 @@ class Forecaster:
         """
         descriptive_assert(len([m for m in models if m not in _estimators_]) == 0,ValueError,f'all models passed to models argument most be one of {_estimators_}')
         descriptive_assert(os.path.isfile('./Grids.py'),FileNotFoundError,'Grids.py not found in working directory')
+        descriptive_assert('comob' not in models,ValueError,'combo models cannot be tuned')
         for m in models:
             self.set_estimator(m)
             self.tune()
