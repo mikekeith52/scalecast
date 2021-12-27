@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scalecast.Forecaster import Forecaster
 
-models = ('knn','svr','lightgbm','mlp')
+models = ('knn','svr','lightgbm','mlp','elasticnet')
 level_models = ('arima','hwes','prophet','silverkite')
 df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
 
 f.set_test_length(12) # specify a test length for your models--it's a good idea to keep this the same for all forecasts
-f.generate_future_dates(25) # this will create future dates that are on the same interval as the current dates and it will also set the forecast length
+f.generate_future_dates(24) # this will create future dates that are on the same interval as the current dates and it will also set the forecast length
 f.add_ar_terms(4) # add AR terms before differencing
 f.add_AR_terms((2,12)) # seasonal AR terms
 f.diff() # differences the y term and all ar terms to make a series stationary (also supports 2-level integration)
@@ -20,11 +20,10 @@ f.add_seasonal_regressors('year')
 f.add_covid19_regressor() # dates are flexible, default is from when disney world closed to when US CDC lifted mask recommendations
 f.add_time_trend()
 f.add_combo_regressors('t','COVID19') # multiplies regressors together
-f.add_poly_terms('t',pwr=3) # by default, creates an order 2 regressor, n-order polynomial terms are allowed
 f.set_validation_length(6) # length, different than test_length, to tune the hyperparameters 
 
 # automatically tune and forecast with a series of models
-f.tune_test_forecast(models,feature_importance=True,summary_stats=True)
+f.tune_test_forecast(models,feature_importance=True,summary_stats=True) # by default, tuning is not dynamic but testing is
 
 # combine models and run manually specified models of other varieties
 f.set_estimator('combo')
@@ -33,7 +32,7 @@ f.manual_forecast(how='weighted',models=models,determine_best_by='ValidationMetr
 
 # undifference results to bring back orginal series
 f.undiff()
-f.tune_test_forecast(level_models,feature_importance=True,summary_stats=True)
+f.tune_test_forecast(level_models,feature_importance=True,summary_stats=True) # by default, tuning is not dynamic but testing is
 
 # combine models and run manually specified models of other varieties
 f.set_estimator('combo')

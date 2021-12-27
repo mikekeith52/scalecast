@@ -5,6 +5,7 @@
 - for each  model, there are different hyperparameters that can be tuned this way -- see the specific model's source documentation
 - all combinations will be tried like any other grid, however, combinations that cannot be estimated together will be passed over to not break loops (this issue comes up frequently with hwes estimators)
 - most estimators will also accept an `Xvars` and `normalizer` argument and these can be added to the grid
+- you can pass the `dynamic_tuning=True` argument for dynamic tuning. by default, this is `False` to improve speed
 
 [tuning grids](#grids.py)  
 [grid generator](#grid-generator)  

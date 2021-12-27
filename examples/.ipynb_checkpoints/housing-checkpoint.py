@@ -37,7 +37,7 @@ f.add_covid19_regressor() # dates are flexible, default is from when disney worl
 f.add_time_trend()
 f.add_combo_regressors('t','COVID19') # multiplies regressors together
 f.set_validation_length(6) # length, different than test_length, to tune the hyperparameters 
-f.tune_test_forecast(models,feature_importance=True,summary_stats=True)
+f.tune_test_forecast(models,feature_importance=True,summary_stats=True) # by default, tuning is not dynamic but testing is
 
 # combine models and run manually specified models of other varieties
 f.set_estimator('combo')

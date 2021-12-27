@@ -65,12 +65,20 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     
     button.on_click(on_button_clicked)
 
-def tune_test_forecast(forecaster,models,summary_stats=False,feature_importance=False):
+def tune_test_forecast(forecaster,models,dynamic_tuning=False,dynamic_testing=True,summary_stats=False,feature_importance=False):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm
         Paramaters:
             forecaster: Forecaster.Forecaster object
             models: list-like
                 each element must match an element in scalecast.Forecaster._estimators_ (except "combo", which cannot be tuned)
+            dynamic_tuning: bool, default False
+                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, metrics effectively become an average of one-step forecasts
+            dynamic_testing: bool, default True
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, test-set metrics effectively become an average of one-step forecasts
             summary_stats: bool, default False
                 whether to save summary stats for the models that offer those
             feature_importance: bool, default False
@@ -80,8 +88,8 @@ def tune_test_forecast(forecaster,models,summary_stats=False,feature_importance=
         raise ValueError('values passed to models must be list-like and in {}'.format([m for m in _estimators_ if m != 'combo']))
     for m in log_progress(models):
         forecaster.set_estimator(m)
-        forecaster.tune()
-        forecaster.auto_forecast()
+        forecaster.tune(dynamic_tuning=dynamic_tuning)
+        forecaster.auto_forecast(dynamic_testing=dynamic_testing)
 
         if summary_stats:
             forecaster.save_summary_stats()

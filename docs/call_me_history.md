@@ -13,7 +13,8 @@ dict(call_me =
     'Scaler' = str: name of normalizer used ('minmax','scale',None), always set
     'Forecast' = list: the forecast at whatever level it was run, always set
     'FittedVals' = list: the fitted values at whatever level the forecast was run, always set
-    'Tuned' = bool: whether the model was auto-tuned, always set
+    'Tuned' = str: "Not Tuned" when model was not tuned, "Dynamically" if `dynamic_tuning=True` was passed when tune() function was called, otherwise "Not Dynamically"; always set
+    'DynamicallyTested' = bool: whether the models were dynamically tested, always set
     'Integration' = int: the integration of the model run, 0 when no series diff taken, never greater than 2, always set
     'TestSetLength' = int: the number of periods set aside to test the model, always set
     'TestSetRMSE' = float: the RMSE of the model on the test set at whatever level the forecast was run, always set

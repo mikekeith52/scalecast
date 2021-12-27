@@ -29377,3 +29377,704 @@ INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality
 INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
 INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
 INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'n'}. error: Schur decomposition solver error.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'n'}. error: Schur decomposition solver error.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'n'}. error: Schur decomposition solver error.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'n'}. error: Schur decomposition solver error.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'n'}. error: Schur decomposition solver error.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'n'}. error: Schur decomposition solver error.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (2, 1, 0), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (0, 1, 2), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (0, 1, 1, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 'c'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 't'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the arima model
+WARNING:root:could not evaluate the paramaters: {'order': (1, 1, 1), 'seasonal_order': (2, 1, 0, 12), 'trend': 'ct'}. error: In models with integration (`d > 0`) or seasonal integration (`D > 0`), trend terms of lower order than `d + D` cannot be (as they would be eliminated due to the differencing operation). For example, a constant cannot be included in an ARIMA(1, 1, 1) model, but including a linear trend, which would have the same effect as fitting a constant to the differenced data, is allowed.
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the hwes model
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the prophet model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:fbprophet.models:Optimization terminated abnormally. Falling back to Newton.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+WARNING:root:dynamic_testing argument will be ignored for the silverkite model
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+INFO:fbprophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:fbprophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.

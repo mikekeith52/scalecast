@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.7] - 2021-12-27
+## Added
+- `dynamic_testing` argument to `manual_forecast()` and `auto_forecast()` functions -- this is `True` by default (makes all testing comparable between sklearn/non-sklearn models)
+- `dynamic_tuning` argument to `tune()` function -- this is `False` by default to majorly improve speed in some applications
+## Changed
+- native Forecaster warnings will be logged
+## Fixed
+
 ## [0.3.6] - 2021-12-14
 ## Added
 - added `tune_test_forecast()` function to notebook module to create a progress bar when using a notebook

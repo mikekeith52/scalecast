@@ -35,6 +35,7 @@ def descriptive_assert(statement,ErrorType,error_message):
         raise ErrorType(error_message)
 
 _estimators_ = {'arima','mlr','mlp','gbt','xgboost','lightgbm','rf','prophet','silverkite','hwes','elasticnet','svr','knn','combo'}
+_sklearn_estimators_ = {'mlr','mlp','gbt','xgboost','lightgbm','rf','elasticnet','svr','knn'}
 _metrics_ = {'r2', 'rmse', 'mape', 'mae'}
 _determine_best_by_ = {'TestSetRMSE', 'TestSetMAPE', 'TestSetMAE', 'TestSetR2', 'InSampleRMSE', 'InSampleMAPE', 'InSampleMAE',
                         'InSampleR2', 'ValidationMetricValue', 'LevelTestSetRMSE', 'LevelTestSetMAPE', 'LevelTestSetMAE',
@@ -106,7 +107,8 @@ class Forecaster:
             'Scaler':kwargs['normalizer'] if 'normalizer' in kwargs.keys() else None if self.estimator in ('prophet','combo') else None if hasattr(self,'univariate') else 'minmax',
             'Forecast':self.forecast[:],
             'FittedVals':self.fitted_values[:],
-            'Tuned':kwargs['auto'],
+            'Tuned':'Not Tuned' if not kwargs['auto'] else 'Dynamically' if self.dynamic_tuning else 'Not Dynamically',
+            'DynamicallyTested':self.dynamic_testing,
             'Integration':self.integration,
             'TestSetLength':self.test_length,
             'TestSetRMSE':self.rmse,
@@ -297,7 +299,7 @@ class Forecaster:
         self.Xvars = Xvars
         return Xvars, y, X, test_size
 
-    def _forecast_sklearn(self,scaler,regr,X,y,Xvars,future_dates,future_xreg,true_forecast=False) -> list:
+    def _forecast_sklearn(self,scaler,regr,X,y,Xvars,future_dates,future_xreg,dynamic_testing,true_forecast=False) -> list:
         """ forecasts an sklearn model into the unknown
             uses loops to dynamically plug in AR values without leaking in either a tune/test process or true forecast
             returns a list of forecasted values
@@ -318,13 +320,18 @@ class Forecaster:
         """
         if true_forecast:
             self._clear_the_deck()
+            self.dynamic_testing = dynamic_testing
         X = self._scale(scaler,X)
         regr.fit(X,y)
         if true_forecast:
             self.regr = regr
             self.X = X
             self.fitted_values = list(regr.predict(X))
-        if len([x for x in self.current_xreg.keys() if x.startswith('AR')]) > 0:
+        if (len([x for x in self.current_xreg.keys() if x.startswith('AR')]) == 0) | ((not true_forecast) & (not dynamic_testing)):
+            p = pd.DataFrame(future_xreg)
+            p = self._scale(scaler,p)
+            fcst = list(regr.predict(p)) 
+        else:
             fcst = []
             for i, _ in enumerate(future_dates):
                 p = pd.DataFrame({k:[v[i]] for k,v in future_xreg.items() if k in Xvars})
@@ -345,13 +352,9 @@ class Forecaster:
                                     future_xreg[k][i+1] = self.y.values[idx]
                                 except IndexError:
                                     future_xreg[k].append(self.y.values[idx])
-        else:
-            p = pd.DataFrame(future_xreg)
-            p = self._scale(scaler,p)
-            fcst = list(regr.predict(p))
         return fcst
 
-    def _full_sklearn(self,fcster,tune,Xvars,normalizer,**kwargs) -> Union[float,list]:
+    def _full_sklearn(self,fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs) -> Union[float,list]:
         """ runs an sklearn forecast start-to-finish
             drops n/a AR observations
             the following methods are called (in order):
@@ -380,14 +383,11 @@ class Forecaster:
         X_test = self._scale(scaler,X_test)
         regr = fcster(**kwargs)
         regr.fit(X_train,y_train)
-        pred = self._forecast_sklearn(scaler,regr,X_train,y_train,Xvars,self.current_dates.values[-test_size:], {x:v.values[-test_size:] for x,v in self.current_xreg.items() if x in self.Xvars})
+        pred = self._forecast_sklearn(scaler,regr,X_train,y_train,Xvars,self.current_dates.values[-test_size:], {x:v.values[-test_size:] for x,v in self.current_xreg.items() if x in self.Xvars},dynamic_testing)
         self._metrics(y_test,pred)
-        if tune:
-            return self._tune()
-        else:
-            return self._forecast_sklearn(scaler,regr,X,y,Xvars,self.future_dates,{x: v for x, v in self.future_xreg.items() if x in self.Xvars},true_forecast=True)
+        return self._tune() if tune else self._forecast_sklearn(scaler,regr,X,y,Xvars,self.future_dates,{x: v for x, v in self.future_xreg.items() if x in self.Xvars},dynamic_testing,true_forecast=True)
 
-    def _forecast_mlp(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_mlp(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ multi-level perceptron from sklearn
             returns an error/accuracy metric if tune is True, a list of future forecasted value if tune is False
             tune: bool, default False
@@ -398,75 +398,84 @@ class Forecaster:
                 if None, uses all regressors
             normalizer: one of _normalizer_, default 'minmax'
                 the type of scaling to perform on the model inputs
+            dynamic_testing: bool, default True
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, test-set metrics effectively become an average of one-step forecasts
             **kwargs: passed to the regression function when fitting model
         """
         from sklearn.neural_network import MLPRegressor as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_mlr(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_mlr(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ multi-linear regression from sklearn
             for parameters, see _forecast_mlp()
         """
         from sklearn.linear_model import LinearRegression as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_xgboost(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_xgboost(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ xgboost from xgboost -- uses sklearn api and same as any other sklearn model
             for parameters, see _forecast_mlp()
         """
         from xgboost import XGBRegressor as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_lightgbm(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_lightgbm(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ lightgbm from lightgbm -- uses sklearn api and same as any other sklearn model
             for parameters, see _forecast_mlp()
         """
         from lightgbm import LGBMRegressor as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_gbt(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_gbt(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ gradient boosted tree from sklearn
             for parameters, see _forecast_mlp()
         """
         from sklearn.ensemble import GradientBoostingRegressor as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_rf(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_rf(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ random forest from sklearn
             for parameters, see _forecast_mlp()
         """
         from sklearn.ensemble import RandomForestRegressor as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_elasticnet(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_elasticnet(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ elasticnet from sklearn
             for parameters, see _forecast_mlp()
         """ 
         from sklearn.linear_model import ElasticNet as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_svr(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_svr(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ support vector machine from sklearn
             for parameters, see _forecast_mlp()
         """
         from sklearn.svm import SVR as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
 
-    def _forecast_knn(self,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
+    def _forecast_knn(self,tune=False,Xvars=None,normalizer='minmax',dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ k-nearest neighbors from sklearn
             for parameters, see _forecast_mlp()
         """
         from sklearn.neighbors import KNeighborsRegressor as fcster
-        return self._full_sklearn(fcster,tune,Xvars,normalizer,**kwargs)
+        return self._full_sklearn(fcster,tune,Xvars,normalizer,dynamic_testing,**kwargs)
     
-    def _forecast_hwes(self,tune=False,**kwargs) -> Union[float,list]:
+    def _forecast_hwes(self,tune=False,dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ forecasts with holt-winters exponential smoothing
             tune: bool, default False
                 whether to tune the forecast
                 if True, returns a metric
                 if False, returns a list of forecasted values
+            dynamic_testing: bool, default True
+                always ignored (for now)
             **kwargs passed to the HWES() function from statsmodels
         """
+        if not dynamic_testing:
+            logging.warning('dynamic_testing argument will be ignored for the hwes model')
+        self.dynamic_testing = True
         from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
         y = self.y.to_list()
         if tune:
@@ -491,7 +500,7 @@ class Forecaster:
             self._set_summary_stats()
             return list(regr.predict(start=len(y),end=len(y) + len(self.future_dates) - 1))
 
-    def _forecast_arima(self,tune=False,Xvars=None,**kwargs) -> Union[float,list]:
+    def _forecast_arima(self,tune=False,Xvars=None,dynamic_testing=True,**kwargs) -> Union[float,list]:
         """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX)
             tune: bool, default False
                 whether to tune the forecast
@@ -500,8 +509,13 @@ class Forecaster:
             Xvars: str or None, default None
                 the names of the regressors to use -- must match names in current_xreg and future_xreg
                 if None, unlike sklearn model, will use no regressors
+            dynamic_testing: bool, default True
+                always ignored (for now)
             **kwargs passed to the ARIMA() function from statsmodels
         """
+        if not dynamic_testing:
+            logging.warning('dynamic_testing argument will be ignored for the arima model')
+        self.dynamic_testing = True
         from statsmodels.tsa.arima.model import ARIMA
         Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else Xvars
         Xvars_orig = None if Xvars is None else None if len(Xvars) == 0 else Xvars
@@ -531,7 +545,7 @@ class Forecaster:
             fcst = regr.predict(exog=p,start=len(y),end=len(y) + len(self.future_dates) - 1, typ = 'levels', dynamic = True)
             return list(fcst)
 
-    def _forecast_prophet(self,tune=False,Xvars=None,cap=None,floor=None,**kwargs) -> Union[float,list]:
+    def _forecast_prophet(self,tune=False,Xvars=None,dynamic_testing=True,cap=None,floor=None,**kwargs) -> Union[float,list]:
         """ forecasts with the prophet model from facebook
             tune: bool, default False
                 whether to tune the forecast
@@ -540,12 +554,17 @@ class Forecaster:
             Xvars: str or None, default None
                 the names of the regressors to use -- must match names in current_xreg and future_xreg
                 if None, unlike sklearn model, will use no regressors
+            dynamic_testing: bool, default True
+                always ignored (for now)
             cap: float or None, default None
                 specific to prophet when using logistic growth -- the largest amount the model is allowed to evaluate to
             floor: float or None, default None
                 specific to prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to
             **kwargs passed to the Prophet() function from fbprophet
         """
+        if not dynamic_testing:
+            logging.warning('dynamic_testing argument will be ignored for the prophet model')
+        self.dynamic_testing = True
         from fbprophet import Prophet
         X = pd.DataFrame({k:v for k,v in self.current_xreg.items() if not k.startswith('AR')})
         p = pd.DataFrame({k:v for k,v in self.future_xreg.items() if not k.startswith('AR')})
@@ -585,17 +604,22 @@ class Forecaster:
             fcst = regr.predict(p)
             return fcst['yhat'].to_list()
 
-    def _forecast_silverkite(self,tune=False,Xvars=None,**kwargs) -> Union[float,list]:
+    def _forecast_silverkite(self,tune=False,dynamic_testing=True,Xvars=None,**kwargs) -> Union[float,list]:
         """ forecasts with the silverkte model from LinkedIn greykite library
             tune: bool, default False
                 whether to tune the forecast
                 if True, returns a metric
                 if False, returns a list of forecasted values
+            dynamic_testing: bool, default True
+                always ignored (for now)
             Xvars: str or None, default None
                 the names of the regressors to use -- must match names in current_xreg and future_xreg
                 if None, unlike sklearn model, will use no regressors
             **kwargs passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config
         """
+        if not dynamic_testing:
+            logging.warning('dynamic_testing argument will be ignored for the silverkite model')
+        self.dynamic_testing = True
         from greykite.framework.templates.autogen.forecast_config import ForecastConfig, MetadataParam, ModelComponentsParam, EvaluationPeriodParam
         from greykite.framework.templates.forecaster import Forecaster as SKForecaster
         Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else []
@@ -643,7 +667,7 @@ class Forecaster:
             self.fitted_values = result[0][:-fcst_length]
             return result[0][-fcst_length:]
 
-    def _forecast_combo(self,how='simple',models='all',determine_best_by='ValidationMetricValue',rebalance_weights=.1,weights=None,splice_points=None):
+    def _forecast_combo(self,how='simple',models='all',dynamic_testing=True,determine_best_by='ValidationMetricValue',rebalance_weights=.1,weights=None,splice_points=None):
         """ combines at least two previously evaluted forecasts to create a new estimator
             how: one of {'simple','weighted','splice'}, default 'simple'
                 the type of combination
@@ -675,6 +699,9 @@ class Forecaster:
                     models[0] --> :splice_points[0]
                     models[-1] --> splice_points[-1]:
         """
+        if not dynamic_testing:
+            logging.warning('dynamic_testing argument will be ignored for the combo model')
+        self.dynamic_testing = None
         determine_best_by = determine_best_by if (weights is None) & ((models[:4] == 'top_') | (how == 'weighted')) else None if how != 'weighted' else determine_best_by
         minmax = (str(determine_best_by).endswith('R2')) | ((determine_best_by == 'ValidationMetricValue') & (self.validation_metric.upper() == 'R2')) | (weights is not None)
         models = self._parse_models(models,determine_best_by)
@@ -944,7 +971,7 @@ class Forecaster:
         for x,v in self.future_xreg.items():
             self.future_xreg[x] = v[:len(self.future_dates)]
             if not len(v) == len(self.future_dates):
-                warnings.warn(f'warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(self.future_dates)}')
+                logging.warning(f'warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(self.future_dates)}')
 
     def set_test_length(self,n=1) -> None:
         """ set the length of the test set (no fractional splits)
@@ -1272,9 +1299,13 @@ class Forecaster:
             raise ValueError('can only validate with r2 if the validation length is at least 2, try set_validation_length()')
         self.validation_metric = metric
 
-    def tune(self) -> None:
+    def tune(self,dynamic_tuning=False) -> None:
         """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as the estimator by default)
             any parameters you can pass as **kwargs to manual_forecast() can be tuned with this process
+            dynamic_tuning: bool, default False
+                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, metrics effectively become an average of one-step forecasts
         """
         if not hasattr(self,'grid'):
             try:
@@ -1282,7 +1313,7 @@ class Forecaster:
             except SyntaxError:
                 raise
             except:
-                raise ForecastError.NoGrid(f'to tune, a grid must be loaded. we tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory or there is no grid with that name. try ingest_grid() with a dictionary grid passed manually.')
+                raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory or there is no grid with that name. try ingest_grid() with a dictionary grid passed manually.')
 
         if self.estimator == 'combo':
             raise ForecastError('combo models cannot be tuned')
@@ -1292,12 +1323,12 @@ class Forecaster:
         metrics = []
         for i, v in self.grid.iterrows():
             try:
-                metrics.append(getattr(self,f'_forecast_{self.estimator}')(tune=True,**v))
+                metrics.append(getattr(self,f'_forecast_{self.estimator}')(tune=True,dynamic_testing=dynamic_tuning,**v))
             except TypeError:
                 raise
             except Exception as e:
                 self.grid.drop(i,axis=0,inplace=True)
-                warnings.warn(f'could not evaluate the paramaters: {dict(v)}. error: {e}')
+                logging.warning(f'could not evaluate the paramaters: {dict(v)}. error: {e}')
 
         if len(metrics) > 0:
 
@@ -1315,41 +1346,59 @@ class Forecaster:
             self.validation_metric_value = self.grid_evaluated.loc[best_params_idx,'metric_value']
 
         else:
-            warnings.warn(f'none of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model')
+            logging.warning(f'none of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model')
             self.best_params = {}
 
-    def manual_forecast(self,call_me=None,**kwargs) -> None:
+        self.dynamic_tuning = dynamic_tuning
+
+    def manual_forecast(self,call_me=None,dynamic_testing=True,**kwargs) -> None:
         """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywoords
             call_me: str or None, default None
                 what to call the model when storing it in the object's history dictionary
                 duplicated names will be overwritten with the most recently called model
+            dynamic_testing: bool, default True
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, test-set metrics effectively become an average of one-step forecasts
             **kwargs are passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
         """
         call_me = self.estimator if call_me is None else call_me
         descriptive_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
-        self.forecast = getattr(self,f'_forecast_{self.estimator}')(**kwargs)
+        self.forecast = getattr(self,f'_forecast_{self.estimator}')(dynamic_testing=dynamic_testing,**kwargs)
         self.call_me = call_me
         self._bank_history(auto=False,**kwargs)
 
-    def auto_forecast(self,call_me=None) -> None:
+    def auto_forecast(self,call_me=None,dynamic_testing=True) -> None:
         """ auto forecast with the best parameters indicated from the tuning process
             call_me: str or None, default None
                 what to call the model when storing it in the object's history dictionary
                 duplicated names will be overwritten with the most recently called model
+            dynamic_testing: bool, default True
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, test-set metrics effectively become an average of one-step forecasts
         """
         call_me = self.estimator if call_me is None else call_me
         descriptive_assert(isinstance(call_me,str),ValueError,'call_me must be a str type or None')
         if not hasattr(self,'best_params'):
-            warnings.warn(f'since tune() has not been called, {self.estimator} model will be run with default parameters')
+            logging.warning(f'since tune() has not been called, {self.estimator} model will be run with default parameters')
             self.best_params = {}
-        self.forecast = getattr(self,f'_forecast_{self.estimator}')(**self.best_params)
+        self.forecast = getattr(self,f'_forecast_{self.estimator}')(dynamic_testing=dynamic_testing,**self.best_params)
         self.call_me = call_me
         self._bank_history(auto=len(self.best_params.keys()) > 0,**self.best_params)
 
-    def tune_test_forecast(self,models,summary_stats=False,feature_importance=False) -> None:
+    def tune_test_forecast(self,models,dynamic_tuning=False,dynamic_testing=True,summary_stats=False,feature_importance=False) -> None:
         """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information
             models: list-like
                 each element must match an element in _estimators_ (except "combo", which cannot be tuned)
+            dynamic_tuning: bool, default False
+                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, metrics effectively become an average of one-step forecasts
+            dynamic_testing: bool, default True
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, test-set metrics effectively become an average of one-step forecasts
             summary_stats: bool, default False
                 whether to save summary stats for the models that offer those
             feature_importance: bool, default False
@@ -1360,8 +1409,8 @@ class Forecaster:
         descriptive_assert('comob' not in models,ValueError,'combo models cannot be tuned')
         for m in models:
             self.set_estimator(m)
-            self.tune()
-            self.auto_forecast()
+            self.tune(dynamic_tuning=dynamic_tuning)
+            self.auto_forecast(dynamic_testing=dynamic_testing)
 
             if summary_stats:
                 self.save_summary_stats()
@@ -1684,6 +1733,7 @@ class Forecaster:
                 'HyperParams',
                 'Scaler',
                 'Tuned',
+                'DynamicallyTested',
                 'Integration',
                 'TestSetLength',
                 'TestSetRMSE',
