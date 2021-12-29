@@ -53,7 +53,7 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     ts_dd = widgets.Dropdown(options=f_dict.keys(), description = 'Time Series:')
     mo_dd = widgets.Dropdown(options=range(1,len(all_models)+1), description = 'No. Models')
     lv_dd = widgets.Dropdown(options=[True,False],description='View Level')
-    me_dd = widgets.Dropdown(options=sorted([e for e in _determine_best_by_ if e is not None])
+    me_dd = widgets.Dropdown(options=sorted(_determine_best_by_)
         ,description='Order By')
 
     # never changes

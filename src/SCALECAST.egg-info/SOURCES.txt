@@ -77,6 +77,7 @@ examples/.ipynb_checkpoints/avocados-checkpoint.ipynb
 examples/.ipynb_checkpoints/eCommerce-checkpoint.ipynb
 examples/.ipynb_checkpoints/eCommerce_hourly-checkpoint.ipynb
 examples/.ipynb_checkpoints/housing-checkpoint.py
+examples/.ipynb_checkpoints/housing_different_levels-checkpoint.py
 examples/__pycache__/Grids.cpython-38.pyc
 src/SCALECAST.egg-info/PKG-INFO
 src/SCALECAST.egg-info/SOURCES.txt

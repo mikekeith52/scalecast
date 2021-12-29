@@ -12,7 +12,7 @@ elasticnet = {
 
 gbt = {
 	'max_depth':[2,3],
-    'max_features':['sqrt',None]
+	'max_features':['sqrt',None]
 }
 
 hwes = {
@@ -22,7 +22,8 @@ hwes = {
 }
 
 knn = {
-	'n_neighbors':range(2,50)
+	'n_neighbors':range(2,21),
+	'weights':['uniform','distance']
 }
 
 lightgbm = {
@@ -33,12 +34,12 @@ mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],
 	'solver':['lbfgs','adam'],
-	'normalizer':['scale','minmax',None],
+	'normalizer':['pt','minmax','scale'],
 	'random_state':[20]
 }
 
 mlr = {
-	'normalizer':['scale','minmax','normalize',None]
+	'normalizer':['scale','minmax','pt',None]
 }
 
 prophet = {
@@ -56,8 +57,8 @@ silverkite = {
 
 svr={
 	'kernel':['linear'],
-    'C':[.5,1,2,3],
-    'epsilon':[0.01,0.1,0.5]
+	'C':[.5,1,2,3],
+	'epsilon':[0.01,0.1,0.5]
 }
 
 xgboost = {

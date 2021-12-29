@@ -1,6 +1,30 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.3.8] - 2021-12-29
+## Added
+- added the following functions that can each add additional Xvars to forecast with:
+	- `add_exp_terms()` - for non polynomial exponential transformations
+	- `add_logged_terms()` - for log of any base transformations
+	- `add_pt_terms()` - for individual variable power transformations (box cox and yeo johnson available)
+	- `add_diffed_terms()` - to difference non-y terms
+	- `add_lagged_terms()` - to lag non-y terms
+- added the 'pt' normalizer for yeo-johnson normalization (in addition to 'minmax', 'normalize', and 'scale')
+- added the `drop_Xvars()` function that is identical to the `drop_regressors()` function
+## Changed
+- imports all sklearn models as soon as scalecast is imported
+- src code cleanup with better coding practices when it comes to forecasting sklearn models (no more copying and pasting new functions)
+- changed several set data types to lists in src code
+- changed the names of some hidden functions
+- other src code cleanup for readability and minor efficiency gains
+- better in-line comments and docstring documentation
+- got rid of quiet paramater in `save_summary_stats()` and `save_feature_importance()` and now these simply log any problems as warnings
+- time trends now start at 1 instead of 0 (makes log transformations possible)
+- observation dropping for AR terms in sklearn models now based on the number of N/A values in each AR term instead of just the AR number
+- changed some example grids to include the pt normalizer
+## Fixed
+- now logs all warnings
+
 ## [0.3.7] - 2021-12-27
 ## Added
 - `dynamic_testing` argument to `manual_forecast()` and `auto_forecast()` functions -- this is `True` by default (makes all testing comparable between sklearn/non-sklearn models)
