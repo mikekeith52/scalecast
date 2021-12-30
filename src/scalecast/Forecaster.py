@@ -411,9 +411,9 @@ class Forecaster:
                                     future_xreg[k].append(fcst[idx])
                             else:
                                 try:
-                                    future_xreg[k][i+1] = self.y.values[idx]
+                                    future_xreg[k][i+1] = y[idx]
                                 except IndexError:
-                                    future_xreg[k].append(self.y.values[idx])
+                                    future_xreg[k].append(y[idx])
         return fcst
 
     def _forecast_sklearn(self,fcster,dynamic_testing,tune=False,Xvars=None,normalizer='minmax',**kwargs) -> Union[float,list]:
@@ -437,7 +437,7 @@ class Forecaster:
         ars = [v.isnull().sum() for x,v in self.current_xreg.items() if x.startswith('AR')]
         # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
         obs_to_drop = max(ars) if len(ars) > 0 else 0
-        y = self.y.values[obs_to_drop:]
+        y = self.y.values[obs_to_drop:].copy()
         current_xreg = {xvar:x.values[obs_to_drop:].copy() for xvar,x in self.current_xreg.items()}
         # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
         Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars,y,current_xreg)

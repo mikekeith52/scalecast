@@ -63,8 +63,10 @@ examples/avocado_results.pckl
 examples/avocados.ipynb
 examples/eCommerce.csv
 examples/eCommerce.ipynb
+examples/eCommerce_Xvars.csv
 examples/eCommerce_feature_info.xlsx
 examples/eCommerce_results.xlsx
+examples/eCommerce_validation_grids.xlsx
 examples/housing.py
 examples/housing_different_levels.py
 examples/housing_different_levels_feature_info.xlsx

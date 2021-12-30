@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.4.1] - 2021-12-30
+## Added
+- Can now sort by metric value in `export_all_validation_grids_to_excel()`
+## Changed
+## Fixed
+- Fixed an issue where sometimes the incorrect AR terms were being propogated for test-set evaluation only
+
 ## [0.4.0] - 2021-12-30
 ## Added
 ## Changed
