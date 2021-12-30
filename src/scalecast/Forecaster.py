@@ -111,6 +111,8 @@ class Forecaster:
         self.validation_length = 1
         self.validation_metric = 'rmse'
         self.integration = 0
+        self.levely = list(y)
+        self.init_dates = list(current_dates)
         for key, value in kwargs.items():
             setattr(self,key,value)
 
@@ -122,11 +124,17 @@ class Forecaster:
             first_prt = 'Forecaster object with no models evaluated.'
         else:
             first_prt = 'Forecaster object with the following models evaluated: {}.'.format(', '.join(models))
-        whole_thing = first_prt + ' Data starts at {}, ends at {}, loaded to forecast out {} periods, has {} regressors.'.format(self.current_dates.min(),self.current_dates.max(),len(self.future_dates),len(self.current_xreg.keys()))
+        whole_thing = first_prt + ' Data starts at {}, ends at {}, has {} observations, differenced x{}, loaded to forecast out {} periods, has {} regressors.'\
+            .format(self.current_dates.min(),
+                self.current_dates.max(),
+                len(self.y),
+                self.integration,
+                len(self.future_dates),
+                len(self.current_xreg.keys()))
         return whole_thing
 
     def __repr__(self):
-        return self.__str__()
+       return self.__str__()
 
     def _adder(self) -> None:
         """ makes sure future periods have been specified before adding regressors
@@ -145,6 +153,7 @@ class Forecaster:
             'Xvars':self.Xvars,
             'HyperParams':{k:v for k,v in kwargs.items() if k not in ('Xvars','normalizer','auto')},
             'Scaler':kwargs['normalizer'] if 'normalizer' in kwargs.keys() else None if self.estimator in ('prophet','combo') else None if hasattr(self,'univariate') else 'minmax',
+            'Observations':len(self.y),
             'Forecast':self.forecast[:],
             'FittedVals':self.fitted_values[:],
             'Tuned':False if not kwargs['auto'] else 'Dynamically' if self.dynamic_tuning else True,
@@ -168,51 +177,42 @@ class Forecaster:
             self.history[call_me]['ValidationMetric'] = self.validation_metric
             self.history[call_me]['ValidationMetricValue'] = self.validation_metric_value
 
-        for attr in ('univariate','first_obs','first_dates','grid_evaluated','models','weights'):
+        for attr in ('univariate','grid_evaluated','models','weights'):
             if hasattr(self,attr):
                 self.history[call_me][attr] = getattr(self,attr)
 
+        self.history[call_me]['LevelY'] = self.levely[:]
         if self.integration > 0:
-            first_obs = self.first_obs.copy()
             fcst = self.forecast[::-1]
             integration = self.integration
-            y = self.y.to_list()[::-1]
             pred = self.history[call_me]['TestSetPredictions'][::-1]
-            if integration == 2:
-                first_ = first_obs[1] - first_obs[0]
-                y.append(first_)
-                y = list(np.cumsum(y[::-1]))[::-1]
-            y.append(first_obs[0])
-            y = list(np.cumsum(y[::-1]))
             
             if integration == 2:
                 fcst.append(self.y.values[-2] + self.y.values[-1])
                 pred.append(self.y.values[-(len(pred) + 2)] + self.y.values[-(len(pred) + 1)])
             else:
-                fcst.append(y[-1])
-                pred.append(y[-(len(pred) + 1)])
+                fcst.append(self.levely[-1])
+                pred.append(self.levely[-(len(pred) + 1)])
 
             fcst = list(np.cumsum(fcst[::-1]))[1:]
             pred = list(np.cumsum(pred[::-1]))[1:]
 
             if integration == 2:
                 fcst.reverse()
-                fcst.append(y[-1])
+                fcst.append(self.levely[-1])
                 fcst = list(np.cumsum(fcst[::-1]))[1:]
                 pred.reverse()
-                pred.append(y[-(len(pred) + 1)])
+                pred.append(self.levely[-(len(pred) + 1)])
                 pred = list(np.cumsum(pred[::-1]))[1:]
 
             self.history[call_me]['LevelForecast'] = fcst[:]
-            self.history[call_me]['LevelY'] = y[integration:]
-            self.history[call_me]['LevelTestSetPreds'] = pred
-            self.history[call_me]['LevelTestSetRMSE'] = rmse(y[-len(pred):],pred)
-            self.history[call_me]['LevelTestSetMAPE'] = mape(y[-len(pred):],pred)
-            self.history[call_me]['LevelTestSetMAE'] = mae(y[-len(pred):],pred)
-            self.history[call_me]['LevelTestSetR2'] = r2(y[-len(pred):],pred)
+            self.history[call_me]['LevelTestSetPreds'] = pred[:]
+            self.history[call_me]['LevelTestSetRMSE'] = rmse(self.levely[-len(pred):],pred)
+            self.history[call_me]['LevelTestSetMAPE'] = mape(self.levely[-len(pred):],pred)
+            self.history[call_me]['LevelTestSetMAE'] = mae(self.levely[-len(pred):],pred)
+            self.history[call_me]['LevelTestSetR2'] = r2(self.levely[-len(pred):],pred)
         else: # better to have these attributes populated for all series
             self.history[call_me]['LevelForecast'] = self.forecast[:]
-            self.history[call_me]['LevelY'] = self.y.to_list()
             self.history[call_me]['LevelTestSetPreds'] = self.test_set_pred[:]
             self.history[call_me]['LevelTestSetRMSE'] = self.rmse
             self.history[call_me]['LevelTestSetMAPE'] = self.mape
@@ -255,10 +255,19 @@ class Forecaster:
             from sklearn.preprocessing import Normalizer as Scaler
         elif normalizer == 'scale':
             from sklearn.preprocessing import StandardScaler as Scaler
-        elif normalizer == 'pt':
-            from sklearn.preprocessing import PowerTransformer as Scaler
+        elif normalizer == 'pt': # fixing an issue with 0.3.7
+            try:
+                from sklearn.preprocessing import PowerTransformer as Scaler
+                scaler = Scaler()
+                scaler.fit(X_train)
+                return scaler
+            except ValueError:
+                logging.warning(f'the pt normalizer did not work for the {self.estimator} model, defaulting to a StandardScaler')
+                normalizer = 'scale'
+                from sklearn.preprocessing import StandardScaler as Scaler
         else:
             return None
+
         scaler = Scaler()
         scaler.fit(X_train)
         return scaler
@@ -378,10 +387,10 @@ class Forecaster:
             self.fitted_values = list(regr.predict(X))
 
         # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
-        if (len([x for x in self.current_xreg.keys() if x.startswith('AR')]) == 0) | ((not true_forecast) & (not dynamic_testing)):
+        if (len([x for x in Xvars if x.startswith('AR')]) == 0) | ((not true_forecast) & (not dynamic_testing)):
             p = pd.DataFrame(future_xreg)
             p = self._scale(scaler,p)
-            fcst = list(regr.predict(p)) 
+            fcst = list(regr.predict(p))
         
         # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
         else:
@@ -429,8 +438,7 @@ class Forecaster:
         # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
         obs_to_drop = max(ars) if len(ars) > 0 else 0
         y = self.y.values[obs_to_drop:]
-        current_xreg = {xvar:x.values[obs_to_drop:] for xvar,x in self.current_xreg.items()}
-        
+        current_xreg = {xvar:x.values[obs_to_drop:].copy() for xvar,x in self.current_xreg.items()}
         # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
         Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars,y,current_xreg)
         # split the data
@@ -450,9 +458,10 @@ class Forecaster:
             regr,
             X_train,
             y_train,
-            Xvars,self.current_dates.values[-test_size:],
-            {x:v.values[-test_size:] for x,v in self.current_xreg.items() if x in self.Xvars}
-            ,dynamic_testing)
+            Xvars,
+            self.current_dates.values[-test_size:],
+            {x:v[-test_size:] for x,v in current_xreg.items() if x in Xvars},
+            dynamic_testing)
         # set the test-set metrics
         self._metrics(y_test,pred)
 
@@ -464,8 +473,8 @@ class Forecaster:
                 X,
                 y,
                 Xvars,
-                self.future_dates,
-                {x: v for x, v in self.future_xreg.items() if x in self.Xvars},
+                self.future_dates.copy(),
+                {x:v[:] for x, v in self.future_xreg.items() if x in Xvars},
                 dynamic_testing,
                 true_forecast=True)
     
@@ -876,15 +885,11 @@ class Forecaster:
             i: one of {0,1,2}, default 1
                 the number of differences to take
         """
-        if hasattr(self,'first_obs'):
-            raise ForecastError.CannotDiff('series has already been differenced, if you want to difference again, use undiff() first, then diff(2)')
-
+        descriptive_assert(self.integration == 0,ForecastError.CannotDiff,'series has already been differenced, if you want to difference again, use undiff() first, then diff(2)')
         if i == 0:
             return
 
         descriptive_assert(i in (1,2),ValueError,f'only 1st and 2nd order integrations supported for now, got i={i}')
-        self.first_obs = self.y.values[:i] # np array
-        self.first_dates = self.current_dates.values[:i] # np array
         self.integration = i
         for _ in range(i):
             self.y = self.y.diff()
@@ -895,8 +900,7 @@ class Forecaster:
                     self.current_xreg[k] = v.diff()
                 self.future_xreg[k] = [self.y.values[-ar]]
 
-        if hasattr(self,'adf_stationary'):
-            delattr(self,'adf_stationary')
+        delattr(self,'adf_stationary') if hasattr(self,'adf_stationary') else None
 
     def integrate(self,critical_pval=0.05,train_only=False,max_integration=2) -> None:
         """differences the series 0, 1, or 2 times based on ADF test
@@ -1359,24 +1363,10 @@ class Forecaster:
         
         self.current_xreg = {}
         self.future_xreg = {}
-        first_obs = self.first_obs.copy()
-        first_dates = list(self.first_dates.copy())
-        integration = self.integration
-        for attr in ('first_obs','first_dates'):
-            delattr(self,attr)
 
-        y = self.y.to_list()[::-1]
-        current_dates = self.current_dates.to_list()[::-1]
-        if integration == 2:
-            first_ = first_obs[1] - first_obs[0]
-            y.append(first_)
-            y = list(np.cumsum(y[::-1]))[::-1]
-        y.append(first_obs[0])
-        y = np.cumsum(y[::-1])
+        self.current_dates = pd.Series(self.init_dates)
+        self.y = pd.Series(self.levely)
 
-        current_dates += first_dates[::-1] # correction 2021-07-14
-        self.current_dates = pd.Series(current_dates[::-1])
-        self.y = pd.Series(y)
         self.integration = 0
         if hasattr(self,'adf_stationary'):
             delattr(self,'adf_stationary')
@@ -1818,7 +1808,7 @@ class Forecaster:
             self.history.pop(a)
 
     def export(self,
-               dfs=['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_fcsts'],
+               dfs=['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_test_set_predictions','lvl_fcsts'],
                models='all',
                best_model='auto',
                determine_best_by='TestSetRMSE',
@@ -1852,7 +1842,7 @@ class Forecaster:
             raise ValueError('no dfs passed to dfs')
         determine_best_by = determine_best_by if best_model == 'auto' else None
         models = self._parse_models(models,determine_best_by)
-        _dfs_ = ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_fcsts']
+        _dfs_ = ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_test_set_predictions','lvl_fcsts']
         _bad_dfs_ = [i for i in dfs if i not in _dfs_]
         
         if len(_bad_dfs_) > 0:
@@ -1872,6 +1862,7 @@ class Forecaster:
                 'Xvars',
                 'HyperParams',
                 'Scaler',
+                'Observations',
                 'Tuned',
                 'DynamicallyTested',
                 'Integration',
@@ -1924,6 +1915,12 @@ class Forecaster:
             for m in models:
                 test_set_predictions[m] = self.history[m]['TestSetPredictions']
             output['test_set_predictions'] = test_set_predictions
+        if 'lvl_test_set_predictions' in dfs:
+            test_set_predictions = pd.DataFrame({'DATE':self.current_dates[-self.test_length:]})
+            test_set_predictions['actual'] = self.levely[-self.test_length:]
+            for m in models:
+                test_set_predictions[m] = self.history[m]['LevelTestSetPreds']
+            output['lvl_test_set_predictions'] = test_set_predictions
         if 'lvl_fcsts' in dfs:
             lvl_fcsts = pd.DataFrame({'DATE':self.future_dates.to_list()})
             for m in models:
@@ -1985,19 +1982,29 @@ class Forecaster:
         except IndexError:
             raise ForecastError("no saved feature importance or summary stats could be found")
 
-    def all_validation_grids_to_excel(self,out_path='./',excel_name='validation_grids.xlsx') -> None:
+    def all_validation_grids_to_excel(self,
+        out_path='./',
+        excel_name='validation_grids.xlsx',
+        sort_by_metric_value=False,
+        ascending=True) -> None:
         """ saves all validation grids to excel
             each model where such info is available for gets its own tab
             out_path: str, default './'
                 the path to export to
             excel_name: str, default 'feature_info.xlsx'
                 the name of the resulting excel file
+            sort_by_metric_value: bool, default False
+            ascending: bool, default True
+                whether to sort least-to-greatest
+                ignored if sort_by_metric_value is False
         """
         try:
             with pd.ExcelWriter(os.path.join(out_path,excel_name),engine='openpyxl') as writer:
                 for m in self.history.keys():
                     if 'grid_evaluated' in self.history[m].keys():
-                        self.history[m]['grid_evaluated'].to_excel(writer,sheet_name=m)
+                        df = self.history[m]['grid_evaluated'].copy() if not sort_by_metric_value\
+                            else self.history[m]['grid_evaluated'].sort_values(['metric_value'],ascending=ascending)
+                        df.to_excel(writer,sheet_name=m,index=False)
         except IndexError:
             raise ForecastError("no validation grids could be found")
 
@@ -2013,12 +2020,20 @@ class Forecaster:
             dropna: bool, default False
                 whether to drop null values from the resulting dataframe
         """
+        self.typ_set() if not hasattr(self,'estimator') else None
+        fut_df = pd.DataFrame()
+        for k, v in self.future_xreg.items():
+            if len(v) < len(self.future_dates):
+                fut_df[k] = v + [None] * (len(self.future_dates) - len(v))
+            else:
+                fut_df[k] = v[:]
+
         df = pd.concat([
             pd.concat([
                 pd.DataFrame({'DATE':self.current_dates.to_list()}),pd.DataFrame(self.current_xreg)
             ],axis=1),
             pd.concat([
-                 pd.DataFrame({'DATE':self.future_dates.to_list()}),pd.DataFrame(self.future_xreg)
+                 pd.DataFrame({'DATE':self.future_dates.to_list()}),fut_df
             ],axis=1)
         ],ignore_index=True)
 

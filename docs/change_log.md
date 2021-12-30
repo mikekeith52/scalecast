@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.4.0] - 2021-12-30
+## Added
+## Changed
+- deleted the 'scale' normalizer from the mlp grid
+## Fixed
+- Fixed an issue with the PowerTransformer normalizer that failed because of a DivideByZero error, now defaults to a StandardScaler when this issue is encountered and logs a warning
+
+## [0.3.9] - 2021-12-30
+## Added
+- Added `init_dates` and `levely` attributes
+- Added `'Observations'` info to history and `export()`
+- Added `'lvl_test_set_predictions'` to export dataframes
+## Changed
+- Got rid of `first_obs` and `first_dates` attributes and wrote more efficient code to do what they were there for
+- More information available when `__str__()` is called
+## Fixed
+- Fixed what became an issue with the last update in which when calling `add_diffed_terms()` or `add_lagged_terms()`, the level series wasn't accurate due to how undifferencing was being executed. After examining this issue, it became evident that the previous way to undifference forecasts was less efficient than it should have been, this update fixed the issues from the last update and made the code more efficient
+- Fixed an issue where AR terms were manipulating the underlying xreg structures so that each forecast were using its own test-set propogated AR values instead of the correct AR values
+- Fixed the `export_Xvars_df()` method which wasn't working correctly if at least one forecast hadn't been called first
+
 ## [0.3.8] - 2021-12-29
 ## Added
 - added the following functions that can each add additional Xvars to forecast with:

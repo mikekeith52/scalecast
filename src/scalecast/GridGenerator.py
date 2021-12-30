@@ -36,7 +36,7 @@ mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],
 	'solver':['lbfgs','adam'],
-	'normalizer':['pt','minmax',None],
+	'normalizer':['pt','minmax'],
 	'random_state':[20]
 }
 
