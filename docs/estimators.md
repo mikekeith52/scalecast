@@ -7,6 +7,7 @@
 [hwes](#hwes)  
 [knn](#knn)  
 [lightgbm](#lightgbm)  
+[lstm](#lstm)  
 [mlr](#mlr)  
 [mlp](#mlp)  
 [prophet](#prophet)  
@@ -15,7 +16,7 @@
 [svr](#svr)  
 [xgboost](#xgboost)  
 ```python
-_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lightgbm', 'rf', 'prophet', 'silverkite', 'hwes', 'elasticnet', 'svr', 'knn', 'combo'}
+_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lstm', 'lightgbm', 'rf', 'prophet', 'silverkite', 'hwes', 'elasticnet', 'svr', 'knn', 'combo'}
 ```
 
 ### arima
@@ -211,9 +212,37 @@ f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('xgboost')
 f.manual_forecast(max_depth=3)
 ```
+
+### lstm
+- [TensorFlow Documentation](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
+- Long-Short Term Memory Neural Network
+- uses all Xvars and a MinMax normalizer by default
+- better on differenced data for non-stationary series
+``` python
+import pandas as pd
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+f.set_test_length(12)
+f.generate_future_dates(24) # forecast length
+f.add_ar_terms(4)
+f.add_AR_terms((2,12)) # seasonal AR terms
+f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
+f.add_seasonal_regressors('year')
+f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
+f.add_time_trend()
+f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regressor
+f.add_logged_terms('t') # lnt
+f.diff() # non-stationary data forecasts better differenced with this model
+f.set_estimator('lstm')
+f.manual_forecast(Xvars=['monthsin','monthcos','year','lnt'],epochs=10)
+```
+
 ### mlp
 - [Sklearn Documentation](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
-- Multi-Level Perceptron (neural network)
+- Multi-Level Perceptron Neural Network
 - uses all Xvars and a MinMax normalizer by default
 - better on differenced data for non-stationary series
 ```python

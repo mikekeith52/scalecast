@@ -1,4 +1,5 @@
 scikit-learn
+tensorflow
 statsmodels
 scipy
 eli5

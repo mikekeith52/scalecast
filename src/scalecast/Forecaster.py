@@ -10,6 +10,7 @@ import logging
 import warnings
 import os
 import math
+import random
 from collections import Counter
 from scipy import stats
 import sklearn
@@ -18,6 +19,10 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_percenta
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
+
+# LOGGING
+logging.basicConfig(filename='warnings.log',level=logging.WARNING)
+logging.captureWarnings(True)
 
 # sklearn imports below
 from sklearn.linear_model import LinearRegression as mlr_
@@ -29,10 +34,6 @@ from sklearn.ensemble import RandomForestRegressor as rf_
 from sklearn.linear_model import ElasticNet as elasticnet_
 from sklearn.svm import SVR as svr_
 from sklearn.neighbors import KNeighborsRegressor as knn_
-
-# LOGGING
-logging.basicConfig(filename='warnings.log',level=logging.WARNING)
-logging.captureWarnings(True)
 
 # FUNCTIONS
 
@@ -67,11 +68,11 @@ _sklearn_imports_ = {
     'svr':svr_,
     'knn':knn_
 }
-_sklearn_estimators_ = list(_sklearn_imports_.keys())
+_sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 
 # to add non-sklearn models, add to the list below
-_non_sklearn_estimators_ = ['arima','hwes','prophet','silverkite','combo']
-_estimators_ = _sklearn_estimators_ + _non_sklearn_estimators_
+_non_sklearn_estimators_ = ['arima','hwes','lstm','prophet','silverkite','combo']
+_estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
 _metrics_ = ['r2', 'rmse', 'mape', 'mae']
 _determine_best_by_ = ['TestSetRMSE', 'TestSetMAPE', 'TestSetMAE', 'TestSetR2', 'InSampleRMSE', 'InSampleMAPE', 'InSampleMAE',
                         'InSampleR2', 'ValidationMetricValue', 'LevelTestSetRMSE', 'LevelTestSetMAPE', 'LevelTestSetMAE',
@@ -317,7 +318,7 @@ class Forecaster:
         if not scaler is None:
             return scaler.transform(X)
         else:
-            return X
+            return X.values if hasattr(X,'values') else X
 
     def _clear_the_deck(self) -> None:
         """ deletes the following attributes to prepare a new forecast:
@@ -352,8 +353,21 @@ class Forecaster:
         self.Xvars = Xvars
         return Xvars, y, X, test_size
 
-    def _evaluate_sklearn(self,scaler,regr,X,y,Xvars,future_dates,future_xreg,dynamic_testing,true_forecast=False) -> list:
+    def _evaluate_sklearn(self,
+        scaler,
+        regr,
+        X,
+        y,
+        Xvars,
+        future_dates,
+        future_xreg,
+        dynamic_testing,
+        true_forecast=False,
+        lstm=False,
+        batch_size=None,
+        epochs=None) -> list:
         """ forecasts an sklearn model into the unknown
+            beginning in 0.4.1, now supports lstm model evaluation (three arguments added to function)
             uses loops to dynamically plug in AR values without leaking in either a tune/test process or true forecast, unless dynamic_testing is False
             returns a list of forecasted values
             scaler: sklearn.preprocessing.MinMaxScaler | sklearn.preprocessing.Normalizer | sklearn.preprocessing.StandardScaler | None
@@ -370,6 +384,14 @@ class Forecaster:
             true_forecast: bool, default False
                 False if testing or tuning
                 if True, saves regr, X, and fitted_values attributes
+            lstm: bool, default False
+                Whether evaluating an LSTM model
+            batch_size: int, default None
+                batch size of lstm model
+                ignored when lstm == False
+            epochs: int, default None
+                number of epochs for lstm model
+                ignored when lstm == False
         """
         # not tuning/testing
         if true_forecast:
@@ -378,13 +400,13 @@ class Forecaster:
         
         # apply the normalizer fit on training data only
         X = self._scale(scaler,X)
-        regr.fit(X,y)
+        regr.fit(X,y) if not lstm else regr.fit(X,y,batch_size=batch_size,epochs=epochs,verbose=0)
         
         # not tuning/testing
         if true_forecast:
             self.regr = regr
             self.X = X
-            self.fitted_values = list(regr.predict(X))
+            self.fitted_values = list(regr.predict(X)) if not lstm else [x[0] for x in regr.predict(X)]
 
         # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
         if (len([x for x in Xvars if x.startswith('AR')]) == 0) | ((not true_forecast) & (not dynamic_testing)):
@@ -398,7 +420,7 @@ class Forecaster:
             for i, _ in enumerate(future_dates):
                 p = pd.DataFrame({k:[v[i]] for k,v in future_xreg.items() if k in Xvars})
                 p = self._scale(scaler,p)
-                fcst.append(regr.predict(p)[0])
+                fcst.append(regr.predict(p)[0] if not lstm else regr.predict(p.reshape(p.shape[0],p.shape[1],1))[0][0])
                 if not i == len(future_dates) - 1:
                     for k, v in future_xreg.items():
                         if k.startswith('AR'):
@@ -445,15 +467,9 @@ class Forecaster:
         X_train, X_test, y_train, y_test = self._train_test_split(X,y,test_size)
         # fit the normalizer to training data only
         scaler = self._parse_normalizer(X_train,normalizer)
-        # normaliz training and test data with scaler fit on training data only
-        X_train = self._scale(scaler,X_train)
-        X_test = self._scale(scaler,X_test)
-
         # get the sklearn regressor
         regr = _sklearn_imports_[fcster](**kwargs)
-        # fit the regressor on training data
-        regr.fit(X_train,y_train)
-        # test the trained model
+        # train/test the model
         pred = self._evaluate_sklearn(scaler,
             regr,
             X_train,
@@ -532,7 +548,9 @@ class Forecaster:
             logging.warning('dynamic_testing argument will be ignored for the arima model')
         self.dynamic_testing = True
         from statsmodels.tsa.arima.model import ARIMA
-        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else Xvars
+        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all'\
+            else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None\
+            else Xvars
         Xvars_orig = None if Xvars is None else None if len(Xvars) == 0 else Xvars
         Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars,self.y,self.current_xreg)
         if len(self.current_xreg.keys()) > 0:
@@ -583,7 +601,9 @@ class Forecaster:
         from fbprophet import Prophet
         X = pd.DataFrame({k:v for k,v in self.current_xreg.items() if not k.startswith('AR')})
         p = pd.DataFrame({k:v for k,v in self.future_xreg.items() if not k.startswith('AR')})
-        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else []
+        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all'\
+            else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None\
+            else []
         if cap is not None: X['cap'] = cap
         if floor is not None: X['floor'] = floor
         X['y'] = self.y.to_list()
@@ -637,7 +657,9 @@ class Forecaster:
         self.dynamic_testing = True
         from greykite.framework.templates.autogen.forecast_config import ForecastConfig, MetadataParam, ModelComponentsParam, EvaluationPeriodParam
         from greykite.framework.templates.forecaster import Forecaster as SKForecaster
-        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all' else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None else []
+        Xvars = [x for x in self.current_xreg.keys() if not x.startswith('AR')] if Xvars == 'all'\
+            else [x for x in Xvars if not x.startswith('AR')] if Xvars is not None\
+            else []
         def _forecast_sk(df,Xvars,validation_length,test_length,forecast_length):
             test_length = test_length if test_length > 0 else -(df.shape[0]+1)
             validation_length = validation_length if validation_length > 0 else -(df.shape[0]+1)
@@ -681,6 +703,183 @@ class Forecaster:
             self.summary_stats = result[1].set_index('Pred_col')
             self.fitted_values = result[0][:-fcst_length]
             return result[0][-fcst_length:]
+
+    def _evaluate_lstm(self,
+        regr,
+        X,
+        y,
+        Xvars,
+        future_dates,
+        future_xreg,
+        dynamic_testing,
+        epochs,
+        batch_size,
+        true_forecast=False):
+
+        fcst = self._evaluate_sklearn(None, # None because everything has already been scaled
+                regr,
+                X,
+                y,
+                Xvars,
+                future_dates,
+                future_xreg,
+                dynamic_testing,
+                true_forecast=True,
+                lstm=True,
+                batch_size=batch_size,
+                epochs=epochs)
+
+        fcst = [x[0] for x in fcst] if isinstance(fcst[0],np.ndarray) else fcst
+        fcst = [0 if x is None or x is np.nan else x for x in fcst]
+        return fcst
+
+    def _forecast_lstm(self,
+        dynamic_testing=True,
+        tune=False,
+        Xvars=None,
+        normalizer='minmax',
+        lstm_layer_sizes=(25,),
+        dropout=(0.0,),
+        loss='mean_absolute_error',
+        activation='tanh',
+        optimizer='Adam',
+        learning_rate=0.001,
+        epochs=5,
+        batch_size=None,
+        random_seed=None):
+        """ forecasts with a long-short term memory neural network from TensorFlow
+            dynamic_testing: bool
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
+                when False, test-set metrics effectively become an average of one-step forecasts
+            tune: bool, default False
+                whether the model is being tuned
+            Xvars: list where all elements are in current_xreg keys, 'all', or None
+                if None and Xvars are required, None becomes equivalent to 'all'
+            normalizer: one of {_normalizer_}
+                if not None, normalizer applied to training data only to not leak
+            lstm_layer_sizes: list-like, default (25,)
+                the size of each lstm layer to add
+                the first element is for the input layer
+                the size of this array minus 1 will equal the number of hidden layers in the resulting model
+            dropout: list-like, default (0.0,)
+                the dropout rate for each lstm layer
+                must be the same size as lstm_layer_sizes
+            loss: str, default 'mean_absolute_error'
+                the loss function to minimize
+                see available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses
+                be sure to choose one that is suitable for regression tasks
+            activation: str, default "tanh"
+                the activation function to use in each lstm layer
+                see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/activations
+            optimizer: str, default "Adam"
+                the optimizer to use when compiling the model
+                see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
+                watch capitalization as that matters (can't be "adam", must be "Adam")
+            learning_rate: float, default 0.001
+                the learning rate to use when compiling the model
+            epochs: int, default 5
+                the number of epochs to fit the model with
+            batch_size: int, optional
+                the size of the batch for each epoch
+                if None, will default to 32
+            random_seed: int, optional
+                set a seed for consistent results
+                with tensorflow networks, setting seeds does not guarantee consistent results
+            optimizer: one of see here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
+            if you want more hyperparameter options, contribute!!
+        """
+        descriptive_assert(len(lstm_layer_sizes) >= 1,ValueError,f'must pass at least one layer to lstm_layer_sizes, got {lstm_layer_sizes}')
+        descriptive_assert(len(self.current_xreg.keys()) > 0,ForecastError,f'need at least 1 Xvar to forecast with the {self.estimator} model')
+        descriptive_assert(len(dropout) == len(lstm_layer_sizes),
+            ValueError,
+            f'length of dropout must be the same size as lstm_layer_sizes, got {len(dropout)} and {len(lstm_layer_sizes)}')
+        
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Dense, LSTM
+        import tensorflow.keras.optimizers
+        optimizer = eval(f'tensorflow.keras.optimizers.{optimizer}')
+        
+        if random_seed is not None:
+            random.seed(random_seed)
+
+        # list of integers, each one representing the n/a values in each AR term
+        ars = [v.isnull().sum() for x,v in self.current_xreg.items() if x.startswith('AR')]
+        # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
+        obs_to_drop = max(ars) if len(ars) > 0 else 0
+        y = self.y.values[obs_to_drop:].copy()
+        current_xreg = {xvar:x.values[obs_to_drop:].copy() for xvar,x in self.current_xreg.items()}
+        # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
+        Xvars, y, X, test_size = self._prepare_sklearn(tune,Xvars,y,current_xreg)
+        # split the data
+        X_train, X_test, y_train, y_test = self._train_test_split(X,y,test_size)
+        # fit the normalizer to training data only
+        scaler = self._parse_normalizer(X_train,normalizer)
+        y_train = np.array(y_train)
+        y_test = np.array(y_test)
+        y = np.array(y)
+
+        X_train = self._scale(scaler,X_train)
+        X_test = self._scale(scaler,X_test)
+        X = self._scale(scaler,X)
+        
+        # reshape data into the right format - lstm needs 3d
+        n_timesteps = X_train.shape[1]
+        n_features = 1
+
+        X_train = X_train.reshape(X_train.shape[0], n_timesteps, n_features)
+        X_test = X_test.reshape(X_test.shape[0], n_timesteps, n_features)
+        X = X.reshape(X.shape[0], n_timesteps, n_features)
+
+        # build model
+        model = Sequential([
+            LSTM(lstm_layer_sizes[0]
+                ,activation=activation
+                ,input_shape=(n_timesteps,n_features)
+                ,dropout=dropout[0]
+                ,return_sequences=len(lstm_layer_sizes) > 1)
+            ])
+        for i,layer in enumerate(lstm_layer_sizes):
+            if i > 0: # since we already added the first layer
+                model.add(LSTM(layer
+                    ,activation=activation
+                    ,return_sequences=(not i==(len(lstm_layer_sizes)-1))
+                    ,dropout=dropout[i]))
+        model.add(Dense(1)) # output layer
+
+        # compile model
+        model.compile(
+            optimizer=optimizer(learning_rate=learning_rate),
+            loss=loss
+        )
+
+        # out-of-sample predictions
+        pred = self._evaluate_lstm(model,
+            X_train,
+            y_train,
+            Xvars,
+            self.current_dates.values[-test_size:],
+            {x:v[-test_size:] for x,v in current_xreg.items() if x in Xvars},
+            dynamic_testing,
+            true_forecast=False,
+            batch_size=batch_size,
+            epochs=epochs)
+        # set the test-set metrics
+        self._metrics(y_test,pred)
+
+        # if we are tuning, return the relevant test-set metric only and delete other metrics out of memory
+        # otherwise, get me my entire forecast into the future 
+        return self._tune() if tune\
+            else self._evaluate_lstm(model,
+                X,
+                y,
+                Xvars,
+                self.future_dates.copy(),
+                {x:v[:] for x, v in self.future_xreg.items() if x in Xvars},
+                dynamic_testing,
+                true_forecast=True,
+                batch_size=batch_size,
+                epochs=epochs)
 
     def _forecast_combo(self,how='simple',models='all',dynamic_testing=True,determine_best_by='ValidationMetricValue',rebalance_weights=.1,weights=None,splice_points=None):
         """ combines at least two previously evaluted forecasts to create a new estimator
@@ -1393,7 +1592,9 @@ class Forecaster:
                 if str, must match the name of a dict grid stored in Grids.py
         """
         from itertools import product
-        expand_grid = lambda d: pd.DataFrame([row for row in product(*d.values())],columns=d.keys())
+        def expand_grid(d):
+            return pd.DataFrame([row for row in product(*d.values())],columns=d.keys())
+
         if isinstance(grid,str):
             import Grids
             importlib.reload(Grids)
@@ -1406,9 +1607,10 @@ class Forecaster:
             n: int or float
                 if int, randomly selects that many parameter combinations
                 if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations
+            random_seed: int, optional
+                set a seed to make results consistent
         """
         if random_seed is not None:
-            import random
             random.seed(random_seed)
             
         if n >= 1:
@@ -1443,7 +1645,7 @@ class Forecaster:
             except SyntaxError:
                 raise
             except:
-                raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory or there is no grid with that name. try ingest_grid() with a dictionary grid passed manually.')
+                raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
 
         if self.estimator == 'combo':
             raise ForecastError('combo models cannot be tuned')
@@ -1806,6 +2008,38 @@ class Forecaster:
         """
         for a in args:
             self.history.pop(a)
+
+    def pop_using_criterion(self,metric,evaluated_as,threshold,delete_all=True):
+        """ deletes all forecasts from history that meet a given criterion
+            metric: str, one of _determine_best_by_ + ['AnyPrediction','AnyLevelPrediction']
+            evaluated_as: str, one of {"<","<=",">",">=","=="}
+            threshold: float
+            delete_all: bool, default True
+                if the passed criterion deletes all forecasts, whether to actually delete all forecasts
+                if False and all forecasts meet criterion, will keep them all
+            >>> f.pop_using_criterion('LevelTestSetMAPE','>',2)
+            >>> f.pop_using_criterion('AnyPrediction','<',0,delete_all=False)
+        """
+        descriptive_assert(evaluated_as in ("<","<=",">",">="),
+            ValueError,
+            f'evaluated_as must be one of ("<","<=",">",">="), got {evaluated_as}')
+        threshold = float(threshold)
+        if metric in _determine_best_by_:
+            fcsts = [m for m,v in self.history.items() if v[metric] > threshold] if 'evaluated_as' == '>'\
+                else [m for m,v in self.history.items() if v[metric] >= threshold] if 'evaluated_as' == '>='\
+                else [m for m,v in self.history.items() if v[metric] < threshold] if 'evaluated_as' == '<'\
+                else [m for m,v in self.history.items() if v[metric] <= threshold] if 'evaluated_as' == '<='\
+                else [m for m,v in self.history.items() if v[metric] == threshold]
+        elif metric not in ('AnyPrediction','AnyLevelPrediction'):
+            raise ValueError('metric must be one of {}, got {}'.format(_determine_best_by_ + ['AnyPrediction','AnyLevelPrediction'],metric))
+        else:
+            metric = 'Forecast' if metric == 'AnyPrediction' else 'LevelForecast'
+            fcsts = [m for m,v in self.history.items() if max(v[metric]) > threshold] if 'evaluated_as' == '>'\
+                else [m for m,v in self.history.items() if max(v[metric]) >= threshold] if 'evaluated_as' == '>='\
+                else [m for m,v in self.history.items() if min(v[metric]) < threshold] if 'evaluated_as' == '<'\
+                else [m for m,v in self.history.items() if min(v[metric]) <= threshold] if 'evaluated_as' == '<='\
+                else [m for m,v in self.history.items() if threshold in v[metric]]
+        self.pop(*fcsts) if len(fcsts) < len(self.history.keys()) or delete_all else None
 
     def export(self,
                dfs=['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_test_set_predictions','lvl_fcsts'],

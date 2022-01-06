@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.4.25] - (quick fix) 2022-01-06
+## Added
+## Changed
+## Fixed
+- source code was using `f` instead of `self` when when calling `pop_using_criterion()`
+
+## [0.4.2] - 2022-01-06
+## Added
+- lstm estimator and lstm grid in example grids
+- added `pop_using_criterion()` function
+## Changed
+- Fixed an issue where sklearn models were being fit on the same data twice -- does not change outcomes but the models run faster now
+- Output from `_scale()` function is now always a numpy matrix (could have been either that or pandas dataframe before)
+- sorted `_estimators_` list
+- changed the error message for when importing a grid fails to account for one other possible reason the failure occured
+## Fixed
+
 ## [0.4.1] - 2021-12-30
 ## Added
 - Can now sort by metric value in `export_all_validation_grids_to_excel()`
