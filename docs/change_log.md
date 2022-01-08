@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.4.4] - 2022-01-07
+## Added
+- added lstm grid in example grids
+- added EarlyStopping callback functionality for the LSTM model
+- added `get_expanded_lstm_grid()` to GridGenerator module which gives an example of a grid with early stopping
+## Changed
+- changed default paramaters for the lstm model
+- added `**kwargs` to the lstm model forecast function that are passed to the `fit()` function in TensorFlow, got rid of `epochs` and `batch_size` args consequently
+## Fixed
+
 ## [0.4.25] - (quick fix) 2022-01-06
 ## Added
 ## Changed
@@ -9,7 +19,7 @@ All notable changes to this project will be documented in this file. We keep tra
 
 ## [0.4.2] - 2022-01-06
 ## Added
-- lstm estimator and lstm grid in example grids
+- lstm estimator
 - added `pop_using_criterion()` function
 ## Changed
 - Fixed an issue where sklearn models were being fit on the same data twice -- does not change outcomes but the models run faster now

@@ -364,8 +364,7 @@ class Forecaster:
         dynamic_testing,
         true_forecast=False,
         lstm=False,
-        batch_size=None,
-        epochs=None) -> list:
+        **kwargs) -> list:
         """ forecasts an sklearn model into the unknown
             beginning in 0.4.1, now supports lstm model evaluation (three arguments added to function)
             uses loops to dynamically plug in AR values without leaking in either a tune/test process or true forecast, unless dynamic_testing is False
@@ -386,12 +385,7 @@ class Forecaster:
                 if True, saves regr, X, and fitted_values attributes
             lstm: bool, default False
                 Whether evaluating an LSTM model
-            batch_size: int, default None
-                batch size of lstm model
-                ignored when lstm == False
-            epochs: int, default None
-                number of epochs for lstm model
-                ignored when lstm == False
+            **kwargs passed to fit() method and ignored when lstm == False
         """
         # not tuning/testing
         if true_forecast:
@@ -400,7 +394,7 @@ class Forecaster:
         
         # apply the normalizer fit on training data only
         X = self._scale(scaler,X)
-        regr.fit(X,y) if not lstm else regr.fit(X,y,batch_size=batch_size,epochs=epochs,verbose=0)
+        regr.fit(X,y) if not lstm else regr.fit(X,y,**kwargs)
         
         # not tuning/testing
         if true_forecast:
@@ -712,9 +706,8 @@ class Forecaster:
         future_dates,
         future_xreg,
         dynamic_testing,
-        epochs,
-        batch_size,
-        true_forecast=False):
+        true_forecast=False,
+        **kwargs):
 
         fcst = self._evaluate_sklearn(None, # None because everything has already been scaled
                 regr,
@@ -724,13 +717,12 @@ class Forecaster:
                 future_dates,
                 future_xreg,
                 dynamic_testing,
-                true_forecast=True,
+                true_forecast=true_forecast,
                 lstm=True,
-                batch_size=batch_size,
-                epochs=epochs)
+                **kwargs)
 
         fcst = [x[0] for x in fcst] if isinstance(fcst[0],np.ndarray) else fcst
-        fcst = [0 if x is None or x is np.nan else x for x in fcst]
+        fcst = [0 if x is np.nan else x for x in fcst]
         return fcst
 
     def _forecast_lstm(self,
@@ -738,24 +730,23 @@ class Forecaster:
         tune=False,
         Xvars=None,
         normalizer='minmax',
-        lstm_layer_sizes=(25,),
+        lstm_layer_sizes=(8,),
         dropout=(0.0,),
         loss='mean_absolute_error',
         activation='tanh',
         optimizer='Adam',
         learning_rate=0.001,
-        epochs=5,
-        batch_size=None,
-        random_seed=None):
+        random_seed=None,
+        **kwargs):
         """ forecasts with a long-short term memory neural network from TensorFlow
             dynamic_testing: bool
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
                 when False, test-set metrics effectively become an average of one-step forecasts
-            tune: bool, default False
+            tune: bool
                 whether the model is being tuned
             Xvars: list where all elements are in current_xreg keys, 'all', or None
-                if None and Xvars are required, None becomes equivalent to 'all'
+                None and 'all' are equivalent in this model
             normalizer: one of {_normalizer_}
                 if not None, normalizer applied to training data only to not leak
             lstm_layer_sizes: list-like, default (25,)
@@ -778,15 +769,10 @@ class Forecaster:
                 watch capitalization as that matters (can't be "adam", must be "Adam")
             learning_rate: float, default 0.001
                 the learning rate to use when compiling the model
-            epochs: int, default 5
-                the number of epochs to fit the model with
-            batch_size: int, optional
-                the size of the batch for each epoch
-                if None, will default to 32
             random_seed: int, optional
                 set a seed for consistent results
                 with tensorflow networks, setting seeds does not guarantee consistent results
-            optimizer: one of see here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
+            **kwargs passed to fit() and can include epochs, verbosity, callbacks, validation splitting, and more
             if you want more hyperparameter options, contribute!!
         """
         descriptive_assert(len(lstm_layer_sizes) >= 1,ValueError,f'must pass at least one layer to lstm_layer_sizes, got {lstm_layer_sizes}')
@@ -862,8 +848,7 @@ class Forecaster:
             {x:v[-test_size:] for x,v in current_xreg.items() if x in Xvars},
             dynamic_testing,
             true_forecast=False,
-            batch_size=batch_size,
-            epochs=epochs)
+            **kwargs)
         # set the test-set metrics
         self._metrics(y_test,pred)
 
@@ -878,8 +863,7 @@ class Forecaster:
                 {x:v[:] for x, v in self.future_xreg.items() if x in Xvars},
                 dynamic_testing,
                 true_forecast=True,
-                batch_size=batch_size,
-                epochs=epochs)
+                **kwargs)
 
     def _forecast_combo(self,how='simple',models='all',dynamic_testing=True,determine_best_by='ValidationMetricValue',rebalance_weights=.1,weights=None,splice_points=None):
         """ combines at least two previously evaluted forecasts to create a new estimator
@@ -1645,7 +1629,8 @@ class Forecaster:
             except SyntaxError:
                 raise
             except:
-                raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
+                raise
+                #raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
 
         if self.estimator == 'combo':
             raise ForecastError('combo models cannot be tuned')
@@ -1686,16 +1671,17 @@ class Forecaster:
 
     def manual_forecast(self,call_me=None,dynamic_testing=True,**kwargs) -> None:
         """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywoords
-            call_me: str or None, default None
+            call_me: str, optional
                 what to call the model when storing it in the object's history dictionary
+                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.)
                 duplicated names will be overwritten with the most recently called model
             dynamic_testing: bool, default True
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
                 when False, test-set metrics effectively become an average of one-step forecasts
             **kwargs are passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
-            **kwargs can include for sklearn models:
-                normalizer: one of {_normalizer_}
+            **kwargs include for sklearn and lstm models:
+                normalizer: one of {_normalizer_}, default 'minmax'
                     if not None, normalizer applied to training data only to not leak
                 Xvars: list where all elements are in current_xreg keys, 'all', or None
                     if None and Xvars are required, None becomes equivalent to 'all'

@@ -1,3 +1,5 @@
+import typing
+
 example_grids = """
 arima = {
 	'order':[(2,1,0),(0,1,2),(1,1,1)],
@@ -18,8 +20,7 @@ gbt = {
 
 hwes = {
 	'trend':['add','mul'],
-	'seasonal':['add','mul'],
-	'damped_trend':[True,False]
+	'seasonal':['add','mul']
 }
 
 knn = {
@@ -29,7 +30,18 @@ knn = {
 
 
 lightgbm = {
-	'max_depth':[-1,2,3]
+	'max_depth':[2,3]
+}
+
+lstm = {
+	'lstm_layer_sizes':[(8,),(8,16,8)],
+	'dropout':[(0,),(0.2,0.2,0)],
+	'activation':['relu','tanh'],
+	'epochs':[5],
+	'batch_size':[32],
+	'random_seed':[20],
+	'shuffle':[True],
+	'verbose':[0],
 }
 
 mlp = {
@@ -65,7 +77,6 @@ svr={
 
 xgboost = {
 	'max_depth':[2,3]
-}
 }
 """
 
@@ -110,3 +121,21 @@ def get_empty_grids(overwrite=False):
 	
 	with open('Grids.py','w') as f:
 		f.write(empty_grids)
+
+def get_expanded_lstm_grid() -> dict:
+	""" returns a grid dictionary that adds more hyperparameter tuning to the LSTM model
+	"""
+	from tensorflow.keras.callbacks import EarlyStopping
+	return {
+		'lstm_layer_sizes':[(64,64),(64,64,64)],
+		'dropout':[(0.2,0),(0.2,0,0),(0,0,0)],
+		'activation':['relu','tanh'],
+		'optimizer':['Adam','Nadam'],
+		'epochs':[20],
+		'validation_split':[0.2],
+		'batch_size':[32],
+		'random_seed':[20],
+		'shuffle':[True],
+		'verbose':[0],
+		'callbacks':[EarlyStopping(monitor='val_loss',patience=3)]
+	}
