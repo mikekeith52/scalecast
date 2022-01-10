@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.5.0] - 2022-01-10
+## Added
+- Added confidence intervals using bootstrapping
+  - `set_cilvel()` function (default .95)
+  - `set_bootstrap_samples()` function (default 100)
+- Added `ci` parameter to `plot()` and `plot_test_set()` function 
+- Added UpperCI, LowerCI, TestSetUpperCI, TestSetLowerCI keys to history dict
+- Added `export_forecasts_with_cis()` and `export_test_set_preds_with_cis()` functions
+- Added source code (commented out) to get level confidence intervals -- when I tested, the intervals were too large to implement but maybe in the future this will be revisited
+## Changed
+## Fixed
+
 ## [0.4.4] - 2022-01-07
 ## Added
 - added lstm grid in example grids

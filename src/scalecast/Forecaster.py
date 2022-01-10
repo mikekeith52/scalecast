@@ -1,3 +1,5 @@
+## TODO: cis - differenced, level, test-set both, exponentiated by the number of AR terms?
+
 import typing
 from typing import Union, Tuple, Dict
 import importlib
@@ -114,6 +116,8 @@ class Forecaster:
         self.integration = 0
         self.levely = list(y)
         self.init_dates = list(current_dates)
+        self.cilevel = 0.95
+        self.ci_bootstrap_samples = 100
         for key, value in kwargs.items():
             setattr(self,key,value)
 
@@ -144,11 +148,22 @@ class Forecaster:
             ForecastError,
             'before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)')
         
+    def _find_cis(self):
+        """ bootsrapts the upper and lower forecast estimates using the info stored in cilevel and bootstrap_samples
+        """
+        random.seed(20)
+        resids = [fv - ac for fv, ac in zip(self.fitted_values[:],self.y[-len(self.fitted_values):])]
+        bootstrapped_resids = np.random.choice(resids,size=self.ci_bootstrap_samples)
+        bootstrap_mean = np.mean(bootstrapped_resids)
+        bootstrap_std = np.std(bootstrapped_resids)
+        return stats.norm.ppf(1-(1 - self.cilevel)/2) * bootstrap_std + bootstrap_mean
+
     def _bank_history(self,**kwargs) -> None:
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
             **kwargs are passed from each model, depending on how that model uses Xvars and normalizer args
         """
         call_me = self.call_me
+        ci_range = self._find_cis()
         self.history[call_me] = {
             'Estimator':self.estimator,
             'Xvars':self.Xvars,
@@ -156,6 +171,8 @@ class Forecaster:
             'Scaler':kwargs['normalizer'] if 'normalizer' in kwargs.keys() else None if self.estimator in ('prophet','combo') else None if hasattr(self,'univariate') else 'minmax',
             'Observations':len(self.y),
             'Forecast':self.forecast[:],
+            'UpperCI':[f + ci_range for f in self.forecast],
+            'LowerCI':[f - ci_range for f in self.forecast],
             'FittedVals':self.fitted_values[:],
             'Tuned':False if not kwargs['auto'] else 'Dynamically' if self.dynamic_tuning else True,
             'DynamicallyTested':self.dynamic_testing,
@@ -166,6 +183,8 @@ class Forecaster:
             'TestSetMAE':self.mae,
             'TestSetR2':self.r2,
             'TestSetPredictions':self.test_set_pred[:],
+            'TestSetUpperCI':[f + ci_range for f in self.test_set_pred], # not exactly right, but close enough with caveat
+            'TestSetLowerCI':[f - ci_range for f in self.test_set_pred], # not exactly right, but close enough with caveat
             'TestSetActuals':self.test_set_actuals[:],
             'InSampleRMSE':rmse(self.y.values[-len(self.fitted_values):],self.fitted_values),
             'InSampleMAPE':mape(self.y.values[-len(self.fitted_values):],self.fitted_values),
@@ -184,37 +203,75 @@ class Forecaster:
 
         self.history[call_me]['LevelY'] = self.levely[:]
         if self.integration > 0:
-            fcst = self.forecast[::-1]
             integration = self.integration
+
+            fcst = self.forecast[::-1]
+            #fcstuci = [f + ci_range for f in self.forecast][::-1]
+            #fcstlci = [f - ci_range for f in self.forecast][::-1]
             pred = self.history[call_me]['TestSetPredictions'][::-1]
-            
+            #preduci = [f + ci_range for f in self.test_set_pred][::-1]
+            #predlci = [f - ci_range for f in self.test_set_pred][::-1]
+
             if integration == 2:
                 fcst.append(self.y.values[-2] + self.y.values[-1])
+                #fcstuci.append(self.history[call_me]['UpperCI'][-2] + self.history[call_me]['UpperCI'][-1])
+                #fcstlci.append(self.history[call_me]['LowerCI'][-2] + self.history[call_me]['LowerCI'][-1])
                 pred.append(self.y.values[-(len(pred) + 2)] + self.y.values[-(len(pred) + 1)])
+                #preduci.append(self.history[call_me]['TestSetUpperCI'][-2] + self.history[call_me]['TestSetUpperCI'][-1])
+                #predlci.append(self.history[call_me]['TestSetLowerCI'][-2] + self.history[call_me]['TestSetLowerCI'][-1])
             else:
                 fcst.append(self.levely[-1])
+                #fcstuci.append(self.history[call_me]['UpperCI'][-1])
+                #fcstlci.append(self.history[call_me]['LowerCI'][-1])
                 pred.append(self.levely[-(len(pred) + 1)])
+                #preduci.append(self.history[call_me]['TestSetUpperCI'][-1])
+                #predlci.append(self.history[call_me]['TestSetLowerCI'][-1])
 
             fcst = list(np.cumsum(fcst[::-1]))[1:]
+            #fcstuci = list(np.cumsum(fcstuci[::-1]))[1:]
+            #fcstlci = list(np.cumsum(fcstlci[::-1]))[1:]
             pred = list(np.cumsum(pred[::-1]))[1:]
+            #preduci = list(np.cumsum(preduci[::-1]))[1:]
+            #predlci = list(np.cumsum(predlci[::-1]))[1:]
 
             if integration == 2:
                 fcst.reverse()
                 fcst.append(self.levely[-1])
                 fcst = list(np.cumsum(fcst[::-1]))[1:]
+                #fcstuci.reverse()
+                #fcstuci.append(self.history[call_me]['UpperCI'][-1])
+                #fcstuci = list(np.cumsum(fcstuci[::-1]))[1:]
+                #fcstlci.reverse()
+                #fcstlci.append(self.history[call_me]['LowerCI'][-1])
+                #fcstlci = list(np.cumsum(fcstlci[::-1]))[1:]
+
                 pred.reverse()
                 pred.append(self.levely[-(len(pred) + 1)])
                 pred = list(np.cumsum(pred[::-1]))[1:]
+                #preduci.reverse()
+                #preduci.append(self.history[call_me]['TestSetUpperCI'][-1])
+                #preduci = list(np.cumsum(preduci[::-1]))[1:]
+                #predlci.reverse()
+                #predlci.append(self.history[call_me]['TestSetLowerCI'][-1])
+                #predlci = list(np.cumsum(predlci[::-1]))[1:]
 
             self.history[call_me]['LevelForecast'] = fcst[:]
+            #self.history[call_me]['LevelForecastUpperCI'] = fcstuci[:]
+            #self.history[call_me]['LevelForecastLowerCI'] = fcstlci[:]
             self.history[call_me]['LevelTestSetPreds'] = pred[:]
+            #self.history[call_me]['LevelTestSetPredsUpperCI'] = preduci[:]
+            #self.history[call_me]['LevelTestSetPredsLowerCI'] = predlci[:]
             self.history[call_me]['LevelTestSetRMSE'] = rmse(self.levely[-len(pred):],pred)
             self.history[call_me]['LevelTestSetMAPE'] = mape(self.levely[-len(pred):],pred)
             self.history[call_me]['LevelTestSetMAE'] = mae(self.levely[-len(pred):],pred)
             self.history[call_me]['LevelTestSetR2'] = r2(self.levely[-len(pred):],pred)
         else: # better to have these attributes populated for all series
             self.history[call_me]['LevelForecast'] = self.forecast[:]
+            #self.history[call_me]['LevelForecastUpperCI'] = [f + ci_range for f in self.forecast]
+            #self.history[call_me]['LevelForecastLowerCI'] = [f - ci_range for f in self.forecast]
             self.history[call_me]['LevelTestSetPreds'] = self.test_set_pred[:]
+            #self.history[call_me]['LevelTestSetPredsUpperCI'] = [f + ci_range for f in self.test_set_pred]
+            #self.history[call_me]['LevelTestSetPredsLowerCI'] = [f - ci_range for f in self.test_set_pred]
             self.history[call_me]['LevelTestSetRMSE'] = self.rmse
             self.history[call_me]['LevelTestSetMAPE'] = self.mape
             self.history[call_me]['LevelTestSetMAE'] = self.mae
@@ -1190,6 +1247,22 @@ class Forecaster:
             raise ValueError('can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()')
         self.validation_length=n
 
+    def set_cilevel(self,n):
+        """ sets the level for the resulting confidence intervals (95% default)
+            n: float greater than 0 and less than 1
+        """
+        descriptive_assert(n < 1 and n > 0,ValueError,'n must be greater than 0 and less than 1')
+        self.cilevel = n
+
+    def set_bootstrap_samples(self,n):
+        """ sets the number of bootstrap samples to set confidence intervals for each model (default is 100)
+            n: float greater than or equal to 30
+                30 because you need around there to satisfy central limit theorem
+                the lower this number, the faster the performance, but the less sure of the outcome you can be
+        """
+        descriptive_assert(n >= 30,ValueError,'n must be greater than or equal to 30')
+        self.bootstrap_samples = n
+
     def adf_test(self,critical_pval=0.05,quiet=True,full_res=False,train_only=False,**kwargs) -> Union[dict,bool]:
         """ tests the stationarity of the y series using augmented dickey fuller
             critical_pval: float, default 0.05
@@ -1800,7 +1873,7 @@ class Forecaster:
             case2 = [k for k in self.future_xreg.keys() if k not in self.current_xreg.keys()]
             raise ValueError(f'the following regressors are in current_xreg but not future_xreg: {case1}\nthe following regressors are in future_xreg but not current_xreg {case2}')
 
-    def plot(self,models='all',order_by=None,level=False,print_attr=[],to_png=False,out_path='./',png_name='plot.png') -> None:
+    def plot(self,models='all',order_by=None,level=False,print_attr=[],to_png=False,out_path='./',png_name='plot.png',ci=False) -> None:
         """ plots all forecasts with the actuals, or just actuals if no forecasts available
             models: list-like, str, or None; default 'all'
                the forecated models to plot
@@ -1820,6 +1893,11 @@ class Forecaster:
                 the path to save the png file to (ignored when `to_png=False`)
             png_name: str, default './plot.png'
                 the name of the resulting png image (ignored when `to_png=False`)
+            ci: bool, default False
+                whether to display the confidence intervals
+                default is 100 boostrapped samples and a 95% confidence interval
+                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting
+                ignored when level = False
         """
         try:
             models = self._parse_models(models,order_by)
@@ -1853,8 +1931,15 @@ class Forecaster:
         print_attr_map = {}
         sns.lineplot(x=plot['date'][-plot['actuals_len']:],y=plot['actuals'][-plot['actuals_len']:],label='actuals')
         for i, m in enumerate(models):
-            plot[m] = self.history[m]['Forecast'] if not level else self.history[m]['LevelForecast'] 
+            plot[m] = self.history[m]['Forecast'] if not level else self.history[m]['LevelForecast']
             sns.lineplot(x=self.future_dates.to_list(),y=plot[m],color=_colors_[i],label=m)
+            if ci and not level:
+                plt.fill_between(x=self.future_dates.to_list(),
+                    y1=self.history[m]['UpperCI'],
+                    y2=self.history[m]['LowerCI'],
+                    alpha=0.2,
+                    color=_colors_[i],
+                    label='{} {:.0%} CI'.format(m,self.cilevel))
             print_attr_map[m] = {a:self.history[m][a] for a in print_attr if a in self.history[m].keys()}
 
         for m, d in print_attr_map.items():
@@ -1869,7 +1954,7 @@ class Forecaster:
             plt.savefig(os.path.join(out_path,png_name))
         plt.show()
 
-    def plot_test_set(self,models='all',order_by=None,include_train=True,level=False,to_png=False,out_path='./',png_name='./plot.png') -> None:
+    def plot_test_set(self,models='all',order_by=None,include_train=True,level=False,to_png=False,out_path='./',png_name='./plot.png',ci=False) -> None:
         """ plots all test-set predictions with the actuals
             models: list-like or str, default 'all'
                the forecated models to plot
@@ -1890,6 +1975,11 @@ class Forecaster:
                 the path to save the png file to (ignored when `to_png=False`)
             png_name: str, default './plot.png'
                 the name of the resulting png image (ignored when `to_png=False`)
+            ci: bool, default False
+                whether to display the confidence intervals
+                default is 100 boostrapped samples and a 95% confidence interval
+                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting
+                ignored when level = False
         """
         models = self._parse_models(models,order_by)
         integration = set([d['Integration'] for m,d in self.history.items() if m in models])
@@ -1924,6 +2014,13 @@ class Forecaster:
             plot[m] = self.history[m]['TestSetPredictions'] if not level else self.history[m]['LevelTestSetPreds']
             test_dates = self.current_dates.to_list()[-len(plot[m]):]
             sns.lineplot(x=test_dates,y=plot[m],linestyle='--',color=_colors_[i],alpha=0.7,label=m)
+            if ci and not level:
+                plt.fill_between(x=test_dates,
+                    y1=self.history[m]['TestSetUpperCI'],
+                    y2=self.history[m]['TestSetLowerCI'],
+                    alpha=0.2,
+                    color=_colors_[i],
+                    label='{} {:.0%} CI'.format(m,self.cilevel))
 
         plt.legend()
         plt.xlabel('Date')
@@ -2258,3 +2355,30 @@ class Forecaster:
         ],ignore_index=True)
 
         return df.dropna() if dropna else df
+
+    def export_forecasts_with_cis(self,model):
+        """ exports a single dataframe with forecasts and upper and lower forecast bounds
+            model: str
+                the model nickname (must exist in history.keys())
+        """
+        return pd.DataFrame({
+            'DATE':self.future_dates.to_list(),
+            'UpperForecast':self.history[model]['UpperCI'],
+            'Forecast':self.history[model]['Forecast'],
+            'LowerForecast':self.history[model]['LowerCI'],
+            'ModelNickname':[model]*len(self.future_dates)
+            })
+
+    def export_test_set_preds_with_cis(self,model):
+        """ exports a single dataframe with test-set predictions and upper and lower prediction bounds
+            model: str
+                the model nickname (must exist in history.keys())
+        """
+        return pd.DataFrame({
+            'DATE':self.current_dates.to_list()[-len(self.history[model]['TestSetPredictions']):],
+            'UpperPreds':self.history[model]['TestSetUpperCI'],
+            'Preds':self.history[model]['TestSetPredictions'],
+            'Actuals':self.history[model]['TestSetActuals'],
+            'LowerPreds':self.history[model]['TestSetLowerCI'],
+            'ModelNickname':[model]*len(self.history[model]['TestSetPredictions'])
+            })
