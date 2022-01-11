@@ -215,7 +215,7 @@ f.manual_forecast(max_depth=3)
 
 ### lstm
 - [TensorFlow Documentation](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
-- Long-Short Term Memory Neural Network
+- Long Short-Term Memory Neural Network
 - uses all Xvars and a MinMax normalizer by default
 - better on differenced data for non-stationary series
 ``` python
