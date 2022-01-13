@@ -1,5 +1,4 @@
 CODE_OF_CONDUCT.md
-Grids.py
 MANIFEST
 README.md
 license.txt
@@ -12,6 +11,7 @@ __pycache__/Grids.cpython-38.pyc
 assets/logo1.png
 assets/logo2.png
 assets/main_forecast.png
+assets/main_forecast_test_set.png
 assets/plot.png
 assets/plot_acf.png
 assets/plot_different_levels.png

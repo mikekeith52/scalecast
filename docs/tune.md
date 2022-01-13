@@ -1,5 +1,5 @@
 ## tuning models
-- all models except combination models can be tuned with a straightforward process
+- all except combination and lstm models can be tuned with a straightforward process
 - `set_validation_length()` will set n periods aside before the test set chronologically to validate different model hyperparameters
 - grids can be fed to the object that are dictionaries with a keyword as the key and array-like object as the value
 - for each  model, there are different hyperparameters that can be tuned this way -- see the specific model's source documentation

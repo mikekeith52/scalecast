@@ -70,7 +70,9 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
 |[📚 Documentation Markdown Files](/docs)|Review all high-level concepts in the library|
 
 ## Contribute
-**The following contributions are needed (contact mikekeith52@gmail.com)**
+I have no formal education in Python development. Maintaining this package is truly a work of passion that I'm not sure anyone ever even sees. If you feel connected to the project, contact mikekeith52@gmail.com.  
+
+Here's what's needed:  
 1. Documentation moved to a proper website with better organization
 2. Error/issue reporting
 3. Confidence intervals that expand outward for dates further out

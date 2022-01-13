@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.5.2] - 2022-01-12
+## Added
+## Changed
+## Fixed
+- Fixed an error that occured when calling the `__repr__()` method if no models had been evaluated first
+
+## [0.5.1] - 2022-01-12
+## Added
+- Added `export_fitted_vals()` function
+- Added ci option to the `results_vis()` function in notebook
+- Added the `get_funcs()` function
+## Changed
+- No `Xvars` in LSTM model, changed to lags (now model will only look at its own history)
+- No `normalizer` in LSTM model (always uses a minmax scaler now)
+- LSTM model can no longer be tuned
+- Got rid of all lstm model grids
+- changed `__str__()` and `__repr__()` so that they now offer better info
+## Fixed
+- Fixed the LSTM model by scaling the dependent variable and unscaling it (minmax) when it comes out and getting rid of other Xvars
+
 ## [0.5.0] - 2022-01-10
 ## Added
 - Added confidence intervals using bootstrapping

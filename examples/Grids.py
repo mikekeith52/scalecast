@@ -29,17 +29,6 @@ lightgbm = {
 	'max_depth':[2,3]
 }
 
-lstm = {
-	'lstm_layer_sizes':[(8,),(8,16,8)],
-	'dropout':[(0,),(0.2,0.2,0)],
-	'activation':['relu','tanh'],
-	'epochs':[5],
-	'batch_size':[32],
-	'random_seed':[20],
-	'shuffle':[True],
-	'verbose':[0]
-}
-
 mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],

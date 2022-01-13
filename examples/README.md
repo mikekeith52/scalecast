@@ -4,7 +4,8 @@
 - Example 2: [housing.py](housing.py)
 - Example 3: [avocados.ipynb](avocados.ipynb)
 - Example 4: [housing_different_levels.py](housing_different_levels.py)
-- Example 5 (external repository): [housing_prices.ipynb](https://github.com/mikekeith52/housing_prices/blob/main/housing_prices.ipynb)
+- Example 5: [LSTM.ipynb](LSTM.ipynb)
+- Example 6 (external repository): [housing_prices.ipynb](https://github.com/mikekeith52/housing_prices/blob/main/housing_prices.ipynb)
 
 ## See the blog posts:
 1. [Part 1](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)

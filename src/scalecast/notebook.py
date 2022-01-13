@@ -29,19 +29,21 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     if plot_type not in {'forecast','test'}:
         raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
 
-    def display_user_selections(ts_selection,mo_selection,lv_selection,me_selection):
+    def display_user_selections(ts_selection,mo_selection,lv_selection,ci_selection,me_selection):
         selected_data = f_dict[ts_selection]
         print(ts_selection)
         if plot_type == 'forecast':
             selected_data.plot(models=f'top_{mo_selection}',order_by=me_selection,level=lv_selection,
-                               print_attr=print_attr)
+                               print_attr=print_attr,ci=ci_selection)
         else:
-            selected_data.plot_test_set(models=f'top_{mo_selection}',order_by=me_selection,include_train=include_train,level=lv_selection)
+            selected_data.plot_test_set(models=f'top_{mo_selection}',order_by=me_selection,include_train=include_train,level=lv_selection,
+                                        ci=ci_selection)
             
     def on_button_clicked(b):
         mo_selection = mo_dd.value
         ts_selection = ts_dd.value
         lv_selection = lv_dd.value
+        ci_selection = ci_dd.value
         me_selection = me_dd.value
         with output:
             clear_output()
@@ -53,6 +55,7 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     ts_dd = widgets.Dropdown(options=f_dict.keys(), description = 'Time Series:')
     mo_dd = widgets.Dropdown(options=range(1,len(all_models)+1), description = 'No. Models')
     lv_dd = widgets.Dropdown(options=[True,False],description='View Level')
+    ci_dd = widgets.Dropdown(options=[True,False],description='View Confidence Intervals')
     me_dd = widgets.Dropdown(options=sorted(_determine_best_by_)
         ,description='Order By')
 

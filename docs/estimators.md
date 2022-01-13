@@ -15,9 +15,6 @@
 [silverkite](#silverkite)  
 [svr](#svr)  
 [xgboost](#xgboost)  
-```python
-_estimators_ = {'arima', 'mlr', 'mlp', 'gbt', 'xgboost', 'lstm', 'lightgbm', 'rf', 'prophet', 'silverkite', 'hwes', 'elasticnet', 'svr', 'knn', 'combo'}
-```
 
 ### arima
 - [Stats Models Documentation](https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html)
@@ -47,6 +44,7 @@ f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
       - should be one less in length than models
       - models[0] --> :splice_points[0]
       - models[-1] --> splice_points[-1]:
+- this model cannot be tuned
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -216,8 +214,9 @@ f.manual_forecast(max_depth=3)
 ### lstm
 - [TensorFlow Documentation](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
 - Long Short-Term Memory Neural Network
-- uses all Xvars and a MinMax normalizer by default
-- better on differenced data for non-stationary series
+- uses no Xvars, only `lags` argument
+- always scales with MinMaxScaler from scikit-learn
+- this model cannot be tuned
 ``` python
 import pandas as pd
 import pandas_datareader as pdr
@@ -237,7 +236,7 @@ f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regres
 f.add_logged_terms('t') # lnt
 f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('lstm')
-f.manual_forecast(Xvars=['monthsin','monthcos','year','lnt'],epochs=10)
+f.manual_forecast(lags=24,epochs=10)
 ```
 
 ### mlp
