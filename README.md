@@ -65,7 +65,7 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
 |Documentation||
 |----|----|
 |[📋 Examples](/examples)|Get straight to the process|
-|[💻 Towards Data Science Latest]|Check out the new LSTM Recurrent Neural Net application|
+|[💻 Towards Data Science Latest](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)|Check out the new LSTM Recurrent Neural Net application|
 |[➡ Towards Data Science Series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)|Read the introductory 3-part series|
 |[📓 Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
 |[🛠️ Change Log](docs/change_log.md)|See what's changed|
