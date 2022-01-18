@@ -56,7 +56,9 @@ docs/tune.md
 docs/warnings.md
 docs/weighted.md
 docs/xvars.md
+examples/AirPassengers.csv
 examples/Grids.py
+examples/LSTM.ipynb
 examples/README.md
 examples/avocado.csv
 examples/avocado_model_summaries.csv
@@ -76,6 +78,7 @@ examples/housing_feature_info.xlsx
 examples/housing_results.xlsx
 examples/warnings.log
 examples/.ipynb_checkpoints/Grids-checkpoint.py
+examples/.ipynb_checkpoints/LSTM-checkpoint.ipynb
 examples/.ipynb_checkpoints/avocados-checkpoint.ipynb
 examples/.ipynb_checkpoints/eCommerce-checkpoint.ipynb
 examples/.ipynb_checkpoints/eCommerce_hourly-checkpoint.ipynb

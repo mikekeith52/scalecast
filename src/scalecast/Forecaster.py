@@ -89,6 +89,7 @@ _sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 _non_sklearn_estimators_ = ["arima", "hwes", "lstm", "prophet", "silverkite", "combo"]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
 _cannot_be_tuned_ = ['combo','lstm']
+_can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
 _metrics_ = ["r2", "rmse", "mape", "mae"]
 _determine_best_by_ = [
     "TestSetRMSE",
@@ -206,7 +207,7 @@ class Forecaster:
         self.levely = list(y)
         self.init_dates = list(current_dates)
         self.cilevel = 0.95
-        self.ci_bootstrap_samples = 100
+        self.bootstrap_samples = 100
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -226,6 +227,7 @@ class Forecaster:
     TestLength={}
     ValidationLength={}
     ValidationMetric={}
+    ForecastsEvaluated={}
     CILevel={}
     BootstrapSamples={}
 )""".format(self.current_dates.values[0].astype(str),
@@ -237,8 +239,9 @@ class Forecaster:
             self.test_length,
             self.validation_length,
             self.validation_metric,
+            list(self.history.keys()),
             self.cilevel,
-            self.ci_bootstrap_samples)
+            self.bootstrap_samples)
 
     def get_funcs(self,which):
         """ returns a group of functions based on what's passed to which
@@ -263,7 +266,7 @@ class Forecaster:
             fv - ac
             for fv, ac in zip(self.fitted_values[:], self.y[-len(self.fitted_values):])
         ]
-        bootstrapped_resids = np.random.choice(resids, size=self.ci_bootstrap_samples)
+        bootstrapped_resids = np.random.choice(resids, size=self.bootstrap_samples)
         bootstrap_mean = np.mean(bootstrapped_resids)
         bootstrap_std = np.std(bootstrapped_resids)
         return (
@@ -1485,7 +1488,6 @@ class Forecaster:
                 number of future dates to produce
                 this will also be the forecast length
         """
-        self.infer_freq()
         self.future_dates = pd.Series(
             pd.date_range(
                 start=self.current_dates.values[-1], periods=n + 1, freq=self.freq
@@ -1498,7 +1500,6 @@ class Forecaster:
                 the date to end on
                 the number of future generated dates will be used as the forecast length
         """
-        self.infer_freq()
         if isinstance(date, str):
             date = datetime.datetime.strptime(date, "%Y-%m-%d")
         self.future_dates = pd.Series(
@@ -1682,7 +1683,6 @@ class Forecaster:
                 "the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object. if you desire to use the dataframe to set the future dates for the object, use use_future_dates=True",
             )
         else:
-            self.infer_freq()
             self.future_dates = future_df[date_col]
 
         for c in [c for c in future_df if c != date_col]:
@@ -1842,7 +1842,6 @@ class Forecaster:
         descriptive_assert(
             isinstance(train_only, bool), ValueError, "train_only must be True or False"
         )
-        self.infer_freq()
         y = self._diffy(diffy)
         current_dates = (
             self.current_dates.values[-len(y) :]

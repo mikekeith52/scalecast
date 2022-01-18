@@ -41,7 +41,7 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
 - Extends scikit-learn regression modeling concepts to be useful for time-series forecasting
   - propogates lagged y terms dynamically
   - differences and undifferences series with ease to model stationary series only
-- Allows comparison of many different modeling concepts, including ARIMA, MLR, MLP, and Prophet so you never have to be in doubt about which model is right for your series
+- Allows comparison of many different modeling concepts, including ARIMA, MLR, MLP, Keras, and Prophet so you never have to be in doubt about which model is right for your series
 - Your results and accuracy metrics can always be level, even if you need to difference the series to model it effectively
   
 ## Installation
@@ -78,3 +78,5 @@ Here's what's needed:
 3. Confidence intervals that expand outward for dates further out
 4. Better default validation grids
 5. Help with LSTM modeling optimization
+
+If you notice an issue or have a feature request, start a [New Issue][new issue], please.

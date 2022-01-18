@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.5.3] - 2022-01-18
+## Added
+- EvaluatedModels to `__repr__()`
+## Changed
+- Does not call `infer_freq()` as often, making code more efficient
+## Fixed
+- sometimes the attribute `ci_bootstrap_samples` was being called `bootstrap_samples`, changed everything to `bootstrap_samples` only
+
 ## [0.5.2] - 2022-01-12
 ## Added
 ## Changed
