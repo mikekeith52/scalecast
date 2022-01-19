@@ -6,7 +6,7 @@
 
 ## About
 
-This package uses a scaleable forecasting approach in Python with common [scikit-learn](https://scikit-learn.org/stable/) and [statsmodels](https://www.statsmodels.org/stable/), as well as [Facebook Prophet](https://facebook.github.io/prophet/), [Microsoft LightGBM](https://lightgbm.readthedocs.io/en/latest/), [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library), and [Keras](https://keras.io/) models, to forecast time series. Use your own regressors or load the object with its own seasonal, auto-regressive, and other regressors, or combine all of the above. All forecasting is dynamic by default so that auto-regressive terms can be used without leaking data into the test set, setting it apart from other time-series libraries. Dynamic model testing can be disabled to improve model evaluation speed. Differencing to achieve stationarity is built into the library and metrics can be compared across the time series' original level or first or second difference. Bootstrapped confidence intervals consistently applied across all models for comparable results. This library was written to easily apply and compare many forecasts fairly across the same series.
+This package uses a scaleable forecasting approach in Python with [scikit-learn](https://scikit-learn.org/stable/), [statsmodels](https://www.statsmodels.org/stable/), [Facebook Prophet](https://facebook.github.io/prophet/), [Microsoft LightGBM](https://lightgbm.readthedocs.io/en/latest/), [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library), and [Keras](https://keras.io/) models to forecast time series. Use your own regressors or load the object with its own seasonal, auto-regressive, and other regressors, or combine all of the above. All forecasting is dynamic by default so that auto-regressive terms can be used without leaking data into the test set, setting it apart from other time-series libraries. Dynamic model testing can be disabled to improve model evaluation speed. Differencing to achieve stationarity is built into the library and metrics can be compared across the time series' original level or first or second difference. Bootstrapped confidence intervals consistently applied across all models for comparable results. This library was written to easily apply and compare many forecasts fairly across the same series.
 
 ```python
 import pandas as pd
@@ -36,12 +36,13 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
 ![](assets/main_forecast.png)
 
 ## Why switch to Scalecast?
-- Much simpler to set up than a tensorflow neural network
-- Faster than prophet, tensorflow, and other libraries to evaluate models
+- Much simpler to set up than a TensorFlow neural network, with much time series preparation performed behind the scenes
+- Many models are faster to evaluate and just as accurate as Prophet, TensorFlow, and other libraries
 - Extends scikit-learn regression modeling concepts to be useful for time-series forecasting
   - propogates lagged y terms dynamically
   - differences and undifferences series with ease to model stationary series only
 - Allows comparison of many different modeling concepts, including ARIMA, MLR, MLP, Keras, and Prophet so you never have to be in doubt about which model is right for your series
+- Consistently applied bootstrapped confidence intervals at any level are available
 - Your results and accuracy metrics can always be level, even if you need to difference the series to model it effectively
   
 ## Installation
@@ -64,7 +65,8 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
 |Documentation||
 |----|----|
 |[📋 Examples](/examples)|Get straight to the process|
-|[➡ Towards Data Science Series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)|Read the 3-part series|
+|[💻 Towards Data Science Latest](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)|Check out the new LSTM Recurrent Neural Net application|
+|[➡ Towards Data Science Series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)|Read the introductory 3-part series|
 |[📓 Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
 |[🛠️ Change Log](docs/change_log.md)|See what's changed|
 |[📚 Documentation Markdown Files](/docs)|Review all high-level concepts in the library|
