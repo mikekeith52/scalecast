@@ -16,7 +16,7 @@ from scalecast.Forecaster import Forecaster
 
 models = ('mlr','knn','svr','xgboost','elasticnet','mlp','prophet')
 df = pdr.get_data_fred('HOUSTNSA',start='2009-01-01',end='2021-06-01')
-GridGenerator.get_example_grids()
+GridGenerator.get_example_grids() # saves Grids.py with validation grids for each model that can be used to tune the forecasts
 f = Forecaster(y=df.HOUSTNSA,current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
 f.set_test_length(12) # specify a test length for your models - do this before eda
 f.generate_future_dates(24) # this will create future dates that are on the same interval as the current dates and it will also set the forecast length
@@ -76,9 +76,8 @@ I have no formal education in Python development. Maintaining this package is tr
 
 Here's what's needed:  
 1. Documentation moved to a proper website with better organization
-2. Error/issue reporting
+2. [Error/issue reporting and feature requests][new issue]
 3. Confidence intervals that expand outward for dates further out
 4. Better default validation grids
 5. Help with LSTM modeling optimization
-
-If you notice an issue or have a feature request, start a [New Issue][new issue], please.
+6. More feature analysis (summary stats, feature importance, etc.)

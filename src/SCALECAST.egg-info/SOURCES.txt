@@ -43,7 +43,6 @@ assets/pt3/fitted.png
 assets/pt3/fitted_level.png
 assets/pt3/forecast.png
 assets/pt3/test_set.png
-docs/call_me_history.md
 docs/change_log.md
 docs/estimators.md
 docs/export.md
@@ -66,7 +65,6 @@ examples/avocado_results.pckl
 examples/avocados.ipynb
 examples/eCommerce.csv
 examples/eCommerce.ipynb
-examples/eCommerce_Xvars.csv
 examples/eCommerce_feature_info.xlsx
 examples/eCommerce_results.xlsx
 examples/eCommerce_validation_grids.xlsx

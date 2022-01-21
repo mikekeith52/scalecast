@@ -50,7 +50,7 @@ prophet = {
 }
 
 rf = {
-	'max_depth':[5,10,None],
+	'max_depth':[2,5],
 	'n_estimators':[100,500,1000]
 }
 

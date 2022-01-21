@@ -12,6 +12,7 @@
 [mlp](#mlp)  
 [prophet](#prophet)  
 [rf](#rf)  
+[rnn](#rnn)  
 [silverkite](#silverkite)  
 [svr](#svr)  
 [xgboost](#xgboost)  
@@ -45,6 +46,7 @@ f.manual_forecast(order=(1,1,1),seasonal_order=(2,1,0,12),trend='ct')
       - models[0] --> :splice_points[0]
       - models[-1] --> splice_points[-1]:
 - this model cannot be tuned
+- see src by calling `help(f._forecast_combo)`
 ```python
 import pandas as pd
 import pandas_datareader as pdr
@@ -217,6 +219,7 @@ f.manual_forecast(max_depth=3)
 - uses no Xvars, only `lags` argument
 - always scales with MinMaxScaler from scikit-learn
 - this model cannot be tuned
+- see src by calling `help(f._forecast_lstm)`
 ``` python
 import pandas as pd
 import pandas_datareader as pdr
@@ -226,17 +229,8 @@ df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
 f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
 f.set_test_length(12)
 f.generate_future_dates(24) # forecast length
-f.add_ar_terms(4)
-f.add_AR_terms((2,12)) # seasonal AR terms
-f.add_seasonal_regressors('month','dayofyear','week',raw=False,sincos=True)
-f.add_seasonal_regressors('year')
-f.add_covid19_regressor() # default is from when disney world closed to when U.S. cdc no longer recommended masks but can be changed
-f.add_time_trend()
-f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regressor
-f.add_logged_terms('t') # lnt
-f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('lstm')
-f.manual_forecast(lags=24,epochs=10)
+f.manual_forecast(lags=36,epochs=10,lstm_layer_sizes=(64,64),dropout=(.2,0))
 ```
 
 ### mlp
@@ -337,6 +331,37 @@ f.add_combo_regressors('t','COVID19') # multiplies time trend and COVID19 regres
 f.diff() # non-stationary data forecasts better differenced with this model
 f.set_estimator('rf')
 f.manual_forecast(n_estimators=1000,max_depth=6)
+```
+
+### rnn
+- [TensorFlow Documentation](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN)
+- [Src]
+- Recurrent Neural Network - Can be LSTM or SimpleRNN
+  - everything that can be done with [lstm](#lstm) estimator can be done here
+  - this implementation of a TensorFlow network is more flexible but also more complex than the [lstm](#lstm) estimator
+- uses no Xvars, only `lags` argument
+- always scales with MinMaxScaler from scikit-learn
+- this model cannot be tuned
+- see src by calling `help(f._forecast_rnn)`
+``` python
+import pandas as pd
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+
+df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-05-01')
+f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+f.set_test_length(12)
+f.generate_future_dates(24) # forecast length
+f.set_estimator('rnn')
+f.manual_forecast(lags=36,
+  epochs=10,
+  hidden_layers_struct={'simple':{'units':16,'activation':'tanh'},'simple':{'units':16,'activation':'tanh'}},
+  call_me='rnn_2layers')
+
+f.manual_forecast(lags=36,
+  epochs=10,
+  hidden_layers_struct={'lstm':{'units':16,'activation':'tanh'},'lstm':{'units':16,'activation':'tanh'}},
+  call_me='lstm_2layers')
 ```
 
 ### silverkite

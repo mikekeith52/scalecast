@@ -86,9 +86,9 @@ _sklearn_imports_ = {
 _sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 
 # to add non-sklearn models, add to the list below
-_non_sklearn_estimators_ = ["arima", "hwes", "lstm", "prophet", "silverkite", "combo"]
+_non_sklearn_estimators_ = ["arima", "hwes", "lstm", "prophet", "silverkite", "rnn", "combo"]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
-_cannot_be_tuned_ = ['combo','lstm']
+_cannot_be_tuned_ = ['combo','lstm','rnn']
 _can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
 _metrics_ = ["r2", "rmse", "mape", "mae"]
 _determine_best_by_ = [
@@ -282,8 +282,8 @@ class Forecaster:
         self.history[call_me] = {
             "Estimator": self.estimator,
             "Xvars": self.Xvars,
-            "HyperParams": {k: v for k, v in kwargs.items() if k not in ("Xvars", "normalizer", "auto")},
-            "Scaler": kwargs["normalizer"] if "normalizer" in kwargs.keys() else None if self.estimator in ("prophet", "combo") else None if hasattr(self, "univariate") else "minmax",
+            "HyperParams": {k: v for k, v in kwargs.items() if k not in ("Xvars", "normalizer", "auto", "plot_loss")},
+            "Scaler": kwargs["normalizer"] if "normalizer" in kwargs.keys() else 'minmax' if self.estimator in ("lstm","rnn") else None if self.estimator in ("prophet", "combo") else None if hasattr(self, "univariate") else "minmax",
             "Observations": len(self.y),
             "Forecast": self.forecast[:],
             "UpperCI": [f + ci_range for f in self.forecast],
@@ -305,6 +305,8 @@ class Forecaster:
             "InSampleMAPE": mape(self.y.values[-len(self.fitted_values) :], self.fitted_values),
             "InSampleMAE": mae(self.y.values[-len(self.fitted_values) :], self.fitted_values),
             "InSampleR2": r2(self.y.values[-len(self.fitted_values) :], self.fitted_values),
+            "CILevel":self.cilevel,
+            "CIPlusMinus":ci_range,
         }
 
         if kwargs["auto"]:
@@ -1087,6 +1089,156 @@ class Forecaster:
 
         return X_new, y_new
 
+    def _forecast_rnn(
+        self,
+        dynamic_testing=True,
+        lags=1,
+        hidden_layers_struct={'simple':{'units':8,'activation':'tanh'}},
+        loss="mean_absolute_error",
+        optimizer="Adam",
+        learning_rate=0.001,
+        random_seed=None,
+        plot_loss=False,
+        **kwargs,
+    ):
+        """ forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent
+            cannot be tuned
+            only xvar options are the series' own history (specify in lags argument)
+            always uses minmax normalizer
+            this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility
+            fitted values are the last fcst_length worth of values only
+            dynamic_testing: bool, default True
+                always ignored for lstm because the model doesn't work like others
+            lags: int greater than 0, default 1
+                the number of y-variable lags to train the model with
+            hidden_layers_struct: dict[str,dict[str,Union[float,str]]], default {'simple':{'size':8,'activation':'tanh'}}
+                key is the type of each hidden layer, one of {'simple','lstm'}
+                val is a dict
+                    key is str representing hyperparameter value: 'units','activation', etc
+                        see all possible here for simple rnn: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
+                        here for lstm: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
+                    val is the desired hyperparam value
+                    do not pass return_sequences or input_shape as these will be set automatically
+            loss: str, default 'mean_absolute_error'
+                the loss function to minimize
+                see available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses
+                be sure to choose one that is suitable for regression tasks
+            optimizer: str, default "Adam"
+                the optimizer to use when compiling the model
+                see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
+                watch capitalization as that matters (can't be "adam", must be "Adam")
+            learning_rate: float, default 0.001
+                the learning rate to use when compiling the model
+            random_seed: int, optional
+                set a seed for consistent results
+                with tensorflow networks, setting seeds does not guarantee consistent results
+            plot_loss: bool, default False
+                whether to plot the LSTM loss function stored in history for each epoch
+                if validation_split passed to kwargs, will plot the validation loss as well
+                looks better if epochs > 1 passed to **kwargs
+            **kwargs passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
+        """
+        descriptive_assert(
+            len(hidden_layers_struct.keys()) >= 1,
+            ValueError,
+            f"must pass at least one layer to hidden_layers_struct, got {hidden_layers_struct}",
+        )
+        if not dynamic_testing:
+            logging.warning(
+                "dynamic_testing argument will be ignored for the rnn model"
+            )
+        self.dynamic_testing = True
+
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
+        import tensorflow.keras.optimizers
+
+        optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")
+
+        if random_seed is not None:
+            random.seed(random_seed)
+
+        y_train = self.y.values[:-self.test_length].copy()
+        y_test = self.y.values[-self.test_length:].copy()
+
+        ymin = y_train.min()
+        ymax = y_train.max()
+
+        X_train, y_train_new = self._prepare_lstm(y_train,lags,self.test_length)
+        X, y_new = self._prepare_lstm(self.y.values.copy(),lags,len(self.future_dates))
+
+        X_test = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-(lags + self.test_length):-self.test_length].copy()]])
+        y_test_new = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-self.test_length:].copy()]])
+        fut = np.array([[(i - self.y.min()) / (self.y.max() - self.y.min()) for i in self.y.values[-lags:].copy()]])
+
+        n_timesteps = X_train.shape[1]
+        n_features = 1
+
+        X_train = X_train.reshape(X_train.shape[0],X_train.shape[1],1)
+        X_test = X_test.reshape(X_test.shape[0],X_test.shape[1],1)
+        X = X.reshape(X.shape[0],X.shape[1],1)
+        fut = fut.reshape(fut.shape[0],fut.shape[1],1)
+
+        def get_compiled_model(y):
+            # build model
+            for i, kv in enumerate(hidden_layers_struct.items()):
+                descriptive_assert(
+                    kv[0] in ('simple','lstm'),
+                    ValueError,
+                    f'each key in the hidden_layers_struct dict must be one of ("simple","lstm"), got {kv[0]}'
+                )
+                layer = SimpleRNN if kv[0] == 'simple' else LSTM
+                if i == 0:
+                    model = Sequential(
+                        [
+                            layer(
+                                **kv[1],
+                                input_shape=(n_timesteps, n_features),
+                                return_sequences=len(hidden_layers_struct.keys()) > 1,
+                            )
+                        ]
+                    )
+                else:
+                    model.add(
+                        layer(
+                            **kv[1],
+                            return_sequences=(not i == (len(hidden_layers_struct.keys()) - 1))
+                        )
+                    )
+            model.add(Dense(y.shape[1]))  # output layer
+
+            # compile model
+            model.compile(optimizer=optimizer(learning_rate=learning_rate), loss=loss)
+            return model
+
+        test_model = get_compiled_model(y_train_new)
+        test_model.fit(X_train,y_train_new,**kwargs)
+        pred = test_model.predict(X_test)
+
+        pred = [p * (ymax-ymin) + ymin for p in pred[0]] # un-minmax
+
+        # set the test-set metrics
+        self._metrics(y_test, pred)
+
+        model = get_compiled_model(y_new)
+        hist = model.fit(X,y_new,**kwargs)
+
+        if plot_loss:
+            plt.plot(hist.history['loss'],label='train_loss')
+            if 'val_loss' in hist.history.keys():
+                plt.plot(hist.history['val_loss'],label='val_loss')
+            plt.title('model loss')
+            plt.xlabel('epoch')
+            plt.legend(loc='upper right')
+            plt.show()
+
+        fcst = model.predict(fut)
+        self.fitted_values = [p * (self.y.max()-self.y.min()) + self.y.min() for p in model.predict(X)[0]] # only last fcst amount of values
+        self.Xvars = None
+        self.univariate = True
+
+        return [p * (self.y.max()-self.y.min()) + self.y.min() for p in fcst[0]]
+
 
     def _forecast_lstm(
         self,
@@ -1138,8 +1290,7 @@ class Forecaster:
                 whether to plot the LSTM loss function stored in history for each epoch
                 if validation_split passed to kwargs, will plot the validation loss as well
                 looks better if epochs > 1 passed to **kwargs
-            **kwargs passed to fit() and can include epochs, verbosity, callbacks, validation splitting, and more
-            if you want more hyperparameter options, contribute!!
+            **kwargs passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
         """
         descriptive_assert(
             len(lstm_layer_sizes) >= 1,
@@ -1153,7 +1304,7 @@ class Forecaster:
         )
         if not dynamic_testing:
             logging.warning(
-                "dynamic_testing argument will be ignored for the silverkite model"
+                "dynamic_testing argument will be ignored for the lstm model"
             )
         self.dynamic_testing = True
 
@@ -1238,7 +1389,7 @@ class Forecaster:
             plt.show()
 
         fcst = model.predict(fut)
-        self.fitted_values = [p *(self.y.max()-self.y.min()) + self.y.min() for p in model.predict(X)[0]] # only last fcst amount of values
+        self.fitted_values = [p * (self.y.max()-self.y.min()) + self.y.min() for p in model.predict(X)[0]] # only last fcst amount of values
         self.Xvars = None
         self.univariate = True
 
@@ -2690,7 +2841,7 @@ class Forecaster:
                     y2=self.history[m]["LowerCI"],
                     alpha=0.2,
                     color=_colors_[i],
-                    label="{} {:.0%} CI".format(m, self.cilevel),
+                    label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
                 )
             print_attr_map[m] = {
                 a: self.history[m][a] for a in print_attr if a in self.history[m].keys()
@@ -2814,7 +2965,7 @@ class Forecaster:
                     y2=self.history[m]["TestSetLowerCI"],
                     alpha=0.2,
                     color=_colors_[i],
-                    label="{} {:.0%} CI".format(m, self.cilevel),
+                    label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
                 )
 
         plt.legend()
@@ -2917,9 +3068,9 @@ class Forecaster:
             >>> f.pop_using_criterion('AnyPrediction','<',0,delete_all=False)
         """
         descriptive_assert(
-            evaluated_as in ("<", "<=", ">", ">="),
+            evaluated_as in ("<", "<=", ">", ">=","=="),
             ValueError,
-            f'evaluated_as must be one of ("<","<=",">",">="), got {evaluated_as}',
+            f'evaluated_as must be one of ("<","<=",">",">=","=="), got {evaluated_as}',
         )
         threshold = float(threshold)
         if metric in _determine_best_by_:
@@ -3046,6 +3197,8 @@ class Forecaster:
                 "TestSetR2",
                 "LastTestSetPrediction",
                 "LastTestSetActual",
+                "CILevel",
+                "CIPlusMinus",
                 "InSampleRMSE",
                 "InSampleMAPE",
                 "InSampleMAE",

@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.5.5] - 2022-01-20
+## Added
+- Added CILevel info to export model_summaries function
+## Changed
+## Fixed
+- Fixed an issue where plots were diplaying incorrect confidence levels if `cilevel` had been changed since training it
+
+## [0.5.4] - 2022-01-20
+## Added
+- Added the rnn estimator
+## Changed
+- plot_loss argument no longer considered a hyperparameter value for LSTM and RNN models
+## Fixed
+- Fixed an issue where "==" wasn't being accepted in the `evaluated_as` argument in the `pop_using_criterion()` function
+- Scaler in history saved as 'minmax' instead of None for LSTM and RNN models
+
 ## [0.5.3] - 2022-01-18
 ## Added
 - EvaluatedModels to `__repr__()`

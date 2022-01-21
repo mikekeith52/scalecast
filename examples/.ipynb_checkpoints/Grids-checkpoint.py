@@ -17,8 +17,7 @@ gbt = {
 
 hwes = {
 	'trend':['add','mul'],
-	'seasonal':['add','mul'],
-	'damped_trend':[True,False]
+	'seasonal':['add','mul']
 }
 
 knn = {
@@ -27,14 +26,14 @@ knn = {
 }
 
 lightgbm = {
-	'max_depth':[-1,2,3]
+	'max_depth':[2,3]
 }
 
 mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],
 	'solver':['lbfgs','adam'],
-	'normalizer':['pt','minmax','scale'],
+	'normalizer':['pt','minmax'],
 	'random_state':[20]
 }
 
@@ -47,7 +46,7 @@ prophet = {
 }
 
 rf = {
-	'max_depth':[5,10,None],
+	'max_depth':[2,5],
 	'n_estimators':[100,500,1000]
 }
 
