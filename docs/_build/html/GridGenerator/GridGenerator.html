@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+    <title>GridGenerator &#8212; scalecast 0.5.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <link rel="shortcut icon" href="../_static/logo2.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Notebook" href="../Notebook/Notebook.html" />
+    <link rel="prev" title="Forecasting Different Model Types" href="../Forecaster/_forecast.html" /> 
+  </head><body>
+      <div class="header" role="banner">
+        <a href="../index.html">
+          <img class="logo" src="../_static/logo2.png" alt="Logo"/>
+        </a>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="../Forecaster/_forecast.html">Forecasting Different Model Types</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="../Notebook/Notebook.html">Notebook</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="gridgenerator">
+<h1>GridGenerator<a class="headerlink" href="#gridgenerator" title="Permalink to this headline">¶</a></h1>
+<p>If you want to automatically generate grids to tune models with, here’s how.</p>
+<section id="module-GridGenerator.get_empty_grids">
+<span id="gridgenerator-get-empty-grids"></span><h2>GridGenerator.get_empty_grids<a class="headerlink" href="#module-GridGenerator.get_empty_grids" title="Permalink to this headline">¶</a></h2>
+<p>saves empty grids to working directory as Grids.py (does not overwrite by default).</p>
+<dl class="field-list simple">
+<dt class="field-odd">param overwrite</dt>
+<dd class="field-odd"><p>whether to overwrite a Grids.py file if one is already in the working directory</p>
+</dd>
+<dt class="field-even">type overwrite</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scalecast</span> <span class="kn">import</span> <span class="n">GridGenerator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GridGenerator</span><span class="o">.</span><span class="n">get_empty_grids</span><span class="p">()</span> <span class="c1"># writes a Grids.py file with all available models that can be tuned and empty dictionaries</span>
+</pre></div>
+</div>
+</section>
+<section id="module-GridGenerator.get_example_grids">
+<span id="gridgenerator-get-example-grids"></span><h2>GridGenerator.get_example_grids<a class="headerlink" href="#module-GridGenerator.get_example_grids" title="Permalink to this headline">¶</a></h2>
+<p>saves example grids to working directory as Grids.py (does not overwrite by default).</p>
+<dl class="field-list simple">
+<dt class="field-odd">param overwrite</dt>
+<dd class="field-odd"><p>whether to overwrite a Grids.py file if one is already in the working directory</p>
+</dd>
+<dt class="field-even">type overwrite</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scalecast</span> <span class="kn">import</span> <span class="n">GridGenerator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GridGenerator</span><span class="o">.</span><span class="n">get_example_grids</span><span class="p">()</span> <span class="c1"># writes a Grids.py file with all available models that can be tuned and example dictionaries</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="../Forecaster/_forecast.html">Forecasting Different Model Types</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="../Notebook/Notebook.html">Notebook</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Michael Keith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+    </div>
+  </body>
+</html>

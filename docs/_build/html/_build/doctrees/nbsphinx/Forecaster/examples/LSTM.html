@@ -1,0 +1,1597 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+    <title>LSTM Example &#8212; scalecast 0.5.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/haiku.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <link rel="shortcut icon" href="../../../../../_static/logo2.png"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+  </head><body>
+      <div class="header" role="banner">
+        <a href="../../../../../index.html">
+          <img class="logo" src="../../../../../_static/logo2.png" alt="Logo"/>
+        </a>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<section id="LSTM-Example">
+<h1>LSTM Example<a class="headerlink" href="#LSTM-Example" title="Permalink to this headline">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">scalecast.Forecaster</span> <span class="kn">import</span> <span class="n">Forecaster</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">rc</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">:(</span><span class="mi">15</span><span class="p">,</span><span class="mi">8</span><span class="p">)})</span>
+</pre></div>
+</div>
+</div>
+<section id="Data-preprocessing">
+<h2>Data preprocessing<a class="headerlink" href="#Data-preprocessing" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;AirPassengers.csv&#39;</span><span class="p">,</span><span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Month&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Month</th>
+      <th>#Passengers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1949-01-01</td>
+      <td>112</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1949-02-01</td>
+      <td>118</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1949-03-01</td>
+      <td>132</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1949-04-01</td>
+      <td>129</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1949-05-01</td>
+      <td>121</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(144, 2)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Month&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Timestamp(&#39;1949-01-01 00:00:00&#39;)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Month&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Timestamp(&#39;1960-12-01 00:00:00&#39;)
+</pre></div></div>
+</div>
+</section>
+<section id="EDA">
+<h2>EDA<a class="headerlink" href="#EDA" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">Forecaster</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;#Passengers&#39;</span><span class="p">],</span><span class="n">current_dates</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Month&#39;</span><span class="p">])</span>
+<span class="n">f</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_9_0.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_9_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Forecaster(
+    DateStartActuals=1949-01-01T00:00:00.000000000
+    DateEndActuals=1960-12-01T00:00:00.000000000
+    Freq=MS
+    ForecastLength=0
+    Xvars=[]
+    Differenced=0
+    TestLength=1
+    ValidationLength=1
+    ValidationMetric=rmse
+    CILevel=0.95
+    BootstrapSamples=100
+)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot_acf</span><span class="p">(</span><span class="n">lags</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_11_0.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_11_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot_pacf</span><span class="p">(</span><span class="n">lags</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_12_0.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_12_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">seasonal_decompose</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_13_0.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_13_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">stat</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">adf_test</span><span class="p">(</span><span class="n">full_res</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stat</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pval</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0.8153688792060569
+0.9918802434376411
+</pre></div></div>
+</div>
+</section>
+<section id="LSTM-Model">
+<h2>LSTM Model<a class="headerlink" href="#LSTM-Model" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">set_test_length</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">generate_future_dates</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;lstm&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Attempt-1">
+<h3>Attempt 1<a class="headerlink" href="#Attempt-1" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">manual_forecast</span><span class="p">(</span><span class="n">call_me</span><span class="o">=</span><span class="s1">&#39;lstm_default&#39;</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+4/4 [==============================] - 1s 3ms/step - loss: 0.3460
+5/5 [==============================] - 1s 2ms/step - loss: 0.3293
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_18_1.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_18_1.png" />
+</div>
+</div>
+</section>
+<section id="Attempt-2">
+<h3>Attempt 2<a class="headerlink" href="#Attempt-2" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">manual_forecast</span><span class="p">(</span><span class="n">call_me</span><span class="o">=</span><span class="s1">&#39;lstm_24lags&#39;</span><span class="p">,</span><span class="n">lags</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+3/3 [==============================] - 1s 6ms/step - loss: 0.4245
+4/4 [==============================] - 1s 9ms/step - loss: 0.3630
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_20_1.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_20_1.png" />
+</div>
+</div>
+</section>
+<section id="Attempt-3">
+<h3>Attempt 3<a class="headerlink" href="#Attempt-3" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">manual_forecast</span><span class="p">(</span><span class="n">call_me</span><span class="o">=</span><span class="s1">&#39;lstm_24lags_5epochs&#39;</span><span class="p">,</span><span class="n">lags</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span><span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">validation_split</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span><span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Epoch 1/5
+3/3 [==============================] - 2s 191ms/step - loss: 0.4728 - val_loss: 0.1959
+Epoch 2/5
+3/3 [==============================] - 0s 16ms/step - loss: 0.4631 - val_loss: 0.1895
+Epoch 3/5
+3/3 [==============================] - 0s 15ms/step - loss: 0.4533 - val_loss: 0.1830
+Epoch 4/5
+3/3 [==============================] - 0s 14ms/step - loss: 0.4432 - val_loss: 0.1765
+Epoch 5/5
+3/3 [==============================] - 0s 17ms/step - loss: 0.4331 - val_loss: 0.1698
+Epoch 1/5
+3/3 [==============================] - 2s 174ms/step - loss: 0.4601 - val_loss: 0.1779
+Epoch 2/5
+3/3 [==============================] - 0s 15ms/step - loss: 0.4520 - val_loss: 0.1725
+Epoch 3/5
+3/3 [==============================] - 0s 17ms/step - loss: 0.4442 - val_loss: 0.1672
+Epoch 4/5
+3/3 [==============================] - 0s 17ms/step - loss: 0.4362 - val_loss: 0.1619
+Epoch 5/5
+3/3 [==============================] - 0s 20ms/step - loss: 0.4285 - val_loss: 0.1566
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_22_1.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_22_1.png" />
+</div>
+</div>
+</section>
+<section id="Attempt-4">
+<h3>Attempt 4<a class="headerlink" href="#Attempt-4" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.callbacks</span> <span class="kn">import</span> <span class="n">EarlyStopping</span>
+<span class="n">f</span><span class="o">.</span><span class="n">manual_forecast</span><span class="p">(</span><span class="n">call_me</span><span class="o">=</span><span class="s1">&#39;lstm_24lags_earlystop_3layers&#39;</span><span class="p">,</span>
+                  <span class="n">lags</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+                  <span class="n">epochs</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+                  <span class="n">validation_split</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span>
+                  <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">callbacks</span><span class="o">=</span><span class="n">EarlyStopping</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span>
+                                          <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+                  <span class="n">lstm_layer_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">16</span><span class="p">),</span>
+                  <span class="n">dropout</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Epoch 1/25
+3/3 [==============================] - 5s 429ms/step - loss: 0.4558 - val_loss: 0.1840
+Epoch 2/25
+3/3 [==============================] - 0s 32ms/step - loss: 0.4332 - val_loss: 0.1693
+Epoch 3/25
+3/3 [==============================] - 0s 30ms/step - loss: 0.4066 - val_loss: 0.1506
+Epoch 4/25
+3/3 [==============================] - 0s 36ms/step - loss: 0.3715 - val_loss: 0.1265
+Epoch 5/25
+3/3 [==============================] - 0s 34ms/step - loss: 0.3267 - val_loss: 0.1022
+Epoch 6/25
+3/3 [==============================] - 0s 36ms/step - loss: 0.2773 - val_loss: 0.0927
+Epoch 7/25
+3/3 [==============================] - 0s 36ms/step - loss: 0.2318 - val_loss: 0.1061
+Epoch 8/25
+3/3 [==============================] - 0s 36ms/step - loss: 0.2014 - val_loss: 0.1344
+Epoch 9/25
+3/3 [==============================] - 0s 34ms/step - loss: 0.1833 - val_loss: 0.1470
+Epoch 10/25
+3/3 [==============================] - 0s 38ms/step - loss: 0.1687 - val_loss: 0.1388
+Epoch 11/25
+3/3 [==============================] - 0s 38ms/step - loss: 0.1551 - val_loss: 0.1213
+Epoch 1/25
+3/3 [==============================] - 4s 463ms/step - loss: 0.4363 - val_loss: 0.1611
+Epoch 2/25
+3/3 [==============================] - 0s 38ms/step - loss: 0.4122 - val_loss: 0.1417
+Epoch 3/25
+3/3 [==============================] - 0s 31ms/step - loss: 0.3800 - val_loss: 0.1166
+Epoch 4/25
+3/3 [==============================] - 0s 30ms/step - loss: 0.3379 - val_loss: 0.0927
+Epoch 5/25
+3/3 [==============================] - 0s 33ms/step - loss: 0.2842 - val_loss: 0.0887
+Epoch 6/25
+3/3 [==============================] - 0s 37ms/step - loss: 0.2350 - val_loss: 0.1134
+Epoch 7/25
+3/3 [==============================] - 0s 39ms/step - loss: 0.2065 - val_loss: 0.1444
+Epoch 8/25
+3/3 [==============================] - 0s 35ms/step - loss: 0.1936 - val_loss: 0.1461
+Epoch 9/25
+3/3 [==============================] - 0s 36ms/step - loss: 0.1735 - val_loss: 0.1193
+Epoch 10/25
+3/3 [==============================] - 0s 35ms/step - loss: 0.1508 - val_loss: 0.0893
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_24_1.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_24_1.png" />
+</div>
+</div>
+</section>
+<section id="Attempt-5">
+<h3>Attempt 5<a class="headerlink" href="#Attempt-5" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">manual_forecast</span><span class="p">(</span><span class="n">call_me</span><span class="o">=</span><span class="s1">&#39;lstm_best&#39;</span><span class="p">,</span>
+                  <span class="n">lags</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
+                  <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                  <span class="n">epochs</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                  <span class="n">validation_split</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span>
+                  <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;tanh&#39;</span><span class="p">,</span>
+                  <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;Adam&#39;</span><span class="p">,</span>
+                  <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+                  <span class="n">lstm_layer_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">72</span><span class="p">,)</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span>
+                  <span class="n">dropout</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span>
+                  <span class="n">plot_loss</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetMAPE&#39;</span><span class="p">,</span><span class="n">models</span><span class="o">=</span><span class="s1">&#39;top_2&#39;</span><span class="p">,</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Epoch 1/15
+3/3 [==============================] - 7s 729ms/step - loss: 0.4853 - val_loss: 0.2078
+Epoch 2/15
+3/3 [==============================] - 0s 98ms/step - loss: 0.3940 - val_loss: 0.0994
+Epoch 3/15
+3/3 [==============================] - 0s 117ms/step - loss: 0.2115 - val_loss: 0.1568
+Epoch 4/15
+3/3 [==============================] - 0s 117ms/step - loss: 0.1480 - val_loss: 0.0611
+Epoch 5/15
+3/3 [==============================] - 0s 118ms/step - loss: 0.1177 - val_loss: 0.0646
+Epoch 6/15
+3/3 [==============================] - 0s 114ms/step - loss: 0.1161 - val_loss: 0.0677
+Epoch 7/15
+3/3 [==============================] - 0s 114ms/step - loss: 0.1049 - val_loss: 0.0551
+Epoch 8/15
+3/3 [==============================] - 0s 112ms/step - loss: 0.0993 - val_loss: 0.0548
+Epoch 9/15
+3/3 [==============================] - 0s 115ms/step - loss: 0.0957 - val_loss: 0.0562
+Epoch 10/15
+3/3 [==============================] - 0s 111ms/step - loss: 0.0967 - val_loss: 0.0561
+Epoch 11/15
+3/3 [==============================] - 0s 109ms/step - loss: 0.0925 - val_loss: 0.0531
+Epoch 12/15
+3/3 [==============================] - 0s 105ms/step - loss: 0.0987 - val_loss: 0.0592
+Epoch 13/15
+3/3 [==============================] - 0s 115ms/step - loss: 0.0948 - val_loss: 0.0720
+Epoch 14/15
+3/3 [==============================] - 0s 114ms/step - loss: 0.0939 - val_loss: 0.0515
+Epoch 15/15
+3/3 [==============================] - 0s 109ms/step - loss: 0.0935 - val_loss: 0.0532
+Epoch 1/15
+3/3 [==============================] - 6s 674ms/step - loss: 0.4620 - val_loss: 0.1708
+Epoch 2/15
+3/3 [==============================] - 0s 97ms/step - loss: 0.3402 - val_loss: 0.1124
+Epoch 3/15
+3/3 [==============================] - 0s 104ms/step - loss: 0.2069 - val_loss: 0.1296
+Epoch 4/15
+3/3 [==============================] - 0s 113ms/step - loss: 0.1372 - val_loss: 0.0567
+Epoch 5/15
+3/3 [==============================] - 0s 117ms/step - loss: 0.1333 - val_loss: 0.0756
+Epoch 6/15
+3/3 [==============================] - 0s 118ms/step - loss: 0.1093 - val_loss: 0.1006
+Epoch 7/15
+3/3 [==============================] - 0s 126ms/step - loss: 0.1034 - val_loss: 0.0534
+Epoch 8/15
+3/3 [==============================] - 0s 124ms/step - loss: 0.0989 - val_loss: 0.0519
+Epoch 9/15
+3/3 [==============================] - 0s 119ms/step - loss: 0.0895 - val_loss: 0.0615
+Epoch 10/15
+3/3 [==============================] - 0s 119ms/step - loss: 0.0905 - val_loss: 0.0473
+Epoch 11/15
+3/3 [==============================] - 0s 122ms/step - loss: 0.0881 - val_loss: 0.0469
+Epoch 12/15
+3/3 [==============================] - 0s 122ms/step - loss: 0.0847 - val_loss: 0.0476
+Epoch 13/15
+3/3 [==============================] - 0s 120ms/step - loss: 0.0853 - val_loss: 0.0524
+Epoch 14/15
+3/3 [==============================] - 0s 125ms/step - loss: 0.0845 - val_loss: 0.0501
+Epoch 15/15
+3/3 [==============================] - 0s 120ms/step - loss: 0.0833 - val_loss: 0.0521
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_26_1.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_26_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_26_2.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_26_2.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="MLR-Modeling">
+<h2>MLR Modeling<a class="headerlink" href="#MLR-Modeling" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">add_ar_terms</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">add_seasonal_regressors</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="s1">&#39;quarter&#39;</span><span class="p">,</span><span class="n">dummy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">add_seasonal_regressors</span><span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">add_time_trend</span><span class="p">()</span>
+<span class="n">f</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">manual_forecast</span><span class="p">()</span>
+<span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetMAPE&#39;</span><span class="p">,</span><span class="n">models</span><span class="o">=</span><span class="s1">&#39;top_2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_29_0.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_29_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">models</span><span class="o">=</span><span class="s1">&#39;mlr&#39;</span><span class="p">,</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_30_0.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_30_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetMAPE&#39;</span><span class="p">,</span><span class="n">models</span><span class="o">=</span><span class="s1">&#39;top_2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_31_0.png" src="../../../../../_images/_build_doctrees_nbsphinx_Forecaster_examples_LSTM_31_0.png" />
+</div>
+</div>
+</section>
+<section id="Benchmarking">
+<h2>Benchmarking<a class="headerlink" href="#Benchmarking" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s1">&#39;model_summaries&#39;</span><span class="p">,</span><span class="n">determine_best_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetMAPE&#39;</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s1">&#39;ModelNickname&#39;</span><span class="p">,</span><span class="s1">&#39;LevelTestSetMAPE&#39;</span><span class="p">,</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="s1">&#39;LevelTestSetR2&#39;</span><span class="p">,</span><span class="s1">&#39;best_model&#39;</span><span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ModelNickname</th>
+      <th>LevelTestSetMAPE</th>
+      <th>LevelTestSetRMSE</th>
+      <th>LevelTestSetR2</th>
+      <th>best_model</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>mlr</td>
+      <td>0.023420</td>
+      <td>13.932124</td>
+      <td>0.964960</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>lstm_best</td>
+      <td>0.113758</td>
+      <td>83.110945</td>
+      <td>-0.246947</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>lstm_24lags_earlystop_3layers</td>
+      <td>0.313254</td>
+      <td>176.288432</td>
+      <td>-4.610212</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>lstm_24lags_5epochs</td>
+      <td>0.719614</td>
+      <td>360.578667</td>
+      <td>-22.471004</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>lstm_default</td>
+      <td>0.766014</td>
+      <td>377.468538</td>
+      <td>-24.721313</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>lstm_24lags</td>
+      <td>0.789948</td>
+      <td>395.179590</td>
+      <td>-27.191658</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+<section id="Export-Results">
+<h2>Export Results<a class="headerlink" href="#Export-Results" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">export_forecasts_with_cis</span><span class="p">(</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DATE</th>
+      <th>UpperForecast</th>
+      <th>Forecast</th>
+      <th>LowerForecast</th>
+      <th>ModelNickname</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1961-01-01</td>
+      <td>48.200665</td>
+      <td>30.246319</td>
+      <td>12.291972</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1961-02-01</td>
+      <td>-26.568385</td>
+      <td>-44.522731</td>
+      <td>-62.477077</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1961-03-01</td>
+      <td>61.632285</td>
+      <td>43.677939</td>
+      <td>25.723593</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1961-04-01</td>
+      <td>47.017771</td>
+      <td>29.063425</td>
+      <td>11.109079</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1961-05-01</td>
+      <td>30.351736</td>
+      <td>12.397390</td>
+      <td>-5.556956</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1961-06-01</td>
+      <td>91.214331</td>
+      <td>73.259985</td>
+      <td>55.305639</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>1961-07-01</td>
+      <td>123.495172</td>
+      <td>105.540825</td>
+      <td>87.586479</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>1961-08-01</td>
+      <td>-15.632798</td>
+      <td>-33.587144</td>
+      <td>-51.541490</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>1961-09-01</td>
+      <td>-72.577979</td>
+      <td>-90.532325</td>
+      <td>-108.486671</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>1961-10-01</td>
+      <td>-41.418451</td>
+      <td>-59.372797</td>
+      <td>-77.327144</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>1961-11-01</td>
+      <td>-54.486169</td>
+      <td>-72.440515</td>
+      <td>-90.394862</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>1961-12-01</td>
+      <td>66.525041</td>
+      <td>48.570694</td>
+      <td>30.616348</td>
+      <td>mlr</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">export_test_set_preds_with_cis</span><span class="p">(</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>DATE</th>
+      <th>UpperPreds</th>
+      <th>Preds</th>
+      <th>Actuals</th>
+      <th>LowerPreds</th>
+      <th>ModelNickname</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1960-01-01</td>
+      <td>28.556057</td>
+      <td>10.601711</td>
+      <td>12.0</td>
+      <td>-7.352636</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1960-02-01</td>
+      <td>1.231249</td>
+      <td>-16.723097</td>
+      <td>-26.0</td>
+      <td>-34.677443</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1960-03-01</td>
+      <td>66.376317</td>
+      <td>48.421971</td>
+      <td>28.0</td>
+      <td>30.467624</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1960-04-01</td>
+      <td>3.388136</td>
+      <td>-14.566210</td>
+      <td>42.0</td>
+      <td>-32.520557</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1960-05-01</td>
+      <td>50.838291</td>
+      <td>32.883945</td>
+      <td>11.0</td>
+      <td>14.929599</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1960-06-01</td>
+      <td>78.852376</td>
+      <td>60.898029</td>
+      <td>63.0</td>
+      <td>42.943683</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>1960-07-01</td>
+      <td>104.158996</td>
+      <td>86.204650</td>
+      <td>87.0</td>
+      <td>68.250303</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>1960-08-01</td>
+      <td>23.959542</td>
+      <td>6.005196</td>
+      <td>-16.0</td>
+      <td>-11.949150</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>1960-09-01</td>
+      <td>-86.291126</td>
+      <td>-104.245472</td>
+      <td>-98.0</td>
+      <td>-122.199818</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>1960-10-01</td>
+      <td>-50.666725</td>
+      <td>-68.621071</td>
+      <td>-47.0</td>
+      <td>-86.575417</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>1960-11-01</td>
+      <td>-43.483259</td>
+      <td>-61.437606</td>
+      <td>-71.0</td>
+      <td>-79.391952</td>
+      <td>mlr</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>1960-12-01</td>
+      <td>67.033891</td>
+      <td>49.079545</td>
+      <td>42.0</td>
+      <td>31.125199</td>
+      <td>mlr</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<section id="Export-Feature-Info">
+<h3>Export Feature Info<a class="headerlink" href="#Export-Feature-Info" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">save_feature_importance</span><span class="p">()</span>
+<span class="n">f</span><span class="o">.</span><span class="n">export_feature_importance</span><span class="p">(</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>weight</th>
+      <th>std</th>
+    </tr>
+    <tr>
+      <th>feature</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>AR1</th>
+      <td>0.353654</td>
+      <td>0.040011</td>
+    </tr>
+    <tr>
+      <th>AR12</th>
+      <td>0.212440</td>
+      <td>0.035555</td>
+    </tr>
+    <tr>
+      <th>AR4</th>
+      <td>0.195865</td>
+      <td>0.031963</td>
+    </tr>
+    <tr>
+      <th>AR10</th>
+      <td>0.172288</td>
+      <td>0.016409</td>
+    </tr>
+    <tr>
+      <th>AR21</th>
+      <td>0.144722</td>
+      <td>0.014716</td>
+    </tr>
+    <tr>
+      <th>AR13</th>
+      <td>0.110973</td>
+      <td>0.008805</td>
+    </tr>
+    <tr>
+      <th>AR2</th>
+      <td>0.103469</td>
+      <td>0.011157</td>
+    </tr>
+    <tr>
+      <th>AR18</th>
+      <td>0.095767</td>
+      <td>0.006091</td>
+    </tr>
+    <tr>
+      <th>AR20</th>
+      <td>0.080367</td>
+      <td>0.014563</td>
+    </tr>
+    <tr>
+      <th>AR11</th>
+      <td>0.078889</td>
+      <td>0.015673</td>
+    </tr>
+    <tr>
+      <th>AR3</th>
+      <td>0.072955</td>
+      <td>0.005806</td>
+    </tr>
+    <tr>
+      <th>AR7</th>
+      <td>0.064859</td>
+      <td>0.010104</td>
+    </tr>
+    <tr>
+      <th>AR8</th>
+      <td>0.061835</td>
+      <td>0.005144</td>
+    </tr>
+    <tr>
+      <th>AR22</th>
+      <td>0.059363</td>
+      <td>0.004871</td>
+    </tr>
+    <tr>
+      <th>month_9</th>
+      <td>0.047820</td>
+      <td>0.004102</td>
+    </tr>
+    <tr>
+      <th>AR9</th>
+      <td>0.043480</td>
+      <td>0.009598</td>
+    </tr>
+    <tr>
+      <th>AR14</th>
+      <td>0.032727</td>
+      <td>0.003600</td>
+    </tr>
+    <tr>
+      <th>AR24</th>
+      <td>0.026527</td>
+      <td>0.006712</td>
+    </tr>
+    <tr>
+      <th>AR17</th>
+      <td>0.024978</td>
+      <td>0.004891</td>
+    </tr>
+    <tr>
+      <th>AR23</th>
+      <td>0.020637</td>
+      <td>0.005097</td>
+    </tr>
+    <tr>
+      <th>AR19</th>
+      <td>0.018921</td>
+      <td>0.002676</td>
+    </tr>
+    <tr>
+      <th>month_7</th>
+      <td>0.015187</td>
+      <td>0.002255</td>
+    </tr>
+    <tr>
+      <th>month_2</th>
+      <td>0.010931</td>
+      <td>0.001847</td>
+    </tr>
+    <tr>
+      <th>AR5</th>
+      <td>0.009453</td>
+      <td>0.004327</td>
+    </tr>
+    <tr>
+      <th>month_10</th>
+      <td>0.006637</td>
+      <td>0.001670</td>
+    </tr>
+    <tr>
+      <th>month_8</th>
+      <td>0.006208</td>
+      <td>0.003219</td>
+    </tr>
+    <tr>
+      <th>AR16</th>
+      <td>0.005731</td>
+      <td>0.001594</td>
+    </tr>
+    <tr>
+      <th>month_11</th>
+      <td>0.003629</td>
+      <td>0.001834</td>
+    </tr>
+    <tr>
+      <th>month_3</th>
+      <td>0.003575</td>
+      <td>0.001255</td>
+    </tr>
+    <tr>
+      <th>AR6</th>
+      <td>0.003097</td>
+      <td>0.000892</td>
+    </tr>
+    <tr>
+      <th>year</th>
+      <td>0.001463</td>
+      <td>0.001607</td>
+    </tr>
+    <tr>
+      <th>month_1</th>
+      <td>0.001226</td>
+      <td>0.000950</td>
+    </tr>
+    <tr>
+      <th>month</th>
+      <td>0.000897</td>
+      <td>0.000571</td>
+    </tr>
+    <tr>
+      <th>AR15</th>
+      <td>0.000765</td>
+      <td>0.000396</td>
+    </tr>
+    <tr>
+      <th>month_12</th>
+      <td>0.000628</td>
+      <td>0.000638</td>
+    </tr>
+    <tr>
+      <th>t</th>
+      <td>0.000578</td>
+      <td>0.000714</td>
+    </tr>
+    <tr>
+      <th>month_6</th>
+      <td>0.000424</td>
+      <td>0.000652</td>
+    </tr>
+    <tr>
+      <th>quarter_2</th>
+      <td>0.000368</td>
+      <td>0.000750</td>
+    </tr>
+    <tr>
+      <th>quarter_1</th>
+      <td>0.000236</td>
+      <td>0.000311</td>
+    </tr>
+    <tr>
+      <th>quarter_4</th>
+      <td>0.000116</td>
+      <td>0.000379</td>
+    </tr>
+    <tr>
+      <th>month_4</th>
+      <td>0.000106</td>
+      <td>0.000160</td>
+    </tr>
+    <tr>
+      <th>quarter_3</th>
+      <td>0.000030</td>
+      <td>0.000179</td>
+    </tr>
+    <tr>
+      <th>quarter</th>
+      <td>-0.000020</td>
+      <td>0.000130</td>
+    </tr>
+    <tr>
+      <th>month_5</th>
+      <td>-0.000115</td>
+      <td>0.000365</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {}, "version_major": 2, "version_minor": 0}
+</script></section>
+</section>
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Michael Keith.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+    </div>
+  </body>
+</html>
