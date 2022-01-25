@@ -1,8 +1,8 @@
-numpydoc
-sphinx
-sphinxcontrib-napoleon
 autodocsumm
-myst_parse
+myst_parser
 nbsphinx
 pandoc
-sphinxcontrib-confluencebuilders
+sphinx
+sphinxcontrib-confluencebuilder
+sphinxcontrib-napoleon
+numpydoc
