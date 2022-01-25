@@ -12,19 +12,23 @@ import seaborn as sns
 from tqdm.notebook import tqdm as log_progress
 
 def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_attr: list = [], include_train: Union[bool,int] = True) -> None:
-    """ visualize the forecast results leveraging widgets
-        Parameters:
-            f_dict: dictionary of forcaster objects
-            plot_type: one of {"forecast","test"}, default "forecast"
-                the type of results to visualize
-            print_attr: list, optional
-                the attributes from history to print
-                passed to print_attr parameter when plot_type = 'forecast'
-                ignored when plot_type = 'test'
-            include_train: bool or int, optional
-                whether to include the complete training set in the plot or how many traning-set observations to include
-                passed to include_train parameter when plot_type = 'test'
-                ignored when plot_type = 'forecast'
+    """ visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.
+
+    Args:
+        f_dict (dict): dictionary of forcaster objects.
+        plot_type (str): one of {"forecast","test"}, default "forecast";
+            the type of results to visualize.
+        print_attr (list): optional;
+            the attributes from history to print;
+            passed to print_attr parameter when plot_type = 'forecast';
+            ignored when plot_type = 'test'.
+        include_train (bool or int): optional;
+            whether to include the complete training set in the plot or how many traning-set observations to include;
+            passed to include_train parameter when plot_type = 'test';
+            ignored when plot_type = 'forecast'.
+
+    Returns:
+        None 
     """
     if plot_type not in {'forecast','test'}:
         raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
@@ -70,22 +74,26 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
 
 def tune_test_forecast(forecaster,models,dynamic_tuning=False,dynamic_testing=True,summary_stats=False,feature_importance=False):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm
-        Paramaters:
-            forecaster: Forecaster.Forecaster object
-            models: list-like
-                each element must match an element in scalecast.Forecaster._estimators_ (except "combo", which cannot be tuned)
-            dynamic_tuning: bool, default False
-                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values)
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
-                when False, metrics effectively become an average of one-step forecasts
-            dynamic_testing: bool, default True
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
-                when False, test-set metrics effectively become an average of one-step forecasts
-            summary_stats: bool, default False
-                whether to save summary stats for the models that offer those
-            feature_importance: bool, default False
-                whether to save permutation feature importance information for the models that offer those
+
+    Args:
+        forecaster (Forecaster): the object to visualize; works best if two or more models have been evaluated.
+        models (list-like):
+            each element must match an element in scalecast.Forecaster._estimators_ (except "combo", which cannot be tuned).
+        dynamic_tuning (bool): default False;
+            whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values);
+            setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+            when False, metrics effectively become an average of one-step forecasts.
+        dynamic_testing (bool): default True;
+            whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
+            setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+            when False, test-set metrics effectively become an average of one-step forecasts.
+        summary_stats (bool): default False;
+            whether to save summary stats for the models that offer those.
+        feature_importance (bool): default False;
+            whether to save permutation feature importance information for the models that offer those.
+
+    Returns:
+        None
     """
     if len([m for m in models if m not in [m for m in _estimators_ if m != 'combo']]) > 0:
         raise ValueError('values passed to models must be list-like and in {}'.format([m for m in _estimators_ if m != 'combo']))

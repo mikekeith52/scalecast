@@ -193,6 +193,13 @@ class ForecastError(Exception):
 # MAIN OBJECT
 class Forecaster:
     def __init__(self, y, current_dates, **kwargs):
+        """ initializes the object
+
+        Args:
+            y (list-like): An array of the values to predict
+            current_dates (list-like): An array of the dates that correspond (in order) with y
+            **kwargs: set as attributes in the object
+        """
 
         self.y = y
         self.current_dates = current_dates
@@ -243,13 +250,20 @@ class Forecaster:
             self.cilevel,
             self.bootstrap_samples)
 
-    def get_funcs(self,which):
-        """ returns a group of functions based on what's passed to which
-            which: str, one of {'adder','exporter','setter','plotter','getter'}
+    def get_funcs(self,which) -> list:
+        """ returns a group of functions based on what's passed to `which`
+        
+        Args:
+            which (str): one of {'adder','exporter','setter','plotter','getter'}
+        
+        Returns:
+            (list): the names of the relevant functions
+
+        >>> f.get_funcs('adder')
         """
         return globals()[f'_{which}_funcs_']
 
-    def _adder(self) -> None:
+    def _adder(self):
         """ makes sure future periods have been specified before adding regressors
         """
         descriptive_assert(
@@ -259,7 +273,7 @@ class Forecaster:
         )
 
     def _find_cis(self):
-        """ bootsrapts the upper and lower forecast estimates using the info stored in cilevel and bootstrap_samples
+        """ bootstraps the upper and lower forecast estimates using the info stored in cilevel and bootstrap_samples
         """
         random.seed(20)
         resids = [
@@ -273,9 +287,9 @@ class Forecaster:
             stats.norm.ppf(1 - (1 - self.cilevel) / 2) * bootstrap_std + bootstrap_mean
         )
 
-    def _bank_history(self, **kwargs) -> None:
+    def _bank_history(self, **kwargs):
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
-            **kwargs are passed from each model, depending on how that model uses Xvars and normalizer args
+            **kwargs: passed from each model, depending on how that model uses Xvars, normalizer, and other args
         """
         call_me = self.call_me
         ci_range = self._find_cis()
@@ -396,20 +410,20 @@ class Forecaster:
             self.history[call_me]["LevelTestSetMAE"] = self.mae
             self.history[call_me]["LevelTestSetR2"] = self.r2
 
-    def _set_summary_stats(self) -> None:
+    def _set_summary_stats(self):
         """ for every model where summary stats are available, saves them to a pandas dataframe where index is the regressor name
         """
         results_summary = self.regr.summary()
         results_as_html = results_summary.tables[1].as_html()
         self.summary_stats = pd.read_html(results_as_html, header=0, index_col=0)[0]
 
-    def _bank_fi_to_history(self) -> None:
+    def _bank_fi_to_history(self):
         """ for every model where ELI5 permutation feature importance can be extracted, saves that info to a pandas dataframe wehre index is the regressor name
         """
         call_me = self.call_me
         self.history[call_me]["feature_importance"] = self.feature_importance
 
-    def _bank_summary_stats_to_history(self) -> None:
+    def _bank_summary_stats_to_history(self):
         """ saves summary stats (where available) to history
         """
         call_me = self.call_me
@@ -424,13 +438,18 @@ class Forecaster:
         None,
     ]:
         """ fits an appropriate scaler to training data that will then be applied to test and future data
-            X_train: pandas dataframe
-            normalizer: one of {_normalizer_}
-                if 'minmax', uses the MinMaxScaler from sklearn.preprocessing
-                if 'scale', uses the StandardScaler from sklearn.preprocessing
-                if 'normalize', uses the Normalizer from sklearn.preprocessing
-                if 'pt', uses the PowerTransformer from sklearn.preprocessing
-                if None, returns None
+
+        Args:
+            X_train (DataFrame): the independent values.
+            normalizer (str): one of _normalizer_;
+                if 'minmax', uses the MinMaxScaler from sklearn.preprocessing;
+                if 'scale', uses the StandardScaler from sklearn.preprocessing;
+                if 'normalize', uses the Normalizer from sklearn.preprocessing;
+                if 'pt', uses the PowerTransformer from sklearn.preprocessing;
+                if None, returns None.
+
+        Returns:
+            (scikit-learn preprecessing scaler/normalizer): The normalizer fitted on training data only.
         """
         descriptive_assert(
             normalizer in _normalizer_,
@@ -465,13 +484,18 @@ class Forecaster:
     def _train_test_split(
         self, X, y, test_size
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """ splits data chronologically into training and testing set--the last observations in order will be used in test set
-            X: numpy array or pandas dataframe
+        """ splits data chronologically into training and testing set--the last observations in order will be used in test set.
+
+        Args:
+            X (ndarray or DataFrame):
                 regressor values
-            y: numpy array or pandas series
+            y (ndarray or Series):
                 dependent-variable values
-            test_size: int (no fractional splits)
+            test_size (int):
                 size of resulting test set
+
+        Returns:
+            (ndarray,ndarray,ndarray,ndarray): X training set, X testing set, y training array, y testing array.
         """
         from sklearn.model_selection import train_test_split
 
@@ -480,12 +504,17 @@ class Forecaster:
         )
         return X_train, X_test, y_train, y_test
 
-    def _metrics(self, y, pred) -> None:
-        """ creates the following attributes: test_set_actuals, test_set_pred, rmse, r2, mae, mape
-            y: list-like
+    def _metrics(self, y, pred):
+        """ creates the following attributes: test_set_actuals, test_set_pred, rmse, r2, mae, mape.
+
+        Args:
+            y (list-like):
                 the actual observations
-            pred: list-like
-                the predictions of y
+            pred (list-like):
+                the predictions of y from the model
+
+        Returns:
+            None
         """
         self.test_set_actuals = list(y)
         self.test_set_pred = list(pred)
@@ -495,8 +524,8 @@ class Forecaster:
         self.mape = mape(y, pred)
 
     def _tune(self) -> float:
-        """ reads which validation metric to use in _metrics_ and pulls that attribute value to return from function
-            deletes: 'r2','rmse','mape','mae','test_set_pred', and 'test_set_actuals' attributes if they exist
+        """ reads which validation metric to use in _metrics_ and pulls that attribute value to return from function;
+            deletes: 'r2','rmse','mape','mae','test_set_pred', and 'test_set_actuals' attributes if they exist.
         """
         metric = getattr(self, getattr(self, "validation_metric"))
         for attr in ("r2", "rmse", "mape", "mae", "test_set_pred", "test_set_actuals"):
@@ -504,17 +533,23 @@ class Forecaster:
         return metric
 
     def _scale(self, scaler, X) -> np.ndarray:
-        """ uses scaler parsed from _parse_normalizer() function to transform matrix passed to X
-            scaler: sklearn.preprocessing.MinMaxScaler | sklearn.preprocessing.Normalizer | sklearn.preprocessing.StandardScaler | None
-            X: numpy array or pandas dataframe
+        """ uses scaler parsed from _parse_normalizer() function to transform matrix passed to X.
+
+        Args:
+            scaler (MinMaxScaler, Normalizer, StandardScaler, PowerTransformer, or None): 
+                the fitted scaler or None type
+            X (ndarray or DataFrame):
                 the matrix to transform
+
+        Returns:
+            (ndarray): The scaled x values.
         """
         if not scaler is None:
             return scaler.transform(X)
         else:
             return X.values if hasattr(X, "values") else X
 
-    def _clear_the_deck(self) -> None:
+    def _clear_the_deck(self):
         """ deletes the following attributes to prepare a new forecast:
             'univariate','fitted_values','regr','X','feature_importance','summary_stats','models','weights'
         """
@@ -535,13 +570,19 @@ class Forecaster:
 
     def _prepare_sklearn(
         self, tune, Xvars, y, current_xreg
-    ) -> Tuple[str, list, pd.DataFrame, int]:
-        """ returns objects specific to forecasting with sklearn
-            tune: bool
-                whether the forecasting interation is for tuning the model
-            Xvars: str or None
-                if None, uses all Xvars
-                if str, uses only those Xvars
+    ) -> Tuple[list, list, pd.DataFrame, int]:
+        """ returns objects specific to forecasting with sklearn.
+
+        Args:
+            tune (bool):
+                whether the forecasting interation is for tuning the model.
+            Xvars (str, list-like, or None):
+                if None, uses all Xvars;
+                if list-like, uses only those Xvars;
+                if str, uses only that Xvar.
+
+        Returns:
+            (list,list,DataFrame,int): The names of the Xvars, the y values, the X values, the test size.
         """
         if Xvars is None or Xvars == "all":
             Xvars = list(current_xreg.keys())
@@ -570,31 +611,29 @@ class Forecaster:
         future_dates,
         future_xreg,
         dynamic_testing,
-        true_forecast=False,
-        lstm=False,
-        **kwargs,
+        true_forecast=False
     ) -> list:
-        """ forecasts an sklearn model into the unknown
-            beginning in 0.4.1, now supports lstm model evaluation (three arguments added to function)
-            uses loops to dynamically plug in AR values without leaking in either a tune/test process or true forecast, unless dynamic_testing is False
-            returns a list of forecasted values
-            scaler: sklearn.preprocessing.MinMaxScaler | sklearn.preprocessing.Normalizer | sklearn.preprocessing.StandardScaler | None
-                the scaling to use on the future xreg values if not None
-            regr: sklearn model
-                the regression model to forecast with
-            X: np.ndarray
-                a matrix of regressor values
-            y: np.ndarray
-                the known dependent-variable values
-            Xvars: str or None
-                the name of the regressors to use
-                must be stored in the current_xreg and future_xreg attributes
-            true_forecast: bool, default False
-                False if testing or tuning
-                if True, saves regr, X, and fitted_values attributes
-            lstm: bool, default False
-                Whether evaluating an LSTM model
-            **kwargs passed to fit() method and ignored when lstm == False
+        """ forecasts an sklearn model into the unknown;
+            uses loops to dynamically plug in AR values without leaking in either a tune/test process or true forecast, unless dynamic_testing is False.
+        
+        Args:
+            scaler (MinMaxScaler, Normalizer, StandardScaler, PowerTransformer, or None):
+                the scaling to use on the future xreg values if not None.
+            regr (sklearn model):
+                the regression model to forecast with.
+            X (ndarray):
+                a matrix of regressor values.
+            y (ndarray):
+                the known dependent-variable values.
+            Xvars (list or None):
+                the name of the regressors to use;
+                must be stored in the current_xreg and future_xreg attributes.
+            true_forecast (bool): default False;
+                False if testing or tuning;
+                if True, saves regr, X, and fitted_values attributes.
+
+        Returns:
+            (list): The resulting forecast or test-set predictions.
         """
         # not tuning/testing
         if true_forecast:
@@ -603,14 +642,14 @@ class Forecaster:
 
         # apply the normalizer fit on training data only
         X = self._scale(scaler, X)
-        regr.fit(X, y) if not lstm else regr.fit(X, y, **kwargs)
+        regr.fit(X, y)
 
         # not tuning/testing
         if true_forecast:
             self.regr = regr
             self.X = X
             self.fitted_values = (
-                list(regr.predict(X)) if not lstm else [x[0] for x in regr.predict(X)]
+                list(regr.predict(X))
             )
 
         # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
@@ -631,8 +670,6 @@ class Forecaster:
                 p = self._scale(scaler, p)
                 fcst.append(
                     regr.predict(p)[0]
-                    if not lstm
-                    else regr.predict(p.reshape(p.shape[0], p.shape[1], 1))[0][0]
                 )
                 if not i == len(future_dates) - 1:
                     for k, v in future_xreg.items():
@@ -660,19 +697,24 @@ class Forecaster:
         normalizer="minmax",
         **kwargs,
     ) -> Union[float, list]:
-        """ runs an sklearn forecast start-to-finish
-            fcster: str, one of {_sklearn_estimators_}
-            dynamic_testing: bool
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
-                when False, test-set metrics effectively become an average of one-step forecasts
-            tune: bool, default False
-                whether the model is being tuned
-            Xvars: list where all elements are in current_xreg keys, 'all', or None
-                if None and Xvars are required, None becomes equivalent to 'all'
-            normalizer: one of {_normalizer_}
-                if not None, normalizer applied to training data only to not leak
-            **kwargs treated as model hyperparameters and passed to _sklearn_imports_[model]()
+        """ runs an sklearn forecast start-to-finish.
+
+        Args:
+            fcster (str): one of _sklearn_estimators_.
+            dynamic_testing (bool):
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+                when False, test-set metrics effectively become an average of one-step forecasts.
+            tune (bool): default False;
+                whether the model is being tuned.
+            Xvars (list, str, or None): all elements are in current_xreg keys;
+                if None and Xvars are required, None becomes equivalent to 'all'.
+            normalizer (str): one of _normalizer_;
+                if not None, normalizer applied to training data only to not leak.
+            **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
+
+        Returns:
+            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions. 
         """
         descriptive_assert(
             len(self.current_xreg.keys()) > 0,
@@ -733,14 +775,17 @@ class Forecaster:
     def _forecast_hwes(
         self, tune=False, dynamic_testing=True, **kwargs
     ) -> Union[float, list]:
-        """ forecasts with holt-winters exponential smoothing
-            tune: bool, default False
-                whether to tune the forecast
-                if True, returns a metric
-                if False, returns a list of forecasted values
-            dynamic_testing: bool, default True
-                always ignored in HWES (for now) - everything is set to be dynamic using statsmodels
-            **kwargs passed to the HWES() function from statsmodels
+        """ forecasts with holt-winters exponential smoothing.
+
+        Args:
+            tune (bool): default False;
+                whether the model is being tuned.
+            dynamic_testing (bool): default True;
+                always ignored in HWES (for now) - everything is set to be dynamic using statsmodels;
+            **kwargs: passed to the HWES() function from statsmodels
+
+        Returns:
+            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions. 
         """
         if not dynamic_testing:
             logging.warning(
@@ -786,17 +831,19 @@ class Forecaster:
     def _forecast_arima(
         self, tune=False, Xvars=None, dynamic_testing=True, **kwargs
     ) -> Union[float, list]:
-        """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX)
-            tune: bool, default False
-                whether to tune the forecast
-                if True, returns a metric
-                if False, returns a list of forecasted values
-            Xvars: str or None, default None
-                the names of the regressors to use -- must match names in current_xreg and future_xreg
-                if None, unlike sklearn model, will use no regressors
-            dynamic_testing: bool, default True
-                always ignored in ARIMA (for now) - everything is set to be dynamic using statsmodels
-            **kwargs passed to the ARIMA() function from statsmodels
+        """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).
+
+        Args:
+            tune (bool): default False;
+                whether the model is being tuned.
+            Xvars (list, str, or None): all elements are in current_xreg keys;
+                None means no Xvars used (unlike sklearn models).
+            dynamic_testing (bool): default True;
+                always ignored in ARIMA (for now) - everything is set to be dynamic using statsmodels.
+            **kwargs: passed to the ARIMA() function from statsmodels.
+
+        Returns:
+            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions.
         """
         if not dynamic_testing:
             logging.warning(
@@ -880,21 +927,25 @@ class Forecaster:
         floor=None,
         **kwargs,
     ) -> Union[float, list]:
-        """ forecasts with the prophet model from facebook
-            tune: bool, default False
-                whether to tune the forecast
-                if True, returns a metric
-                if False, returns a list of forecasted values
-            Xvars: str or None, default None
-                the names of the regressors to use -- must match names in current_xreg and future_xreg
-                if None, unlike sklearn model, will use no regressors
-            dynamic_testing: bool, default True
-                always ignored for Prophet (for now)
-            cap: float or None, default None
-                specific to prophet when using logistic growth -- the largest amount the model is allowed to evaluate to
-            floor: float or None, default None
-                specific to prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to
-            **kwargs passed to the Prophet() function from fbprophet
+        """ forecasts with the prophet model from facebook.
+
+        Args:
+            tune (bool): default False;
+                whether to tune the forecast;
+                if True, returns a metric;
+                if False, returns a list of forecasted values.
+            Xvars (list, str, or None): all elements are in current_xreg keys;
+                None means no Xvars used (unlike sklearn models).
+            dynamic_testing (bool): default True;
+                always ignored for Prophet (for now).
+            cap (float): optional;
+                specific to prophet when using logistic growth -- the largest amount the model is allowed to evaluate to.
+            floor (float): optional;
+                specific to prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to.
+            **kwargs: passed to the Prophet() function from fbprophet.
+
+        Returns:
+            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions.
         """
         if not dynamic_testing:
             logging.warning(
@@ -960,17 +1011,21 @@ class Forecaster:
     def _forecast_silverkite(
         self, tune=False, dynamic_testing=True, Xvars=None, **kwargs
     ) -> Union[float, list]:
-        """ forecasts with the silverkte model from LinkedIn greykite library
-            tune: bool, default False
-                whether to tune the forecast
-                if True, returns a metric
-                if False, returns a list of forecasted values
-            dynamic_testing: bool, default True
-                always ignored for silverkite (for now)
-            Xvars: str or None, default None
-                the names of the regressors to use -- must match names in current_xreg and future_xreg
-                if None, unlike sklearn model, will use no regressors
-            **kwargs passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config
+        """ forecasts with the silverkite model from LinkedIn greykite library.
+
+        Args:
+            tune (bool): default False;
+                whether to tune the forecast;
+                if True, returns a metric;
+                if False, returns a list of forecasted values.
+            dynamic_testing (bool): default True;
+                always ignored for silverkite (for now).
+            Xvars (list, str, or None): all elements are in current_xreg keys;
+                None means no Xvars used (unlike sklearn models).
+            **kwargs: passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
+
+        Returns:
+            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions.
         """
         if not dynamic_testing:
             logging.warning(
@@ -1045,7 +1100,7 @@ class Forecaster:
                 self.test_length,
                 self.validation_length,
             )[0]
-            self._metrics(y_test, pred[-self.validation_length :])
+            self._metrics(y_test, pred[-self.validation_length:])
             return self._tune()
         else:
             pred = _forecast_sk(df, Xvars, self.test_length, 0, self.test_length)[0]
@@ -1063,6 +1118,16 @@ class Forecaster:
             return result[0][-fcst_length:]
 
     def _prepare_lstm(self, yvals, lags, forecast_length):
+        """ prepares and scales the data for rnn models.
+
+        Args:
+            yvals (ndarray): dependent variable values to prepare
+            lags (int): the number of lags to use as predictors and to make the X matrix with
+            forecast_length (int): the amount of time to forecast out
+
+        Returns:
+            (ndarray,ndarray): The new X matrix and y array.
+        """
         ylist = [(y - yvals.min()) / (yvals.max() - yvals.min()) for y in yvals]
 
         n_future = forecast_length
@@ -1101,42 +1166,50 @@ class Forecaster:
         plot_loss=False,
         **kwargs,
     ):
-        """ forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent
-            cannot be tuned
-            only xvar options are the series' own history (specify in lags argument)
-            always uses minmax normalizer
-            this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility
-            fitted values are the last fcst_length worth of values only
-            dynamic_testing: bool, default True
-                always ignored for lstm because the model doesn't work like others
-            lags: int greater than 0, default 1
-                the number of y-variable lags to train the model with
-            hidden_layers_struct: dict[str,dict[str,Union[float,str]]], default {'simple':{'size':8,'activation':'tanh'}}
-                key is the type of each hidden layer, one of {'simple','lstm'}
-                val is a dict
-                    key is str representing hyperparameter value: 'units','activation', etc
-                        see all possible here for simple rnn: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
-                        here for lstm: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-                    val is the desired hyperparam value
-                    do not pass return_sequences or input_shape as these will be set automatically
-            loss: str, default 'mean_absolute_error'
-                the loss function to minimize
-                see available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses
-                be sure to choose one that is suitable for regression tasks
-            optimizer: str, default "Adam"
-                the optimizer to use when compiling the model
-                see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
-                watch capitalization as that matters (can't be "adam", must be "Adam")
-            learning_rate: float, default 0.001
-                the learning rate to use when compiling the model
-            random_seed: int, optional
-                set a seed for consistent results
-                with tensorflow networks, setting seeds does not guarantee consistent results
-            plot_loss: bool, default False
-                whether to plot the LSTM loss function stored in history for each epoch
-                if validation_split passed to kwargs, will plot the validation loss as well
-                looks better if epochs > 1 passed to **kwargs
-            **kwargs passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
+        """ forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent;
+        cannot be tuned;
+        only xvar options are the series' own history (specified in lags argument);
+        always uses minmax normalizer;
+        this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility;
+        fitted values are the last fcst_length worth of values only.
+
+        Args:
+            dynamic_testing (bool): default True;
+                always ignored for lstm.
+            lags (int): greater than 0, default 1;
+                the number of y-variable lags to train the model with.
+            hidden_layers_struct (dict[str,dict[str,Union[float,str]]]): default {'simple':{'size':8,'activation':'tanh'}};
+                key is the type of each hidden layer, one of {'simple','lstm'};
+                val is a dict where:
+                    key is str representing hyperparameter value: 'units','activation', etc;
+                        see all possible here for simple rnn: 
+                          https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN;
+                        here for lstm: 
+                          https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM;
+                    val is the desired hyperparam value;
+                    do not pass `return_sequences` or `input_shape` as these will be set automatically.
+            loss (str): default 'mean_absolute_error';
+                the loss function to minimize;
+                see available options here: 
+                  https://www.tensorflow.org/api_docs/python/tf/keras/losses;
+                be sure to choose one that is suitable for regression tasks.
+            optimizer (str): default "Adam";
+                the optimizer to use when compiling the model;
+                see available values here: 
+                  https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
+            learning_rate (float): default 0.001;
+                the learning rate to use when compiling the model.
+            random_seed (int): optional;
+                set a seed for consistent results;
+                with tensorflow networks, setting seeds does not guarantee consistent results.
+            plot_loss (bool): default False;
+                whether to plot the LSTM loss function stored in history for each epoch;
+                if validation_split passed to kwargs, will plot the validation loss as well;
+                looks better if epochs > 1 passed to **kwargs.
+            **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
+
+        Returns:
+            (list): The predictions.
         """
         descriptive_assert(
             len(hidden_layers_struct.keys()) >= 1,
@@ -1254,43 +1327,50 @@ class Forecaster:
         plot_loss=False,
         **kwargs,
     ): 
-        """ forecasts with a long-short term memory neural network from TensorFlow
-            cannot be tuned
-            only xvar options are the series' own history (specify in lags argument)
-            always uses minmax normalizer
-            fitted values are the last fcst_length worth of values only
-            dynamic_testing: bool, default True
-                always ignored for lstm because the model doesn't work like others
-            lags: int greater than 0, default 1
-                the number of y-variable lags to train the model with
-            lstm_layer_sizes: list-like, default (25,)
-                the size of each lstm layer to add
-                the first element is for the input layer
-                the size of this array minus 1 will equal the number of hidden layers in the resulting model
-            dropout: list-like, default (0.0,)
-                the dropout rate for each lstm layer
-                must be the same size as lstm_layer_sizes
-            loss: str, default 'mean_absolute_error'
-                the loss function to minimize
-                see available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses
-                be sure to choose one that is suitable for regression tasks
-            activation: str, default "tanh"
-                the activation function to use in each lstm layer
-                see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/activations
-            optimizer: str, default "Adam"
-                the optimizer to use when compiling the model
-                see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
-                watch capitalization as that matters (can't be "adam", must be "Adam")
-            learning_rate: float, default 0.001
-                the learning rate to use when compiling the model
-            random_seed: int, optional
-                set a seed for consistent results
-                with tensorflow networks, setting seeds does not guarantee consistent results
-            plot_loss: bool, default False
-                whether to plot the LSTM loss function stored in history for each epoch
-                if validation_split passed to kwargs, will plot the validation loss as well
-                looks better if epochs > 1 passed to **kwargs
-            **kwargs passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
+        """ forecasts with a long-short term memory neural network from TensorFlow;
+            cannot be tuned;
+            only xvar options are the series' own history (specify in lags argument);
+            always uses minmax normalizer;
+            fitted values are the last fcst_length worth of values only.
+            
+        Args:
+            dynamic_testing (bool): default True;
+                always ignored for lstm.
+            lags (int): greater than 0, default 1;
+                the number of y-variable lags to train the model with.
+            lstm_layer_sizes (list-like): default (25,);
+                the size of each lstm layer to add;
+                the first element is for the input layer;
+                the size of this array minus 1 will equal the number of hidden layers in the resulting model.
+            dropout (list-like): default (0.0,);
+                the dropout rate for each lstm layer;
+                must be the same size as lstm_layer_sizes.
+            loss (str): default 'mean_absolute_error';
+                the loss function to minimize;
+                see available options here:
+                  https://www.tensorflow.org/api_docs/python/tf/keras/losses;
+                be sure to choose one that is suitable for regression tasks.
+            activation (str): default "tanh";
+                the activation function to use in each lstm layer;
+                see available values here:
+                  https://www.tensorflow.org/api_docs/python/tf/keras/activations.
+            optimizer (str): default "Adam";
+                the optimizer to use when compiling the model;
+                see available values here:
+                  https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
+            learning_rate (float): default 0.001;
+                the learning rate to use when compiling the model.
+            random_seed (int): optional;
+                set a seed for consistent results;
+                with tensorflow networks, setting seeds does not guarantee consistent results.
+            plot_loss (bool): default False;
+                whether to plot the LSTM loss function stored in history for each epoch;
+                if validation_split passed to kwargs, will plot the validation loss as well;
+                looks better if epochs > 1 passed to **kwargs.
+            **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
+
+        Returns:
+            (list): The predictions.
         """
         descriptive_assert(
             len(lstm_layer_sizes) >= 1,
@@ -1405,38 +1485,37 @@ class Forecaster:
         weights=None,
         splice_points=None,
     ):
-        """ combines at least two previously evaluted forecasts to create a new estimator
-            how: one of {'simple','weighted','splice'}, default 'simple'
-                the type of combination
-                all test lengths must be the same for all combined models
-            models: 'all', starts with "top_", or list-like, default 'all'
-                which models to combine
-                must be at least 2 in length
-                if using list-like object, elements must match model nicknames specified in call_me when forecasting
-            dynamic_testing: bool, default True
-                always ignored for combo (for now and possibly forever)
-            determine_best_by: one of {'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','InSampleMAPE','InSampleMAE','InSampleR2','ValidationMetricValue','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2',None}, default 'ValidationMetricValue'
-                if (models does not start with 'top_' and how is not 'weighted') or (how is 'weighted' and manual weights are specified), this is ignored
-                'TestSetRMSE','TestSetMAPE','TestSetMAE','TestSetR2InSampleRMSE','LevelTestSetRMSE','LevelTestSetMAPE','LevelTestSetMAE','LevelTestSetR2' will probably lead to overfitting (data leakage)
-                'InSampleMAPE','InSampleMAE','InSampleR2' probably will lead to overfitting since in-sample includes the test set and overfitted models are weighted more highly
-                'ValidationMetricValue' is the safest option to avoid overfitting, but only works if all combined models were tuned and the validation metric was the same for all models
-            rebalance_weights: float, default 0.1
-                a minmax/maxmin scaler is used to perform the weighted average, but this method means the worst performing model on the test set is always weighted 0
-                to correct that so that all models have some weight in the final combo, you can rebalance the weights but specifying this parameter
-                the higher this is, the closer to a simple average the weighted average becomes
-                must be at least 0 -- 0 means the worst model is not given any weight
-            weights: (optional) list-like
-                only applicable when how='weighted'
-                manually specifies weights
-                must be the same size as models
-                if None and how='weighted', weights are set automatically
-                if manually passed weights do not add to 1, will rebalance them
-            splice_points: (optional) list-like
-                only applicable when how='splice'
-                elements in array must be str in yyyy-mm-dd or datetime object
+        """ combines at least two previously evaluted forecasts to create a new model.
+
+        Args:
+            how (str): one of {'simple','weighted','splice'}, default 'simple';
+                the type of combination;
+                all test lengths must be the same for all combined models.
+            models (list-like or str): default 'all';
+                which models to combine;
+                can start with top ('top_5').
+            dynamic_testing (bool): default True;
+                always ignored for combo (for now and possibly forever).
+            determine_best_by (str): one of _determine_best_by_, default 'ValidationMetricValue';
+                if (models does not start with 'top_' and how is not 'weighted', this is ignored;
+                if how is 'weighted' and manual weights are specified, this is ignored.
+            rebalance_weights (float): default 0.1;
+                how to rebalance the weights when how = 'weighted';
+                the higher, the closer the weights will be to each other for each model;
+                if 0, the worst-performing model will be weighted with 0.
+            weights (list-like): optional;
+                only applicable when how='weighted';
+                manually specifies weights;
+                must be the same size as models;
+                if None and how='weighted', weights are set automatically;
+                if manually passed weights do not add to 1, will rebalance them.
+            splice_points (list-like): optional;
+                only applicable when how='splice';
+                elements in array must be str in yyyy-mm-dd or datetime object;
                 must be exactly one less in length than the number of models
-                    models[0] --> :splice_points[0]
-                    models[-1] --> splice_points[-1]:
+
+        Returns:
+            (list): The predictions.
         """
         if not dynamic_testing:
             logging.warning(
@@ -1557,10 +1636,15 @@ class Forecaster:
         return fcst
 
     def _parse_models(self, models, determine_best_by) -> list:
-        """ takes a list-like of models and orders them best-to-worst based on a given metric and returns the ordered list (of str type)
-            models: a list-like object where each element is one of _estimators_
-            determine_best_by: one of {_determine_best_by_}
+        """ takes a list-like of models and orders them best-to-worst based on a given metric and returns the ordered list (of str type).
+
+        Args:
+            models (list-like): each element is one of _estimators_
+            determine_best_by (str): one of _determine_best_by_
                 if a model does not have the metric specified here (i.e. one of the passed models wasn't tuned and this is 'ValidationMetricValue'), it will be ignored silently, so be careful
+
+        Returns:
+            (list) The ordered evaluated models.
         """
         if determine_best_by is None:
             if models[:4] == "top_":
@@ -1594,10 +1678,15 @@ class Forecaster:
 
     def _diffy(self, n) -> pd.Series:
         """ parses the argument fed to a diffy parameter
-            n: one of {True,False,0,1,2}
-                If False or 0, does not difference
-                If True or 1, differences 1 time
-                If 2, differences 2 times
+
+        Args:
+            n (bool or int): one of {True,False,0,1,2};
+                If False or 0, does not difference;
+                If True or 1, differences 1 time;
+                If 2, differences 2 times.
+
+        Returns:
+            (Series): The differenced array.
         """
         n = int(n)
         descriptive_assert(
@@ -1610,18 +1699,23 @@ class Forecaster:
             y = y.diff().dropna()
         return y
 
-    def infer_freq(self) -> None:
-        """ uses pandas library to infer frequency of loaded dates
+    def infer_freq(self):
+        """ uses pandas library to infer frequency of loaded dates.
         """
         if not hasattr(self, "freq"):
             self.freq = pd.infer_freq(self.current_dates)
             self.current_dates.freq = self.freq
 
-    def fillna_y(self, how="ffill") -> None:
-        """ fills null values in the y attribute
-            how: {'backfill', 'bfill', 'pad', 'ffill', 'midpoint'}
-                midpoint is unique to this library and only works if there is not more than two missing values sequentially
-                all other possible arguments are from pandas.DataFrame.fillna() method and will do the same
+    def fillna_y(self, how="ffill"):
+        """ fills null values in the y attribute.
+
+        Args:
+            how (str): one of {'backfill', 'bfill', 'pad', 'ffill', 'midpoint'};
+                midpoint is unique to this library and only works if there is not more than two missing values sequentially;
+                all other possible arguments are from pandas.DataFrame.fillna() method and will do the same.
+
+        Returns:
+            None
         """
         self.y = pd.Series(self.y)
         if (
@@ -1633,11 +1727,16 @@ class Forecaster:
                 if val is None:
                     self.y.values[i] = (self.y.values[i - 1] + self.y.values[i + 1]) / 2
 
-    def generate_future_dates(self, n) -> None:
-        """ generates a certain amount of future dates based on an inferred frequency
-            n: int
-                number of future dates to produce
-                this will also be the forecast length
+    def generate_future_dates(self, n):
+        """ generates a certain amount of future dates in same frequency as current_dates.
+
+        Args:
+            n (int): greater than 0;
+                number of future dates to produce;
+                this will also be the forecast length.
+
+        Returns:
+            None
         """
         self.future_dates = pd.Series(
             pd.date_range(
@@ -1645,11 +1744,15 @@ class Forecaster:
             ).values[1:]
         )
 
-    def set_last_future_date(self, date) -> None:
-        """ generates future dates that ends on the passed date
-            date: datetime.datetime, pandas.Timestamp, or str ('%Y-%m-%d' format)
-                the date to end on
-                the number of future generated dates will be used as the forecast length
+    def set_last_future_date(self, date):
+        """ generates future dates in the same frequency as current_dates that ends on a specified date.
+
+        Args:
+            date (datetime.datetime, pd.Timestamp, or str):
+                the date to end on; if str, must be in '%Y-%m-%d' format.
+
+        Returns:
+            None
         """
         if isinstance(date, str):
             date = datetime.datetime.strptime(date, "%Y-%m-%d")
@@ -1659,8 +1762,11 @@ class Forecaster:
             ).values[1:]
         )
 
-    def typ_set(self) -> None:
-        """ converts all objects in y, current_dates, future_dates, current_xreg, and future_xreg to appropriate types if possible
+    def typ_set(self):
+        """ converts all objects in y, current_dates, future_dates, current_xreg, and future_xreg to appropriate types if possible.
+        automatically gets called when object is initiated.
+
+        >>> f.typ_set() # sets all arrays to the correct format
         """
         self.y = pd.Series(self.y).dropna().astype(np.float64)
         self.current_dates = pd.to_datetime(
@@ -1686,12 +1792,18 @@ class Forecaster:
 
         self.infer_freq()
 
-    def diff(self, i=1) -> None:
-        """ differences the y attribute, as well as all regressor values stored in current_xreg and future_xreg
-            call this after adding all desired ar terms and those terms will be differenced too
-            if you add ar terms after differencing, an error will be raised
-            i: one of {0,1,2}, default 1
-                the number of differences to take
+    def diff(self, i=1):
+        """ differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.
+
+        Args:
+            i (int): default 1;
+                the number of differences to take;
+                must be 1 or 2.
+
+        Returns:
+            None
+
+        >>> f.diff(2) # differences y twice
         """
         descriptive_assert(
             self.integration == 0,
@@ -1720,15 +1832,23 @@ class Forecaster:
 
     def integrate(
         self, critical_pval=0.05, train_only=False, max_integration=2
-    ) -> None:
-        """differences the series 0, 1, or 2 times based on ADF test
-            critical_pval: float, default 0.05
-                the p-value threshold in the statistical test to accept the alternative hypothesis
-            train_only: bool, default False
-                if True, will exclude the test set from the test (a measure added to avoid leakage)
-            max_integration: int, one of {1,2}, default 2
-                if 1, will only difference data up to one time even if the results of the test indicate two integrations
-                if 2, behaves how you would expect
+    ):
+        """differences the series 0, 1, or 2 times based on ADF test results.
+
+        Args:
+            critical_pval (float): default 0.05;
+                the p-value threshold in the statistical test to accept the alternative hypothesis.
+            train_only (bool): default False;
+                if True, will exclude the test set from the ADF test (to avoid leakage).
+            max_integration (int): one of {1,2}, default 2;
+                if 1, will only difference data up to one time even if the results of the test indicate two integrations;
+                if 2, behaves how you would expect.
+
+        Returns:
+            None
+
+        >>> f.integrate(max_integration=1) # differences y only once if it is not stationarity
+        >>> f.integrate() # differences y up to twice it is not stationarity and if its first difference is not stationary
         """
         descriptive_assert(
             self.integration == 0,
@@ -1758,10 +1878,16 @@ class Forecaster:
         self.diff(2)
         self.adf_stationary = True
 
-    def add_ar_terms(self, n) -> None:
-        """ add auto-regressive terms to forecast with
-            n: int
-                the number of terms to add (1 to this number will be added)
+    def add_ar_terms(self, n):
+        """ add auto-regressive terms.
+
+        Args:
+            n (int): the number of terms to add (1 to this number will be added).
+
+        Returns:
+            None
+
+        >>> f.add_ar_terms(4) # adds four lags of y to predict with
         """
         self._adder()
         descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
@@ -1775,13 +1901,16 @@ class Forecaster:
             self.current_xreg[f"AR{i}"] = pd.Series(self.y).shift(i)
             self.future_xreg[f"AR{i}"] = [self.y.values[-i]]
 
-    def add_AR_terms(self, N) -> None:
-        """ add seasonal AR terms
-            N: tuple of len 2 (P,m)
-                P: int
-                    the number of terms to add
-                m: int
-                    the seasonal period (12 for monthly data, etc.)
+    def add_AR_terms(self, N):
+        """ add seasonal auto-regressive terms.
+            
+        Args:
+            N (tuple): first element is the number of terms to add and the second element is the space between terms.
+
+        Returns:
+            None
+
+        >>> f.add_AR_terms((2,12)) # adds 12th and 24th lags
         """
         self._adder()
         descriptive_assert(
@@ -1800,17 +1929,25 @@ class Forecaster:
 
     def ingest_Xvars_df(
         self, df, date_col="Date", drop_first=False, use_future_dates=False
-    ) -> None:
-        """ ingest a dataframe of regressors with names (don't start anything with AR!!!)
-            all non-numeric values will be dummied
-            df: pandas.DataFrame
-            date_col: str, default 'Date'
-                the name of the date column in the dataframe (use named index only if passing this column as an index)
-            drop_first: bool, default False
-                whether to drop the first observation of any dummied variables, irrelevant if passing all numeric values
-            use_future_dates: bool, default False
-                whether to use the future dates in the dataframe as the future_dates attribute in the object
-                if False, the dataframe must have at least the same number of observations as len(future_dates)
+    ):
+        """ ingests a dataframe of regressors and saves its contents to the Forecaster object.
+            must specify a date column.
+            all non-numeric values will be dummied.
+            any columns in the dataframe that begin with "AR" will be confused with autoregressive terms and could cause errors.
+
+        Args:
+            df (DataFrame): the dataframe that is at least the length of len(current_dates) + len(future_dates)
+            date_col (str): default 'Date';
+                the name of the date column in the dataframe;
+                this column must have the same frequency as the dates in current_dates.
+            drop_first (bool): default False;
+                whether to drop the first observation of any dummied variables;
+                irrelevant if passing all numeric values.
+            use_future_dates (bool): default False;
+                whether to use the future dates in the dataframe as the future_dates attribute in the object.
+
+        Returns:
+            None
         """
         descriptive_assert(
             df.shape[0] == len(df[date_col].unique()),
@@ -1847,18 +1984,32 @@ class Forecaster:
                     f"warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(self.future_dates)}"
                 )
 
-    def set_test_length(self, n=1) -> None:
-        """ set the length of the test set (no fractional splits)
-            n: int, default 1
-                the length of the resulting test set
+    def set_test_length(self, n=1):
+        """ set the length of the test set.
+
+        Args:
+            n (int): default 1;
+                the length of the resulting test set.
+
+        Returns:
+            None
+
+        >>> f.set_test_length(12) # test set of 12
         """
         descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
         self.test_length = n
 
-    def set_validation_length(self, n=1) -> None:
-        """ set the length of the validation set (no fractional splits)
-            n: int, default 1
-                the length of the resulting validation set
+    def set_validation_length(self, n=1):
+        """ set the length of the validation set.
+
+        Args:
+            n (int): default 1;
+                the length of the resulting validation set.
+
+        Returns:
+            None
+
+        >>> f.set_validation_length(6) # validation length of 6
         """
         descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
         descriptive_assert(n > 0, ValueError, f"n must be greater than 1, got {n}")
@@ -1869,8 +2020,15 @@ class Forecaster:
         self.validation_length = n
 
     def set_cilevel(self, n):
-        """ sets the level for the resulting confidence intervals (95% default)
-            n: float greater than 0 and less than 1
+        """ sets the level for the resulting confidence intervals (95% default).
+
+        Args:
+            n (float): greater than 0 and less than 1.
+
+        Returns:
+            None
+
+        >>> f.set_cilevel(.80) # next forecast will get 80% confidence intervals
         """
         descriptive_assert(
             n < 1 and n > 0, ValueError, "n must be greater than 0 and less than 1"
@@ -1878,28 +2036,43 @@ class Forecaster:
         self.cilevel = n
 
     def set_bootstrap_samples(self, n):
-        """ sets the number of bootstrap samples to set confidence intervals for each model (default is 100)
-            n: float greater than or equal to 30
-                30 because you need around there to satisfy central limit theorem
-                the lower this number, the faster the performance, but the less sure of the outcome you can be
+        """ sets the number of bootstrap samples to set confidence intervals for each model (100 default).
+
+        Args:
+            n (int): greater than or equal to 30;
+                30 because you need around there to satisfy central limit theorem;
+                the lower this number, the faster the performance, but the less confident in the resulting intervals you should be.
+
+        Returns:
+            None
+
+        >>> f.set_bootstrap_samples(1000) # next forecast will get confidence intervals with 1,000 bootstrap sample
         """
         descriptive_assert(n >= 30, ValueError, "n must be greater than or equal to 30")
         self.bootstrap_samples = n
 
     def adf_test(
         self, critical_pval=0.05, quiet=True, full_res=False, train_only=False, **kwargs
-    ) -> Union[dict, bool]:
-        """ tests the stationarity of the y series using augmented dickey fuller
-            critical_pval: float, default 0.05
-                the p-value threshold in the statistical test to accept the alternative hypothesis
-            quiet: bool, default True
-                if False, prints whether the tests suggests stationary or non-stationary data
-            full_res: bool, default False
-                if True, returns a dictionary with the pvalue, evaluated statistic, and other statistical information (returns what the adfuller() function from statsmodels does)
-                if False, returns a bool that matches whether the test indicates stationarity
-            train_only: bool, default False
-                if True, will exclude the test set from the test (a measure added to avoid leakage)
-            **kwargs passed to adfuller() function from statsmodels
+    ) -> Union[tuple, bool]:
+        """ tests the stationarity of the y series using augmented dickey fuller.
+
+        Args:
+            critical_pval (float): default 0.05;
+                the p-value threshold in the statistical test to accept the alternative hypothesis.
+            quiet (bool): default True;
+                if False, prints whether the tests suggests stationary or non-stationary data.
+            full_res (bool): default False;
+                if True, returns a dictionary with the pvalue, evaluated statistic, and other statistical information (returns what the adfuller() function from statsmodels does);
+                if False, returns a bool that matches whether the test indicates stationarity.
+            train_only (bool): default False;
+                if True, will exclude the test set from the test (to avoid leakage).
+            **kwargs: passed to adfuller() function from statsmodels.
+
+        Returns:
+            (bool or tuple): if bool (full_res = False), returns whether the test suggests stationarity;
+                otherwise, returns the full results (stat, pval, etc.) of the test.
+
+        >>> stat, pval, _, _, _, _ = f.adf_test(full_res=True)
         """
         descriptive_assert(
             isinstance(train_only, bool), ValueError, "train_only must be True or False"
@@ -1924,16 +2097,25 @@ class Forecaster:
         else:
             return res
 
-    def plot_acf(self, diffy=False, train_only=False, **kwargs) -> plt:
+    def plot_acf(self, diffy=False, train_only=False, **kwargs):
         """ plots an autocorrelation function of the y values
-            diffy: one of {True,False,0,1,2}, default False
-                whether to difference the data and how many times before passing the values to the function
-                If False or 0, does not difference
-                If True or 1, differences 1 time
-                If 2, differences 2 times
-            train_only: bool, default False
-                if True, will exclude the test set from the test (a measure added to avoid leakage)
-            **kwargs passed to plot_acf() function from statsmodels
+
+        Args:
+            diffy (bool or int): one of {True,False,0,1,2}; default False;
+                whether to difference the data and how many times before passing the values to the function;
+                if False or 0, does not difference;
+                if True or 1, differences 1 time;
+                if 2, differences 2 times.
+            train_only (bool): default False;
+                if True, will exclude the test set from the test (a measure added to avoid leakage).
+            **kwargs: passed to plot_acf() function from statsmodels.
+
+        Returns:
+            (Figure): If ax is None, the created figure. Otherwise the figure to which ax is connected.
+
+        >>> import matplotlib.pyplot as plt
+        >>> f.plot_acf(train_only=True)
+        >>> plt.plot()
         """
         descriptive_assert(
             isinstance(train_only, bool), ValueError, "train_only must be True or False"
@@ -1942,16 +2124,25 @@ class Forecaster:
         y = y.values if not train_only else y.values[: -self.test_length]
         return plot_acf(y, **kwargs)
 
-    def plot_pacf(self, diffy=False, train_only=False, **kwargs) -> plt:
+    def plot_pacf(self, diffy=False, train_only=False, **kwargs):
         """ plots a partial autocorrelation function of the y values
-            diffy: one of {True,False,0,1,2}, default False
-                whether to difference the data and how many times before passing the values to the function
-                If False or 0, does not difference
-                If True or 1, differences 1 time
-                If 2, differences 2 times
-            train_only: bool, default False
-                if True, will exclude the test set from the test (a measure added to avoid leakage)
-            **kwargs passed to plot_pacf() function from statsmodels
+
+        Args:
+            diffy (bool or int): one of {True,False,0,1,2}; default False;
+                whether to difference the data and how many times before passing the values to the function;
+                if False or 0, does not difference;
+                if True or 1, differences 1 time;
+                if 2, differences 2 times.
+            train_only (bool): default False;
+                if True, will exclude the test set from the test (a measure added to avoid leakage).
+            **kwargs: passed to plot_pacf() function from statsmodels.
+
+        Returns:
+            (Figure): If ax is None, the created figure. Otherwise the figure to which ax is connected.
+
+        >>> import matplotlib.pyplot as plt
+        >>> f.plot_pacf(train_only=True)
+        >>> plt.plot()
         """
         descriptive_assert(
             isinstance(train_only, bool), ValueError, "train_only must be True or False"
@@ -1962,13 +2153,23 @@ class Forecaster:
 
     def plot_periodogram(self, diffy=False, train_only=False):
         """ plots a periodogram of the y values (comes from scipy.signal)
-            diffy: one of {True,False,0,1,2}, default False
-                whether to difference the data and how many times before passing the values to the function
-                If False or 0, does not difference
-                If True or 1, differences 1 time
-                If 2, differences 2 times
-            train_only: bool, default False
-                if True, will exclude the test set from the test (a measure added to avoid leakage)
+
+        Args:
+            diffy (bool or int): one of {True,False,0,1,2}; default False;
+                whether to difference the data and how many times before passing the values to the function;
+                if False or 0, does not difference;
+                if True or 1, differences 1 time;
+                if 2, differences 2 times.
+            train_only (bool): default False;
+                if True, will exclude the test set from the test (a measure added to avoid leakage).
+
+        Returns:
+            (ndarray,ndarray): Element 1: Array of sample frequencies. Element 2: Power spectral density or power spectrum of x.
+
+        >>> import matplotlib.pyplot as plt
+        >>> a, b = f.plot_periodogram(diffy=True,train_only=True)
+        >>> plt.semilogy(a, b)
+        >>> plt.show()
         """
         from scipy.signal import periodogram
 
@@ -1981,14 +2182,23 @@ class Forecaster:
 
     def seasonal_decompose(self, diffy=False, train_only=False, **kwargs):
         """ plots a signal/seasonal decomposition of the y values
-            diffy: one of {True,False,0,1,2}, default False
-                whether to difference the data and how many times before passing the values to the function
-                If False or 0, does not difference
-                If True or 1, differences 1 time
-                If 2, differences 2 times
-            train_only: bool, default False
-                if True, will exclude the test set from the test (a measure added to avoid leakage)
-            **kwargs passed to seasonal_decompose() function from statsmodels
+
+        Args:
+            diffy (bool or int): one of {True,False,0,1,2}; default False;
+                whether to difference the data and how many times before passing the values to the function;
+                if False or 0, does not difference;
+                if True or 1, differences 1 time;
+                if 2, differences 2 times.
+            train_only (bool): default False;
+                If True, will exclude the test set from the test (a measure added to avoid leakage).
+            **kwargs: passed to seasonal_decompose() function from statsmodels.
+
+        Returns:
+            (DecomposeResult): An object with seasonal, trend, and resid attributes.
+
+        >>> import matplotlib.pyplot as plt
+        >>> f.seasonal_decompose(train_only=True).plot()
+        >>> plt.show()
         """
         descriptive_assert(
             isinstance(train_only, bool), ValueError, "train_only must be True or False"
@@ -2006,19 +2216,28 @@ class Forecaster:
 
     def add_seasonal_regressors(
         self, *args, raw=True, sincos=False, dummy=False, drop_first=False
-    ) -> None:
-        """ adds seasonal regressors to the object
-            *args: each of str type
+    ):
+        """ adds seasonal regressors to the object (current_xreg and future_xreg)
+
+        Args:
+            *args: each of str type;
                 values that return a series of int type from pandas.dt and pandas.dt.isocalendar()
-            raw: bool, default True
+            raw (bool): default True;
                 whether to use the raw integer values
-            sincos: bool, default False
+            sincos (bool): default False;
                 whether to use a sin/cos transformation of the raw integer values (estimates the cycle based on the max observed value)
-            dummy: bool, default False
+            dummy (bool): default False;
                 whether to use dummy variables from the raw int values
-            drop_first: bool, default False
-                whether to drop the first observed dummy level (saves a degree of freedom when model estimates an intercept)
+            drop_first (bool): default False;
+                whether to drop the first observed dummy level;
                 not relevant when dummy = False
+
+        Returns:
+            None
+
+        >>> f.add_seasonal_regressors('year')
+        >>> f.add_seasonal_regressors('month','week','quarter',raw=False,sincos=True)
+        >>> f.add_seasonal_regressors('dayofweek',raw=False,dummy=True,drop_first=True)
         """
         self._adder()
         if not (raw | sincos | dummy):
@@ -2081,10 +2300,17 @@ class Forecaster:
                 for c in [d for d in all_dummies if d not in self.future_xreg.keys()]:
                     self.future_xreg[c] = [0] * len(self.future_dates)
 
-    def add_time_trend(self, called="t") -> None:
-        """ adds a time trend from 0 to len(current_dates) + len(future_dates)
-            called: str, default 't'
+    def add_time_trend(self, called="t"):
+        """ adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg
+
+        Args:
+            called (str): default 't';
                 what to call the resulting variable
+
+        Returns:
+            None
+
+        >>> f.add_time_trend()
         """
         self._adder()
         self.current_xreg[called] = pd.Series(range(1, len(self.y) + 1))
@@ -2092,12 +2318,21 @@ class Forecaster:
             range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
         )
 
-    def add_other_regressor(self, called, start, end) -> None:
-        """ adds dummy variable that is 1 during the specified time period, 0 otherwise
-            called: str
-                what to call the resulting variable
-            start: str, datetime, or pd.Timestamp object
-            end: str, datetime, or pd.Timestamp object
+    def add_other_regressor(self, called, start, end):
+        """ adds dummy variable that is 1 during the specified time period, 0 otherwise.
+
+        Args:
+            called (str):
+                what to call the resulting variable.
+            start (str, datetime.datetime, or pd.Timestamp): start date;
+                use format '%Y-%m-%d' when passing strings.
+            end (str, datetime.datetime, or pd.Timestamp): end date;
+                use format '%Y-%m-%d' when passing strings.
+
+        Returns:
+            None
+
+        >>> f.add_other_regressor('january_2021','2021-01-01','2021-01-31')
         """
         self._adder()
         if isinstance(start, str):
@@ -2116,26 +2351,39 @@ class Forecaster:
         called="COVID19",
         start=datetime.datetime(2020, 3, 15),
         end=datetime.datetime(2021, 5, 13),
-    ) -> None:  # default is from when disney world closed to the end of the national (USA) mask mandate
-        """ adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise
-            this function may be out of date as the pandemic has lasted longer than most expected, but we are keeping it for now
-            called str, default 'COVID19'
-               what to call the resulting variable
-            start: str, datetime, or pd.Timestamp object, default datetime.datetime(2020,3,15)
-                the start date (default is day Walt Disney World closed in the U.S.)
-                use format yyyy-mm-dd when passing strings
-           end: str, datetime, or pd.Timestamp object, default datetime.datetime(2021,5,13)
-               the end date (default is day the U.S. CDC dropped mask mandate/recommendation for vaccinated people)
-                use format yyyy-mm-dd when passing strings
+    ):  # default is from when disney world closed to the end of the national (USA) mask mandate
+        """ adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise;
+        this function may be out of date as the pandemic has lasted longer than most expected, but we are keeping it for now.
+
+        Args:
+            called (str): default 'COVID19';
+               what to call the resulting variable.
+            start (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2020,3,15);
+                the start date (default is day Walt Disney World closed in the U.S.);
+                use format '%Y-%m-%d' when passing strings.
+           end: (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2021,5,13);
+               the end date (default is day the U.S. CDC dropped mask mandate/recommendation for vaccinated people);
+               use format '%Y-%m-%d' when passing strings.
+
+        Returns:
+            None
         """
         self._adder()
         self.add_other_regressor(called=called, start=start, end=end)
 
-    def add_combo_regressors(self, *args, sep="_") -> None:
-        """ combines all passed variables by multiplying their values together
-            *args: names of Xvars that aleady exist in the object
-            sep: str, default '_'
-                the separator between each term in arg to create the final variable name 
+    def add_combo_regressors(self, *args, sep="_"):
+        """ combines all passed variables by multiplying their values together.
+
+        Args:
+            *args (str): names of Xvars that aleady exist in the object.
+            sep (str): default '_';
+                the separator between each term in arg to create the final variable name.
+
+        Returns:
+            None
+
+        >>> f.add_combo_regressors('t','monthsin') # multiplies these two together
+        >>> f.add_combo_regressors('t','monthcos') # multiplies these two together
         """
         self._adder()
         descriptive_assert(
@@ -2168,13 +2416,20 @@ class Forecaster:
                     )
                 ]
 
-    def add_poly_terms(self, *args, pwr=2, sep="^") -> None:
-        """ raises all passed variables (no AR terms) to exponential powers (ints only)
-            *args: names of Xvars that aleady exist in the object
-            pwr: int, default 2
-                the max power to add to each term in args (2 to this number will be added)
-            sep: str, default '^'
-                the separator between each term in arg to create the final variable name 
+    def add_poly_terms(self, *args, pwr=2, sep="^"):
+        """ raises all passed variables (no AR terms) to exponential powers (ints only).
+
+        Args:
+            *args (str): names of Xvars that aleady exist in the object
+            pwr (int): default 2;
+                the max power to add to each term in args (2 to this number will be added).
+            sep (str): default '^';
+                the separator between each term in arg to create the final variable name.
+
+        Returns:
+            None
+
+        >>> f.add_poly_terms('t','year',pwr=3) ### raises t and year to 2nd and 3rd powers
         """
         self._adder()
         for a in args:
@@ -2188,16 +2443,23 @@ class Forecaster:
                 self.future_xreg[f"{a}{sep}{i}"] = [x ** i for x in self.future_xreg[a]]
 
     def add_exp_terms(self, *args, pwr, sep="^", cutoff=2):
-        """ raises all passed variables (no AR terms) to exponential powers (ints or floats)
-            *args: names of Xvars that aleady exist in the object
-            pwr: float
-                the power to raise each term to in args
+        """ raises all passed variables (no AR terms) to exponential powers (ints or floats).
+
+        Args:
+            *args (str): names of Xvars that aleady exist in the object.
+            pwr (float): 
+                the power to raise each term to in args;
                 can use values like 0.5 to perform square roots, etc.
-            sep: str, default '^'
-                the separator between each term in arg to create the final variable name 
-            cutoff: int, default 2
-                the resulting variable name will be rounded to this number based on the passed pwr
-                for instance, if pwr = 0.33333333333 and 't' is passed as an arg to *args, the resulting name will be t^0.33 by default
+            sep (str): default '^';
+                the separator between each term in arg to create the final variable name.
+            cutoff (int): default 2;
+                the resulting variable name will be rounded to this number based on the passed pwr;
+                for instance, if pwr = 0.33333333333 and 't' is passed as an arg to *args, the resulting name will be t^0.33 by default.
+
+        Returns:
+            None
+
+        >>> f.add_exp_terms('t',pwr=.5) # adds square root t
         """
         self._adder()
         pwr = float(pwr)
@@ -2215,13 +2477,20 @@ class Forecaster:
             ]
 
     def add_logged_terms(self, *args, base=math.e, sep=""):
-        """ logs all passed variables (no AR terms)
-            *args: names of Xvars that aleady exist in the object
-            base: math.e or int greater than 1
-                the log base
-            sep: str, default ''
-                the separator between each term in arg to create the final variable name
+        """ logs all passed variables (no AR terms).
+
+        Args:
+            *args (str): names of Xvars that aleady exist in the object.
+            base (float): default math.e; the log base;
+                must be math.e or int greater than 1.
+            sep (str): default '';
+                the separator between each term in arg to create the final variable name;
                 resulting variable names will be like "log2t" or "lnt" by default
+
+        Returns:
+            None
+
+        >>> f.add_logged_terms('t') # adds natural log t
         """
         self._adder()
         for a in args:
@@ -2250,15 +2519,22 @@ class Forecaster:
             ]
 
     def add_pt_terms(self, *args, method="box-cox", sep="_"):
-        """ applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms)
-            *args: names of Xvars that aleady exist in the object
-            method: one of {'box-cox','yeo-johnson'}, default 'box-cox'
-                the type of transformation
-                box-cox works for positive values only
-                yeo-johnson is like a box-cox but can be used with 0s or negatives (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html)
-            sep: str, default ''
-                the separator between each term in arg to create the final variable name
-                resulting variable names will be like "box-cox_t" or "yeo-johnson_t" by default 
+        """ applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).
+
+        Args:
+            *args (str): names of Xvars that aleady exist in the object
+            method (str): one of {'box-cox','yeo-johnson'}, default 'box-cox';
+                the type of transformation;
+                box-cox works for positive values only;
+                yeo-johnson is like a box-cox but can be used with 0s or negatives (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html).
+            sep (str): default '';
+                the separator between each term in arg to create the final variable name;
+                resulting variable names will be like "box-cox_t" or "yeo-johnson_t" by default.
+
+        Returns:
+            None
+
+        >>> f.add_pt_terms('t') # adds box cox of t
         """
         self._adder()
         pt = PowerTransformer(method=method, standardize=False)
@@ -2279,14 +2555,20 @@ class Forecaster:
             ]
 
     def add_diffed_terms(self, *args, diff=1, sep="_"):
-        """ differences all passed variables (no AR terms) up to 2 times
-            *args: names of Xvars that aleady exist in the object
-            diff: one of {1,2}, default 1
-                the number of times to difference each variable passed to args
-            sep: str, default '_'
-                the separator between each term in arg to create the final variable name
-                resulting variable names will be like "tdiff_1" or "tdiff_2" by default
+        """ differences all passed variables (no AR terms) up to 2 times.
 
+        Args:
+            *args (str): names of Xvars that aleady exist in the object.
+            diff (int): one of {1,2}, default 1;
+                the number of times to difference each variable passed to args.
+            sep (str): default '_';
+                the separator between each term in arg to create the final variable name;
+                resulting variable names will be like "tdiff_1" or "tdiff_2" by default.
+
+        Returns:
+            None
+
+        >>> add_diffed_terms('t') # adds first difference of t as regressor
         """
         self._adder()
         descriptive_assert(
@@ -2313,17 +2595,25 @@ class Forecaster:
         self.keep_smaller_history(obs_to_keep)
 
     def add_lagged_terms(self, *args, lags=1, upto=True, sep="_"):
-        """ lags all passed variables (no AR terms) 1 or more times
-            *args: names of Xvars that aleady exist in the object
-            lags: int greater than 0, default 1
-                the number of times to lag each passed variable
-            upto: bool, default True
-                whether to add all lags up to the number passed to lags
-                if you pass 6 to lags and upto is True, lags 1, 2, 3, 4, 5, 6 will all be added
-                if you pass 6 to lags and upto is False, lag 6 only will be added
-            sep: str, default '_'
-                the separator between each term in arg to create the final variable name
-                resulting variable names will be like "tlag_1" or "tlag_2" by default
+        """ lags all passed variables (no AR terms) 1 or more times.
+
+        Args:
+            *args (str): names of Xvars that aleady exist in the object.
+            lags (int): greater than 0, default 1;
+                the number of times to lag each passed variable.
+            upto (bool): default True;
+                whether to add all lags up to the number passed to lags;
+                if you pass 6 to lags and upto is True, lags 1, 2, 3, 4, 5, 6 will all be added;
+                if you pass 6 to lags and upto is False, lag 6 only will be added.
+            sep (str): default '_';
+                the separator between each term in arg to create the final variable name;
+                resulting variable names will be like "tlag_1" or "tlag_2" by default.
+
+        Returns:
+            None
+
+        >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t
+        >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only
         """
         self._adder()
         descriptive_assert(
@@ -2365,10 +2655,17 @@ class Forecaster:
         obs_to_keep = len(self.y) - lags
         self.keep_smaller_history(obs_to_keep)
 
-    def undiff(self, suppress_error=False) -> None:
-        """ undifferences y to original level and drops all regressors (such as AR terms)
-            suppress_error: bool, default False
-                whether to suppress an error that gets raised if the series was never differenced
+    def undiff(self, suppress_error=False):
+        """ undifferences y to original level and drops all regressors (such as AR terms).
+
+        Args:
+            suppress_error (bool): default False;
+                whether to suppress an error that gets raised if the series was never differenced.
+
+        Returns:
+            None
+
+        >>> f.undiff()
         """
         self.typ_set()
         if self.integration == 0:
@@ -2389,9 +2686,16 @@ class Forecaster:
         if hasattr(self, "adf_stationary"):
             delattr(self, "adf_stationary")
 
-    def set_estimator(self, estimator) -> None:
+    def set_estimator(self, estimator):
         """ sets the estimator to forecast with
-            estimator: one of _estimators_
+
+        Args:
+            estimator (str): one of _estimators_
+
+        Returns:
+            None
+
+        >>> f.set_estimator('mlr')
         """
         descriptive_assert(
             estimator in _estimators_,
@@ -2413,11 +2717,19 @@ class Forecaster:
         else:
             self.estimator = estimator
 
-    def ingest_grid(self, grid) -> None:
-        """ ingests a grid to tune the estimator
-            grid: dict or str
-                if dict, must be a user-created grid
-                if str, must match the name of a dict grid stored in Grids.py
+    def ingest_grid(self, grid):
+        """ ingests a grid to tune the estimator.
+
+        Args:
+            grid (dict or str):
+                if dict, must be a user-created grid;
+                if str, must match the name of a dict grid stored in Grids.py.
+
+        Returns:
+            None
+
+        >>> f.set_estimator('mlr')
+        >>> f.ingest_grid({'normalizer':['scale','minmax']})
         """
         from itertools import product
 
@@ -2432,13 +2744,25 @@ class Forecaster:
         grid = expand_grid(grid)
         self.grid = grid
 
-    def limit_grid_size(self, n, random_seed=None) -> None:
-        """ makes a grid smaller randomly
-            n: int or float
-                if int, randomly selects that many parameter combinations
-                if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations
-            random_seed: int, optional
-                set a seed to make results consistent
+    def limit_grid_size(self, n, random_seed=None):
+        """ makes a grid smaller randomly.
+
+        Args:
+            n (int or float):
+                if int, randomly selects that many parameter combinations;
+                if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.
+            random_seed (int): optional;
+                set a seed to make results consistent.
+
+        Returns:
+            None
+
+        >>> from scalecast import GridGenerator
+        >>> f.get_example_grids()
+        >>> f.set_estimator('mlp')
+        >>> f.ingest_grid('mlp')
+        >>> f.limit_grid_size(10,random_seed=20) # limits grid to 10 iterations
+        >>> f.limit_grid_size(.5,random_seed=20) # limits grid to half its original size
         """
         if random_seed is not None:
             random.seed(random_seed)
@@ -2452,11 +2776,16 @@ class Forecaster:
         else:
             raise ValueError(f"argment passed to n not usable: {n}")
 
-    def set_validation_metric(self, metric="rmse") -> None:
-        """ sets the metric that will be used to tune all subsequent models
-            not a good idea to change this if you are planning to combo model as weird things could happen
+    def set_validation_metric(self, metric="rmse"):
+        """ sets the metric that will be used to tune all subsequent models.
+
+        Args:
             metric: one of _metrics_, default 'rmse'
                 the metric to optimize the models on using the validation set
+        Returns:
+            None
+
+        >>> f.set_validation_metric('mae')
         """
         descriptive_assert(
             metric in _metrics_,
@@ -2469,13 +2798,22 @@ class Forecaster:
             )
         self.validation_metric = metric
 
-    def tune(self, dynamic_tuning=False) -> None:
-        """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as the estimator by default)
-            any parameters you can pass as **kwargs to manual_forecast() can be tuned with this process
-            dynamic_tuning: bool, default False
-                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values)
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
-                when False, metrics effectively become an average of one-step forecasts
+    def tune(self, dynamic_tuning=False):
+        """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as the estimator by default).
+        any parameters you can pass as **kwargs to manual_forecast() can be tuned with this process.
+
+        Args:
+            dynamic_tuning (bool): default False;
+                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values);
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+                when False, metrics effectively become an average of one-step forecasts.
+
+        Returns:
+            None
+
+        >>> f.set_estimator('xgboost')
+        >>> f.tune()
+        >>> f.auto_forecast()
         """
         if not hasattr(self, "grid"):
             try:
@@ -2544,22 +2882,28 @@ class Forecaster:
 
         self.dynamic_tuning = dynamic_tuning
 
-    def manual_forecast(self, call_me=None, dynamic_testing=True, **kwargs) -> None:
-        """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywoords
-            call_me: str, optional
-                what to call the model when storing it in the object's history dictionary
-                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.)
-                duplicated names will be overwritten with the most recently called model
-            dynamic_testing: bool, default True
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
-                when False, test-set metrics effectively become an average of one-step forecasts
-            **kwargs are passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
-            **kwargs include for sklearn and lstm models:
-                normalizer: one of {_normalizer_}, default 'minmax'
-                    if not None, normalizer applied to training data only to not leak
-                Xvars: list where all elements are in current_xreg keys, 'all', or None
-                    if None and Xvars are required, None becomes equivalent to 'all'
+    def manual_forecast(self, call_me=None, dynamic_testing=True, **kwargs):
+        """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywoords.
+
+        Args:
+            call_me (str): optional;
+                what to call the model when storing it in the object's history dictionary;
+                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.);
+                duplicated names will be overwritten with the most recently called model.
+            dynamic_testing (bool): default True;
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+                when False, test-set metrics effectively become an average of one-step forecasts.
+            **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
+                for sklearn models, can inlcude normalizer and Xvars;
+                for ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer;
+                LSTM and RNN models have their own sets of possible keywords.
+
+        Returns:
+            None
+
+        >>> f.set_estimator('mlr')
+        >>> f.manual_forecast(normalizer='pt')
         """
         descriptive_assert(
             isinstance(call_me, str) | (call_me is None),
@@ -2583,9 +2927,25 @@ class Forecaster:
             **kwargs,
         )
 
-    def auto_forecast(self, call_me=None, dynamic_testing=True) -> None:
-        """ auto forecast with the best parameters indicated from the tuning process
-            see manual_forecast() docstring 
+    def auto_forecast(self, call_me=None, dynamic_testing=True):
+        """ auto forecast with the best parameters indicated from the tuning process.
+
+        Args:
+            call_me (str): optional;
+                what to call the model when storing it in the object's history dictionary;
+                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.);
+                duplicated names will be overwritten with the most recently called model.
+            dynamic_testing (bool): default True;
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+                when False, test-set metrics effectively become an average of one-step forecasts.
+
+        Returns:
+            None
+
+        >>> f.set_estimator('xgboost')
+        >>> f.tune()
+        >>> f.auto_forecast()
         """
         if not hasattr(self, "best_params"):
             logging.warning(
@@ -2603,22 +2963,30 @@ class Forecaster:
         dynamic_testing=True,
         summary_stats=False,
         feature_importance=False,
-    ) -> None:
-        """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information
-            models: list-like
-                each element must match an element in _estimators_ (except "combo", which cannot be tuned)
-            dynamic_tuning: bool, default False
-                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values)
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
-                when False, metrics effectively become an average of one-step forecasts
-            dynamic_testing: bool, default True
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values)
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods
-                when False, test-set metrics effectively become an average of one-step forecasts
-            summary_stats: bool, default False
-                whether to save summary stats for the models that offer those
-            feature_importance: bool, default False
-                whether to save permutation feature importance information for the models that offer those
+    ):
+        """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information.
+
+        Args:
+            models (list-like):
+                each element must match an element in _estimators_ (except "combo", which cannot be tuned).
+            dynamic_tuning (bool): default False;
+                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values);
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+                when False, metrics effectively become an average of one-step forecasts.
+            dynamic_testing (bool): default True;
+                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
+                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+                when False, test-set metrics effectively become an average of one-step forecasts.
+            summary_stats (bool): default False;
+                whether to save summary stats for the models that offer those.
+            feature_importance (bool): default False;
+                whether to save permutation feature importance information for the models that offer those.
+
+        Returns:
+            None
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
         """
         descriptive_assert(
             len([m for m in models if m not in _estimators_]) == 0,
@@ -2643,9 +3011,13 @@ class Forecaster:
             if feature_importance:
                 self.save_feature_importance()
 
-    def save_feature_importance(self) -> None:
-        """ save feature info for models that offer it
-            will not raise errors if not available
+    def save_feature_importance(self):
+        """ saves feature info for models that offer it and will not raise errors if not available.
+        call after evaluating the model you want it for and before changing the estimator.
+
+        >>> f.set_estimator('mlr')
+        >>> f.manual_forecast()
+        >>> f.save_feature_importance()
         """
         import eli5
         from eli5.sklearn import PermutationImportance
@@ -2664,9 +3036,13 @@ class Forecaster:
         ).set_index("feature")
         self._bank_fi_to_history()
 
-    def save_summary_stats(self) -> None:
-        """ save summary stats for models that offer it
-            will not raise errors if not available
+    def save_summary_stats(self):
+        """ save summary stats for models that offer it and will not raise errors if not available;
+            call after evaluating the model you want it for and before changing the estimator.
+
+        >>> f.set_estimator('arima')
+        >>> f.manual_forecast(order=(1,1,1))
+        >>> f.save_summary_stats()
         """
         if not hasattr(self, "summary_stats"):
             logging.warning(
@@ -2675,11 +3051,20 @@ class Forecaster:
             return
         self._bank_summary_stats_to_history()
 
-    def keep_smaller_history(self, n) -> None:
-        """ cuts the amount of observations in the object (trims the current_dates and current_xreg attributes as well)
-            n: int, str in '%Y-%m-%d' format, or datetime object
-                if int, the number of observations to keep
-                otherwise, the last observation to keep 
+    def keep_smaller_history(self, n):
+        """ cuts the amount of observations in the object (trims the current_dates and current_xreg attributes as well).
+
+        Args:
+            n (int, str, or datetime.datetime):
+                if int, the number of observations to keep;
+                otherwise, the last observation to keep;
+                if str, must be '%Y-%m-%d' format.
+
+        Returns:
+            None
+
+        >>> f.keep_smaller_history(500) # keeps last 500 observations
+        >>> f.keep_smaller_history('2020-01-01') # keeps only observations on or later than 1/1/2020
         """
         if isinstance(n, str):
             n = datetime.datetime.strptime(n, "%Y-%m-%d")
@@ -2701,10 +3086,19 @@ class Forecaster:
             self.current_xreg[k] = v[-n:]
 
     def order_fcsts(self, models, determine_best_by="TestSetRMSE") -> list:
-        """ returns a list of estiamated forecasts from best-to-worst
-            models: list-like
-                each element must match an element in _estimators_ (except "combo", which cannot be tuned)
-            determine_best_by: one of _determine_best_by_
+        """ gets estimated forecasts ordered from best-to-worst.
+        
+        Args:
+            models (list-like):
+                each element must match an evaluated model's nickname (which is the same as its estimator name by default).
+            determine_best_by (str): default 'TestSetRMSE'; one of _determine_best_by_.
+
+        Returns:
+            (list): The ordered models.
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> ordered_models = f.order_fcsts(models,"LevelTestSetMAPE")
         """
         descriptive_assert(
             determine_best_by in _determine_best_by_,
@@ -2724,15 +3118,36 @@ class Forecaster:
         )
 
     def get_regressor_names(self) -> list:
-        """returns a lit of regressor names stored in the object"""
+        """ gets the regressor names stored in the object
+
+        Args:
+            None
+
+        Returns:
+            (list): Regressor names that have been added to the object.
+        
+        >>> f.add_time_trend()
+        >>> f.get_regressor_names()
+        """
         return [k for k in self.current_xreg.keys()]
 
     def get_freq(self) -> str:
-        """returns the pandas inferred date frequency"""
+        """ gets the pandas inferred date frequency
+        
+        Args:
+            None
+
+        Returns:
+            (str): The inferred frequency of the current_dates array.
+
+        >>> f.get_freq()
+        """
         return self.freq
 
-    def validate_regressor_names(self) -> None:
-        """validates that all regressor names exist in both current_xregs and future_xregs"""
+    def validate_regressor_names(self):
+        """ validates that all regressor names exist in both current_xregs and future_xregs.
+        raises an error if this is not the case.
+        """
         try:
             assert sorted(self.current_xreg.keys()) == sorted(self.future_xreg.keys())
         except AssertionError:
@@ -2756,31 +3171,39 @@ class Forecaster:
         out_path="./",
         png_name="plot.png",
         ci=False,
-    ) -> None:
+    ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts available
-            models: list-like, str, or None; default 'all'
-               the forecated models to plot
-               can start with "top_" and the metric specified in order_by will be used to order the models appropriately
-               if None or models/order_by combo invalid, will plot only actual values
-            order_by: one of _determine_best_by_, default None
-            level: bool, default False
-                if True, will always plot level forecasts
-                if False, will plot the forecasts at whatever level they were called on
-                if False and there are a mix of models passed with different integrations, will default to True
-            print_attr: list-like, default []
-                attributes from history dict to print to console
-                if the attribute doesn't exist for a passed model, will not raise error, will just skip that element
-            to_png: bool, default False
-                whether to save the resulting image to a png file
-            out_path: str, default './'
-                the path to save the png file to (ignored when `to_png=False`)
-            png_name: str, default './plot.png'
-                the name of the resulting png image (ignored when `to_png=False`)
-            ci: bool, default False
-                whether to display the confidence intervals
-                default is 100 boostrapped samples and a 95% confidence interval
-                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting
-                ignored when level = False
+
+        Args:
+            models (list-like, str, or None): default 'all';
+               the forecasted models to plot;
+               can start with "top_" and the metric specified in order_by will be used to order the models appropriately;
+               if None or models/order_by combo invalid, will plot only actual values.
+            order_by (str): one of _determine_best_by_; optional.
+            level (bool): default False;
+                if True, will always plot level forecasts;
+                if False, will plot the forecasts at whatever level they were called on;
+                if False and there are a mix of models passed with different integrations, will default to True.
+            print_attr (list-like): default [];
+                attributes from history dict to print to console;
+                if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
+            to_png (bool): default False;
+                whether to save the resulting image to a png file.
+            out_path (str): default './';
+                the path to save the png file to (ignored when `to_png=False`).
+            png_name (str): default './plot.png';
+                the name of the resulting png image (ignored when `to_png=False`).
+            ci (bool): default False;
+                whether to display the confidence intervals;
+                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting;
+                ignored when level = True.
+
+        Returns:
+            None (just plots)
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> f.plot(order_by='LevelTestSetMAPE') # plots all forecasts
         """
         try:
             models = self._parse_models(models, order_by)
@@ -2869,32 +3292,41 @@ class Forecaster:
         out_path="./",
         png_name="./plot.png",
         ci=False,
-    ) -> None:
-        """ plots all test-set predictions with the actuals
-            models: list-like or str, default 'all'
-               the forecated models to plot
-               can start with "top_" and the metric specified in order_by will be used to order the models appropriately
-            order_by: one of _determine_best_by_, default None
-            include_train: bool or int, default True
-                use to zoom into training results
-                if True, plots the test results with the entire history in y
-                if False, matches y history to test results and only plots this
-                if int, plots that length of y to match to test results
-            level: bool, default False
-                if True, will always plot level forecasts
-                if False, will plot the forecasts at whatever level they were called on
-                if False and there are a mix of models passed with different integrations, will default to True
-            to_png: bool, default False
-                whether to save the resulting image to a png file
-            out_path: str, default './'
-                the path to save the png file to (ignored when `to_png=False`)
-            png_name: str, default './plot.png'
-                the name of the resulting png image (ignored when `to_png=False`)
-            ci: bool, default False
-                whether to display the confidence intervals
-                default is 100 boostrapped samples and a 95% confidence interval
-                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting
-                ignored when level = False
+    ):
+        """ plots all test-set predictions with the actuals.
+
+        Args:
+            models (list-like or str): default 'all';
+               the forecated models to plot;
+               can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
+            order_by (str): one of _determine_best_by_, optional.
+            include_train (bool or int): default True;
+                use to zoom into training resultsl
+                if True, plots the test results with the entire history in y;
+                if False, matches y history to test results and only plots this;
+                if int, plots that length of y to match to test results.
+            level (bool): default False;
+                if True, will always plot level forecasts;
+                if False, will plot the forecasts at whatever level they were called on;
+                if False and there are a mix of models passed with different integrations, will default to True.
+            to_png (bool): default False;
+                whether to save the resulting image to a png file.
+            out_path (str): default './',
+                the path to save the png file to (ignored when `to_png=False`).
+            png_name (str): default './plot.png';
+                the name of the resulting png image (ignored when `to_png=False`).
+            ci (bool): default False;
+                whether to display the confidence intervals;
+                default is 100 boostrapped samples and a 95% confidence interval;
+                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting;
+                ignored when level = False.
+
+        Returns:
+            None
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> f.plot(order_by='LevelTestSetMAPE') # plots all test-set results
         """
         models = self._parse_models(models, order_by)
         integration = set(
@@ -2983,18 +3415,27 @@ class Forecaster:
         to_png=False,
         out_path="./",
         png_name="./plot.png",
-    ) -> None:
-        """ plots all fitted values with the actuals
-            models: list-like or str, default 'all'
-               the forecated models to plot
-               can start with "top_" and the metric specified in order_by will be used to order the models appropriately
-            order_by: one of _determine_best_by_, default None
-            to_png: bool, default False
-                whether to save the resulting image to a png file
-            out_path: str, default './'
-                the path to save the png file to (ignored when `to_png=False`)
-            png_name: str, default './plot.png'
-                the name of the resulting png image (ignored when `to_png=False`)
+    ):
+        """ plots all fitted values with the actuals.
+
+        Args:
+            models (list-like,str): default 'all';
+               the forecated models to plot;
+               can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
+            order_by (str): one of _determine_best_by_, default None.
+            to_png (bool): default False;
+                whether to save the resulting image to a png file.
+            out_path (str): default './';
+                the path to save the png file to (ignored when `to_png=False`).
+            png_name (str): default './plot.png';
+                the name of the resulting png image (ignored when `to_png=False`).
+
+        Returns:
+            None
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> f.plot_fitted(order_by='LevelTestSetMAPE') # plots all fitted values
         """
         models = self._parse_models(models, order_by)
         integration = set(
@@ -3035,37 +3476,71 @@ class Forecaster:
             plt.savefig(os.path.join(out_path, png_name))
         plt.show()
 
-    def drop_regressors(self, *args) -> None:
-        """ drops regressors
-            *args are names of regressors to drop
+    def drop_regressors(self, *args):
+        """ drops regressors.
+
+        Args:
+            *args (str): the names of regressors to drop
+
+        Returns:
+            None
+
+        >>> f.add_time_trend()
+        >>> f.add_exp_terms('t',pwr=.5)
+        >>> f.drop_regressors('t','t^0.5')
         """
         for a in args:
             self.current_xreg.pop(a)
             self.future_xreg.pop(a)
 
     def drop_Xvars(self, *args):
-        """ drops regressors
-            *args are names of regressors to drop
+        """ drops regressors.
+
+        Args:
+            *args (str): the names of regressors to drop
+
+        Returns:
+            None
+
+        >>> f.add_time_trend()
+        >>> f.add_exp_terms('t',pwr=.5)
+        >>> f.drop_Xvars('t','t^0.5')
         """
         self.drop_regressors(*args)
 
-    def pop(self, *args) -> None:
-        """ deletes evaluated forecasts from the history dictionary
-            *args names of models matching what was passed to call_me (default for call_me in a given model is the same as the estimator name)
+    def pop(self, *args):
+        """ deletes evaluated forecasts from the object's memory.
+
+        Args:
+            *args (str): names of models matching what was passed to call_me;
+            default for call_me in a given model is the same as the estimator name.
+
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> f.pop('mlr')
         """
         for a in args:
             self.history.pop(a)
 
     def pop_using_criterion(self, metric, evaluated_as, threshold, delete_all=True):
-        """ deletes all forecasts from history that meet a given criterion
-            metric: str, one of _determine_best_by_ + ['AnyPrediction','AnyLevelPrediction']
-            evaluated_as: str, one of {"<","<=",">",">=","=="}
-            threshold: float
-            delete_all: bool, default True
-                if the passed criterion deletes all forecasts, whether to actually delete all forecasts
-                if False and all forecasts meet criterion, will keep them all
-            >>> f.pop_using_criterion('LevelTestSetMAPE','>',2)
-            >>> f.pop_using_criterion('AnyPrediction','<',0,delete_all=False)
+        """ deletes all forecasts from history that meet a given criterion.
+
+        Args:
+            metric (str): one of _determine_best_by_ + ['AnyPrediction','AnyLevelPrediction'].
+            evaluated_as (str): one of {"<","<=",">",">=","=="}.
+            threshold (float): the threshold to compare the metric and operator to.
+            delete_all (bool): default True;
+                if the passed criterion deletes all forecasts, whether to actually delete all forecasts;
+                if False and all forecasts meet criterion, will keep them all.
+
+        Returns:
+            None
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> f.pop_using_criterion('LevelTestSetMAPE','>',2)
+        >>> f.pop_using_criterion('AnyPrediction','<',0,delete_all=False)
         """
         descriptive_assert(
             evaluated_as in ("<", "<=", ">", ">=","=="),
@@ -3126,24 +3601,32 @@ class Forecaster:
         out_path="./",
         excel_name="results.xlsx",
     ) -> Union[Dict[str, pd.DataFrame], pd.DataFrame]:
-        """ exports 1-all of 5 pandas dataframes, can write to excel with each dataframe on a separate sheet
-            will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified
-            dfs: list-like or str, default ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_fcsts']
-                a list or name of the specific dataframe(s) you want returned and/or written to excel
-                must be one of or multiple of default
-            models: list-like or str, default 'all'
-                the models to write information for
-                can start with "top_" and the metric specified in `determine_best_by` will be used to order the models appropriately
-            best_model: str, default 'auto'
-                the name of the best model, if "auto", will determine this by the metric in determine_best_by
-                if not "auto", must match a model nickname of an already-evaluated model
-            determine_best_by: one of _determine_best_by_, default 'TestSetRMSE'
-            to_excel: bool, default False
-                whether to save to excel
-            out_path: str, default './'
-                the path to save the excel file to (ignored when `to_excel=False`)
-            excel_name: str, default 'results.xlsx'
-                the name to call the excel file (ignored when `to_excel=False`)
+        """ exports 1-all of 5 pandas dataframes, can write to excel with each dataframe on a separate sheet.
+        will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
+
+        Args:
+            dfs (list-like or str): default ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_fcsts'];
+                a list or name of the specific dataframe(s) you want returned and/or written to excel;
+                must be one of or multiple of default.
+            models (list-like or str): default 'all';
+                the models to write information for;
+                can start with "top_" and the metric specified in `determine_best_by` will be used to order the models appropriately.
+            best_model (str): default 'auto';
+                the name of the best model, if "auto", will determine this by the metric in determine_best_by;
+                if not "auto", must match a model nickname of an already-evaluated model.
+            determine_best_by (str): one of _determine_best_by_, default 'TestSetRMSE'.
+            to_excel (bool): default False;
+                whether to save to excel.
+            out_path (str): default './';
+                the path to save the excel file to (ignored when `to_excel=False`).
+            excel_name (str): default 'results.xlsx';
+                the name to call the excel file (ignored when `to_excel=False`).
+
+        Returns:
+            (DataFrame or Dict[str,DataFrame]): either a single pandas dataframe if one element passed to dfs 
+                or a dictionary where the keys match what was passed to dfs and the values are dataframes. 
+
+        >>> f.export(dfs=['model_summaries','lvl_fcsts'],to_excel=True)
         """
         if isinstance(dfs, str):
             dfs = [dfs]
@@ -3287,39 +3770,66 @@ class Forecaster:
             return output
 
     def export_summary_stats(self, model) -> pd.DataFrame:
-        """ exports the summary stats from a model
-            raises an error if you never saved the model's summary stats
-            model: str
-                the name of them model to export for, matches what was passed to call_me when calling the forecast (default is estimator name)
+        """ exports the summary stats from a model.
+        raises an error if you never saved the model's summary stats.
+
+        Args:
+            model (str):
+                the name of them model to export for;
+                matches what was passed to call_me when calling the forecast (default is estimator name)
+
+        Returns:
+            (DataFrame): The resulting summary stats of the evaluated model passed to model arg.
+
+        >>> ss = f.export_summary_stats('arima')
         """
         return self.history[model]["summary_stats"]
 
     def export_feature_importance(self, model) -> pd.DataFrame:
-        """ exports the feature importance from a model
-            raises an error if you never saved the model's feature importance
-            model: str
-                the name of them model to export for, matches what was passed to call_me when calling the forecast (default is estimator name)
+        """ exports the feature importance from a model.
+        raises an error if you never saved the model's feature importance.
+
+        Args:
+            model (str):
+                the name of them model to export for;
+                matches what was passed to call_me when calling the forecast (default is estimator name)
+
+        Returns:
+            (DataFrame): The resulting feature importances of the evaluated model passed to model arg.
+
+        >>> fi = f.export_feature_importance('mlr')
         """
         return self.history[model]["feature_importance"]
 
     def export_validation_grid(self, model) -> pd.DataFrame:
-        """ exports the validation from a model
-            raises an error if you never tuned the model
-            model: str
-                the name of them model to export for, matches what was passed to call_me when calling the forecast (default is estimator name)
+        """ exports the validation from a model;
+            raises an error if you never tuned the model.
+
+        Args:
+            model (str):
+                the name of them model to export for;
+                matches what was passed to call_me when calling the forecast (default is estimator name)
+
+        Returns:
+            (DataFrame): The resulting validation grid of the evaluated model passed to model arg.
         """
         return self.history[model]["grid_evaluated"]
 
     def all_feature_info_to_excel(
         self, out_path="./", excel_name="feature_info.xlsx"
-    ) -> None:
-        """ saves all feature importance and summary stats to excel
-            each model where such info is available for gets its own tab
-            be sure to call save_summary_stats() and save_feature_importance() before using this function
-            out_path: str, default './'
+    ):
+        """ saves all feature importance and summary stats to excel.
+        each model where such info is available for gets its own tab.
+        be sure to have called save_summary_stats() and/or save_feature_importance() before using this function.
+
+        Args:
+            out_path (str): default './'
                 the path to export to
-            excel_name: str, default 'feature_info.xlsx'
+            excel_name (str): default 'feature_info.xlsx'
                 the name of the resulting excel file
+
+        Returns:
+            None
         """
         try:
             with pd.ExcelWriter(
@@ -3345,17 +3855,24 @@ class Forecaster:
         excel_name="validation_grids.xlsx",
         sort_by_metric_value=False,
         ascending=True,
-    ) -> None:
-        """ saves all validation grids to excel
-            each model where such info is available for gets its own tab
-            out_path: str, default './'
-                the path to export to
-            excel_name: str, default 'feature_info.xlsx'
-                the name of the resulting excel file
-            sort_by_metric_value: bool, default False
-            ascending: bool, default True
-                whether to sort least-to-greatest
-                ignored if sort_by_metric_value is False
+    ):
+        """ saves all validation grids to excel.
+        each model where such info is available for gets its own tab.
+        be sure to have tuned at least model before calling this.
+
+        Args:
+            out_path (str): default './';
+                the path to export to.
+            excel_name (str): default 'feature_info.xlsx';
+                the name of the resulting excel file.
+            sort_by_metric_value (bool): default False;
+                whether to sort the output by performance on validation set
+            ascending (bool): default True;
+                whether to sort least-to-greatest;
+                ignored if sort_by_metric_value is False.
+
+        Returns:
+            None
         """
         try:
             with pd.ExcelWriter(
@@ -3374,17 +3891,22 @@ class Forecaster:
         except IndexError:
             raise ForecastError("no validation grids could be found")
 
-    def reset(self) -> None:
-        """ drops all regressors and reverts object to original (level) state when initiated
+    def reset(self):
+        """ drops all regressors and reverts object to original (level) state when initiated.
         """
         self.undiff(suppress_error=True)
         self.current_xreg = {}
         self.future_xreg = {}
 
     def export_Xvars_df(self, dropna=False):
-        """ returns a pandas dataframe with all utilized regressors and values
-            dropna: bool, default False
+        """ gets all utilized regressors and values.
+            
+        Args:
+            dropna (bool): default False;
                 whether to drop null values from the resulting dataframe
+
+        Returns:
+            (DataFrame): A dataframe of Xvars and names/values stored in the object.
         """
         self.typ_set() if not hasattr(self, "estimator") else None
         fut_df = pd.DataFrame()
@@ -3414,9 +3936,14 @@ class Forecaster:
         return df.dropna() if dropna else df
 
     def export_forecasts_with_cis(self, model):
-        """ exports a single dataframe with forecasts and upper and lower forecast bounds
-            model: str
-                the model nickname (must exist in history.keys())
+        """ exports a single dataframe with forecasts and upper and lower forecast bounds.
+
+        Args:
+            model (str):
+                the model nickname (must exist in history.keys()).
+
+        Returns:
+            (DataFrame): A dataframe with forecasts to future dates and corresponding confidence intervals.
         """
         return pd.DataFrame(
             {
@@ -3425,32 +3952,41 @@ class Forecaster:
                 "Forecast": self.history[model]["Forecast"],
                 "LowerForecast": self.history[model]["LowerCI"],
                 "ModelNickname": [model] * len(self.future_dates),
+                "CILevel": [self.history[model]["CILevel"]] * len(self.future_dates),
             }
         )
 
     def export_test_set_preds_with_cis(self, model):
-        """ exports a single dataframe with test-set predictions, actuals, and upper and lower prediction bounds
-            model: str
-                the model nickname (must exist in history.keys())
+        """ exports a single dataframe with test-set predictions, actuals, and upper and lower prediction bounds.
+
+        Args:
+            model (str):
+                the model nickname (must exist in history.keys()).
+
+        Returns:
+            (DataFrame): A dataframe with test-set predictions and actuals with corresponding confidence intervals.
         """
         return pd.DataFrame(
             {
-                "DATE": self.current_dates.to_list()[
-                    -len(self.history[model]["TestSetPredictions"]) :
-                ],
+                "DATE": self.current_dates.to_list()[-len(self.history[model]["TestSetPredictions"]):],
                 "UpperPreds": self.history[model]["TestSetUpperCI"],
                 "Preds": self.history[model]["TestSetPredictions"],
                 "Actuals": self.history[model]["TestSetActuals"],
                 "LowerPreds": self.history[model]["TestSetLowerCI"],
-                "ModelNickname": [model]
-                * len(self.history[model]["TestSetPredictions"]),
+                "ModelNickname": [model] * len(self.history[model]["TestSetPredictions"]),
+                "CILevel": [self.history[model]["CILevel"]] * len(self.history[model]["TestSetPredictions"]),
             }
         )
 
     def export_fitted_vals(self,model):
-        """ exports a single dataframe with fitted values and actuals
-            model: str
-                the model nickname (must exist in history.keys())
+        """ exports a single dataframe with fitted values and actuals.
+
+        Args:
+            model (str):
+                the model nickname (must exist in history.keys()).
+
+        Returns:
+            (DataFrame): A dataframe with fitted values and actuals.
         """
         return pd.DataFrame(
             {

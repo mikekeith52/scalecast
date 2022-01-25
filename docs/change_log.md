@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.5.6] - 2022-01-25
+## Added
+- Added documentation on Read the Docs
+- Added cilvel information to export functions
+## Changed
+## Fixed
+
 ## [0.5.5] - 2022-01-20
 ## Added
 - Added CILevel info to export model_summaries function

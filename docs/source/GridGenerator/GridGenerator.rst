@@ -1,0 +1,24 @@
+GridGenerator
+============================================
+
+If you want to automatically generate grids to tune models with, here's how.
+
+GridGenerator.get_empty_grids
+--------------------------------------------------
+.. automodule:: GridGenerator.get_empty_grids
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+>>> from scalecast import GridGenerator
+>>> GridGenerator.get_empty_grids() # writes a Grids.py file with all available models that can be tuned and empty dictionaries
+
+GridGenerator.get_example_grids
+--------------------------------------------------
+.. automodule:: GridGenerator.get_example_grids
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+>>> from scalecast import GridGenerator
+>>> GridGenerator.get_example_grids() # writes a Grids.py file with all available models that can be tuned and example dictionaries

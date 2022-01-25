@@ -4,6 +4,7 @@ README.md
 license.txt
 setup.cfg
 setup.py
+warnings.log
 __pycache__/Forecaster.cpython-37.pyc
 __pycache__/Forecaster.cpython-38.pyc
 __pycache__/Grids.cpython-37.pyc
@@ -44,17 +45,6 @@ assets/pt3/fitted_level.png
 assets/pt3/forecast.png
 assets/pt3/test_set.png
 docs/change_log.md
-docs/estimators.md
-docs/export.md
-docs/features.md
-docs/levels.md
-docs/metrics.md
-docs/normalizer.md
-docs/plotting.md
-docs/tune.md
-docs/warnings.md
-docs/weighted.md
-docs/xvars.md
 examples/AirPassengers.csv
 examples/Grids.py
 examples/LSTM.ipynb

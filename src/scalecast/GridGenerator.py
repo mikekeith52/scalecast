@@ -88,9 +88,13 @@ xgboost = {}
 import os
 
 def get_example_grids(overwrite=False):
-	""" saves example grids to working directory as Grids.py (does not overwrite by default)
-		overwrite: bool
-			whether to overwrite a Grids.py file if one is already in the working directory
+	""" saves example grids to working directory as Grids.py (does not overwrite by default).
+
+	Args:
+		overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory
+
+	Returns:
+		None
 	"""
 	if 'Grids.py' in os.listdir('./'):
 		if not overwrite:
@@ -100,9 +104,13 @@ def get_example_grids(overwrite=False):
 		f.write(example_grids)
 
 def get_empty_grids(overwrite=False):
-	""" saves empty grids to working directory as Grids.py (does not overwrite by default)
-		overwrite: bool
-			whether to overwrite a Grids.py file if one is already in the working directory
+	""" saves empty grids to working directory as Grids.py (does not overwrite by default).
+
+	Args:
+		overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory
+
+	Returns:
+		None
 	"""
 	if 'Grids.py' in os.listdir('./'):
 		if not overwrite:

@@ -32,18 +32,15 @@ f.tune_test_forecast(models)
 f.plot_test_set(models='top_3',order_by='LevelTestSetMAPE',ci=True) # plots the differenced test set with confidence intervals
 f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
 ```
-![](assets/main_forecast_test_set.png)
-![](assets/main_forecast.png)
+![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast_test_set.png)
+![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast.png)
 
 ## Why switch to Scalecast?
-- Much simpler to set up than a TensorFlow neural network, with much time series preparation performed behind the scenes
-- Many models are faster to evaluate and just as accurate as Prophet, TensorFlow, and other libraries
-- Extends scikit-learn regression modeling concepts to be useful for time-series forecasting
-  - propogates lagged y terms dynamically
-  - differences and undifferences series with ease to model stationary series only
-- Allows comparison of many different modeling concepts, including ARIMA, MLR, MLP, Keras, and Prophet so you never have to be in doubt about which model is right for your series
-- Consistently applied bootstrapped confidence intervals at any level are available
-- Your results and accuracy metrics can always be level, even if you need to difference the series to model it effectively
+- The modeling process is streamlined for forecasting tasks. If you have ever written code to forecast with sklearn or TensorFlow, scalecast will let you implement a similar model but with much less code.
+- Many of the simpler available models are faster to evaluate and just as accurate as Prophet, TensorFlow, and other libraries. You can benchmark many models and compare what is best for your task.
+- It consistently applies bootstrapped confidence intervals at any level you want to see them.
+- Your results and accuracy metrics can always be level, even if you need to difference the series to model it effectively.
+- Dynamic forecasting, where lagged dependent-variable values are propogated forward for prediction-making, is easier than ever.
   
 ## Installation
 1. `pip install scalecast`  
@@ -53,7 +50,7 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
     - to resolve a common installation issue, see this [Stack Overflow post](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet)
 3. `pip install greykite`
     - only necessary if you plan to forecast with LinkedIn Silverkite
-4. If using notebook functions:
+4. If using notebook:
     - `pip install tqdm`
     - `pip install ipython`
     - `pip install ipywidgets`
@@ -61,23 +58,20 @@ f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
     - if using Jupyter Lab: `jupyter labextension install @jupyter-widgets/jupyterlab-manager`
 
 
-## Documentation
-|Documentation||
+## Initialization
+```python
+from scalecast.Forecaster import Forecaster
+array_of_dates = ['2021-01-01','2021-01-02','2021-01-03']
+array_of_values = [1,2,3]
+f = Forecaster(y=array_of_values, current_dates=array_of_dates)
+```
+
+## Links
+|Links||
 |----|----|
-|[📋 Examples](/examples)|Get straight to the process|
+|[📋 Examples](https://github.com/mikekeith52/scalecast/tree/main/examples)|Get straight to the process|
 |[💻 Towards Data Science Latest](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)|Check out the new LSTM Recurrent Neural Net application|
 |[➡ Towards Data Science Series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)|Read the introductory 3-part series|
 |[📓 Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
-|[🛠️ Change Log](docs/change_log.md)|See what's changed|
-|[📚 Documentation Markdown Files](/docs)|Review all high-level concepts in the library|
-
-## Contribute
-I have no formal education in Python development. Maintaining this package is truly a work of passion that I'm not sure anyone ever even sees. If you feel connected to the project, contact mikekeith52@gmail.com.  
-
-Here's what's needed:  
-1. Documentation moved to a proper website with better organization
-2. [Error/issue reporting and feature requests][new issue]
-3. Confidence intervals that expand outward for dates further out
-4. Better default validation grids
-5. Help with LSTM modeling optimization
-6. More feature analysis (summary stats, feature importance, etc.)
+|[🛠️ Change Log](https://github.com/mikekeith52/scalecast/blob/main/docs/change_log.md)|See what's changed|
+|[📚 Read the Docs](https://scalecast.readthedocs.io/en/latest/)|Read the docs|
