@@ -10,3 +10,4 @@ pdflatex
 pyyaml
 ipywidgets
 scalecast
+tqdm
