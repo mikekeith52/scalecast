@@ -8,3 +8,5 @@ sphinxcontrib-napoleon
 numpydoc
 pdflatex
 pyyaml
+ipywidgets
+scalecast
