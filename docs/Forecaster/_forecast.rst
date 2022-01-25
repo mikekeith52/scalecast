@@ -4,7 +4,7 @@ Any time you set an estimator, different arguments become available to you when 
 
 Forecaster.Forecaster._forecast_arima
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_arima
+.. automodule:: scalecast.Forecaster.Forecaster._forecast_arima
     :members:
     :undoc-members:
     :show-inheritance:

@@ -6,3 +6,4 @@ sphinx
 sphinxcontrib-confluencebuilder
 sphinxcontrib-napoleon
 numpydoc
+scalecast
