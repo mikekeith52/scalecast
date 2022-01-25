@@ -5,7 +5,7 @@ If you are using a Jupyter notebook, the notebook functions may come in handy to
 
 notebook.results_vis
 -----------------------------
-.. automodule:: notebook.results_vis
+.. automodule:: src.scalecast.notebook.results_vis
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ notebook.results_vis
 
 notebook.tune_test_forecast
 --------------------------------
-.. automodule:: notebook.tune_test_forecast
+.. automodule:: src.scalecast.notebook.tune_test_forecast
     :members:
     :undoc-members:
     :show-inheritance:

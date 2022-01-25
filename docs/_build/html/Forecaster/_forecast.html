@@ -43,8 +43,8 @@
   <section id="forecasting-different-model-types">
 <h1>Forecasting Different Model Types<a class="headerlink" href="#forecasting-different-model-types" title="Permalink to this headline">¶</a></h1>
 <p>Any time you set an estimator, different arguments become available to you when calling <cite>manual_forecast</cite> or tuning the model. Here is the documentation for all these models:</p>
-<section id="module-Forecaster.Forecaster._forecast_arima">
-<span id="forecaster-forecaster-forecast-arima"></span><h2>Forecaster.Forecaster._forecast_arima<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_arima" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_arima">
+<span id="forecaster-forecaster-forecast-arima"></span><h2>Forecaster.Forecaster._forecast_arima<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_arima" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -92,8 +92,8 @@ always ignored in ARIMA (for now) - everything is set to be dynamic using statsm
 </pre></div>
 </div>
 </section>
-<section id="module-Forecaster.Forecaster._forecast_combo">
-<span id="forecaster-forecaster-forecast-combo"></span><h2>Forecaster.Forecaster._forecast_combo<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_combo" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_combo">
+<span id="forecaster-forecaster-forecast-combo"></span><h2>Forecaster.Forecaster._forecast_combo<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_combo" title="Permalink to this headline">¶</a></h2>
 <p>combines at least two previously evaluted forecasts to create a new model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param how</dt>
@@ -168,8 +168,8 @@ must be exactly one less in length than the number of models</p>
 </pre></div>
 </div>
 </section>
-<section id="module-Forecaster.Forecaster._forecast_hwes">
-<span id="forecaster-forecaster-forecast-hwes"></span><h2>Forecaster.Forecaster._forecast_hwes<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_hwes" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_hwes">
+<span id="forecaster-forecaster-forecast-hwes"></span><h2>Forecaster.Forecaster._forecast_hwes<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_hwes" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with holt-winters exponential smoothing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -210,8 +210,8 @@ always ignored in HWES (for now) - everything is set to be dynamic using statsmo
 </pre></div>
 </div>
 </section>
-<section id="module-Forecaster.Forecaster._forecast_lstm">
-<span id="forecaster-forecaster-forecast-lstm"></span><h2>Forecaster.Forecaster._forecast_lstm<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_lstm" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_lstm">
+<span id="forecaster-forecaster-forecast-lstm"></span><h2>Forecaster.Forecaster._forecast_lstm<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_lstm" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
 <dt>forecasts with a long-short term memory neural network from TensorFlow;</dt><dd><p>cannot be tuned;
 only xvar options are the series’ own history (specify in lags argument);
@@ -324,8 +324,8 @@ looks better if epochs &gt; 1 passed to <a href="#id1"><span class="problematic"
 </pre></div>
 </div>
 </section>
-<section id="module-Forecaster.Forecaster._forecast_prophet">
-<span id="forecaster-forecaster-forecast-prophet"></span><h2>Forecaster.Forecaster._forecast_prophet<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_prophet" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_prophet">
+<span id="forecaster-forecaster-forecast-prophet"></span><h2>Forecaster.Forecaster._forecast_prophet<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_prophet" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with the prophet model from facebook.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -389,8 +389,8 @@ specific to prophet when using logistic growth – the smallest amount the model
 </pre></div>
 </div>
 </section>
-<section id="module-Forecaster.Forecaster._forecast_rnn">
-<span id="forecaster-forecaster-forecast-rnn"></span><h2>Forecaster.Forecaster._forecast_rnn<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_rnn" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_rnn">
+<span id="forecaster-forecaster-forecast-rnn"></span><h2>Forecaster.Forecaster._forecast_rnn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_rnn" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent;
 cannot be tuned;
 only xvar options are the series’ own history (specified in lags argument);
@@ -495,8 +495,8 @@ looks better if epochs &gt; 1 passed to <a href="#id3"><span class="problematic"
 </pre></div>
 </div>
 </section>
-<section id="module-Forecaster.Forecaster._forecast_silverkite">
-<span id="forecaster-forecaster-forecast-silverkite"></span><h2>Forecaster.Forecaster._forecast_silverkite<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_silverkite" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_silverkite">
+<span id="forecaster-forecaster-forecast-silverkite"></span><h2>Forecaster.Forecaster._forecast_silverkite<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_silverkite" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with the silverkite model from LinkedIn greykite library.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -546,8 +546,8 @@ None means no Xvars used (unlike sklearn models).</p>
 </pre></div>
 </div>
 </section>
-<section id="module-Forecaster.Forecaster._forecast_sklearn">
-<span id="forecaster-forecaster-forecast-sklearn"></span><h2>Forecaster.Forecaster._forecast_sklearn<a class="headerlink" href="#module-Forecaster.Forecaster._forecast_sklearn" title="Permalink to this headline">¶</a></h2>
+<section id="module-src.scalecast.Forecaster.Forecaster._forecast_sklearn">
+<span id="forecaster-forecaster-forecast-sklearn"></span><h2>Forecaster.Forecaster._forecast_sklearn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_sklearn" title="Permalink to this headline">¶</a></h2>
 <p>runs an sklearn forecast start-to-finish.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param fcster</dt>

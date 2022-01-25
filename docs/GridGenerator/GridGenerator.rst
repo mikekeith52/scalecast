@@ -5,7 +5,7 @@ If you want to automatically generate grids to tune models with, here's how.
 
 GridGenerator.get_empty_grids
 --------------------------------------------------
-.. automodule:: GridGenerator.get_empty_grids
+.. automodule:: src.scalecast.GridGenerator.get_empty_grids
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ GridGenerator.get_empty_grids
 
 GridGenerator.get_example_grids
 --------------------------------------------------
-.. automodule:: GridGenerator.get_example_grids
+.. automodule:: src.scalecast.GridGenerator.get_example_grids
     :members:
     :undoc-members:
     :show-inheritance:

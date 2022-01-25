@@ -4,7 +4,7 @@ Any time you set an estimator, different arguments become available to you when 
 
 Forecaster.Forecaster._forecast_arima
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_arima
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_arima
     :members:
     :undoc-members:
     :show-inheritance:
@@ -14,7 +14,7 @@ Forecaster.Forecaster._forecast_arima
 
 Forecaster.Forecaster._forecast_combo
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_combo
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_combo
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ Forecaster.Forecaster._forecast_combo
 
 Forecaster.Forecaster._forecast_hwes
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_hwes
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_hwes
     :members:
     :undoc-members:
     :show-inheritance:
@@ -34,7 +34,7 @@ Forecaster.Forecaster._forecast_hwes
 
 Forecaster.Forecaster._forecast_lstm
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_lstm
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_lstm
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,7 +44,7 @@ Forecaster.Forecaster._forecast_lstm
 
 Forecaster.Forecaster._forecast_prophet
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_prophet
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_prophet
     :members:
     :undoc-members:
     :show-inheritance:
@@ -54,7 +54,7 @@ Forecaster.Forecaster._forecast_prophet
 
 Forecaster.Forecaster._forecast_rnn
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_rnn
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_rnn
     :members:
     :undoc-members:
     :show-inheritance:
@@ -64,7 +64,7 @@ Forecaster.Forecaster._forecast_rnn
 
 Forecaster.Forecaster._forecast_silverkite
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_silverkite
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_silverkite
     :members:
     :undoc-members:
     :show-inheritance:
@@ -75,7 +75,7 @@ Forecaster.Forecaster._forecast_silverkite
 
 Forecaster.Forecaster._forecast_sklearn
 --------------------------------------------------
-.. automodule:: Forecaster.Forecaster._forecast_sklearn
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_sklearn
     :members:
     :undoc-members:
     :show-inheritance:

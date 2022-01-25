@@ -2,7 +2,6 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../src/scalecast'))
 
 # -- Project information -----------------------------------------------------
 
@@ -19,7 +18,7 @@ release = '0.5.6'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.napoleon", "numpydoc","autodocsumm","nbsphinx","myst_parser"]
+extensions = ["sphinx.ext.napoleon","autodocsumm","nbsphinx","myst_parser"]
 autodoc_default_options = {"autosummary": True}
 
 # Add any paths that contain templates here, relative to this directory.

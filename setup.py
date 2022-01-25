@@ -18,6 +18,7 @@ setup(
   author_email = 'mikekeith52@gmail.com',
   packages=find_packages('src'),
   package_dir={'': 'src'},
+  numpydoc_show_class_members = False,
   url = 'https://github.com/mikekeith52/scalecast',
   keywords = ['FORECAST', 'SCALE', 'DYNAMIC'],
   install_requires = [
