@@ -1,7 +1,6 @@
 
 from setuptools import setup, find_packages
 import shutil
-#import pypandoc
 
 shutil.copy('./examples/eCommerce.ipynb','./docs/source/Forecaster/examples/eCommerce.ipynb')
 shutil.copy('./examples/LSTM.ipynb','./docs/source/Forecaster/examples/LSTM.ipynb')
