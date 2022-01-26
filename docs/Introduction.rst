@@ -38,11 +38,11 @@ This package uses a scaleable forecasting approach in Python with scikit-learn, 
 
 Installation
 ------------------
->>> `pip install scalecast`  
->>> `pip install fbprophet # for prophet models only`
->>> `pip install greykite # for silverkite models only`
->>>`pip install tqdm # for notebooks only`
->>> `pip install ipython  # for notebooks only`
->>> `pip install ipywidgets  # for notebooks only`
->>> `jupyter nbextension enable --py widgetsnbextension  # for notebooks only`
->>> `jupyter labextension install @jupyter-widgets/jupyterlab-manager # jupyter lab only`
+>>> pip install scalecast 
+>>> pip install fbprophet # for prophet models only
+>>> pip install greykite # for silverkite models only
+>>> pip install tqdm # for notebooks only
+>>> pip install ipython  # for notebooks only
+>>> pip install ipywidgets  # for notebooks only
+>>> jupyter nbextension enable --py widgetsnbextension  # for notebooks only
+>>> jupyter labextension install @jupyter-widgets/jupyterlab-manager # jupyter lab only
