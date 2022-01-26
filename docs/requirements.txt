@@ -1,6 +1,5 @@
 autodocsumm
 myst_parser
-m2r2
 nbsphinx
 pandoc
 sphinx
