@@ -1,5 +1,4 @@
 autodocsumm
-docutils>=0.17
 myst_parser
 nbsphinx
 pandoc
