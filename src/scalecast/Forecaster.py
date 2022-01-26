@@ -2358,7 +2358,7 @@ class Forecaster:
             start (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2020,3,15).
                 the start date (default is day Walt Disney World closed in the U.S.).
                 use format '%Y-%m-%d' when passing strings.
-           end: (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2021,5,13).
+            end: (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2021,5,13).
                the end date (default is day the U.S. CDC dropped mask mandate/recommendation for vaccinated people).
                use format '%Y-%m-%d' when passing strings.
 
