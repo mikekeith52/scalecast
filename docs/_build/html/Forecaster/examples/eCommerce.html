@@ -1,47 +1,123 @@
-
 <!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
-    <title>eCommerce Example &#8212; scalecast 0.5.6 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/haiku.css" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eCommerce Example &mdash; scalecast 0.5.6 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../../_static/logo2.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="LSTM Example" href="LSTM.html" />
-    <link rel="prev" title="ReadMe" href="../../Introduction.html" /> 
-  </head><body>
-      <div class="header" role="banner">
-        <a href="../../index.html">
-          <img class="logo" src="../../_static/logo2.png" alt="Logo"/>
-        </a>
-      </div>
-      <div class="topnav" role="navigation" aria-label="top navigation">
-      
-        <p>
-        «&#160;&#160;<a href="../../Introduction.html">ReadMe</a>
-        &#160;&#160;::&#160;&#160;
-        <a class="uplink" href="../../index.html">Contents</a>
-        &#160;&#160;::&#160;&#160;
-        <a href="LSTM.html">LSTM Example</a>&#160;&#160;»
-        </p>
+    <link rel="prev" title="Getting Started" href="../../initialization.html" /> 
+</head>
 
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: black" >
+            <a href="../../index.html">
+            <img src="../../_static/logo2.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../initialization.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">eCommerce Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Library-Imports">Library Imports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Exploratory-Data-Analysis">Exploratory Data Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Forecast-with-Scalecast">Forecast with Scalecast</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#HWES">HWES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ARIMA">ARIMA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MLR">MLR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Elasticnet-and-Auto-Forecasting">Elasticnet and Auto-Forecasting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Auto-Forecasting-the-Scikit-learn-Models">Auto-Forecasting the Scikit-learn Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Prophet-and-Silverkite">Prophet and Silverkite</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#TensorFlow-Recurrent-Neural-Nets">TensorFlow Recurrent Neural Nets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#SimpleRNN">SimpleRNN</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#LSTM">LSTM</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Combination-Modeling">Combination Modeling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Export-Results">Export Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="LSTM.html">LSTM Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Forecaster:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Forecaster.html">Forecaster Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ForecasterGlobals.html">Forecaster Object Globals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_forecast.html">Forecasting Different Model Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GridGenerator:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../GridGenerator/GridGenerator.html">GridGenerator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Notebook:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Notebook/Notebook.html">Notebook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ChangeLog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../change_log.html">Changelog</a></li>
+</ul>
+
+        </div>
       </div>
-      <div class="content" role="main">
-        
-        
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scalecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>eCommerce Example</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/Forecaster/examples/eCommerce.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
   
 <style>
 /* CSS for nbsphinx extension */
@@ -289,9 +365,31 @@ div.rendered_html tbody tr:nth-child(odd) {
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
 </style>
 <section id="eCommerce-Example">
-<h1>eCommerce Example<a class="headerlink" href="#eCommerce-Example" title="Permalink to this headline">¶</a></h1>
+<h1>eCommerce Example<a class="headerlink" href="#eCommerce-Example" title="Permalink to this headline"></a></h1>
 <p>This notebook details a time series analysis and forecasting application performed with scalecast using the eCommerce dataset. The notebook starts with an exploratory data analysis; moves to time series decomposition; forecasts with an exponential smoothing model; an ARIMA model; a multiple linear regression model; moves to automated forecasting with scikit-learn models, Facebook Prophet, and LinkedIn Greykite/Silverkite; explores TensorFlow recurrent neural nets; and finally finishes with
 combination modeling.</p>
 <p>The utilized dataset is available on kaggle: <a class="reference external" href="https://www.kaggle.com/carrie1/ecommerce-data/">https://www.kaggle.com/carrie1/ecommerce-data/</a></p>
@@ -317,7 +415,7 @@ combination modeling.</p>
 </ul>
 <p><a class="reference external" href="#Export-Results">Export Results</a></p>
 <section id="Library-Imports">
-<h2>Library Imports<a class="headerlink" href="#Library-Imports" title="Permalink to this headline">¶</a></h2>
+<h2>Library Imports<a class="headerlink" href="#Library-Imports" title="Permalink to this headline"></a></h2>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">First, let’s import the libraries and read the data. Some data preprocessing in pandas will be necessary before calling scalecast.</div>
@@ -352,7 +450,7 @@ combination modeling.</p>
 </div>
 </section>
 <section id="Exploratory-Data-Analysis">
-<h2>Exploratory Data Analysis<a class="headerlink" href="#Exploratory-Data-Analysis" title="Permalink to this headline">¶</a></h2>
+<h2>Exploratory Data Analysis<a class="headerlink" href="#Exploratory-Data-Analysis" title="Permalink to this headline"></a></h2>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Let’s view the data’s first five rows.</div>
@@ -847,7 +945,7 @@ last date in data: 2011-12-09 00:00:00
 <p>The remaining data looks somewhat normally distributed with a slight right skew. We see that one outlier far above all other values.</p>
 </section>
 <section id="Forecast-with-Scalecast">
-<h2>Forecast with Scalecast<a class="headerlink" href="#Forecast-with-Scalecast" title="Permalink to this headline">¶</a></h2>
+<h2>Forecast with Scalecast<a class="headerlink" href="#Forecast-with-Scalecast" title="Permalink to this headline"></a></h2>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">To load the object, we call the Forecaster() function with the <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">current_dates</span></code> parameters specified. If we hadn’t already dropped the first observations of the data before calling the object, we could have done it by using the <code class="docutils literal notranslate"><span class="pre">keep_smaller_history()</span></code> function as shown below. We can then plot the values that we will be using for forecasting.</div>
@@ -1091,7 +1189,7 @@ get_freq
 </pre></div></div>
 </div>
 <section id="HWES">
-<h3>HWES<a class="headerlink" href="#HWES" title="Permalink to this headline">¶</a></h3>
+<h3>HWES<a class="headerlink" href="#HWES" title="Permalink to this headline"></a></h3>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Let’s run a couple of exponential smoothing forecasts using Holt-Winters Exponential Smoothing from StatsModels. Most exponential smoothing is considered a somewhat simple way to forecast time series. They are models that smooth out recent trends and predict them to the future. The added benefit of using Holt-Winters is that setting extra parameters to this basic idea, such as seasonality, is possible. We will try one HWES model with seasonality and one without.</div>
@@ -1278,7 +1376,7 @@ will be explored later.</p>
 </div>
 </section>
 <section id="ARIMA">
-<h3>ARIMA<a class="headerlink" href="#ARIMA" title="Permalink to this headline">¶</a></h3>
+<h3>ARIMA<a class="headerlink" href="#ARIMA" title="Permalink to this headline"></a></h3>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Now, let’s run another common, albeit slightly more advanced time-series model: ARIMA. This model uses the series’ own history, errors, and stationarity to forecast. Using the output from the plots above, as well as the results from the ADF test, we can specify a 1,1,0 x 1,1,0 ordered model. The seasonal period will be 7 periods–one week.</div>
@@ -1432,7 +1530,7 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
 </div>
 </section>
 <section id="MLR">
-<h3>MLR<a class="headerlink" href="#MLR" title="Permalink to this headline">¶</a></h3>
+<h3>MLR<a class="headerlink" href="#MLR" title="Permalink to this headline"></a></h3>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">We can use many other models through scalecast. One of the most basic of these is Multiple Linear Regression. Unlike ARIMA, we don’t specify orders on this model, but we can add similar regressors, including autoregressive and seasonal terms, as well as a time trend. The MLR works very similar to the ARIMA model in that it tries to find a linear relationship between all these components and the future. It makes the assumption that the errors in each time period are independent of one another,
@@ -1909,7 +2007,7 @@ The output of the exported data is therefore ranked in terms of which variables 
 <p>At first glance, it looks as though all added regressors were useful to the MLR model, but we can explore regularization now to further refine our forecasting approach.</p>
 </section>
 <section id="Elasticnet-and-Auto-Forecasting">
-<h3>Elasticnet and Auto-Forecasting<a class="headerlink" href="#Elasticnet-and-Auto-Forecasting" title="Permalink to this headline">¶</a></h3>
+<h3>Elasticnet and Auto-Forecasting<a class="headerlink" href="#Elasticnet-and-Auto-Forecasting" title="Permalink to this headline"></a></h3>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">To optimize the hyperparameters of and auto-forecast with models in scalecast, we use a grid-search approach on a validation set of data–a period of time before the test set. The grids are completely customizable, but standard template grids are available by calling the function below:</div>
@@ -2416,10 +2514,10 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
 <p>The elasticnet may have been over-parameterized as it now finds some features as slightly harmful to the model, although those low of values could be due to chance.</p>
 </section>
 <section id="Auto-Forecasting-the-Scikit-learn-Models">
-<h3>Auto-Forecasting the Scikit-learn Models<a class="headerlink" href="#Auto-Forecasting-the-Scikit-learn-Models" title="Permalink to this headline">¶</a></h3>
+<h3>Auto-Forecasting the Scikit-learn Models<a class="headerlink" href="#Auto-Forecasting-the-Scikit-learn-Models" title="Permalink to this headline"></a></h3>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
-<div class="line">In the same way we automatically tuned and forecasted with an elasticnet model, we can choose many models to forecast with using <code class="docutils literal notranslate"><span class="pre">notebook.tune_test_forecast()</span></code>. We will be tuning and forecasting with all available scikit-learn models. Below is a list of all models available, whether they are from scikit-learn, and whether than can be tuned.</div>
+<div class="line">In the same way we automatically tuned and forecasted with an elasticnet model, we can choose many models to forecast with using <code class="docutils literal notranslate"><span class="pre">notebook.tune_test_forecast()</span></code>. We will be tuning and forecasting with all available scikit-learn models. Below is a list of all models available, whether they are from scikit-learn, and whether they can be tuned.</div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[58]:
@@ -2497,7 +2595,7 @@ xgboost; can be tuned: True; from scikit-learn: True
 <img alt="../../_images/Forecaster_examples_eCommerce_117_0.png" src="../../_images/Forecaster_examples_eCommerce_117_0.png" />
 </div>
 </div>
-<p>All of these models appared to perform pretty well on test-set data. Using a variety of models and tuning them carefully, a couple (or more) usually emerge as appearing reasonable to implement. Let’s now see the forecasts and level test-set RMSE from all these models.</p>
+<p>All of these models appear to have performed well on test-set data. Using a variety of models and tuning them carefully, a couple (or more) usually emerge as appearing reasonable to implement. Let’s now see the forecasts and level test-set RMSE from all these models.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[61]:
 </pre></div>
@@ -2529,7 +2627,7 @@ knn LevelTestSetRMSE: 92000.73638283063
 <img alt="../../_images/Forecaster_examples_eCommerce_119_1.png" src="../../_images/Forecaster_examples_eCommerce_119_1.png" />
 </div>
 </div>
-<p>Surprisingly perhaps, nothing outperformed the MLR model. Sometimes the simplest model is the best model. Let’s see the forecasted plots for each model, but to avoid clutter, we focus on only the models that came out farther ahead than the others. We pass the <code class="docutils literal notranslate"><span class="pre">models='top_5'</span></code> argument to this function and rerun. Note, now that the HWES model will not be displayed (which was run on level data), we will have to set <code class="docutils literal notranslate"><span class="pre">level=True</span></code> to view the forecasts at level.</p>
+<p>Surprisingly perhaps, nothing outperformed the MLR model. Sometimes the simplest model is the best model. Let’s see the forecasted plots for each model, but to avoid clutter, we focus on only the models that came out further ahead than the others. We pass the <code class="docutils literal notranslate"><span class="pre">models='top_5'</span></code> argument to this function and rerun. Note, now that the HWES model will not be displayed (which was run on level data), we will have to set <code class="docutils literal notranslate"><span class="pre">level=True</span></code> to view the forecasts at level.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[62]:
 </pre></div>
@@ -2560,7 +2658,7 @@ lightgbm LevelTestSetRMSE: 36585.121542121844
 <p>These various patterns are interesting, and one has to believe the last value being an outlier signficantly influenced the resulting trends of the random forest and lightGBM models.</p>
 </section>
 <section id="Prophet-and-Silverkite">
-<h3>Prophet and Silverkite<a class="headerlink" href="#Prophet-and-Silverkite" title="Permalink to this headline">¶</a></h3>
+<h3>Prophet and Silverkite<a class="headerlink" href="#Prophet-and-Silverkite" title="Permalink to this headline"></a></h3>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">In addition to the scikit-learn and statsmodels forecasting models we have already explored, two other forecasting models from popular libraries are available for use: Facebook <a class="reference external" href="https://facebook.github.io/prophet/">Prophet</a> and LinkedIn Silverkite (from the <a class="reference external" href="https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library">greykite</a> package). Prophet using a Bayesian regression approach with changepoints; Silverkite uses a linear model with
@@ -2675,70 +2773,14 @@ silverkite LevelTestSetRMSE: 44999.94290460528
 <p>Neither the prophet or silverkite models proved to be as accurate as the MLR or HWES models.</p>
 </section>
 <section id="TensorFlow-Recurrent-Neural-Nets">
-<h3>TensorFlow Recurrent Neural Nets<a class="headerlink" href="#TensorFlow-Recurrent-Neural-Nets" title="Permalink to this headline">¶</a></h3>
+<h3>TensorFlow Recurrent Neural Nets<a class="headerlink" href="#TensorFlow-Recurrent-Neural-Nets" title="Permalink to this headline"></a></h3>
 <p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
 <p>The most advanced models available in scalecast are recurrent neural networks. There are two kinds: the SimpleRNN and the Long Short-Term Memory. The SimpleRNN, perhaps ironically, has the more complicated implementation in this framework. It allows for nearly all customization of the model that TensorFlow itselt would offer. What scalecast will do for you is preprocess the data correctly, scale all of the data when training the model, and unscale it appropriately to compare to any other models
 you run. It also tests the model on the same test set and bootsraps confidence intervals. The fact that it tests all the models also means it fits all the models twice, which can slow you down sometimes, but having two fits is also a blessing: <strong>it really lets you know how generalizable your model is when new data is added.</strong> Let’s explore the SimpleRNN more carefully.</p>
 <section id="SimpleRNN">
-<h4>SimpleRNN<a class="headerlink" href="#SimpleRNN" title="Permalink to this headline">¶</a></h4>
+<h4>SimpleRNN<a class="headerlink" href="#SimpleRNN" title="Permalink to this headline"></a></h4>
 <p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
-<p>You can see the documentation for the ‘rnn’ estimator by calling help:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[69]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_forecast_rnn</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Help on method _forecast_rnn in module scalecast.Forecaster:
-
-_forecast_rnn(dynamic_testing=True, lags=1, hidden_layers_struct={&#39;simple&#39;: {&#39;units&#39;: 8, &#39;activation&#39;: &#39;tanh&#39;}}, loss=&#39;mean_absolute_error&#39;, optimizer=&#39;Adam&#39;, learning_rate=0.001, random_seed=None, plot_loss=False, **kwargs) method of scalecast.Forecaster.Forecaster instance
-    forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent
-    cannot be tuned
-    only xvar options are the series&#39; own history (specify in lags argument)
-    always uses minmax normalizer
-    this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility
-    fitted values are the last fcst_length worth of values only
-    dynamic_testing: bool, default True
-        always ignored for lstm because the model doesn&#39;t work like others
-    lags: int greater than 0, default 1
-        the number of y-variable lags to train the model with
-    hidden_layers_struct: dict[str,dict[str,Union[float,str]]], default {&#39;simple&#39;:{&#39;size&#39;:8,&#39;activation&#39;:&#39;tanh&#39;}}
-        key is the type of each hidden layer, one of {&#39;simple&#39;,&#39;lstm&#39;}
-        val is a dict
-            key is str representing hyperparameter value: &#39;units&#39;,&#39;activation&#39;, etc
-                see all possible here for simple rnn: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
-                here for lstm: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-            val is the desired hyperparam value
-            do not pass return_sequences or input_shape as these will be set automatically
-    loss: str, default &#39;mean_absolute_error&#39;
-        the loss function to minimize
-        see available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses
-        be sure to choose one that is suitable for regression tasks
-    optimizer: str, default &#34;Adam&#34;
-        the optimizer to use when compiling the model
-        see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
-        watch capitalization as that matters (can&#39;t be &#34;adam&#34;, must be &#34;Adam&#34;)
-    learning_rate: float, default 0.001
-        the learning rate to use when compiling the model
-    random_seed: int, optional
-        set a seed for consistent results
-        with tensorflow networks, setting seeds does not guarantee consistent results
-    plot_loss: bool, default False
-        whether to plot the LSTM loss function stored in history for each epoch
-        if validation_split passed to kwargs, will plot the validation loss as well
-        looks better if epochs &gt; 1 passed to **kwargs
-    **kwargs passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
-
-</pre></div></div>
-</div>
-<p>In practice, calling this model looks like:</p>
+<p>See the <a class="reference external" href="https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_rnn">documentation</a> for the ‘rnn’ estimator. In practice, calling this model looks like:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[70]:
 </pre></div>
@@ -2831,7 +2873,7 @@ Epoch 15/15
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_138_1.png" src="../../_images/Forecaster_examples_eCommerce_138_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_136_1.png" src="../../_images/Forecaster_examples_eCommerce_136_1.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -2905,72 +2947,15 @@ Epoch 15/15
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_138_3.png" src="../../_images/Forecaster_examples_eCommerce_138_3.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_136_3.png" src="../../_images/Forecaster_examples_eCommerce_136_3.png" />
 </div>
 </div>
 <p>Anything the lstm can do in scalecast, the rnn can also do. Using the lstm estimator instead of rnn is simpler, and that is explored below.</p>
 </section>
 <section id="LSTM">
-<h4>LSTM<a class="headerlink" href="#LSTM" title="Permalink to this headline">¶</a></h4>
+<h4>LSTM<a class="headerlink" href="#LSTM" title="Permalink to this headline"></a></h4>
 <p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
-<p>We can see the documentation on the lstm estimator by running the help function on it:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[71]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">_forecast_lstm</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Help on method _forecast_lstm in module scalecast.Forecaster:
-
-_forecast_lstm(dynamic_testing=True, lags=1, lstm_layer_sizes=(8,), dropout=(0.0,), loss=&#39;mean_absolute_error&#39;, activation=&#39;tanh&#39;, optimizer=&#39;Adam&#39;, learning_rate=0.001, random_seed=None, plot_loss=False, **kwargs) method of scalecast.Forecaster.Forecaster instance
-    forecasts with a long-short term memory neural network from TensorFlow
-    cannot be tuned
-    only xvar options are the series&#39; own history (specify in lags argument)
-    always uses minmax normalizer
-    fitted values are the last fcst_length worth of values only
-    dynamic_testing: bool, default True
-        always ignored for lstm because the model doesn&#39;t work like others
-    lags: int greater than 0, default 1
-        the number of y-variable lags to train the model with
-    lstm_layer_sizes: list-like, default (25,)
-        the size of each lstm layer to add
-        the first element is for the input layer
-        the size of this array minus 1 will equal the number of hidden layers in the resulting model
-    dropout: list-like, default (0.0,)
-        the dropout rate for each lstm layer
-        must be the same size as lstm_layer_sizes
-    loss: str, default &#39;mean_absolute_error&#39;
-        the loss function to minimize
-        see available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses
-        be sure to choose one that is suitable for regression tasks
-    activation: str, default &#34;tanh&#34;
-        the activation function to use in each lstm layer
-        see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/activations
-    optimizer: str, default &#34;Adam&#34;
-        the optimizer to use when compiling the model
-        see available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers
-        watch capitalization as that matters (can&#39;t be &#34;adam&#34;, must be &#34;Adam&#34;)
-    learning_rate: float, default 0.001
-        the learning rate to use when compiling the model
-    random_seed: int, optional
-        set a seed for consistent results
-        with tensorflow networks, setting seeds does not guarantee consistent results
-    plot_loss: bool, default False
-        whether to plot the LSTM loss function stored in history for each epoch
-        if validation_split passed to kwargs, will plot the validation loss as well
-        looks better if epochs &gt; 1 passed to **kwargs
-    **kwargs passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
-
-</pre></div></div>
-</div>
-<p>There are more parameters to explicitly specify, but that makes it a lot easier to navigate as well. In practice, the modeling process looks like:</p>
+<p>See the <a class="reference external" href="https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_lstm">documentation</a> for the ‘lstm’ estimator. There are more parameters to explicitly specify, but that makes it a lot easier to navigate as well. In practice, calling this model looks like:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[72]:
 </pre></div>
@@ -3057,7 +3042,7 @@ Epoch 15/15
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_143_1.png" src="../../_images/Forecaster_examples_eCommerce_143_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_139_1.png" src="../../_images/Forecaster_examples_eCommerce_139_1.png" />
 </div>
 </div>
 <p>Finally, we can see how all these models performed on the test set:</p>
@@ -3073,7 +3058,7 @@ Epoch 15/15
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_145_0.png" src="../../_images/Forecaster_examples_eCommerce_145_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_141_0.png" src="../../_images/Forecaster_examples_eCommerce_141_0.png" />
 </div>
 </div>
 <p>And into the future:</p>
@@ -3099,7 +3084,7 @@ lstm_regularized LevelTestSetRMSE: 43743.325532266164
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_147_1.png" src="../../_images/Forecaster_examples_eCommerce_147_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_143_1.png" src="../../_images/Forecaster_examples_eCommerce_143_1.png" />
 </div>
 </div>
 <p>None of these models arrived at the level of the MLR or HWES models. That’s not to say they couldn’t if more time weren’t spent with them. Theoretically, they can specify thousands of parameters and find the true long-term trends in the data that none of the other models would be capable. For some datasets, this makes a big difference. But some datasets are too random to be fit effectively by one of these more advanced models. Again, sometimes the simplest is most accurate, fastest, and most
@@ -3107,7 +3092,7 @@ interpretable.</p>
 </section>
 </section>
 <section id="Combination-Modeling">
-<h3>Combination Modeling<a class="headerlink" href="#Combination-Modeling" title="Permalink to this headline">¶</a></h3>
+<h3>Combination Modeling<a class="headerlink" href="#Combination-Modeling" title="Permalink to this headline"></a></h3>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">The last model concept we will explore is combination modeling. There are three types of combinations: - simple: a simple average of a group of models. - weighted: a weighted average of a group of models. Weights can be passed manually (as we do below) or set automatically based on a metric passed to the <code class="docutils literal notranslate"><span class="pre">determine_best_by</span></code> parameter. - splice: a splice of two or more models at one or more future splice points. All metrics, fitted values, and test-set metrics from this model will be
@@ -3140,7 +3125,7 @@ a list.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_152_0.png" src="../../_images/Forecaster_examples_eCommerce_152_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_148_0.png" src="../../_images/Forecaster_examples_eCommerce_148_0.png" />
 </div>
 </div>
 <p>Again, we see the usual suspects. One more time on future data:</p>
@@ -3168,7 +3153,7 @@ hwes LevelTestSetRMSE: 36031.56799119545
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_154_1.png" src="../../_images/Forecaster_examples_eCommerce_154_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_150_1.png" src="../../_images/Forecaster_examples_eCommerce_150_1.png" />
 </div>
 </div>
 <p>And just as a grand finale, let’s see all evaluated models plotted together:</p>
@@ -3210,13 +3195,13 @@ knn LevelTestSetRMSE: 92000.73638283063
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_156_1.png" src="../../_images/Forecaster_examples_eCommerce_156_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_152_1.png" src="../../_images/Forecaster_examples_eCommerce_152_1.png" />
 </div>
 </div>
 </section>
 </section>
 <section id="Export-Results">
-<h2>Export Results<a class="headerlink" href="#Export-Results" title="Permalink to this headline">¶</a></h2>
+<h2>Export Results<a class="headerlink" href="#Export-Results" title="Permalink to this headline"></a></h2>
 <div class="line-block">
 <div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Now that we have models that offer interesting ranges of predictions (and a few that look pretty bad), let’s export all available results to Excel to view later. The first function below exports a workbook with five tabs that offer information including forecasted values, level forecasted values, descriptive information about each model, and test-set prediction. The second two functions export feature info and validation grids, and they have to_excel in the method name because they
@@ -3268,27 +3253,39 @@ export_fitted_vals
 </div>
 </div>
 <script type="application/vnd.jupyter.widget-state+json">
-{"state": {"24841b30a8f44d24a5de430d7c710327": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_84b623c41995419bbe3f60ce2de6b2cd", "style": "IPY_MODEL_af735bea27724e908b81924bd9195e59", "value": " 9/9 [00:38&lt;00:00,  3.97s/it]"}}, "3a21806de172428b9b97b7687a66ba71": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "3d269399f4df400fbb1560b0b299d849": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "46bfaedc56004021a6ca9e2e68f40a6f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_5819582ce4954788821537069f58debc", "IPY_MODEL_922f684698da4d799f34ec73bada845a", "IPY_MODEL_24841b30a8f44d24a5de430d7c710327"], "layout": "IPY_MODEL_3a21806de172428b9b97b7687a66ba71"}}, "567074b5e416411d99180ea5cacd9b2d": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "5819582ce4954788821537069f58debc": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_567074b5e416411d99180ea5cacd9b2d", "style": "IPY_MODEL_3d269399f4df400fbb1560b0b299d849", "value": "100%"}}, "6e07d33d06494d23a6e6d8db2b2104e4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "84b623c41995419bbe3f60ce2de6b2cd": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "922f684698da4d799f34ec73bada845a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_a89c49a4a8cc4931aeefa703b39c79eb", "max": 9, "style": "IPY_MODEL_6e07d33d06494d23a6e6d8db2b2104e4", "value": 9}}, "a89c49a4a8cc4931aeefa703b39c79eb": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "af735bea27724e908b81924bd9195e59": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}}, "version_major": 2, "version_minor": 0}
+{"state": {}, "version_major": 2, "version_minor": 0}
 </script></section>
 </section>
 
 
-      </div>
-      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
-      
-        <p>
-        «&#160;&#160;<a href="../../Introduction.html">ReadMe</a>
-        &#160;&#160;::&#160;&#160;
-        <a class="uplink" href="../../index.html">Contents</a>
-        &#160;&#160;::&#160;&#160;
-        <a href="LSTM.html">LSTM Example</a>&#160;&#160;»
-        </p>
-
-      </div>
-
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, Michael Keith.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../initialization.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="LSTM.html" class="btn btn-neutral float-right" title="LSTM Example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  </body>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Michael Keith.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

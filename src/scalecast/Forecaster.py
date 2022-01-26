@@ -700,8 +700,9 @@ class Forecaster:
                 when False, test-set metrics effectively become an average of one-step forecasts.
             tune (bool): default False.
                 whether the model is being tuned.
-            Xvars (list, str, or None): all elements are in current_xreg keys.
-                if None and Xvars are required, None becomes equivalent to 'all'.
+            Xvars (list-like, str, or None): the regressors to predict with.
+                be sure to have added them to the Forecaster object first.
+                None means all Xvars added to the Forecaster object will be used.
             normalizer (str): one of _normalizer_.
                 if not None, normalizer applied to training data only to not leak.
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
@@ -829,7 +830,8 @@ class Forecaster:
         Args:
             tune (bool): default False.
                 whether the model is being tuned.
-            Xvars (list, str, or None): all elements are in current_xreg keys.
+            Xvars (list-like, str, or None): the regressors to predict with.
+                be sure to have added them to the Forecaster object first.
                 None means no Xvars used (unlike sklearn models).
             dynamic_testing (bool): default True.
                 always ignored in ARIMA (for now) - everything is set to be dynamic using statsmodels.
@@ -927,7 +929,8 @@ class Forecaster:
                 whether to tune the forecast.
                 if True, returns a metric.
                 if False, returns a list of forecasted values.
-            Xvars (list, str, or None): all elements are in current_xreg keys.
+            Xvars (list-like, str, or None): the regressors to predict with.
+                be sure to have added them to the Forecaster object first.
                 None means no Xvars used (unlike sklearn models).
             dynamic_testing (bool): default True.
                 always ignored for Prophet (for now).
@@ -1013,7 +1016,8 @@ class Forecaster:
                 if False, returns a list of forecasted values.
             dynamic_testing (bool): default True.
                 always ignored for silverkite (for now).
-            Xvars (list, str, or None): all elements are in current_xreg keys.
+            Xvars (list-like, str, or None): the regressors to predict with.
+                be sure to have added them to the Forecaster object first.
                 None means no Xvars used (unlike sklearn models).
             **kwargs: passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
 
@@ -1483,7 +1487,9 @@ class Forecaster:
         Args:
             how (str): one of {'simple','weighted','splice'}, default 'simple'.
                 the type of combination.
-                all test lengths must be the same for all combined models.
+                if 'simple', uses a simple average.
+                if 'weighted', uses a weighted average.
+                if 'splice', splices several forecasts together at specified splice points.
             models (list-like or str): default 'all'.
                 which models to combine.
                 can start with top ('top_5').
@@ -1505,7 +1511,9 @@ class Forecaster:
             splice_points (list-like): optional.
                 only applicable when how='splice'.
                 elements in array must be str in yyyy-mm-dd or datetime object.
-                must be exactly one less in length than the number of models
+                must be exactly one less in length than the number of models.
+                models[0] --> :splice_points[0]
+                models[-1] --> splice_points[-1]:
 
         Returns:
             (list): The predictions.
@@ -2523,7 +2531,8 @@ class Forecaster:
             method (str): one of {'box-cox','yeo-johnson'}, default 'box-cox'.
                 the type of transformation.
                 box-cox works for positive values only.
-                yeo-johnson is like a box-cox but can be used with 0s or negatives (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html).
+                yeo-johnson is like a box-cox but can be used with 0s or negatives.
+                https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html.
             sep (str): default ''.
                 the separator between each term in arg to create the final variable name.
                 resulting variable names will be like "box-cox_t" or "yeo-johnson_t" by default.
@@ -3477,7 +3486,7 @@ class Forecaster:
         """ drops regressors.
 
         Args:
-            *args (str): the names of regressors to drop
+            *args (str): the names of regressors to drop.
 
         Returns:
             None
@@ -3494,7 +3503,7 @@ class Forecaster:
         """ drops regressors.
 
         Args:
-            *args (str): the names of regressors to drop
+            *args (str): the names of regressors to drop.
 
         Returns:
             None

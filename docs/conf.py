@@ -3,6 +3,8 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
 
+import sphinx_rtd_theme
+
 # -- Project information -----------------------------------------------------
 
 project = 'scalecast'
@@ -37,10 +39,13 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "haiku"
+html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
-    "full_logo": "true"
+    'logo_only': True,
+    'navigation_depth': 5,
+    'style_nav_header_background':'black'
 }
+html_context = {}
 
 html_favicon = '../assets/logo2.png'
 html_logo = '../assets/logo2.png'

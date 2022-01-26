@@ -4,17 +4,44 @@
    contain the root `toctree` directive.
 
 Official Docs
-=====================================
+==========================
+
+Welcome to the official docs for scalecast, a time series forecasting library for Python 3.7+!
+
+Overview
+--------------
+
+:doc:`about`
+   Who is this meant for and what sets it apart?
+
+:doc:`installation`
+   Base package + dependencies.
+
+:doc:`initialization`
+   How to call the object and make forecasts.
+
+:doc:`change_log`
+   See what's changed.
+
+Index
+------
+* :ref:`genindex`
+
+.. Hidden TOCs
 
 .. toctree::
    :maxdepth: 4
-   :caption: Introduction:
+   :caption: Overview:
+   :hidden:  
 
-   Introduction
+   about
+   installation
+   initialization
 
 .. toctree::
    :maxdepth: 4
-   :caption: Examples:  
+   :caption: Examples:
+   :hidden: 
 
    Forecaster/examples/eCommerce
    Forecaster/examples/LSTM
@@ -22,6 +49,7 @@ Official Docs
 .. toctree::
    :maxdepth: 4
    :caption: Forecaster:
+   :hidden:
 
    Forecaster/Forecaster
    Forecaster/ForecasterGlobals
@@ -30,18 +58,20 @@ Official Docs
 .. toctree::
    :maxdepth: 4
    :caption: GridGenerator:
+   :hidden:
 
    GridGenerator/GridGenerator
 
 .. toctree::
    :maxdepth: 4
    :caption: Notebook:  
+   :hidden:
 
    Notebook/Notebook
 
-Indices and tables
-==================
+.. toctree::
+   :maxdepth: 1
+   :caption: ChangeLog:  
+   :hidden:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   change_log

@@ -1,0 +1,4 @@
+About
+========
+
+Scalecast is a package meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results. It takes regression models from scikit-learn and TensorFlow and extends them to support dynamic forecasting processes. Time series models, such as HWES and ARIMA, are also supported in the library. Other libraries, such as Facebook Prophet and LinkedIn GreyKite are incorporated and more may be in the future. All forecasting can be peformed on level or differenced data and level accuracy metrics and results are readily available for benchmarking and implementation. Next, check out how to install the library and get started!

@@ -1,57 +1,137 @@
-
 <!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
-    <title>Forecaster Class &#8212; scalecast 0.5.6 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/haiku.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forecaster Class &mdash; scalecast 0.5.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/logo2.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Forecaster Object Globals" href="ForecasterGlobals.html" />
     <link rel="prev" title="LSTM Example" href="examples/LSTM.html" /> 
-  </head><body>
-      <div class="header" role="banner">
-        <a href="../index.html">
-          <img class="logo" src="../_static/logo2.png" alt="Logo"/>
-        </a>
-      </div>
-      <div class="topnav" role="navigation" aria-label="top navigation">
-      
-        <p>
-        «&#160;&#160;<a href="examples/LSTM.html">LSTM Example</a>
-        &#160;&#160;::&#160;&#160;
-        <a class="uplink" href="../index.html">Contents</a>
-        &#160;&#160;::&#160;&#160;
-        <a href="ForecasterGlobals.html">Forecaster Object Globals</a>&#160;&#160;»
-        </p>
+</head>
 
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: black" >
+            <a href="../index.html">
+            <img src="../_static/logo2.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialization.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples/eCommerce.html">eCommerce Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/LSTM.html">LSTM Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Forecaster:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Forecaster Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ForecasterGlobals.html">Forecaster Object Globals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_forecast.html">Forecasting Different Model Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GridGenerator:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../GridGenerator/GridGenerator.html">GridGenerator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Notebook:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Notebook/Notebook.html">Notebook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ChangeLog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../change_log.html">Changelog</a></li>
+</ul>
+
+        </div>
       </div>
-      <div class="content" role="main">
-        
-        
-  <section id="forecaster-class">
-<h1>Forecaster Class<a class="headerlink" href="#forecaster-class" title="Permalink to this headline">¶</a></h1>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scalecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Forecaster Class</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Forecaster/Forecaster.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="forecaster-class">
+<h1>Forecaster Class<a class="headerlink" href="#forecaster-class" title="Permalink to this headline"></a></h1>
 <p>This is the main object that is utilized for making predictions on the test set, making forecasts, evaluating models, data differencing, adding regressors, and saving, visualizing, and exporting results.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scalecast.Forecaster</span> <span class="kn">import</span> <span class="n">Forecaster</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">array_of_dates</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;2021-01-01&#39;</span><span class="p">,</span><span class="s1">&#39;2021-01-02&#39;</span><span class="p">,</span><span class="s1">&#39;2021-01-03&#39;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">array_of_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Forecaster</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">array_of_values</span><span class="p">,</span> <span class="n">current_dates</span><span class="o">=</span><span class="n">array_of_dates</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scalecast.Forecaster</span> <span class="kn">import</span> <span class="n">Forecaster</span>
+<span class="n">array_of_dates</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;2021-01-01&#39;</span><span class="p">,</span><span class="s1">&#39;2021-01-02&#39;</span><span class="p">,</span><span class="s1">&#39;2021-01-03&#39;</span><span class="p">]</span>
+<span class="n">array_of_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">Forecaster</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">array_of_values</span><span class="p">,</span> <span class="n">current_dates</span><span class="o">=</span><span class="n">array_of_dates</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">src.scalecast.Forecaster.</span></span><span class="sig-name descname"><span class="pre">Forecaster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_dates</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">src.scalecast.Forecaster.</span></span><span class="sig-name descname"><span class="pre">Forecaster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_dates</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p><strong>Methods:</strong></p>
 <table class="longtable docutils align-default">
@@ -259,7 +339,7 @@
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_AR_terms">
-<span class="sig-name descname"><span class="pre">add_AR_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_AR_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_AR_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_AR_terms" title="Permalink to this definition"></a></dt>
 <dd><p>adds seasonal auto-regressive terms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -276,7 +356,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_ar_terms">
-<span class="sig-name descname"><span class="pre">add_ar_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_ar_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_ar_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_ar_terms" title="Permalink to this definition"></a></dt>
 <dd><p>adds auto-regressive terms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -293,7 +373,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_combo_regressors">
-<span class="sig-name descname"><span class="pre">add_combo_regressors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_combo_regressors" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_combo_regressors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_combo_regressors" title="Permalink to this definition"></a></dt>
 <dd><p>combines all passed variables by multiplying their values together.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -315,7 +395,7 @@ the separator between each term in arg to create the final variable name.</p></l
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_covid19_regressor">
-<span class="sig-name descname"><span class="pre">add_covid19_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'COVID19'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2020,</span> <span class="pre">3,</span> <span class="pre">15,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2021,</span> <span class="pre">5,</span> <span class="pre">13,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_covid19_regressor" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_covid19_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'COVID19'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2020,</span> <span class="pre">3,</span> <span class="pre">15,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2021,</span> <span class="pre">5,</span> <span class="pre">13,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_covid19_regressor" title="Permalink to this definition"></a></dt>
 <dd><p>adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise.
 this function may be out of date as the pandemic has lasted longer than most expected, but we are keeping it for now.</p>
 <dl class="field-list simple">
@@ -323,8 +403,11 @@ this function may be out of date as the pandemic has lasted longer than most exp
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>called</strong> (<em>str</em>) – default ‘COVID19’.
 what to call the resulting variable.</p></li>
-<li><p><strong>start</strong> – default datetime.datetime(2020,3,15).
+<li><p><strong>start</strong> (<em>str</em><em>, </em><em>datetime.datetime</em><em>, or </em><em>pd.Timestamp</em>) – default datetime.datetime(2020,3,15).
 the start date (default is day Walt Disney World closed in the U.S.).
+use format ‘%Y-%m-%d’ when passing strings.</p></li>
+<li><p><strong>end</strong> – (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2021,5,13).
+the end date (default is day the U.S. CDC dropped mask mandate/recommendation for vaccinated people).
 use format ‘%Y-%m-%d’ when passing strings.</p></li>
 </ul>
 </dd>
@@ -336,7 +419,7 @@ use format ‘%Y-%m-%d’ when passing strings.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_diffed_terms">
-<span class="sig-name descname"><span class="pre">add_diffed_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_diffed_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_diffed_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_diffed_terms" title="Permalink to this definition"></a></dt>
 <dd><p>differences all passed variables (no AR terms) up to 2 times.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -360,7 +443,7 @@ resulting variable names will be like “tdiff_1” or “tdiff_2” by default.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_exp_terms">
-<span class="sig-name descname"><span class="pre">add_exp_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pwr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'^'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_exp_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_exp_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pwr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'^'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_exp_terms" title="Permalink to this definition"></a></dt>
 <dd><p>raises all passed variables (no AR terms) to exponential powers (ints or floats).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -386,7 +469,7 @@ for instance, if pwr = 0.33333333333 and ‘t’ is passed as an arg to <a href=
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_lagged_terms">
-<span class="sig-name descname"><span class="pre">add_lagged_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upto</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_lagged_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_lagged_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upto</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_lagged_terms" title="Permalink to this definition"></a></dt>
 <dd><p>lags all passed variables (no AR terms) 1 or more times.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -415,7 +498,7 @@ resulting variable names will be like “tlag_1” or “tlag_2” by default.</
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_logged_terms">
-<span class="sig-name descname"><span class="pre">add_logged_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.718281828459045</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_logged_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_logged_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.718281828459045</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_logged_terms" title="Permalink to this definition"></a></dt>
 <dd><p>logs all passed variables (no AR terms).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -439,7 +522,7 @@ resulting variable names will be like “log2t” or “lnt” by default</p></l
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_other_regressor">
-<span class="sig-name descname"><span class="pre">add_other_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_other_regressor" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_other_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_other_regressor" title="Permalink to this definition"></a></dt>
 <dd><p>adds dummy variable that is 1 during the specified time period, 0 otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -462,7 +545,7 @@ use format ‘%Y-%m-%d’ when passing strings.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_poly_terms">
-<span class="sig-name descname"><span class="pre">add_poly_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pwr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'^'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_poly_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_poly_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pwr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'^'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_poly_terms" title="Permalink to this definition"></a></dt>
 <dd><p>raises all passed variables (no AR terms) to exponential powers (ints only).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -485,7 +568,7 @@ the separator between each term in arg to create the final variable name.</p></l
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_pt_terms">
-<span class="sig-name descname"><span class="pre">add_pt_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box-cox'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_pt_terms" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_pt_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box-cox'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_pt_terms" title="Permalink to this definition"></a></dt>
 <dd><p>applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -511,7 +594,7 @@ resulting variable names will be like “box-cox_t” or “yeo-johnson_t” by 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_seasonal_regressors">
-<span class="sig-name descname"><span class="pre">add_seasonal_regressors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sincos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dummy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_seasonal_regressors" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_seasonal_regressors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sincos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dummy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_seasonal_regressors" title="Permalink to this definition"></a></dt>
 <dd><p>adds seasonal regressors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -542,7 +625,7 @@ not relevant when dummy = False</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_time_trend">
-<span class="sig-name descname"><span class="pre">add_time_trend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_time_trend" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_time_trend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_time_trend" title="Permalink to this definition"></a></dt>
 <dd><p>adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -560,7 +643,7 @@ what to call the resulting variable</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.adf_test">
-<span class="sig-name descname"><span class="pre">adf_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">critical_pval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">,</span> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.adf_test" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">adf_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">critical_pval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">,</span> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.adf_test" title="Permalink to this definition"></a></dt>
 <dd><p>tests the stationarity of the y series using augmented dickey fuller.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -595,7 +678,7 @@ if True, will exclude the test set from the test (to avoid leakage).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.all_feature_info_to_excel">
-<span class="sig-name descname"><span class="pre">all_feature_info_to_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excel_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'feature_info.xlsx'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.all_feature_info_to_excel" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">all_feature_info_to_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excel_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'feature_info.xlsx'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.all_feature_info_to_excel" title="Permalink to this definition"></a></dt>
 <dd><p>saves all feature importance and summary stats to excel.
 each model where such info is available for gets its own tab.
 be sure to have called save_summary_stats() and/or save_feature_importance() before using this function.</p>
@@ -616,7 +699,7 @@ the name of the resulting excel file</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.all_validation_grids_to_excel">
-<span class="sig-name descname"><span class="pre">all_validation_grids_to_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excel_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'validation_grids.xlsx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by_metric_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ascending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.all_validation_grids_to_excel" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">all_validation_grids_to_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excel_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'validation_grids.xlsx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by_metric_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ascending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.all_validation_grids_to_excel" title="Permalink to this definition"></a></dt>
 <dd><p>saves all validation grids to excel.
 each model where such info is available for gets its own tab.
 be sure to have tuned at least model before calling this.</p>
@@ -642,7 +725,7 @@ ignored if sort_by_metric_value is False.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.auto_forecast">
-<span class="sig-name descname"><span class="pre">auto_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call_me</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.auto_forecast" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">auto_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call_me</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.auto_forecast" title="Permalink to this definition"></a></dt>
 <dd><p>auto forecasts with the best parameters indicated from the tuning process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -670,7 +753,7 @@ when False, test-set metrics effectively become an average of one-step forecasts
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.diff">
-<span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.diff" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.diff" title="Permalink to this definition"></a></dt>
 <dd><p>differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -689,7 +772,7 @@ must be 1 or 2.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.drop_Xvars">
-<span class="sig-name descname"><span class="pre">drop_Xvars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.drop_Xvars" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">drop_Xvars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.drop_Xvars" title="Permalink to this definition"></a></dt>
 <dd><p>drops regressors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -708,7 +791,7 @@ must be 1 or 2.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.drop_regressors">
-<span class="sig-name descname"><span class="pre">drop_regressors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.drop_regressors" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">drop_regressors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.drop_regressors" title="Permalink to this definition"></a></dt>
 <dd><p>drops regressors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -727,7 +810,7 @@ must be 1 or 2.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export">
-<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['all_fcsts',</span> <span class="pre">'model_summaries',</span> <span class="pre">'best_fcst',</span> <span class="pre">'test_set_predictions',</span> <span class="pre">'lvl_test_set_predictions',</span> <span class="pre">'lvl_fcsts']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">determine_best_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TestSetRMSE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_excel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excel_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'results.xlsx'</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['all_fcsts',</span> <span class="pre">'model_summaries',</span> <span class="pre">'best_fcst',</span> <span class="pre">'test_set_predictions',</span> <span class="pre">'lvl_test_set_predictions',</span> <span class="pre">'lvl_fcsts']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">determine_best_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TestSetRMSE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_excel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excel_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'results.xlsx'</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export" title="Permalink to this definition"></a></dt>
 <dd><p>exports 1-all of 5 pandas dataframes, can write to excel with each dataframe on a separate sheet.
 will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.</p>
 <dl class="field-list simple">
@@ -769,7 +852,7 @@ the name to call the excel file (ignored when <cite>to_excel=False</cite>).</p><
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_Xvars_df">
-<span class="sig-name descname"><span class="pre">export_Xvars_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_Xvars_df" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_Xvars_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_Xvars_df" title="Permalink to this definition"></a></dt>
 <dd><p>gets all utilized regressors and values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -787,7 +870,7 @@ whether to drop null values from the resulting dataframe</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_feature_importance">
-<span class="sig-name descname"><span class="pre">export_feature_importance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_feature_importance" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_feature_importance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_feature_importance" title="Permalink to this definition"></a></dt>
 <dd><p>exports the feature importance from a model.
 raises an error if you never saved the model’s feature importance.</p>
 <dl class="field-list simple">
@@ -809,7 +892,7 @@ matches what was passed to call_me when calling the forecast (default is estimat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_fitted_vals">
-<span class="sig-name descname"><span class="pre">export_fitted_vals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_fitted_vals" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_fitted_vals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_fitted_vals" title="Permalink to this definition"></a></dt>
 <dd><p>exports a single dataframe with fitted values and actuals.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -826,7 +909,7 @@ matches what was passed to call_me when calling the forecast (default is estimat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_forecasts_with_cis">
-<span class="sig-name descname"><span class="pre">export_forecasts_with_cis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_forecasts_with_cis" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_forecasts_with_cis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_forecasts_with_cis" title="Permalink to this definition"></a></dt>
 <dd><p>exports a single dataframe with forecasts and upper and lower forecast bounds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -843,7 +926,7 @@ matches what was passed to call_me when calling the forecast (default is estimat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_summary_stats">
-<span class="sig-name descname"><span class="pre">export_summary_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_summary_stats" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_summary_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_summary_stats" title="Permalink to this definition"></a></dt>
 <dd><p>exports the summary stats from a model.
 raises an error if you never saved the model’s summary stats.</p>
 <dl class="field-list simple">
@@ -865,7 +948,7 @@ matches what was passed to call_me when calling the forecast (default is estimat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_test_set_preds_with_cis">
-<span class="sig-name descname"><span class="pre">export_test_set_preds_with_cis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_test_set_preds_with_cis" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_test_set_preds_with_cis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_test_set_preds_with_cis" title="Permalink to this definition"></a></dt>
 <dd><p>exports a single dataframe with test-set predictions, actuals, and upper and lower prediction bounds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -882,7 +965,7 @@ matches what was passed to call_me when calling the forecast (default is estimat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_validation_grid">
-<span class="sig-name descname"><span class="pre">export_validation_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_validation_grid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">export_validation_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_validation_grid" title="Permalink to this definition"></a></dt>
 <dd><dl class="simple">
 <dt>exports the validation from a model.</dt><dd><p>raises an error if you never tuned the model.</p>
 </dd>
@@ -903,7 +986,7 @@ matches what was passed to call_me when calling the forecast (default is estimat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.fillna_y">
-<span class="sig-name descname"><span class="pre">fillna_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">how</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ffill'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.fillna_y" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fillna_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">how</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ffill'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.fillna_y" title="Permalink to this definition"></a></dt>
 <dd><p>fills null values in the y attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -919,7 +1002,7 @@ all other possible arguments are from pandas.DataFrame.fillna() method and will 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.generate_future_dates">
-<span class="sig-name descname"><span class="pre">generate_future_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.generate_future_dates" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">generate_future_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.generate_future_dates" title="Permalink to this definition"></a></dt>
 <dd><p>generates a certain amount of future dates in same frequency as current_dates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -938,7 +1021,7 @@ this will also be the forecast length.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.get_freq">
-<span class="sig-name descname"><span class="pre">get_freq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.get_freq" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_freq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.get_freq" title="Permalink to this definition"></a></dt>
 <dd><p>gets the pandas inferred date frequency</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -958,7 +1041,7 @@ this will also be the forecast length.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.get_funcs">
-<span class="sig-name descname"><span class="pre">get_funcs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">list</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.get_funcs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_funcs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">list</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.get_funcs" title="Permalink to this definition"></a></dt>
 <dd><p>returns a group of functions based on what’s passed to <cite>which</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -978,7 +1061,7 @@ this will also be the forecast length.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.get_regressor_names">
-<span class="sig-name descname"><span class="pre">get_regressor_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">list</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.get_regressor_names" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_regressor_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">list</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.get_regressor_names" title="Permalink to this definition"></a></dt>
 <dd><p>gets the regressor names stored in the object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -999,13 +1082,13 @@ this will also be the forecast length.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.infer_freq">
-<span class="sig-name descname"><span class="pre">infer_freq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.infer_freq" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">infer_freq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.infer_freq" title="Permalink to this definition"></a></dt>
 <dd><p>uses pandas library to infer frequency of loaded dates.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.ingest_Xvars_df">
-<span class="sig-name descname"><span class="pre">ingest_Xvars_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Date'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_future_dates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.ingest_Xvars_df" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ingest_Xvars_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Date'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_future_dates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.ingest_Xvars_df" title="Permalink to this definition"></a></dt>
 <dd><p>ingests a dataframe of regressors and saves its contents to the Forecaster object.
 must specify a date column.
 all non-numeric values will be dummied.
@@ -1032,7 +1115,7 @@ whether to use the future dates in the dataframe as the future_dates attribute i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.ingest_grid">
-<span class="sig-name descname"><span class="pre">ingest_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.ingest_grid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ingest_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.ingest_grid" title="Permalink to this definition"></a></dt>
 <dd><p>ingests a grid to tune the estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1051,7 +1134,7 @@ if str, must match the name of a dict grid stored in Grids.py.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.integrate">
-<span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">critical_pval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_integration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.integrate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">critical_pval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_integration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.integrate" title="Permalink to this definition"></a></dt>
 <dd><p>differences the series 0, 1, or 2 times based on ADF test results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1077,7 +1160,7 @@ if 2, behaves how you would expect.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.keep_smaller_history">
-<span class="sig-name descname"><span class="pre">keep_smaller_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.keep_smaller_history" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">keep_smaller_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.keep_smaller_history" title="Permalink to this definition"></a></dt>
 <dd><p>cuts the amount of y observations in the object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1097,7 +1180,7 @@ if str, must be ‘%Y-%m-%d’ format.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.limit_grid_size">
-<span class="sig-name descname"><span class="pre">limit_grid_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.limit_grid_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">limit_grid_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.limit_grid_size" title="Permalink to this definition"></a></dt>
 <dd><p>makes a grid smaller randomly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1124,7 +1207,7 @@ set a seed to make results consistent.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.manual_forecast">
-<span class="sig-name descname"><span class="pre">manual_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call_me</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.manual_forecast" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">manual_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call_me</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.manual_forecast" title="Permalink to this definition"></a></dt>
 <dd><p>manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1155,7 +1238,7 @@ LSTM and RNN models have their own sets of possible keywords.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.order_fcsts">
-<span class="sig-name descname"><span class="pre">order_fcsts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">determine_best_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TestSetRMSE'</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">list</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.order_fcsts" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">order_fcsts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">determine_best_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TestSetRMSE'</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">list</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.order_fcsts" title="Permalink to this definition"></a></dt>
 <dd><p>gets estimated forecasts ordered from best-to-worst.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1180,7 +1263,7 @@ LSTM and RNN models have their own sets of possible keywords.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_attr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">png_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plot.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_attr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">png_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plot.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot" title="Permalink to this definition"></a></dt>
 <dd><p>plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1222,7 +1305,7 @@ ignored when level = True.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot_acf">
-<span class="sig-name descname"><span class="pre">plot_acf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_acf" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plot_acf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_acf" title="Permalink to this definition"></a></dt>
 <dd><p>plots an autocorrelation function of the y values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1253,7 +1336,7 @@ if True, will exclude the test set from the test (a measure added to avoid leaka
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot_fitted">
-<span class="sig-name descname"><span class="pre">plot_fitted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">png_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./plot.png'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_fitted" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plot_fitted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">png_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./plot.png'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_fitted" title="Permalink to this definition"></a></dt>
 <dd><p>plots all fitted values with the actuals.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1283,7 +1366,7 @@ the name of the resulting png image (ignored when <cite>to_png=False</cite>).</p
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot_pacf">
-<span class="sig-name descname"><span class="pre">plot_pacf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_pacf" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plot_pacf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_pacf" title="Permalink to this definition"></a></dt>
 <dd><p>plots a partial autocorrelation function of the y values</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1314,7 +1397,7 @@ if True, will exclude the test set from the test (a measure added to avoid leaka
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot_periodogram">
-<span class="sig-name descname"><span class="pre">plot_periodogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_periodogram" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plot_periodogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_periodogram" title="Permalink to this definition"></a></dt>
 <dd><p>plots a periodogram of the y values (comes from scipy.signal).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1345,7 +1428,7 @@ if True, will exclude the test set from the test (a measure added to avoid leaka
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot_test_set">
-<span class="sig-name descname"><span class="pre">plot_test_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">png_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./plot.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_test_set" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plot_test_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">png_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./plot.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_test_set" title="Permalink to this definition"></a></dt>
 <dd><p>plots all test-set predictions with the actuals.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1389,7 +1472,7 @@ ignored when level = False.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.pop">
-<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.pop" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.pop" title="Permalink to this definition"></a></dt>
 <dd><p>deletes evaluated forecasts from the object’s memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1408,7 +1491,7 @@ ignored when level = False.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.pop_using_criterion">
-<span class="sig-name descname"><span class="pre">pop_using_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluated_as</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.pop_using_criterion" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pop_using_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluated_as</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.pop_using_criterion" title="Permalink to this definition"></a></dt>
 <dd><p>deletes all forecasts from history that meet a given criterion.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1435,13 +1518,13 @@ if False and all forecasts meet criterion, will keep them all.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.reset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.reset" title="Permalink to this definition"></a></dt>
 <dd><p>drops all regressors and reverts object to original (level) state when initiated.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.save_feature_importance">
-<span class="sig-name descname"><span class="pre">save_feature_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.save_feature_importance" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">save_feature_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.save_feature_importance" title="Permalink to this definition"></a></dt>
 <dd><p>saves feature info for models that offer it and will not raise errors if not available.
 call after evaluating the model you want it for and before changing the estimator.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;mlr&#39;</span><span class="p">)</span>
@@ -1453,7 +1536,7 @@ call after evaluating the model you want it for and before changing the estimato
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.save_summary_stats">
-<span class="sig-name descname"><span class="pre">save_summary_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.save_summary_stats" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">save_summary_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.save_summary_stats" title="Permalink to this definition"></a></dt>
 <dd><p>saves summary stats for models that offer it and will not raise errors if not available.
 call after evaluating the model you want it for and before changing the estimator.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;arima&#39;</span><span class="p">)</span>
@@ -1465,7 +1548,7 @@ call after evaluating the model you want it for and before changing the estimato
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.seasonal_decompose">
-<span class="sig-name descname"><span class="pre">seasonal_decompose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.seasonal_decompose" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">seasonal_decompose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.seasonal_decompose" title="Permalink to this definition"></a></dt>
 <dd><p>plots a signal/seasonal decomposition of the y values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1496,7 +1579,7 @@ If True, will exclude the test set from the test (a measure added to avoid leaka
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_bootstrap_samples">
-<span class="sig-name descname"><span class="pre">set_bootstrap_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_bootstrap_samples" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_bootstrap_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_bootstrap_samples" title="Permalink to this definition"></a></dt>
 <dd><p>sets the number of bootstrap samples to set confidence intervals for each model (100 default).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1515,7 +1598,7 @@ the lower this number, the faster the performance, but the less confident in the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_cilevel">
-<span class="sig-name descname"><span class="pre">set_cilevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_cilevel" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_cilevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_cilevel" title="Permalink to this definition"></a></dt>
 <dd><p>sets the level for the resulting confidence intervals (95% default).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1532,7 +1615,7 @@ the lower this number, the faster the performance, but the less confident in the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_estimator">
-<span class="sig-name descname"><span class="pre">set_estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_estimator" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_estimator" title="Permalink to this definition"></a></dt>
 <dd><p>sets the estimator to forecast with.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1549,7 +1632,7 @@ the lower this number, the faster the performance, but the less confident in the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_last_future_date">
-<span class="sig-name descname"><span class="pre">set_last_future_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_last_future_date" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_last_future_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_last_future_date" title="Permalink to this definition"></a></dt>
 <dd><p>generates future dates in the same frequency as current_dates that ends on a specified date.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1566,7 +1649,7 @@ the lower this number, the faster the performance, but the less confident in the
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_test_length">
-<span class="sig-name descname"><span class="pre">set_test_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_test_length" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_test_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_test_length" title="Permalink to this definition"></a></dt>
 <dd><p>sets the length of the test set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1584,7 +1667,7 @@ the length of the resulting test set.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_validation_length">
-<span class="sig-name descname"><span class="pre">set_validation_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_validation_length" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_validation_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_validation_length" title="Permalink to this definition"></a></dt>
 <dd><p>sets the length of the validation set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1602,7 +1685,7 @@ the length of the resulting validation set.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_validation_metric">
-<span class="sig-name descname"><span class="pre">set_validation_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rmse'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_validation_metric" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_validation_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rmse'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_validation_metric" title="Permalink to this definition"></a></dt>
 <dd><p>sets the metric that will be used to tune all subsequent models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1620,7 +1703,7 @@ the metric to optimize the models on using the validation set</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.tune">
-<span class="sig-name descname"><span class="pre">tune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dynamic_tuning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.tune" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dynamic_tuning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.tune" title="Permalink to this definition"></a></dt>
 <dd><p>tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as the estimator by default).
 any parameters you can pass as <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs to manual_forecast() can be tuned with this process.</p>
 <dl class="field-list simple">
@@ -1643,7 +1726,7 @@ when False, metrics effectively become an average of one-step forecasts.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.tune_test_forecast">
-<span class="sig-name descname"><span class="pre">tune_test_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_tuning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_importance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.tune_test_forecast" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tune_test_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_tuning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_importance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.tune_test_forecast" title="Permalink to this definition"></a></dt>
 <dd><p>iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1675,7 +1758,7 @@ whether to save permutation feature importance information for the models that o
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.typ_set">
-<span class="sig-name descname"><span class="pre">typ_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.typ_set" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">typ_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.typ_set" title="Permalink to this definition"></a></dt>
 <dd><p>converts all objects in y, current_dates, future_dates, current_xreg, and future_xreg to appropriate types if possible.
 automatically gets called when object is initiated.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">typ_set</span><span class="p">()</span> <span class="c1"># sets all arrays to the correct format</span>
@@ -1685,7 +1768,7 @@ automatically gets called when object is initiated.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.undiff">
-<span class="sig-name descname"><span class="pre">undiff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suppress_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.undiff" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">undiff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suppress_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.undiff" title="Permalink to this definition"></a></dt>
 <dd><p>undifferences y to original level and drops all regressors (such as AR terms).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1703,7 +1786,7 @@ whether to suppress an error that gets raised if the series was never difference
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.validate_regressor_names">
-<span class="sig-name descname"><span class="pre">validate_regressor_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.validate_regressor_names" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">validate_regressor_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.validate_regressor_names" title="Permalink to this definition"></a></dt>
 <dd><p>validates that all regressor names exist in both current_xregs and future_xregs.
 raises an error if this is not the case.</p>
 </dd></dl>
@@ -1713,22 +1796,34 @@ raises an error if this is not the case.</p>
 </section>
 
 
-      </div>
-      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
-      
-        <p>
-        «&#160;&#160;<a href="examples/LSTM.html">LSTM Example</a>
-        &#160;&#160;::&#160;&#160;
-        <a class="uplink" href="../index.html">Contents</a>
-        &#160;&#160;::&#160;&#160;
-        <a href="ForecasterGlobals.html">Forecaster Object Globals</a>&#160;&#160;»
-        </p>
-
-      </div>
-
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, Michael Keith.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples/LSTM.html" class="btn btn-neutral float-left" title="LSTM Example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ForecasterGlobals.html" class="btn btn-neutral float-right" title="Forecaster Object Globals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  </body>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Michael Keith.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

@@ -1,50 +1,140 @@
-
 <!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
-    <title>Forecasting Different Model Types &#8212; scalecast 0.5.6 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/haiku.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forecasting Different Model Types &mdash; scalecast 0.5.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/logo2.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="GridGenerator" href="../GridGenerator/GridGenerator.html" />
     <link rel="prev" title="Forecaster Object Globals" href="ForecasterGlobals.html" /> 
-  </head><body>
-      <div class="header" role="banner">
-        <a href="../index.html">
-          <img class="logo" src="../_static/logo2.png" alt="Logo"/>
-        </a>
-      </div>
-      <div class="topnav" role="navigation" aria-label="top navigation">
-      
-        <p>
-        «&#160;&#160;<a href="ForecasterGlobals.html">Forecaster Object Globals</a>
-        &#160;&#160;::&#160;&#160;
-        <a class="uplink" href="../index.html">Contents</a>
-        &#160;&#160;::&#160;&#160;
-        <a href="../GridGenerator/GridGenerator.html">GridGenerator</a>&#160;&#160;»
-        </p>
+</head>
 
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: black" >
+            <a href="../index.html">
+            <img src="../_static/logo2.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialization.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples/eCommerce.html">eCommerce Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/LSTM.html">LSTM Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Forecaster:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Forecaster.html">Forecaster Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ForecasterGlobals.html">Forecaster Object Globals</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Forecasting Different Model Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_arima">arima</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_combo">combo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_hwes">hwes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_lstm">lstm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_prophet">prophet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_rnn">rnn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_silverkite">silverkite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.Forecaster.Forecaster._forecast_sklearn">sklearn</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">GridGenerator:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../GridGenerator/GridGenerator.html">GridGenerator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Notebook:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Notebook/Notebook.html">Notebook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ChangeLog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../change_log.html">Changelog</a></li>
+</ul>
+
+        </div>
       </div>
-      <div class="content" role="main">
-        
-        
-  <section id="forecasting-different-model-types">
-<h1>Forecasting Different Model Types<a class="headerlink" href="#forecasting-different-model-types" title="Permalink to this headline">¶</a></h1>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scalecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Forecasting Different Model Types</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Forecaster/_forecast.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="forecasting-different-model-types">
+<h1>Forecasting Different Model Types<a class="headerlink" href="#forecasting-different-model-types" title="Permalink to this headline"></a></h1>
 <p>Any time you set an estimator, different arguments become available to you when calling <cite>manual_forecast</cite> or tuning the model. Here is the documentation for all these models:</p>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_arima">
-<span id="arima"></span><h2>arima<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_arima" title="Permalink to this headline">¶</a></h2>
+<span id="arima"></span><h2>arima<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_arima" title="Permalink to this headline"></a></h2>
 <p>forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -55,11 +145,12 @@ whether the model is being tuned.</p>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys.
+<dd class="field-odd"><p>the regressors to predict with.
+be sure to have added them to the Forecaster object first.
 None means no Xvars used (unlike sklearn models).</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
-<dd class="field-even"><p>list, str, or None</p>
+<dd class="field-even"><p>list-like, str, or None</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
 <dd class="field-odd"><p>default True.
@@ -93,13 +184,15 @@ always ignored in ARIMA (for now) - everything is set to be dynamic using statsm
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_combo">
-<span id="combo"></span><h2>combo<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_combo" title="Permalink to this headline">¶</a></h2>
+<span id="combo"></span><h2>combo<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_combo" title="Permalink to this headline"></a></h2>
 <p>combines at least two previously evaluted forecasts to create a new model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param how</dt>
 <dd class="field-odd"><p>one of {‘simple’,’weighted’,’splice’}, default ‘simple’.
 the type of combination.
-all test lengths must be the same for all combined models.</p>
+if ‘simple’, uses a simple average.
+if ‘weighted’, uses a weighted average.
+if ‘splice’, splices several forecasts together at specified splice points.</p>
 </dd>
 <dt class="field-even">type how</dt>
 <dd class="field-even"><p>str</p>
@@ -151,7 +244,9 @@ if manually passed weights do not add to 1, will rebalance them.</p>
 <dd class="field-odd"><p>optional.
 only applicable when how=’splice’.
 elements in array must be str in yyyy-mm-dd or datetime object.
-must be exactly one less in length than the number of models</p>
+must be exactly one less in length than the number of models.
+models[0] –&gt; :splice_points[0]
+models[-1] –&gt; splice_points[-1]:</p>
 </dd>
 <dt class="field-even">type splice_points</dt>
 <dd class="field-even"><p>list-like</p>
@@ -169,7 +264,7 @@ must be exactly one less in length than the number of models</p>
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_hwes">
-<span id="hwes"></span><h2>hwes<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_hwes" title="Permalink to this headline">¶</a></h2>
+<span id="hwes"></span><h2>hwes<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_hwes" title="Permalink to this headline"></a></h2>
 <p>forecasts with holt-winters exponential smoothing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -211,7 +306,7 @@ always ignored in HWES (for now) - everything is set to be dynamic using statsmo
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_lstm">
-<span id="lstm"></span><h2>lstm<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_lstm" title="Permalink to this headline">¶</a></h2>
+<span id="lstm"></span><h2>lstm<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_lstm" title="Permalink to this headline"></a></h2>
 <dl class="simple">
 <dt>forecasts with a long-short term memory neural network from TensorFlow.</dt><dd><p>cannot be tuned.
 only xvar options are the series’ own history (specify in lags argument).
@@ -325,7 +420,7 @@ looks better if epochs &gt; 1 passed to <a href="#id1"><span class="problematic"
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_prophet">
-<span id="prophet"></span><h2>prophet<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_prophet" title="Permalink to this headline">¶</a></h2>
+<span id="prophet"></span><h2>prophet<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_prophet" title="Permalink to this headline"></a></h2>
 <p>forecasts with the prophet model from facebook.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -338,11 +433,12 @@ if False, returns a list of forecasted values.</p>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys.
+<dd class="field-odd"><p>the regressors to predict with.
+be sure to have added them to the Forecaster object first.
 None means no Xvars used (unlike sklearn models).</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
-<dd class="field-even"><p>list, str, or None</p>
+<dd class="field-even"><p>list-like, str, or None</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
 <dd class="field-odd"><p>default True.
@@ -390,7 +486,7 @@ specific to prophet when using logistic growth – the smallest amount the model
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_rnn">
-<span id="rnn"></span><h2>rnn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_rnn" title="Permalink to this headline">¶</a></h2>
+<span id="rnn"></span><h2>rnn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_rnn" title="Permalink to this headline"></a></h2>
 <p>forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent.
 cannot be tuned.
 only xvar options are the series’ own history (specified in lags argument).
@@ -496,7 +592,7 @@ looks better if epochs &gt; 1 passed to <a href="#id3"><span class="problematic"
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_silverkite">
-<span id="silverkite"></span><h2>silverkite<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_silverkite" title="Permalink to this headline">¶</a></h2>
+<span id="silverkite"></span><h2>silverkite<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_silverkite" title="Permalink to this headline"></a></h2>
 <p>forecasts with the silverkite model from LinkedIn greykite library.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
@@ -516,11 +612,12 @@ always ignored for silverkite (for now).</p>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys.
+<dd class="field-odd"><p>the regressors to predict with.
+be sure to have added them to the Forecaster object first.
 None means no Xvars used (unlike sklearn models).</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
-<dd class="field-even"><p>list, str, or None</p>
+<dd class="field-even"><p>list-like, str, or None</p>
 </dd>
 <dt class="field-odd">param **kwargs</dt>
 <dd class="field-odd"><p>passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.</p>
@@ -547,7 +644,7 @@ None means no Xvars used (unlike sklearn models).</p>
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_sklearn">
-<span id="sklearn"></span><h2>sklearn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_sklearn" title="Permalink to this headline">¶</a></h2>
+<span id="sklearn"></span><h2>sklearn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_sklearn" title="Permalink to this headline"></a></h2>
 <p>runs an sklearn forecast start-to-finish.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param fcster</dt>
@@ -572,11 +669,12 @@ whether the model is being tuned.</p>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys.
-if None and Xvars are required, None becomes equivalent to ‘all’.</p>
+<dd class="field-odd"><p>the regressors to predict with.
+be sure to have added them to the Forecaster object first.
+None means all Xvars added to the Forecaster object will be used.</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
-<dd class="field-even"><p>list, str, or None</p>
+<dd class="field-even"><p>list-like, str, or None</p>
 </dd>
 <dt class="field-odd">param normalizer</dt>
 <dd class="field-odd"><p>one of _normalizer_.
@@ -612,22 +710,34 @@ if not None, normalizer applied to training data only to not leak.</p>
 </section>
 
 
-      </div>
-      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
-      
-        <p>
-        «&#160;&#160;<a href="ForecasterGlobals.html">Forecaster Object Globals</a>
-        &#160;&#160;::&#160;&#160;
-        <a class="uplink" href="../index.html">Contents</a>
-        &#160;&#160;::&#160;&#160;
-        <a href="../GridGenerator/GridGenerator.html">GridGenerator</a>&#160;&#160;»
-        </p>
-
-      </div>
-
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, Michael Keith.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.1.
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ForecasterGlobals.html" class="btn btn-neutral float-left" title="Forecaster Object Globals" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../GridGenerator/GridGenerator.html" class="btn btn-neutral float-right" title="GridGenerator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  </body>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Michael Keith.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>
