@@ -1,15 +1,18 @@
 
 from setuptools import setup, find_packages
 import shutil
+import re
+from src.scalecast.__init__ import __version__ as version
 
-shutil.copy('./examples/eCommerce.ipynb','./docs/source/Forecaster/examples/eCommerce.ipynb')
-shutil.copy('./examples/LSTM.ipynb','./docs/source/Forecaster/examples/LSTM.ipynb')
+
+shutil.copy('./examples/eCommerce.ipynb','./docs/Forecaster/examples/eCommerce.ipynb')
+shutil.copy('./examples/LSTM.ipynb','./docs/Forecaster/examples/LSTM.ipynb')
 
 long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = '0.5.6',
+  version = version,
   license='MIT',
   long_description=long_description,
   long_description_content_type='text/markdown',

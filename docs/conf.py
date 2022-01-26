@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
 
 import sphinx_rtd_theme
+from scalecast import __version__ as version
 
 # -- Project information -----------------------------------------------------
 
@@ -12,7 +13,7 @@ copyright = '2022, Michael Keith'
 author = 'Michael Keith'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5.6'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
@@ -43,7 +44,8 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': True,
     'navigation_depth': 5,
-    'style_nav_header_background':'black'
+    'style_nav_header_background':'black',
+    'prev_next_buttons_location':'top'
 }
 html_context = {}
 

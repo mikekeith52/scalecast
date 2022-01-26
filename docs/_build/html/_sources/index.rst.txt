@@ -6,7 +6,7 @@
 Official Docs
 ==========================
 
-Welcome to the official docs for scalecast, a time series forecasting library for python!
+Welcome to the official docs for scalecast, a time series forecasting library for Python 3.7+!
 
 Overview
 --------------

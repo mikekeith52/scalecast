@@ -1,11 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
-## [0.5.7] -
+## [0.5.7] - 2022-01-26
 ## Added
 ## Changed
-- Changed a lot of the documentation (which is now hosted on read the docs)
+- Cleaned up a lot of documentation
 ## Fixed
+- Fixed links in readme
 
 ## [0.5.6] - 2022-01-25
 ## Added
@@ -276,7 +277,7 @@ All notable changes to this project will be documented in this file. We keep tra
 ### Added
 - added lightgbm and silverkite as estimators
 ### Changed
-- changed 'which' parameter in set_valiation_metric() to 'metric' for clarity'
+- changed 'which' parameter in set_valiation_metric() to 'metric' for clarity
 - changed 'which' parameter in set_estimator() to 'estimator' for clarity
 ### Fixed
 

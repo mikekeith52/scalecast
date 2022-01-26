@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forecaster Class &mdash; scalecast 0.5.6 documentation</title>
+  <title>Forecaster Class &mdash; scalecast 0.5.7 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/logo2.png"/>
@@ -34,6 +34,9 @@
             <a href="../index.html">
             <img src="../_static/logo2.png" class="logo" alt="Logo"/>
           </a>
+              <div class="version">
+                0.5.7
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -90,7 +93,10 @@
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Forecaster/Forecaster.rst.txt" rel="nofollow"> View page source</a>
       </li>
-  </ul>
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="examples/LSTM.html" class="btn btn-neutral float-left" title="LSTM Example" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ForecasterGlobals.html" class="btn btn-neutral float-right" title="Forecaster Object Globals" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+  </div>
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -577,7 +583,8 @@ the separator between each term in arg to create the final variable name.</p></l
 <li><p><strong>method</strong> (<em>str</em>) – one of {‘box-cox’,’yeo-johnson’}, default ‘box-cox’.
 the type of transformation.
 box-cox works for positive values only.
-yeo-johnson is like a box-cox but can be used with 0s or negatives (<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html</a>).</p></li>
+yeo-johnson is like a box-cox but can be used with 0s or negatives.
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html</a>.</p></li>
 <li><p><strong>sep</strong> (<em>str</em>) – default ‘’.
 the separator between each term in arg to create the final variable name.
 resulting variable names will be like “box-cox_t” or “yeo-johnson_t” by default.</p></li>
@@ -776,7 +783,7 @@ must be 1 or 2.</p>
 <dd><p>drops regressors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>*args</strong> (<em>str</em>) – the names of regressors to drop</p>
+<dd class="field-odd"><p><strong>*args</strong> (<em>str</em>) – the names of regressors to drop.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
@@ -795,7 +802,7 @@ must be 1 or 2.</p>
 <dd><p>drops regressors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>*args</strong> (<em>str</em>) – the names of regressors to drop</p>
+<dd class="field-odd"><p><strong>*args</strong> (<em>str</em>) – the names of regressors to drop.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
@@ -1798,10 +1805,7 @@ raises an error if this is not the case.</p>
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="examples/LSTM.html" class="btn btn-neutral float-left" title="LSTM Example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="ForecasterGlobals.html" class="btn btn-neutral float-right" title="Forecaster Object Globals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

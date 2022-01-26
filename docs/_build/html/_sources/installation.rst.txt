@@ -14,9 +14,9 @@ If you want to apply prophet (from Facebook) and silverkite (from LinkedIn) mode
    $ pip install prophet
    $ pip install greykite
 
-These packages can cause issues when installing so they are not included in the scalecast dependencies list.
+The two packages above can cause issues when installing so they are not included by default in the scalecast dependencies list.
 
-If you are using Jupyter lab, there are notebook functions available that require the following installation:
+If you are using Jupyter, there are notebook functions available that require the following installation:
 
 .. code:: console
 
