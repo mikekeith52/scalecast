@@ -1,4 +1,4 @@
-# Scalecast: Dynamic Forecasting at Scale
+# 🌄 Scalecast: Dynamic Forecasting at Scale
 
 <p align="center">
   <img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" />
@@ -69,9 +69,9 @@ f = Forecaster(y=array_of_values, current_dates=array_of_dates)
 ## Links
 |Links||
 |----|----|
-|[Read the Docs](https://scalecast.readthedocs.io/en/latest/)|Read the docs|
-|[Examples](https://github.com/mikekeith52/scalecast/tree/main/examples)|Get straight to the process|
-|[Towards Data Science Latest](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)|Check out the new LSTM Recurrent Neural Net application|
-|[Towards Data Science Series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)|Read the introductory 3-part series|
-|[Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
-|[Change Log](https://github.com/mikekeith52/scalecast/blob/main/docs/change_log.md)|See what's changed|
+|[📚 Read the Docs](https://scalecast.readthedocs.io/en/latest/)|Read the docs|
+|[📋 Examples](https://github.com/mikekeith52/scalecast/tree/main/examples)|Get straight to the process|
+|[💻 Towards Data Science Latest](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)|Check out the new LSTM Recurrent Neural Net application|
+|[➡ Towards Data Science Series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)|Read the introductory 3-part series|
+|[📓 Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
+|[🛠️ Change Log](https://github.com/mikekeith52/scalecast/blob/main/docs/change_log.md)|See what's changed|
