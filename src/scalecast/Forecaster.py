@@ -193,13 +193,6 @@ class ForecastError(Exception):
 # MAIN OBJECT
 class Forecaster:
     def __init__(self, y, current_dates, **kwargs):
-        """ initializes the object
-
-        Args:
-            y (list-like): An array of the values to predict
-            current_dates (list-like): An array of the dates that correspond (in order) with y
-            **kwargs: set as attributes in the object
-        """
 
         self.y = y
         self.current_dates = current_dates
@@ -1737,6 +1730,8 @@ class Forecaster:
 
         Returns:
             None
+
+        >>> f.generate_future_dates(12) # 12 future dates to forecast out to
         """
         self.future_dates = pd.Series(
             pd.date_range(
@@ -1753,6 +1748,8 @@ class Forecaster:
 
         Returns:
             None
+
+        >>> f.set_last_future_date('2021-06-01') # creates future dates up to this one in the expected frequency
         """
         if isinstance(date, str):
             date = datetime.datetime.strptime(date, "%Y-%m-%d")
@@ -2301,7 +2298,7 @@ class Forecaster:
                     self.future_xreg[c] = [0] * len(self.future_dates)
 
     def add_time_trend(self, called="t"):
-        """ adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg
+        """ adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg.
 
         Args:
             called (str): default 't'.
@@ -3052,7 +3049,7 @@ class Forecaster:
         self._bank_summary_stats_to_history()
 
     def keep_smaller_history(self, n):
-        """ cuts the amount of observations in the object (trims the current_dates and current_xreg attributes as well).
+        """ cuts the amount of y observations in the object.
 
         Args:
             n (int, str, or datetime.datetime):

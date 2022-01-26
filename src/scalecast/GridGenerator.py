@@ -91,7 +91,7 @@ def get_example_grids(overwrite=False):
 	""" saves example grids to working directory as Grids.py (does not overwrite by default).
 
 	Args:
-		overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory
+		overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory.
 
 	Returns:
 		None
@@ -107,7 +107,7 @@ def get_empty_grids(overwrite=False):
 	""" saves empty grids to working directory as Grids.py (does not overwrite by default).
 
 	Args:
-		overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory
+		overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory.
 
 	Returns:
 		None

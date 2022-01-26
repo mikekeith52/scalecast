@@ -2,7 +2,7 @@ Forecasting Different Model Types
 ===================================
 Any time you set an estimator, different arguments become available to you when calling `manual_forecast` or tuning the model. Here is the documentation for all these models:
 
-Forecaster.Forecaster._forecast_arima
+arima
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_arima
     :members:
@@ -12,7 +12,7 @@ Forecaster.Forecaster._forecast_arima
 >>> f.set_estimator('arima')
 >>> f.manual_forecast() # above args are now available in this function
 
-Forecaster.Forecaster._forecast_combo
+combo
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_combo
     :members:
@@ -22,7 +22,7 @@ Forecaster.Forecaster._forecast_combo
 >>> f.set_estimator('combo')
 >>> f.manual_forecast() # above args are now available in this function
 
-Forecaster.Forecaster._forecast_hwes
+hwes
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_hwes
     :members:
@@ -32,7 +32,7 @@ Forecaster.Forecaster._forecast_hwes
 >>> f.set_estimator('hwes')
 >>> f.manual_forecast() # above args are now available in this function
 
-Forecaster.Forecaster._forecast_lstm
+lstm
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_lstm
     :members:
@@ -42,7 +42,7 @@ Forecaster.Forecaster._forecast_lstm
 >>> f.set_estimator('lstm')
 >>> f.manual_forecast() # above args are now available in this function
 
-Forecaster.Forecaster._forecast_prophet
+prophet
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_prophet
     :members:
@@ -52,7 +52,7 @@ Forecaster.Forecaster._forecast_prophet
 >>> f.set_estimator('prophet')
 >>> f.manual_forecast() # above args are now available in this function
 
-Forecaster.Forecaster._forecast_rnn
+rnn
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_rnn
     :members:
@@ -62,7 +62,7 @@ Forecaster.Forecaster._forecast_rnn
 >>> f.set_estimator('rnn')
 >>> f.manual_forecast() # above args are now available in this function
 
-Forecaster.Forecaster._forecast_silverkite
+silverkite
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_silverkite
     :members:
@@ -73,7 +73,7 @@ Forecaster.Forecaster._forecast_silverkite
 >>> f.manual_forecast() # above args are now available in this function
 
 
-Forecaster.Forecaster._forecast_sklearn
+sklearn
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_sklearn
     :members:

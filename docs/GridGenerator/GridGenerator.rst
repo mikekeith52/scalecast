@@ -3,7 +3,7 @@ GridGenerator
 
 If you want to automatically generate grids to tune models with, here's how.
 
-GridGenerator.get_empty_grids
+get_empty_grids
 --------------------------------------------------
 .. automodule:: src.scalecast.GridGenerator.get_empty_grids
     :members:
@@ -13,7 +13,7 @@ GridGenerator.get_empty_grids
 >>> from scalecast import GridGenerator
 >>> GridGenerator.get_empty_grids() # writes a Grids.py file with all available models that can be tuned and empty dictionaries
 
-GridGenerator.get_example_grids
+get_example_grids
 --------------------------------------------------
 .. automodule:: src.scalecast.GridGenerator.get_example_grids
     :members:
