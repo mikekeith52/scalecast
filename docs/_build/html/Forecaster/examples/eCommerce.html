@@ -319,7 +319,7 @@ combination modeling.</p>
 <section id="Library-Imports">
 <h2>Library Imports<a class="headerlink" href="#Library-Imports" title="Permalink to this headline">¶</a></h2>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">First, let’s import the libraries and read the data. Some data preprocessing in pandas will be necessary before calling scalecast.</div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -354,7 +354,7 @@ combination modeling.</p>
 <section id="Exploratory-Data-Analysis">
 <h2>Exploratory Data Analysis<a class="headerlink" href="#Exploratory-Data-Analysis" title="Permalink to this headline">¶</a></h2>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Let’s view the data’s first five rows.</div>
 </div>
 <div class="nbinput docutils container">
@@ -849,7 +849,7 @@ last date in data: 2011-12-09 00:00:00
 <section id="Forecast-with-Scalecast">
 <h2>Forecast with Scalecast<a class="headerlink" href="#Forecast-with-Scalecast" title="Permalink to this headline">¶</a></h2>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">To load the object, we call the Forecaster() function with the <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">current_dates</span></code> parameters specified. If we hadn’t already dropped the first observations of the data before calling the object, we could have done it by using the <code class="docutils literal notranslate"><span class="pre">keep_smaller_history()</span></code> function as shown below. We can then plot the values that we will be using for forecasting.</div>
 </div>
 <div class="nbinput docutils container">
@@ -1093,7 +1093,7 @@ get_freq
 <section id="HWES">
 <h3>HWES<a class="headerlink" href="#HWES" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Let’s run a couple of exponential smoothing forecasts using Holt-Winters Exponential Smoothing from StatsModels. Most exponential smoothing is considered a somewhat simple way to forecast time series. They are models that smooth out recent trends and predict them to the future. The added benefit of using Holt-Winters is that setting extra parameters to this basic idea, such as seasonality, is possible. We will try one HWES model with seasonality and one without.</div>
 </div>
 <p>Before running any forecast, we need to generate a forecast period. We are attempting to predict 30 days into the future.</p>
@@ -1280,7 +1280,7 @@ will be explored later.</p>
 <section id="ARIMA">
 <h3>ARIMA<a class="headerlink" href="#ARIMA" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Now, let’s run another common, albeit slightly more advanced time-series model: ARIMA. This model uses the series’ own history, errors, and stationarity to forecast. Using the output from the plots above, as well as the results from the ADF test, we can specify a 1,1,0 x 1,1,0 ordered model. The seasonal period will be 7 periods–one week.</div>
 </div>
 <p>To run an ARIMA model, we first set the estimator to ARIMA, then call the <code class="docutils literal notranslate"><span class="pre">manual_forecast()</span></code> function. We can run as many ARIMA models as we like, and differentiate them by using the <code class="docutils literal notranslate"><span class="pre">call_me</span></code> argument. By default, the model will be called whatever the estimator is (“arima” is “arima”, “mlr” is “mlr”, etc.)</p>
@@ -1434,7 +1434,7 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
 <section id="MLR">
 <h3>MLR<a class="headerlink" href="#MLR" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">We can use many other models through scalecast. One of the most basic of these is Multiple Linear Regression. Unlike ARIMA, we don’t specify orders on this model, but we can add similar regressors, including autoregressive and seasonal terms, as well as a time trend. The MLR works very similar to the ARIMA model in that it tries to find a linear relationship between all these components and the future. It makes the assumption that the errors in each time period are independent of one another,
 however. This assumption may be spurious, but the MLR has proven to make accurate predictions on real-world data.</div>
 </div>
@@ -1699,208 +1699,208 @@ The output of the exported data is therefore ranked in terms of which variables 
   <tbody>
     <tr>
       <th>AR1</th>
-      <td>1.341194</td>
-      <td>0.097010</td>
+      <td>1.361581</td>
+      <td>0.048865</td>
     </tr>
     <tr>
       <th>AR2</th>
-      <td>1.146020</td>
-      <td>0.058911</td>
+      <td>1.192099</td>
+      <td>0.055277</td>
     </tr>
     <tr>
       <th>AR3</th>
-      <td>0.879331</td>
-      <td>0.051166</td>
+      <td>0.857568</td>
+      <td>0.026342</td>
     </tr>
     <tr>
       <th>AR12</th>
-      <td>0.566296</td>
-      <td>0.045959</td>
+      <td>0.583114</td>
+      <td>0.014812</td>
     </tr>
     <tr>
       <th>AR4</th>
-      <td>0.503739</td>
-      <td>0.047221</td>
+      <td>0.478963</td>
+      <td>0.040052</td>
     </tr>
     <tr>
       <th>AR6</th>
-      <td>0.388718</td>
-      <td>0.020730</td>
+      <td>0.393926</td>
+      <td>0.037958</td>
     </tr>
     <tr>
       <th>AR13</th>
-      <td>0.371235</td>
-      <td>0.037511</td>
+      <td>0.366810</td>
+      <td>0.041059</td>
     </tr>
     <tr>
       <th>AR5</th>
-      <td>0.359291</td>
-      <td>0.050568</td>
+      <td>0.365042</td>
+      <td>0.027757</td>
     </tr>
     <tr>
       <th>AR23</th>
-      <td>0.301809</td>
-      <td>0.053519</td>
-    </tr>
-    <tr>
-      <th>AR14</th>
-      <td>0.299852</td>
-      <td>0.037326</td>
+      <td>0.330003</td>
+      <td>0.037069</td>
     </tr>
     <tr>
       <th>AR15</th>
-      <td>0.292298</td>
-      <td>0.011965</td>
+      <td>0.316762</td>
+      <td>0.027188</td>
     </tr>
     <tr>
       <th>dayofweek_5</th>
-      <td>0.290721</td>
-      <td>0.012441</td>
+      <td>0.288735</td>
+      <td>0.025208</td>
     </tr>
     <tr>
       <th>AR11</th>
-      <td>0.288092</td>
-      <td>0.016752</td>
+      <td>0.273210</td>
+      <td>0.028163</td>
     </tr>
     <tr>
-      <th>AR24</th>
-      <td>0.203350</td>
-      <td>0.020823</td>
+      <th>AR14</th>
+      <td>0.272825</td>
+      <td>0.030271</td>
     </tr>
     <tr>
       <th>AR22</th>
-      <td>0.202463</td>
-      <td>0.011181</td>
+      <td>0.237563</td>
+      <td>0.015261</td>
     </tr>
     <tr>
-      <th>AR8</th>
-      <td>0.188689</td>
-      <td>0.024096</td>
+      <th>AR24</th>
+      <td>0.206462</td>
+      <td>0.025954</td>
     </tr>
     <tr>
       <th>AR9</th>
-      <td>0.175961</td>
-      <td>0.024851</td>
+      <td>0.193294</td>
+      <td>0.020129</td>
+    </tr>
+    <tr>
+      <th>AR8</th>
+      <td>0.190799</td>
+      <td>0.012876</td>
     </tr>
     <tr>
       <th>AR20</th>
-      <td>0.151597</td>
-      <td>0.028590</td>
-    </tr>
-    <tr>
-      <th>AR10</th>
-      <td>0.120955</td>
-      <td>0.018531</td>
+      <td>0.177669</td>
+      <td>0.018373</td>
     </tr>
     <tr>
       <th>AR17</th>
-      <td>0.119666</td>
-      <td>0.024136</td>
+      <td>0.132064</td>
+      <td>0.014788</td>
+    </tr>
+    <tr>
+      <th>AR10</th>
+      <td>0.126921</td>
+      <td>0.018454</td>
     </tr>
     <tr>
       <th>AR21</th>
-      <td>0.114595</td>
-      <td>0.013994</td>
+      <td>0.114727</td>
+      <td>0.024589</td>
     </tr>
     <tr>
       <th>AR19</th>
-      <td>0.112409</td>
-      <td>0.013267</td>
+      <td>0.104920</td>
+      <td>0.006715</td>
     </tr>
     <tr>
       <th>monthcos</th>
-      <td>0.111430</td>
-      <td>0.008604</td>
+      <td>0.100597</td>
+      <td>0.022104</td>
     </tr>
     <tr>
       <th>AR16</th>
-      <td>0.109128</td>
-      <td>0.024289</td>
-    </tr>
-    <tr>
-      <th>AR18</th>
-      <td>0.099217</td>
-      <td>0.009343</td>
-    </tr>
-    <tr>
-      <th>dayofweek_6</th>
-      <td>0.084291</td>
-      <td>0.013069</td>
+      <td>0.097380</td>
+      <td>0.004449</td>
     </tr>
     <tr>
       <th>AR7</th>
-      <td>0.070312</td>
-      <td>0.010573</td>
+      <td>0.090623</td>
+      <td>0.012395</td>
+    </tr>
+    <tr>
+      <th>AR18</th>
+      <td>0.089148</td>
+      <td>0.012601</td>
+    </tr>
+    <tr>
+      <th>dayofweek_6</th>
+      <td>0.084458</td>
+      <td>0.017751</td>
     </tr>
     <tr>
       <th>t</th>
-      <td>0.051330</td>
-      <td>0.008024</td>
-    </tr>
-    <tr>
-      <th>weekcos</th>
-      <td>0.050903</td>
-      <td>0.014471</td>
-    </tr>
-    <tr>
-      <th>weeksin</th>
-      <td>0.050862</td>
-      <td>0.013279</td>
+      <td>0.056415</td>
+      <td>0.004780</td>
     </tr>
     <tr>
       <th>AR27</th>
-      <td>0.047775</td>
-      <td>0.007598</td>
+      <td>0.051311</td>
+      <td>0.007776</td>
+    </tr>
+    <tr>
+      <th>weeksin</th>
+      <td>0.046513</td>
+      <td>0.005039</td>
+    </tr>
+    <tr>
+      <th>weekcos</th>
+      <td>0.043880</td>
+      <td>0.010293</td>
     </tr>
     <tr>
       <th>dayofweek_4</th>
-      <td>0.032554</td>
-      <td>0.015224</td>
+      <td>0.037765</td>
+      <td>0.010777</td>
     </tr>
     <tr>
       <th>AR26</th>
-      <td>0.030478</td>
-      <td>0.005305</td>
+      <td>0.031685</td>
+      <td>0.005943</td>
     </tr>
     <tr>
       <th>AR25</th>
-      <td>0.029079</td>
-      <td>0.004781</td>
+      <td>0.029214</td>
+      <td>0.005976</td>
     </tr>
     <tr>
       <th>dayofweek_1</th>
-      <td>0.019704</td>
-      <td>0.006557</td>
-    </tr>
-    <tr>
-      <th>AR28</th>
-      <td>0.016884</td>
-      <td>0.007667</td>
+      <td>0.021407</td>
+      <td>0.009135</td>
     </tr>
     <tr>
       <th>dayofweek_2</th>
-      <td>0.010136</td>
-      <td>0.002259</td>
+      <td>0.018690</td>
+      <td>0.006764</td>
+    </tr>
+    <tr>
+      <th>AR28</th>
+      <td>0.011374</td>
+      <td>0.005876</td>
     </tr>
     <tr>
       <th>quartersin</th>
-      <td>0.009586</td>
-      <td>0.004232</td>
+      <td>0.010209</td>
+      <td>0.005488</td>
     </tr>
     <tr>
       <th>dayofweek_3</th>
-      <td>0.003612</td>
-      <td>0.002993</td>
+      <td>0.005569</td>
+      <td>0.002313</td>
     </tr>
     <tr>
       <th>monthsin</th>
-      <td>0.001529</td>
-      <td>0.001914</td>
+      <td>0.000719</td>
+      <td>0.003264</td>
     </tr>
     <tr>
       <th>quartercos</th>
-      <td>0.000483</td>
-      <td>0.000643</td>
+      <td>0.000186</td>
+      <td>0.000293</td>
     </tr>
   </tbody>
 </table>
@@ -1911,7 +1911,7 @@ The output of the exported data is therefore ranked in terms of which variables 
 <section id="Elasticnet-and-Auto-Forecasting">
 <h3>Elasticnet and Auto-Forecasting<a class="headerlink" href="#Elasticnet-and-Auto-Forecasting" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">To optimize the hyperparameters of and auto-forecast with models in scalecast, we use a grid-search approach on a validation set of data–a period of time before the test set. The grids are completely customizable, but standard template grids are available by calling the function below:</div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -2206,208 +2206,208 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
   <tbody>
     <tr>
       <th>dayofweek_5</th>
-      <td>2.780720e-02</td>
-      <td>0.002499</td>
+      <td>2.524764e-02</td>
+      <td>0.002553</td>
     </tr>
     <tr>
       <th>dayofweek_6</th>
-      <td>7.191468e-03</td>
-      <td>0.000480</td>
+      <td>6.376736e-03</td>
+      <td>0.000954</td>
     </tr>
     <tr>
       <th>AR7</th>
-      <td>4.262661e-03</td>
-      <td>0.000264</td>
-    </tr>
-    <tr>
-      <th>AR21</th>
-      <td>2.691507e-03</td>
-      <td>0.000137</td>
+      <td>4.668536e-03</td>
+      <td>0.000362</td>
     </tr>
     <tr>
       <th>AR14</th>
-      <td>2.609656e-03</td>
-      <td>0.000285</td>
+      <td>2.663682e-03</td>
+      <td>0.000374</td>
+    </tr>
+    <tr>
+      <th>AR21</th>
+      <td>2.437721e-03</td>
+      <td>0.000222</td>
     </tr>
     <tr>
       <th>AR28</th>
-      <td>2.030700e-03</td>
-      <td>0.000152</td>
+      <td>1.911884e-03</td>
+      <td>0.000271</td>
     </tr>
     <tr>
       <th>dayofweek_4</th>
-      <td>1.189100e-03</td>
-      <td>0.001155</td>
-    </tr>
-    <tr>
-      <th>AR1</th>
-      <td>1.070651e-03</td>
-      <td>0.000065</td>
-    </tr>
-    <tr>
-      <th>AR12</th>
-      <td>9.570370e-04</td>
-      <td>0.000299</td>
-    </tr>
-    <tr>
-      <th>AR2</th>
-      <td>9.476873e-04</td>
-      <td>0.000084</td>
+      <td>1.700549e-03</td>
+      <td>0.000770</td>
     </tr>
     <tr>
       <th>dayofweek_2</th>
-      <td>9.139753e-04</td>
-      <td>0.000575</td>
+      <td>9.471373e-04</td>
+      <td>0.000450</td>
+    </tr>
+    <tr>
+      <th>AR1</th>
+      <td>9.214553e-04</td>
+      <td>0.000158</td>
+    </tr>
+    <tr>
+      <th>AR12</th>
+      <td>8.393193e-04</td>
+      <td>0.000090</td>
+    </tr>
+    <tr>
+      <th>AR2</th>
+      <td>7.304451e-04</td>
+      <td>0.000192</td>
     </tr>
     <tr>
       <th>AR19</th>
-      <td>7.874086e-04</td>
-      <td>0.000135</td>
-    </tr>
-    <tr>
-      <th>AR23</th>
-      <td>7.458200e-04</td>
-      <td>0.000118</td>
+      <td>7.197982e-04</td>
+      <td>0.000110</td>
     </tr>
     <tr>
       <th>AR9</th>
-      <td>6.495071e-04</td>
-      <td>0.000171</td>
+      <td>7.032065e-04</td>
+      <td>0.000132</td>
+    </tr>
+    <tr>
+      <th>AR23</th>
+      <td>6.781578e-04</td>
+      <td>0.000101</td>
     </tr>
     <tr>
       <th>dayofweek_3</th>
-      <td>5.800829e-04</td>
-      <td>0.000323</td>
-    </tr>
-    <tr>
-      <th>AR26</th>
-      <td>4.424854e-04</td>
-      <td>0.000150</td>
+      <td>5.588932e-04</td>
+      <td>0.000502</td>
     </tr>
     <tr>
       <th>AR16</th>
-      <td>3.628442e-04</td>
-      <td>0.000109</td>
+      <td>4.336966e-04</td>
+      <td>0.000186</td>
+    </tr>
+    <tr>
+      <th>AR26</th>
+      <td>3.885394e-04</td>
+      <td>0.000187</td>
     </tr>
     <tr>
       <th>t</th>
-      <td>3.581491e-04</td>
-      <td>0.000104</td>
-    </tr>
-    <tr>
-      <th>AR5</th>
-      <td>3.273884e-04</td>
-      <td>0.000104</td>
-    </tr>
-    <tr>
-      <th>dayofweek_1</th>
-      <td>3.223617e-04</td>
-      <td>0.000240</td>
-    </tr>
-    <tr>
-      <th>AR6</th>
-      <td>1.966880e-04</td>
-      <td>0.000074</td>
-    </tr>
-    <tr>
-      <th>AR8</th>
-      <td>1.553714e-04</td>
-      <td>0.000076</td>
-    </tr>
-    <tr>
-      <th>weekcos</th>
-      <td>1.109013e-04</td>
-      <td>0.000180</td>
-    </tr>
-    <tr>
-      <th>monthcos</th>
-      <td>1.086194e-04</td>
-      <td>0.000264</td>
+      <td>2.524591e-04</td>
+      <td>0.000168</td>
     </tr>
     <tr>
       <th>quartercos</th>
-      <td>8.080662e-05</td>
-      <td>0.000041</td>
+      <td>2.454747e-04</td>
+      <td>0.000246</td>
+    </tr>
+    <tr>
+      <th>AR5</th>
+      <td>2.377288e-04</td>
+      <td>0.000154</td>
+    </tr>
+    <tr>
+      <th>AR6</th>
+      <td>1.819853e-04</td>
+      <td>0.000114</td>
+    </tr>
+    <tr>
+      <th>monthcos</th>
+      <td>1.219272e-04</td>
+      <td>0.000297</td>
+    </tr>
+    <tr>
+      <th>AR8</th>
+      <td>1.035100e-04</td>
+      <td>0.000062</td>
     </tr>
     <tr>
       <th>AR18</th>
-      <td>6.686153e-05</td>
-      <td>0.000043</td>
+      <td>5.723864e-05</td>
+      <td>0.000041</td>
     </tr>
     <tr>
       <th>AR15</th>
-      <td>5.057804e-05</td>
-      <td>0.000028</td>
-    </tr>
-    <tr>
-      <th>AR27</th>
-      <td>3.869580e-05</td>
-      <td>0.000013</td>
-    </tr>
-    <tr>
-      <th>quartersin</th>
-      <td>2.112467e-05</td>
-      <td>0.000008</td>
-    </tr>
-    <tr>
-      <th>AR17</th>
-      <td>1.473823e-05</td>
-      <td>0.000029</td>
-    </tr>
-    <tr>
-      <th>AR25</th>
-      <td>1.304595e-05</td>
-      <td>0.000019</td>
+      <td>4.220264e-05</td>
+      <td>0.000026</td>
     </tr>
     <tr>
       <th>AR22</th>
-      <td>1.148798e-05</td>
-      <td>0.000036</td>
-    </tr>
-    <tr>
-      <th>AR3</th>
-      <td>6.549900e-06</td>
-      <td>0.000007</td>
-    </tr>
-    <tr>
-      <th>weeksin</th>
-      <td>1.710255e-06</td>
-      <td>0.000003</td>
+      <td>4.169538e-05</td>
+      <td>0.000020</td>
     </tr>
     <tr>
       <th>AR10</th>
-      <td>1.555948e-06</td>
-      <td>0.000022</td>
+      <td>2.042367e-05</td>
+      <td>0.000008</td>
+    </tr>
+    <tr>
+      <th>AR25</th>
+      <td>1.674803e-05</td>
+      <td>0.000039</td>
+    </tr>
+    <tr>
+      <th>AR17</th>
+      <td>1.668208e-05</td>
+      <td>0.000027</td>
+    </tr>
+    <tr>
+      <th>AR4</th>
+      <td>9.392779e-06</td>
+      <td>0.000015</td>
+    </tr>
+    <tr>
+      <th>dayofweek_1</th>
+      <td>6.705639e-06</td>
+      <td>0.000624</td>
+    </tr>
+    <tr>
+      <th>AR11</th>
+      <td>4.239243e-06</td>
+      <td>0.000005</td>
+    </tr>
+    <tr>
+      <th>monthsin</th>
+      <td>3.421046e-06</td>
+      <td>0.000014</td>
+    </tr>
+    <tr>
+      <th>AR24</th>
+      <td>2.676908e-06</td>
+      <td>0.000005</td>
+    </tr>
+    <tr>
+      <th>weeksin</th>
+      <td>1.202793e-06</td>
+      <td>0.000002</td>
     </tr>
     <tr>
       <th>AR13</th>
-      <td>1.124511e-06</td>
+      <td>4.208357e-07</td>
       <td>0.000005</td>
     </tr>
     <tr>
       <th>AR20</th>
-      <td>1.164899e-07</td>
+      <td>-2.269004e-07</td>
       <td>0.000002</td>
     </tr>
     <tr>
-      <th>AR11</th>
-      <td>-1.760023e-06</td>
-      <td>0.000007</td>
+      <th>AR3</th>
+      <td>-1.461391e-06</td>
+      <td>0.000014</td>
     </tr>
     <tr>
-      <th>AR24</th>
-      <td>-1.974098e-06</td>
-      <td>0.000004</td>
+      <th>AR27</th>
+      <td>-8.850249e-06</td>
+      <td>0.000016</td>
     </tr>
     <tr>
-      <th>monthsin</th>
-      <td>-2.668380e-06</td>
-      <td>0.000007</td>
+      <th>quartersin</th>
+      <td>-9.815362e-06</td>
+      <td>0.000032</td>
     </tr>
     <tr>
-      <th>AR4</th>
-      <td>-4.967994e-06</td>
-      <td>0.000018</td>
+      <th>weekcos</th>
+      <td>-2.958930e-05</td>
+      <td>0.000118</td>
     </tr>
   </tbody>
 </table>
@@ -2418,7 +2418,7 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
 <section id="Auto-Forecasting-the-Scikit-learn-Models">
 <h3>Auto-Forecasting the Scikit-learn Models<a class="headerlink" href="#Auto-Forecasting-the-Scikit-learn-Models" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">In the same way we automatically tuned and forecasted with an elasticnet model, we can choose many models to forecast with using <code class="docutils literal notranslate"><span class="pre">notebook.tune_test_forecast()</span></code>. We will be tuning and forecasting with all available scikit-learn models. Below is a list of all models available, whether they are from scikit-learn, and whether than can be tuned.</div>
 </div>
 <div class="nbinput docutils container">
@@ -2479,7 +2479,7 @@ xgboost; can be tuned: True; from scikit-learn: True
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "2b5247bdbded4cbda7e3b73d00ad8522", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "46bfaedc56004021a6ca9e2e68f40a6f", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>See the results on the test set.</p>
 <div class="nbinput docutils container">
@@ -2512,13 +2512,13 @@ xgboost; can be tuned: True; from scikit-learn: True
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 mlr LevelTestSetRMSE: 32487.009054880975
+rf LevelTestSetRMSE: 35831.41728470146
 lightgbm LevelTestSetRMSE: 36585.121542121844
-rf LevelTestSetRMSE: 37055.144841532776
 mlp LevelTestSetRMSE: 39120.33092263862
 elasticnet LevelTestSetRMSE: 39522.6929766469
 svr LevelTestSetRMSE: 44003.8044654691
+gbt LevelTestSetRMSE: 57599.607371822385
 xgboost LevelTestSetRMSE: 62488.67436538539
-gbt LevelTestSetRMSE: 71853.24052173684
 knn LevelTestSetRMSE: 92000.73638283063
 </pre></div></div>
 </div>
@@ -2545,9 +2545,9 @@ knn LevelTestSetRMSE: 92000.73638283063
 <div class="highlight"><pre>
 hwes_seasonal LevelTestSetRMSE: 29432.19251120192
 mlr LevelTestSetRMSE: 32487.009054880975
+rf LevelTestSetRMSE: 35831.41728470146
 hwes LevelTestSetRMSE: 36031.56799119545
 lightgbm LevelTestSetRMSE: 36585.121542121844
-rf LevelTestSetRMSE: 37055.144841532776
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -2562,7 +2562,7 @@ rf LevelTestSetRMSE: 37055.144841532776
 <section id="Prophet-and-Silverkite">
 <h3>Prophet and Silverkite<a class="headerlink" href="#Prophet-and-Silverkite" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">In addition to the scikit-learn and statsmodels forecasting models we have already explored, two other forecasting models from popular libraries are available for use: Facebook <a class="reference external" href="https://facebook.github.io/prophet/">Prophet</a> and LinkedIn Silverkite (from the <a class="reference external" href="https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library">greykite</a> package). Prophet using a Bayesian regression approach with changepoints; Silverkite uses a linear model with
 regularization, also with changepoints. Calling them and using them are as easy as any other forecasting model in this package. The <code class="docutils literal notranslate"><span class="pre">Xvars</span></code> argument is available in both models–you can also tune them using the grid-search method. But, since they select a lot of their own regressors and optimize themselves by default, it is sometimes time-saving to manually forecast them with default parameters. We can also run them on un-differenced data and let them create their own regressors. Note,
 undifferencing the series deletes all added regressors.</div>
@@ -2676,12 +2676,12 @@ silverkite LevelTestSetRMSE: 44999.94290460528
 </section>
 <section id="TensorFlow-Recurrent-Neural-Nets">
 <h3>TensorFlow Recurrent Neural Nets<a class="headerlink" href="#TensorFlow-Recurrent-Neural-Nets" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference external" href="#Scalecast-Overview">Back to top</a></p>
+<p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
 <p>The most advanced models available in scalecast are recurrent neural networks. There are two kinds: the SimpleRNN and the Long Short-Term Memory. The SimpleRNN, perhaps ironically, has the more complicated implementation in this framework. It allows for nearly all customization of the model that TensorFlow itselt would offer. What scalecast will do for you is preprocess the data correctly, scale all of the data when training the model, and unscale it appropriately to compare to any other models
 you run. It also tests the model on the same test set and bootsraps confidence intervals. The fact that it tests all the models also means it fits all the models twice, which can slow you down sometimes, but having two fits is also a blessing: <strong>it really lets you know how generalizable your model is when new data is added.</strong> Let’s explore the SimpleRNN more carefully.</p>
 <section id="SimpleRNN">
 <h4>SimpleRNN<a class="headerlink" href="#SimpleRNN" title="Permalink to this headline">¶</a></h4>
-<p><a class="reference external" href="#Scalecast-Overview">Back to top</a></p>
+<p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
 <p>You can see the documentation for the ‘rnn’ estimator by calling help:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[69]:
@@ -2766,65 +2766,65 @@ _forecast_rnn(dynamic_testing=True, lags=1, hidden_layers_struct={&#39;simple&#3
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/15
-7/7 [==============================] - 1s 35ms/step - loss: 0.2122 - val_loss: 0.1304
+7/7 [==============================] - 1s 48ms/step - loss: 0.2074 - val_loss: 0.1279
 Epoch 2/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.1621 - val_loss: 0.1047
+7/7 [==============================] - 0s 9ms/step - loss: 0.1611 - val_loss: 0.1003
 Epoch 3/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.1373 - val_loss: 0.0872
+7/7 [==============================] - 0s 10ms/step - loss: 0.1394 - val_loss: 0.0871
 Epoch 4/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.1211 - val_loss: 0.0800
+7/7 [==============================] - 0s 10ms/step - loss: 0.1268 - val_loss: 0.0948
 Epoch 5/15
-7/7 [==============================] - 0s 7ms/step - loss: 0.1129 - val_loss: 0.0775
+7/7 [==============================] - 0s 10ms/step - loss: 0.1233 - val_loss: 0.0767
 Epoch 6/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.1091 - val_loss: 0.0726
+7/7 [==============================] - 0s 10ms/step - loss: 0.1159 - val_loss: 0.0758
 Epoch 7/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.1049 - val_loss: 0.0691
+7/7 [==============================] - 0s 10ms/step - loss: 0.1113 - val_loss: 0.0714
 Epoch 8/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.1012 - val_loss: 0.0704
+7/7 [==============================] - 0s 11ms/step - loss: 0.1069 - val_loss: 0.0706
 Epoch 9/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0991 - val_loss: 0.0678
+7/7 [==============================] - 0s 9ms/step - loss: 0.1025 - val_loss: 0.0682
 Epoch 10/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0971 - val_loss: 0.0681
+7/7 [==============================] - 0s 10ms/step - loss: 0.1006 - val_loss: 0.0678
 Epoch 11/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0954 - val_loss: 0.0630
+7/7 [==============================] - 0s 10ms/step - loss: 0.0969 - val_loss: 0.0675
 Epoch 12/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0944 - val_loss: 0.0681
+7/7 [==============================] - 0s 11ms/step - loss: 0.0941 - val_loss: 0.0625
 Epoch 13/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0933 - val_loss: 0.0620
+7/7 [==============================] - 0s 10ms/step - loss: 0.0920 - val_loss: 0.0626
 Epoch 14/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0925 - val_loss: 0.0642
+7/7 [==============================] - 0s 10ms/step - loss: 0.0913 - val_loss: 0.0610
 Epoch 15/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0930 - val_loss: 0.0632
+7/7 [==============================] - 0s 10ms/step - loss: 0.0899 - val_loss: 0.0623
 Epoch 1/15
-7/7 [==============================] - 1s 30ms/step - loss: 0.1119 - val_loss: 0.0588
+7/7 [==============================] - 1s 47ms/step - loss: 0.1185 - val_loss: 0.0669
 Epoch 2/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0826 - val_loss: 0.0515
+7/7 [==============================] - 0s 8ms/step - loss: 0.0907 - val_loss: 0.0555
 Epoch 3/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0734 - val_loss: 0.0459
+7/7 [==============================] - 0s 9ms/step - loss: 0.0793 - val_loss: 0.0550
 Epoch 4/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0691 - val_loss: 0.0449
+7/7 [==============================] - 0s 8ms/step - loss: 0.0729 - val_loss: 0.0478
 Epoch 5/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0670 - val_loss: 0.0473
+7/7 [==============================] - 0s 9ms/step - loss: 0.0691 - val_loss: 0.0444
 Epoch 6/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0651 - val_loss: 0.0447
+7/7 [==============================] - 0s 9ms/step - loss: 0.0665 - val_loss: 0.0432
 Epoch 7/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0637 - val_loss: 0.0432
+7/7 [==============================] - 0s 9ms/step - loss: 0.0646 - val_loss: 0.0423
 Epoch 8/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0627 - val_loss: 0.0401
+7/7 [==============================] - 0s 9ms/step - loss: 0.0627 - val_loss: 0.0460
 Epoch 9/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0608 - val_loss: 0.0378
+7/7 [==============================] - 0s 10ms/step - loss: 0.0616 - val_loss: 0.0410
 Epoch 10/15
-7/7 [==============================] - 0s 7ms/step - loss: 0.0584 - val_loss: 0.0368
+7/7 [==============================] - 0s 10ms/step - loss: 0.0589 - val_loss: 0.0408
 Epoch 11/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0572 - val_loss: 0.0376
+7/7 [==============================] - 0s 9ms/step - loss: 0.0584 - val_loss: 0.0393
 Epoch 12/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0560 - val_loss: 0.0351
+7/7 [==============================] - 0s 9ms/step - loss: 0.0569 - val_loss: 0.0394
 Epoch 13/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0545 - val_loss: 0.0341
+7/7 [==============================] - 0s 9ms/step - loss: 0.0566 - val_loss: 0.0397
 Epoch 14/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0532 - val_loss: 0.0341
+7/7 [==============================] - 0s 8ms/step - loss: 0.0569 - val_loss: 0.0388
 Epoch 15/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0523 - val_loss: 0.0328
+7/7 [==============================] - 0s 10ms/step - loss: 0.0555 - val_loss: 0.0360
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -2840,65 +2840,65 @@ Epoch 15/15
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/15
-7/7 [==============================] - 2s 69ms/step - loss: 0.2101 - val_loss: 0.1488
+7/7 [==============================] - 2s 93ms/step - loss: 0.1984 - val_loss: 0.1344
 Epoch 2/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.1838 - val_loss: 0.1172
+7/7 [==============================] - 0s 15ms/step - loss: 0.1579 - val_loss: 0.0984
 Epoch 3/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1481 - val_loss: 0.0995
+7/7 [==============================] - 0s 16ms/step - loss: 0.1302 - val_loss: 0.0804
 Epoch 4/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.1294 - val_loss: 0.0806
+7/7 [==============================] - 0s 17ms/step - loss: 0.1202 - val_loss: 0.0798
 Epoch 5/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1206 - val_loss: 0.0784
+7/7 [==============================] - 0s 17ms/step - loss: 0.1181 - val_loss: 0.0754
 Epoch 6/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.1171 - val_loss: 0.0748
+7/7 [==============================] - 0s 17ms/step - loss: 0.1172 - val_loss: 0.0765
 Epoch 7/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1173 - val_loss: 0.0759
+7/7 [==============================] - 0s 17ms/step - loss: 0.1169 - val_loss: 0.0744
 Epoch 8/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1169 - val_loss: 0.0743
+7/7 [==============================] - 0s 18ms/step - loss: 0.1170 - val_loss: 0.0748
 Epoch 9/15
-7/7 [==============================] - 0s 13ms/step - loss: 0.1169 - val_loss: 0.0743
+7/7 [==============================] - 0s 18ms/step - loss: 0.1167 - val_loss: 0.0743
 Epoch 10/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1166 - val_loss: 0.0746
+7/7 [==============================] - 0s 17ms/step - loss: 0.1168 - val_loss: 0.0742
 Epoch 11/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1167 - val_loss: 0.0738
+7/7 [==============================] - 0s 18ms/step - loss: 0.1162 - val_loss: 0.0737
 Epoch 12/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1162 - val_loss: 0.0739
+7/7 [==============================] - 0s 18ms/step - loss: 0.1161 - val_loss: 0.0737
 Epoch 13/15
-7/7 [==============================] - 0s 18ms/step - loss: 0.1160 - val_loss: 0.0746
+7/7 [==============================] - 0s 21ms/step - loss: 0.1158 - val_loss: 0.0734
 Epoch 14/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.1162 - val_loss: 0.0738
+7/7 [==============================] - 0s 21ms/step - loss: 0.1158 - val_loss: 0.0736
 Epoch 15/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.1160 - val_loss: 0.0741
+7/7 [==============================] - 0s 21ms/step - loss: 0.1158 - val_loss: 0.0739
 Epoch 1/15
-7/7 [==============================] - 2s 101ms/step - loss: 0.1188 - val_loss: 0.0693
+7/7 [==============================] - 2s 93ms/step - loss: 0.1203 - val_loss: 0.0723
 Epoch 2/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0927 - val_loss: 0.0609
+7/7 [==============================] - 0s 14ms/step - loss: 0.0969 - val_loss: 0.0553
 Epoch 3/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0795 - val_loss: 0.0454
+7/7 [==============================] - 0s 15ms/step - loss: 0.0807 - val_loss: 0.0464
 Epoch 4/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0745 - val_loss: 0.0440
+7/7 [==============================] - 0s 16ms/step - loss: 0.0737 - val_loss: 0.0456
 Epoch 5/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0719 - val_loss: 0.0474
+7/7 [==============================] - 0s 16ms/step - loss: 0.0719 - val_loss: 0.0453
 Epoch 6/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.0713 - val_loss: 0.0424
+7/7 [==============================] - 0s 15ms/step - loss: 0.0713 - val_loss: 0.0437
 Epoch 7/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0710 - val_loss: 0.0467
+7/7 [==============================] - 0s 17ms/step - loss: 0.0711 - val_loss: 0.0440
 Epoch 8/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0710 - val_loss: 0.0422
+7/7 [==============================] - 0s 16ms/step - loss: 0.0706 - val_loss: 0.0435
 Epoch 9/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0705 - val_loss: 0.0437
+7/7 [==============================] - 0s 16ms/step - loss: 0.0704 - val_loss: 0.0432
 Epoch 10/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0703 - val_loss: 0.0429
+7/7 [==============================] - 0s 17ms/step - loss: 0.0702 - val_loss: 0.0429
 Epoch 11/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0701 - val_loss: 0.0421
+7/7 [==============================] - 0s 18ms/step - loss: 0.0699 - val_loss: 0.0422
 Epoch 12/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0700 - val_loss: 0.0418
+7/7 [==============================] - 0s 19ms/step - loss: 0.0697 - val_loss: 0.0431
 Epoch 13/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0697 - val_loss: 0.0418
+7/7 [==============================] - 0s 17ms/step - loss: 0.0695 - val_loss: 0.0423
 Epoch 14/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0695 - val_loss: 0.0416
+7/7 [==============================] - 0s 17ms/step - loss: 0.0694 - val_loss: 0.0429
 Epoch 15/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0693 - val_loss: 0.0418
+7/7 [==============================] - 0s 18ms/step - loss: 0.0692 - val_loss: 0.0425
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -2912,7 +2912,7 @@ Epoch 15/15
 </section>
 <section id="LSTM">
 <h4>LSTM<a class="headerlink" href="#LSTM" title="Permalink to this headline">¶</a></h4>
-<p><a class="reference external" href="#Scalecast-Overview">Back to top</a></p>
+<p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
 <p>We can see the documentation on the lstm estimator by running the help function on it:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[71]:
@@ -2992,65 +2992,65 @@ _forecast_lstm(dynamic_testing=True, lags=1, lstm_layer_sizes=(8,), dropout=(0.0
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/15
-7/7 [==============================] - 5s 176ms/step - loss: 0.1930 - val_loss: 0.1044
+7/7 [==============================] - 7s 294ms/step - loss: 0.1886 - val_loss: 0.1009
 Epoch 2/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.1381 - val_loss: 0.0836
+7/7 [==============================] - 0s 43ms/step - loss: 0.1343 - val_loss: 0.0823
 Epoch 3/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.1240 - val_loss: 0.0808
+7/7 [==============================] - 0s 46ms/step - loss: 0.1209 - val_loss: 0.0857
 Epoch 4/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.1190 - val_loss: 0.0763
+7/7 [==============================] - 0s 48ms/step - loss: 0.1197 - val_loss: 0.0776
 Epoch 5/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.1184 - val_loss: 0.0770
+7/7 [==============================] - 0s 49ms/step - loss: 0.1196 - val_loss: 0.0800
 Epoch 6/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.1180 - val_loss: 0.0750
+7/7 [==============================] - 0s 49ms/step - loss: 0.1174 - val_loss: 0.0752
 Epoch 7/15
-7/7 [==============================] - 0s 41ms/step - loss: 0.1172 - val_loss: 0.0744
+7/7 [==============================] - 0s 49ms/step - loss: 0.1179 - val_loss: 0.0785
 Epoch 8/15
-7/7 [==============================] - 0s 45ms/step - loss: 0.1172 - val_loss: 0.0767
+7/7 [==============================] - 0s 49ms/step - loss: 0.1174 - val_loss: 0.0745
 Epoch 9/15
-7/7 [==============================] - 0s 38ms/step - loss: 0.1171 - val_loss: 0.0741
+7/7 [==============================] - 0s 48ms/step - loss: 0.1177 - val_loss: 0.0763
 Epoch 10/15
-7/7 [==============================] - 0s 38ms/step - loss: 0.1175 - val_loss: 0.0758
+7/7 [==============================] - 0s 49ms/step - loss: 0.1168 - val_loss: 0.0767
 Epoch 11/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.1169 - val_loss: 0.0750
+7/7 [==============================] - 0s 48ms/step - loss: 0.1176 - val_loss: 0.0743
 Epoch 12/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.1174 - val_loss: 0.0748
+7/7 [==============================] - 0s 49ms/step - loss: 0.1177 - val_loss: 0.0754
 Epoch 13/15
-7/7 [==============================] - 0s 38ms/step - loss: 0.1176 - val_loss: 0.0828
+7/7 [==============================] - 0s 49ms/step - loss: 0.1173 - val_loss: 0.0744
 Epoch 14/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.1180 - val_loss: 0.0751
+7/7 [==============================] - 0s 48ms/step - loss: 0.1177 - val_loss: 0.0757
 Epoch 15/15
-7/7 [==============================] - 0s 46ms/step - loss: 0.1181 - val_loss: 0.0755
+7/7 [==============================] - 0s 47ms/step - loss: 0.1166 - val_loss: 0.0745
 Epoch 1/15
-7/7 [==============================] - 5s 184ms/step - loss: 0.1110 - val_loss: 0.0648
+7/7 [==============================] - 5s 238ms/step - loss: 0.1132 - val_loss: 0.0617
 Epoch 2/15
-7/7 [==============================] - 0s 34ms/step - loss: 0.0846 - val_loss: 0.0480
+7/7 [==============================] - 0s 37ms/step - loss: 0.0845 - val_loss: 0.0461
 Epoch 3/15
-7/7 [==============================] - 0s 37ms/step - loss: 0.0765 - val_loss: 0.0507
+7/7 [==============================] - 0s 39ms/step - loss: 0.0749 - val_loss: 0.0514
 Epoch 4/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.0726 - val_loss: 0.0437
+7/7 [==============================] - 0s 41ms/step - loss: 0.0722 - val_loss: 0.0436
 Epoch 5/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.0713 - val_loss: 0.0442
+7/7 [==============================] - 0s 43ms/step - loss: 0.0725 - val_loss: 0.0431
 Epoch 6/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.0711 - val_loss: 0.0441
+7/7 [==============================] - 0s 42ms/step - loss: 0.0711 - val_loss: 0.0447
 Epoch 7/15
-7/7 [==============================] - 0s 42ms/step - loss: 0.0707 - val_loss: 0.0426
+7/7 [==============================] - 0s 42ms/step - loss: 0.0708 - val_loss: 0.0429
 Epoch 8/15
-7/7 [==============================] - 0s 42ms/step - loss: 0.0704 - val_loss: 0.0424
+7/7 [==============================] - 0s 44ms/step - loss: 0.0706 - val_loss: 0.0431
 Epoch 9/15
-7/7 [==============================] - 0s 45ms/step - loss: 0.0704 - val_loss: 0.0430
+7/7 [==============================] - 0s 42ms/step - loss: 0.0708 - val_loss: 0.0428
 Epoch 10/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.0700 - val_loss: 0.0428
+7/7 [==============================] - 0s 43ms/step - loss: 0.0708 - val_loss: 0.0453
 Epoch 11/15
-7/7 [==============================] - 0s 41ms/step - loss: 0.0704 - val_loss: 0.0436
+7/7 [==============================] - 0s 42ms/step - loss: 0.0707 - val_loss: 0.0440
 Epoch 12/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.0713 - val_loss: 0.0448
+7/7 [==============================] - 0s 43ms/step - loss: 0.0702 - val_loss: 0.0427
 Epoch 13/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.0716 - val_loss: 0.0428
+7/7 [==============================] - 0s 43ms/step - loss: 0.0699 - val_loss: 0.0438
 Epoch 14/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.0706 - val_loss: 0.0423
+7/7 [==============================] - 0s 43ms/step - loss: 0.0706 - val_loss: 0.0434
 Epoch 15/15
-7/7 [==============================] - 0s 40ms/step - loss: 0.0701 - val_loss: 0.0461
+7/7 [==============================] - 0s 43ms/step - loss: 0.0708 - val_loss: 0.0427
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -3090,9 +3090,9 @@ Epoch 15/15
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-lstm LevelTestSetRMSE: 41013.79774060435
-lstm_regularized LevelTestSetRMSE: 43294.296370670025
-simple_rnn LevelTestSetRMSE: 43533.95850575749
+simple_rnn LevelTestSetRMSE: 40249.15563421383
+lstm LevelTestSetRMSE: 40332.36818693822
+lstm_regularized LevelTestSetRMSE: 43743.325532266164
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -3109,7 +3109,7 @@ interpretable.</p>
 <section id="Combination-Modeling">
 <h3>Combination Modeling<a class="headerlink" href="#Combination-Modeling" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">The last model concept we will explore is combination modeling. There are three types of combinations: - simple: a simple average of a group of models. - weighted: a weighted average of a group of models. Weights can be passed manually (as we do below) or set automatically based on a metric passed to the <code class="docutils literal notranslate"><span class="pre">determine_best_by</span></code> parameter. - splice: a splice of two or more models at one or more future splice points. All metrics, fitted values, and test-set metrics from this model will be
 identical to the simple average.</div>
 </div>
@@ -3160,8 +3160,8 @@ a list.</p>
 hwes_seasonal LevelTestSetRMSE: 29432.19251120192
 mlr LevelTestSetRMSE: 32487.009054880975
 prophet LevelTestSetRMSE: 34148.79734132142
+rf LevelTestSetRMSE: 35831.41728470146
 hwes LevelTestSetRMSE: 36031.56799119545
-lightgbm LevelTestSetRMSE: 36585.121542121844
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -3188,21 +3188,21 @@ lightgbm LevelTestSetRMSE: 36585.121542121844
 hwes_seasonal LevelTestSetRMSE: 29432.19251120192
 mlr LevelTestSetRMSE: 32487.009054880975
 prophet LevelTestSetRMSE: 34148.79734132142
+rf LevelTestSetRMSE: 35831.41728470146
 hwes LevelTestSetRMSE: 36031.56799119545
 lightgbm LevelTestSetRMSE: 36585.121542121844
-rf LevelTestSetRMSE: 37055.144841532776
-avg_lvl_models LevelTestSetRMSE: 38112.66853770681
+avg_lvl_models LevelTestSetRMSE: 37706.15468474031
 mlp LevelTestSetRMSE: 39120.33092263862
 elasticnet LevelTestSetRMSE: 39522.6929766469
-lstm LevelTestSetRMSE: 41013.79774060435
-lstm_regularized LevelTestSetRMSE: 43294.296370670025
-simple_rnn LevelTestSetRMSE: 43533.95850575749
+simple_rnn LevelTestSetRMSE: 40249.15563421383
+lstm LevelTestSetRMSE: 40332.36818693822
+lstm_regularized LevelTestSetRMSE: 43743.325532266164
 svr LevelTestSetRMSE: 44003.8044654691
 silverkite LevelTestSetRMSE: 44999.94290460528
 arima_ma_terms LevelTestSetRMSE: 46563.90435412486
-weighted_differenced_models LevelTestSetRMSE: 60387.96420740432
+gbt LevelTestSetRMSE: 57599.607371822385
+weighted_differenced_models LevelTestSetRMSE: 60439.097276978595
 xgboost LevelTestSetRMSE: 62488.67436538539
-gbt LevelTestSetRMSE: 71853.24052173684
 knn LevelTestSetRMSE: 92000.73638283063
 </pre></div></div>
 </div>
@@ -3218,7 +3218,7 @@ knn LevelTestSetRMSE: 92000.73638283063
 <section id="Export-Results">
 <h2>Export Results<a class="headerlink" href="#Export-Results" title="Permalink to this headline">¶</a></h2>
 <div class="line-block">
-<div class="line"><a class="reference external" href="#Scalecast-Overview">Back to top</a></div>
+<div class="line"><a class="reference external" href="#eCommerce-Example">Back to top</a></div>
 <div class="line">Now that we have models that offer interesting ranges of predictions (and a few that look pretty bad), let’s export all available results to Excel to view later. The first function below exports a workbook with five tabs that offer information including forecasted values, level forecasted values, descriptive information about each model, and test-set prediction. The second two functions export feature info and validation grids, and they have to_excel in the method name because they
 automatically put each model’s info on a seperate tab.</div>
 </div>
@@ -3268,7 +3268,7 @@ export_fitted_vals
 </div>
 </div>
 <script type="application/vnd.jupyter.widget-state+json">
-{"state": {}, "version_major": 2, "version_minor": 0}
+{"state": {"24841b30a8f44d24a5de430d7c710327": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_84b623c41995419bbe3f60ce2de6b2cd", "style": "IPY_MODEL_af735bea27724e908b81924bd9195e59", "value": " 9/9 [00:38&lt;00:00,  3.97s/it]"}}, "3a21806de172428b9b97b7687a66ba71": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "3d269399f4df400fbb1560b0b299d849": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "46bfaedc56004021a6ca9e2e68f40a6f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_5819582ce4954788821537069f58debc", "IPY_MODEL_922f684698da4d799f34ec73bada845a", "IPY_MODEL_24841b30a8f44d24a5de430d7c710327"], "layout": "IPY_MODEL_3a21806de172428b9b97b7687a66ba71"}}, "567074b5e416411d99180ea5cacd9b2d": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "5819582ce4954788821537069f58debc": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_567074b5e416411d99180ea5cacd9b2d", "style": "IPY_MODEL_3d269399f4df400fbb1560b0b299d849", "value": "100%"}}, "6e07d33d06494d23a6e6d8db2b2104e4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "84b623c41995419bbe3f60ce2de6b2cd": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "922f684698da4d799f34ec73bada845a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_a89c49a4a8cc4931aeefa703b39c79eb", "max": 9, "style": "IPY_MODEL_6e07d33d06494d23a6e6d8db2b2104e4", "value": 9}}, "a89c49a4a8cc4931aeefa703b39c79eb": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "af735bea27724e908b81924bd9195e59": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}}, "version_major": 2, "version_minor": 0}
 </script></section>
 </section>
 

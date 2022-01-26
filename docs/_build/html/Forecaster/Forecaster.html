@@ -42,7 +42,7 @@
         
   <section id="forecaster-class">
 <h1>Forecaster Class<a class="headerlink" href="#forecaster-class" title="Permalink to this headline">¶</a></h1>
-<p>This is the main object that is utilized for data differencing, adding regressors to predict with, adding lagged values of y, and saving, visualizing, and exporting results.</p>
+<p>This is the main object that is utilized for making predictions on the test set, making forecasts, evaluating models, data differencing, adding regressors, and saving, visualizing, and exporting results.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scalecast.Forecaster</span> <span class="kn">import</span> <span class="n">Forecaster</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">array_of_dates</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;2021-01-01&#39;</span><span class="p">,</span><span class="s1">&#39;2021-01-02&#39;</span><span class="p">,</span><span class="s1">&#39;2021-01-03&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">array_of_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
@@ -61,16 +61,16 @@
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.add_AR_terms" title="src.scalecast.Forecaster.Forecaster.add_AR_terms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_AR_terms</span></code></a>(N)</p></td>
-<td><p>add seasonal auto-regressive terms.</p></td>
+<td><p>adds seasonal auto-regressive terms.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.add_ar_terms" title="src.scalecast.Forecaster.Forecaster.add_ar_terms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_ar_terms</span></code></a>(n)</p></td>
-<td><p>add auto-regressive terms.</p></td>
+<td><p>adds auto-regressive terms.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.add_combo_regressors" title="src.scalecast.Forecaster.Forecaster.add_combo_regressors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_combo_regressors</span></code></a>(*args[, sep])</p></td>
 <td><p>combines all passed variables by multiplying their values together.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.add_covid19_regressor" title="src.scalecast.Forecaster.Forecaster.add_covid19_regressor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_covid19_regressor</span></code></a>([called, start, end])</p></td>
-<td><p>adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise; this function may be out of date as the pandemic has lasted longer than most expected, but we are keeping it for now.</p></td>
+<td><p>adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.add_diffed_terms" title="src.scalecast.Forecaster.Forecaster.add_diffed_terms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_diffed_terms</span></code></a>(*args[, diff, sep])</p></td>
 <td><p>differences all passed variables (no AR terms) up to 2 times.</p></td>
@@ -94,10 +94,10 @@
 <td><p>applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.add_seasonal_regressors" title="src.scalecast.Forecaster.Forecaster.add_seasonal_regressors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_seasonal_regressors</span></code></a>(*args[, raw, …])</p></td>
-<td><p>adds seasonal regressors to the object (current_xreg and future_xreg)</p></td>
+<td><p>adds seasonal regressors.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.add_time_trend" title="src.scalecast.Forecaster.Forecaster.add_time_trend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_time_trend</span></code></a>([called])</p></td>
-<td><p>adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg</p></td>
+<td><p>adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.adf_test" title="src.scalecast.Forecaster.Forecaster.adf_test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adf_test</span></code></a>([critical_pval, quiet, full_res, …])</p></td>
 <td><p>tests the stationarity of the y series using augmented dickey fuller.</p></td>
@@ -109,7 +109,7 @@
 <td><p>saves all validation grids to excel.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.auto_forecast" title="src.scalecast.Forecaster.Forecaster.auto_forecast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auto_forecast</span></code></a>([call_me, dynamic_testing])</p></td>
-<td><p>auto forecast with the best parameters indicated from the tuning process.</p></td>
+<td><p>auto forecasts with the best parameters indicated from the tuning process.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.diff" title="src.scalecast.Forecaster.Forecaster.diff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diff</span></code></a>([i])</p></td>
 <td><p>differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.</p></td>
@@ -142,7 +142,7 @@
 <td><p>exports a single dataframe with test-set predictions, actuals, and upper and lower prediction bounds.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.export_validation_grid" title="src.scalecast.Forecaster.Forecaster.export_validation_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_validation_grid</span></code></a>(model)</p></td>
-<td><p>exports the validation from a model;</p></td>
+<td><p>exports the validation from a model.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.fillna_y" title="src.scalecast.Forecaster.Forecaster.fillna_y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fillna_y</span></code></a>([how])</p></td>
 <td><p>fills null values in the y attribute.</p></td>
@@ -157,7 +157,7 @@
 <td><p>returns a group of functions based on what’s passed to <cite>which</cite></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.get_regressor_names" title="src.scalecast.Forecaster.Forecaster.get_regressor_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_regressor_names</span></code></a>()</p></td>
-<td><p>gets the regressor names stored in the object</p></td>
+<td><p>gets the regressor names stored in the object.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.infer_freq" title="src.scalecast.Forecaster.Forecaster.infer_freq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">infer_freq</span></code></a>()</p></td>
 <td><p>uses pandas library to infer frequency of loaded dates.</p></td>
@@ -172,22 +172,22 @@
 <td><p>differences the series 0, 1, or 2 times based on ADF test results.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.keep_smaller_history" title="src.scalecast.Forecaster.Forecaster.keep_smaller_history"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_smaller_history</span></code></a>(n)</p></td>
-<td><p>cuts the amount of observations in the object (trims the current_dates and current_xreg attributes as well).</p></td>
+<td><p>cuts the amount of y observations in the object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.limit_grid_size" title="src.scalecast.Forecaster.Forecaster.limit_grid_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limit_grid_size</span></code></a>(n[, random_seed])</p></td>
 <td><p>makes a grid smaller randomly.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.manual_forecast" title="src.scalecast.Forecaster.Forecaster.manual_forecast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">manual_forecast</span></code></a>([call_me, dynamic_testing])</p></td>
-<td><p>manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywoords.</p></td>
+<td><p>manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.order_fcsts" title="src.scalecast.Forecaster.Forecaster.order_fcsts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">order_fcsts</span></code></a>(models[, determine_best_by])</p></td>
 <td><p>gets estimated forecasts ordered from best-to-worst.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.plot" title="src.scalecast.Forecaster.Forecaster.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a>([models, order_by, level, print_attr, …])</p></td>
-<td><p>plots all forecasts with the actuals, or just actuals if no forecasts available</p></td>
+<td><p>plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.plot_acf" title="src.scalecast.Forecaster.Forecaster.plot_acf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_acf</span></code></a>([diffy, train_only])</p></td>
-<td><p>plots an autocorrelation function of the y values</p></td>
+<td><p>plots an autocorrelation function of the y values.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.plot_fitted" title="src.scalecast.Forecaster.Forecaster.plot_fitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_fitted</span></code></a>([models, order_by, to_png, …])</p></td>
 <td><p>plots all fitted values with the actuals.</p></td>
@@ -196,7 +196,7 @@
 <td><p>plots a partial autocorrelation function of the y values</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.plot_periodogram" title="src.scalecast.Forecaster.Forecaster.plot_periodogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_periodogram</span></code></a>([diffy, train_only])</p></td>
-<td><p>plots a periodogram of the y values (comes from scipy.signal)</p></td>
+<td><p>plots a periodogram of the y values (comes from scipy.signal).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.plot_test_set" title="src.scalecast.Forecaster.Forecaster.plot_test_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_test_set</span></code></a>([models, order_by, …])</p></td>
 <td><p>plots all test-set predictions with the actuals.</p></td>
@@ -214,10 +214,10 @@
 <td><p>saves feature info for models that offer it and will not raise errors if not available.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.save_summary_stats" title="src.scalecast.Forecaster.Forecaster.save_summary_stats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_summary_stats</span></code></a>()</p></td>
-<td><p>save summary stats for models that offer it and will not raise errors if not available;</p></td>
+<td><p>saves summary stats for models that offer it and will not raise errors if not available.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.seasonal_decompose" title="src.scalecast.Forecaster.Forecaster.seasonal_decompose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seasonal_decompose</span></code></a>([diffy, train_only])</p></td>
-<td><p>plots a signal/seasonal decomposition of the y values</p></td>
+<td><p>plots a signal/seasonal decomposition of the y values.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.set_bootstrap_samples" title="src.scalecast.Forecaster.Forecaster.set_bootstrap_samples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_bootstrap_samples</span></code></a>(n)</p></td>
 <td><p>sets the number of bootstrap samples to set confidence intervals for each model (100 default).</p></td>
@@ -226,16 +226,16 @@
 <td><p>sets the level for the resulting confidence intervals (95% default).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.set_estimator" title="src.scalecast.Forecaster.Forecaster.set_estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_estimator</span></code></a>(estimator)</p></td>
-<td><p>sets the estimator to forecast with</p></td>
+<td><p>sets the estimator to forecast with.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.set_last_future_date" title="src.scalecast.Forecaster.Forecaster.set_last_future_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_last_future_date</span></code></a>(date)</p></td>
 <td><p>generates future dates in the same frequency as current_dates that ends on a specified date.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.set_test_length" title="src.scalecast.Forecaster.Forecaster.set_test_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_test_length</span></code></a>([n])</p></td>
-<td><p>set the length of the test set.</p></td>
+<td><p>sets the length of the test set.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.set_validation_length" title="src.scalecast.Forecaster.Forecaster.set_validation_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_validation_length</span></code></a>([n])</p></td>
-<td><p>set the length of the validation set.</p></td>
+<td><p>sets the length of the validation set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#src.scalecast.Forecaster.Forecaster.set_validation_metric" title="src.scalecast.Forecaster.Forecaster.set_validation_metric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_validation_metric</span></code></a>([metric])</p></td>
 <td><p>sets the metric that will be used to tune all subsequent models.</p></td>
@@ -260,7 +260,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_AR_terms">
 <span class="sig-name descname"><span class="pre">add_AR_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_AR_terms" title="Permalink to this definition">¶</a></dt>
-<dd><p>add seasonal auto-regressive terms.</p>
+<dd><p>adds seasonal auto-regressive terms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>N</strong> (<em>tuple</em>) – first element is the number of terms to add and the second element is the space between terms.</p>
@@ -277,7 +277,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_ar_terms">
 <span class="sig-name descname"><span class="pre">add_ar_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_ar_terms" title="Permalink to this definition">¶</a></dt>
-<dd><p>add auto-regressive terms.</p>
+<dd><p>adds auto-regressive terms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of terms to add (1 to this number will be added).</p>
@@ -299,7 +299,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>str</em>) – names of Xvars that aleady exist in the object.</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – default ‘_’;
+<li><p><strong>sep</strong> (<em>str</em>) – default ‘_’.
 the separator between each term in arg to create the final variable name.</p></li>
 </ul>
 </dd>
@@ -316,15 +316,15 @@ the separator between each term in arg to create the final variable name.</p></l
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_covid19_regressor">
 <span class="sig-name descname"><span class="pre">add_covid19_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'COVID19'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2020,</span> <span class="pre">3,</span> <span class="pre">15,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2021,</span> <span class="pre">5,</span> <span class="pre">13,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_covid19_regressor" title="Permalink to this definition">¶</a></dt>
-<dd><p>adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise;
+<dd><p>adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise.
 this function may be out of date as the pandemic has lasted longer than most expected, but we are keeping it for now.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>called</strong> (<em>str</em>) – default ‘COVID19’;
+<li><p><strong>called</strong> (<em>str</em>) – default ‘COVID19’.
 what to call the resulting variable.</p></li>
-<li><p><strong>start</strong> – default datetime.datetime(2020,3,15);
-the start date (default is day Walt Disney World closed in the U.S.);
+<li><p><strong>start</strong> – default datetime.datetime(2020,3,15).
+the start date (default is day Walt Disney World closed in the U.S.).
 use format ‘%Y-%m-%d’ when passing strings.</p></li>
 </ul>
 </dd>
@@ -342,10 +342,10 @@ use format ‘%Y-%m-%d’ when passing strings.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>str</em>) – names of Xvars that aleady exist in the object.</p></li>
-<li><p><strong>diff</strong> (<em>int</em>) – one of {1,2}, default 1;
+<li><p><strong>diff</strong> (<em>int</em>) – one of {1,2}, default 1.
 the number of times to difference each variable passed to args.</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – default ‘_’;
-the separator between each term in arg to create the final variable name;
+<li><p><strong>sep</strong> (<em>str</em>) – default ‘_’.
+the separator between each term in arg to create the final variable name.
 resulting variable names will be like “tdiff_1” or “tdiff_2” by default.</p></li>
 </ul>
 </dd>
@@ -366,12 +366,12 @@ resulting variable names will be like “tdiff_1” or “tdiff_2” by default.
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>str</em>) – names of Xvars that aleady exist in the object.</p></li>
-<li><p><strong>pwr</strong> (<em>float</em>) – the power to raise each term to in args;
+<li><p><strong>pwr</strong> (<em>float</em>) – the power to raise each term to in args.
 can use values like 0.5 to perform square roots, etc.</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – default ‘^’;
+<li><p><strong>sep</strong> (<em>str</em>) – default ‘^’.
 the separator between each term in arg to create the final variable name.</p></li>
-<li><p><strong>cutoff</strong> (<em>int</em>) – default 2;
-the resulting variable name will be rounded to this number based on the passed pwr;
+<li><p><strong>cutoff</strong> (<em>int</em>) – default 2.
+the resulting variable name will be rounded to this number based on the passed pwr.
 for instance, if pwr = 0.33333333333 and ‘t’ is passed as an arg to <a href="#id3"><span class="problematic" id="id4">*</span></a>args, the resulting name will be t^0.33 by default.</p></li>
 </ul>
 </dd>
@@ -392,14 +392,14 @@ for instance, if pwr = 0.33333333333 and ‘t’ is passed as an arg to <a href=
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>str</em>) – names of Xvars that aleady exist in the object.</p></li>
-<li><p><strong>lags</strong> (<em>int</em>) – greater than 0, default 1;
+<li><p><strong>lags</strong> (<em>int</em>) – greater than 0, default 1.
 the number of times to lag each passed variable.</p></li>
-<li><p><strong>upto</strong> (<em>bool</em>) – default True;
-whether to add all lags up to the number passed to lags;
-if you pass 6 to lags and upto is True, lags 1, 2, 3, 4, 5, 6 will all be added;
+<li><p><strong>upto</strong> (<em>bool</em>) – default True.
+whether to add all lags up to the number passed to lags.
+if you pass 6 to lags and upto is True, lags 1, 2, 3, 4, 5, 6 will all be added.
 if you pass 6 to lags and upto is False, lag 6 only will be added.</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – default ‘_’;
-the separator between each term in arg to create the final variable name;
+<li><p><strong>sep</strong> (<em>str</em>) – default ‘_’.
+the separator between each term in arg to create the final variable name.
 resulting variable names will be like “tlag_1” or “tlag_2” by default.</p></li>
 </ul>
 </dd>
@@ -421,10 +421,10 @@ resulting variable names will be like “tlag_1” or “tlag_2” by default.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>str</em>) – names of Xvars that aleady exist in the object.</p></li>
-<li><p><strong>base</strong> (<em>float</em>) – default math.e; the log base;
+<li><p><strong>base</strong> (<em>float</em>) – default math.e. the log base.
 must be math.e or int greater than 1.</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – default ‘’;
-the separator between each term in arg to create the final variable name;
+<li><p><strong>sep</strong> (<em>str</em>) – default ‘’.
+the separator between each term in arg to create the final variable name.
 resulting variable names will be like “log2t” or “lnt” by default</p></li>
 </ul>
 </dd>
@@ -445,9 +445,9 @@ resulting variable names will be like “log2t” or “lnt” by default</p></l
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>called</strong> (<em>str</em>) – what to call the resulting variable.</p></li>
-<li><p><strong>start</strong> (<em>str</em><em>, </em><em>datetime.datetime</em><em>, or </em><em>pd.Timestamp</em>) – start date;
+<li><p><strong>start</strong> (<em>str</em><em>, </em><em>datetime.datetime</em><em>, or </em><em>pd.Timestamp</em>) – start date.
 use format ‘%Y-%m-%d’ when passing strings.</p></li>
-<li><p><strong>end</strong> (<em>str</em><em>, </em><em>datetime.datetime</em><em>, or </em><em>pd.Timestamp</em>) – end date;
+<li><p><strong>end</strong> (<em>str</em><em>, </em><em>datetime.datetime</em><em>, or </em><em>pd.Timestamp</em>) – end date.
 use format ‘%Y-%m-%d’ when passing strings.</p></li>
 </ul>
 </dd>
@@ -468,9 +468,9 @@ use format ‘%Y-%m-%d’ when passing strings.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>str</em>) – names of Xvars that aleady exist in the object</p></li>
-<li><p><strong>pwr</strong> (<em>int</em>) – default 2;
+<li><p><strong>pwr</strong> (<em>int</em>) – default 2.
 the max power to add to each term in args (2 to this number will be added).</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – default ‘^’;
+<li><p><strong>sep</strong> (<em>str</em>) – default ‘^’.
 the separator between each term in arg to create the final variable name.</p></li>
 </ul>
 </dd>
@@ -491,12 +491,12 @@ the separator between each term in arg to create the final variable name.</p></l
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>str</em>) – names of Xvars that aleady exist in the object</p></li>
-<li><p><strong>method</strong> (<em>str</em>) – one of {‘box-cox’,’yeo-johnson’}, default ‘box-cox’;
-the type of transformation;
-box-cox works for positive values only;
+<li><p><strong>method</strong> (<em>str</em>) – one of {‘box-cox’,’yeo-johnson’}, default ‘box-cox’.
+the type of transformation.
+box-cox works for positive values only.
 yeo-johnson is like a box-cox but can be used with 0s or negatives (<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html</a>).</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – default ‘’;
-the separator between each term in arg to create the final variable name;
+<li><p><strong>sep</strong> (<em>str</em>) – default ‘’.
+the separator between each term in arg to create the final variable name.
 resulting variable names will be like “box-cox_t” or “yeo-johnson_t” by default.</p></li>
 </ul>
 </dd>
@@ -512,20 +512,20 @@ resulting variable names will be like “box-cox_t” or “yeo-johnson_t” by 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_seasonal_regressors">
 <span class="sig-name descname"><span class="pre">add_seasonal_regressors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sincos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dummy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_seasonal_regressors" title="Permalink to this definition">¶</a></dt>
-<dd><p>adds seasonal regressors to the object (current_xreg and future_xreg)</p>
+<dd><p>adds seasonal regressors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*args</strong> – each of str type;
+<li><p><strong>*args</strong> – each of str type.
 values that return a series of int type from pandas.dt and pandas.dt.isocalendar()</p></li>
-<li><p><strong>raw</strong> (<em>bool</em>) – default True;
+<li><p><strong>raw</strong> (<em>bool</em>) – default True.
 whether to use the raw integer values</p></li>
-<li><p><strong>sincos</strong> (<em>bool</em>) – default False;
+<li><p><strong>sincos</strong> (<em>bool</em>) – default False.
 whether to use a sin/cos transformation of the raw integer values (estimates the cycle based on the max observed value)</p></li>
-<li><p><strong>dummy</strong> (<em>bool</em>) – default False;
+<li><p><strong>dummy</strong> (<em>bool</em>) – default False.
 whether to use dummy variables from the raw int values</p></li>
-<li><p><strong>drop_first</strong> (<em>bool</em>) – default False;
-whether to drop the first observed dummy level;
+<li><p><strong>drop_first</strong> (<em>bool</em>) – default False.
+whether to drop the first observed dummy level.
 not relevant when dummy = False</p></li>
 </ul>
 </dd>
@@ -543,10 +543,10 @@ not relevant when dummy = False</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.add_time_trend">
 <span class="sig-name descname"><span class="pre">add_time_trend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">called</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'t'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.add_time_trend" title="Permalink to this definition">¶</a></dt>
-<dd><p>adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg</p>
+<dd><p>adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>called</strong> (<em>str</em>) – default ‘t’;
+<dd class="field-odd"><p><strong>called</strong> (<em>str</em>) – default ‘t’.
 what to call the resulting variable</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -565,21 +565,21 @@ what to call the resulting variable</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>critical_pval</strong> (<em>float</em>) – default 0.05;
+<li><p><strong>critical_pval</strong> (<em>float</em>) – default 0.05.
 the p-value threshold in the statistical test to accept the alternative hypothesis.</p></li>
-<li><p><strong>quiet</strong> (<em>bool</em>) – default True;
+<li><p><strong>quiet</strong> (<em>bool</em>) – default True.
 if False, prints whether the tests suggests stationary or non-stationary data.</p></li>
-<li><p><strong>full_res</strong> (<em>bool</em>) – default False;
-if True, returns a dictionary with the pvalue, evaluated statistic, and other statistical information (returns what the adfuller() function from statsmodels does);
+<li><p><strong>full_res</strong> (<em>bool</em>) – default False.
+if True, returns a dictionary with the pvalue, evaluated statistic, and other statistical information (returns what the adfuller() function from statsmodels does).
 if False, returns a bool that matches whether the test indicates stationarity.</p></li>
-<li><p><strong>train_only</strong> (<em>bool</em>) – default False;
+<li><p><strong>train_only</strong> (<em>bool</em>) – default False.
 if True, will exclude the test set from the test (to avoid leakage).</p></li>
 <li><p><strong>**kwargs</strong> – passed to adfuller() function from statsmodels.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
-<dt>if bool (full_res = False), returns whether the test suggests stationarity;</dt><dd><p>otherwise, returns the full results (stat, pval, etc.) of the test.</p>
+<dt>if bool (full_res = False), returns whether the test suggests stationarity.</dt><dd><p>otherwise, returns the full results (stat, pval, etc.) of the test.</p>
 </dd>
 </dl>
 </p>
@@ -623,14 +623,14 @@ be sure to have tuned at least model before calling this.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’;
+<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’.
 the path to export to.</p></li>
-<li><p><strong>excel_name</strong> (<em>str</em>) – default ‘feature_info.xlsx’;
+<li><p><strong>excel_name</strong> (<em>str</em>) – default ‘feature_info.xlsx’.
 the name of the resulting excel file.</p></li>
-<li><p><strong>sort_by_metric_value</strong> (<em>bool</em>) – default False;
+<li><p><strong>sort_by_metric_value</strong> (<em>bool</em>) – default False.
 whether to sort the output by performance on validation set</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em>) – default True;
-whether to sort least-to-greatest;
+<li><p><strong>ascending</strong> (<em>bool</em>) – default True.
+whether to sort least-to-greatest.
 ignored if sort_by_metric_value is False.</p></li>
 </ul>
 </dd>
@@ -643,17 +643,17 @@ ignored if sort_by_metric_value is False.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.auto_forecast">
 <span class="sig-name descname"><span class="pre">auto_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call_me</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.auto_forecast" title="Permalink to this definition">¶</a></dt>
-<dd><p>auto forecast with the best parameters indicated from the tuning process.</p>
+<dd><p>auto forecasts with the best parameters indicated from the tuning process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>call_me</strong> (<em>str</em>) – optional;
-what to call the model when storing it in the object’s history dictionary;
-if not specified, the model’s nickname will be assigned the estimator value (‘mlp’ will be ‘mlp’, etc.);
+<li><p><strong>call_me</strong> (<em>str</em>) – optional.
+what to call the model when storing it in the object’s history dictionary.
+if not specified, the model’s nickname will be assigned the estimator value (‘mlp’ will be ‘mlp’, etc.).
 duplicated names will be overwritten with the most recently called model.</p></li>
-<li><p><strong>dynamic_testing</strong> (<em>bool</em>) – default True;
-whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<li><p><strong>dynamic_testing</strong> (<em>bool</em>) – default True.
+whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, test-set metrics effectively become an average of one-step forecasts.</p></li>
 </ul>
 </dd>
@@ -674,8 +674,8 @@ when False, test-set metrics effectively become an average of one-step forecasts
 <dd><p>differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – default 1;
-the number of differences to take;
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – default 1.
+the number of differences to take.
 must be 1 or 2.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -733,21 +733,21 @@ will return either a dictionary with dataframes as values (df str arguments as k
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dfs</strong> (<em>list-like</em><em> or </em><em>str</em>) – default [‘all_fcsts’,’model_summaries’,’best_fcst’,’test_set_predictions’,’lvl_fcsts’];
-a list or name of the specific dataframe(s) you want returned and/or written to excel;
+<li><p><strong>dfs</strong> (<em>list-like</em><em> or </em><em>str</em>) – default [‘all_fcsts’,’model_summaries’,’best_fcst’,’test_set_predictions’,’lvl_fcsts’].
+a list or name of the specific dataframe(s) you want returned and/or written to excel.
 must be one of or multiple of default.</p></li>
-<li><p><strong>models</strong> (<em>list-like</em><em> or </em><em>str</em>) – default ‘all’;
-the models to write information for;
+<li><p><strong>models</strong> (<em>list-like</em><em> or </em><em>str</em>) – default ‘all’.
+the models to write information for.
 can start with “<a href="#id7"><span class="problematic" id="id8">top_</span></a>” and the metric specified in <cite>determine_best_by</cite> will be used to order the models appropriately.</p></li>
-<li><p><strong>best_model</strong> (<em>str</em>) – default ‘auto’;
-the name of the best model, if “auto”, will determine this by the metric in determine_best_by;
+<li><p><strong>best_model</strong> (<em>str</em>) – default ‘auto’.
+the name of the best model, if “auto”, will determine this by the metric in determine_best_by.
 if not “auto”, must match a model nickname of an already-evaluated model.</p></li>
 <li><p><strong>determine_best_by</strong> (<em>str</em>) – one of _determine_best_by_, default ‘TestSetRMSE’.</p></li>
-<li><p><strong>to_excel</strong> (<em>bool</em>) – default False;
+<li><p><strong>to_excel</strong> (<em>bool</em>) – default False.
 whether to save to excel.</p></li>
-<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’;
+<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’.
 the path to save the excel file to (ignored when <cite>to_excel=False</cite>).</p></li>
-<li><p><strong>excel_name</strong> (<em>str</em>) – default ‘results.xlsx’;
+<li><p><strong>excel_name</strong> (<em>str</em>) – default ‘results.xlsx’.
 the name to call the excel file (ignored when <cite>to_excel=False</cite>).</p></li>
 </ul>
 </dd>
@@ -773,7 +773,7 @@ the name to call the excel file (ignored when <cite>to_excel=False</cite>).</p><
 <dd><p>gets all utilized regressors and values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dropna</strong> (<em>bool</em>) – default False;
+<dd class="field-odd"><p><strong>dropna</strong> (<em>bool</em>) – default False.
 whether to drop null values from the resulting dataframe</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -792,7 +792,7 @@ whether to drop null values from the resulting dataframe</p>
 raises an error if you never saved the model’s feature importance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>str</em>) – the name of them model to export for;
+<dd class="field-odd"><p><strong>model</strong> (<em>str</em>) – the name of them model to export for.
 matches what was passed to call_me when calling the forecast (default is estimator name)</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -848,7 +848,7 @@ matches what was passed to call_me when calling the forecast (default is estimat
 raises an error if you never saved the model’s summary stats.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>str</em>) – the name of them model to export for;
+<dd class="field-odd"><p><strong>model</strong> (<em>str</em>) – the name of them model to export for.
 matches what was passed to call_me when calling the forecast (default is estimator name)</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -884,12 +884,12 @@ matches what was passed to call_me when calling the forecast (default is estimat
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.export_validation_grid">
 <span class="sig-name descname"><span class="pre">export_validation_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.export_validation_grid" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>exports the validation from a model;</dt><dd><p>raises an error if you never tuned the model.</p>
+<dt>exports the validation from a model.</dt><dd><p>raises an error if you never tuned the model.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>str</em>) – the name of them model to export for;
+<dd class="field-odd"><p><strong>model</strong> (<em>str</em>) – the name of them model to export for.
 matches what was passed to call_me when calling the forecast (default is estimator name)</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -907,8 +907,8 @@ matches what was passed to call_me when calling the forecast (default is estimat
 <dd><p>fills null values in the y attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>how</strong> (<em>str</em>) – one of {‘backfill’, ‘bfill’, ‘pad’, ‘ffill’, ‘midpoint’};
-midpoint is unique to this library and only works if there is not more than two missing values sequentially;
+<dd class="field-odd"><p><strong>how</strong> (<em>str</em>) – one of {‘backfill’, ‘bfill’, ‘pad’, ‘ffill’, ‘midpoint’}.
+midpoint is unique to this library and only works if there is not more than two missing values sequentially.
 all other possible arguments are from pandas.DataFrame.fillna() method and will do the same.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -923,14 +923,17 @@ all other possible arguments are from pandas.DataFrame.fillna() method and will 
 <dd><p>generates a certain amount of future dates in same frequency as current_dates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – greater than 0;
-number of future dates to produce;
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – greater than 0.
+number of future dates to produce.
 this will also be the forecast length.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">generate_future_dates</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># 12 future dates to forecast out to</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -976,7 +979,7 @@ this will also be the forecast length.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.get_regressor_names">
 <span class="sig-name descname"><span class="pre">get_regressor_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">list</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.get_regressor_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>gets the regressor names stored in the object</p>
+<dd><p>gets the regressor names stored in the object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>None</strong> – </p>
@@ -1003,23 +1006,21 @@ this will also be the forecast length.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.ingest_Xvars_df">
 <span class="sig-name descname"><span class="pre">ingest_Xvars_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Date'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_future_dates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.ingest_Xvars_df" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>ingests a dataframe of regressors and saves its contents to the Forecaster object.</dt><dd><p>must specify a date column.
+<dd><p>ingests a dataframe of regressors and saves its contents to the Forecaster object.
+must specify a date column.
 all non-numeric values will be dummied.
 any columns in the dataframe that begin with “AR” will be confused with autoregressive terms and could cause errors.</p>
-</dd>
-</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> (<em>DataFrame</em>) – the dataframe that is at least the length of len(current_dates) + len(future_dates)</p></li>
-<li><p><strong>date_col</strong> (<em>str</em>) – default ‘Date’;
-the name of the date column in the dataframe;
+<li><p><strong>date_col</strong> (<em>str</em>) – default ‘Date’.
+the name of the date column in the dataframe.
 this column must have the same frequency as the dates in current_dates.</p></li>
-<li><p><strong>drop_first</strong> (<em>bool</em>) – default False;
-whether to drop the first observation of any dummied variables;
+<li><p><strong>drop_first</strong> (<em>bool</em>) – default False.
+whether to drop the first observation of any dummied variables.
 irrelevant if passing all numeric values.</p></li>
-<li><p><strong>use_future_dates</strong> (<em>bool</em>) – default False;
+<li><p><strong>use_future_dates</strong> (<em>bool</em>) – default False.
 whether to use the future dates in the dataframe as the future_dates attribute in the object.</p></li>
 </ul>
 </dd>
@@ -1035,7 +1036,7 @@ whether to use the future dates in the dataframe as the future_dates attribute i
 <dd><p>ingests a grid to tune the estimator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>grid</strong> (<em>dict</em><em> or </em><em>str</em>) – if dict, must be a user-created grid;
+<dd class="field-odd"><p><strong>grid</strong> (<em>dict</em><em> or </em><em>str</em>) – if dict, must be a user-created grid.
 if str, must match the name of a dict grid stored in Grids.py.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1055,12 +1056,12 @@ if str, must match the name of a dict grid stored in Grids.py.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>critical_pval</strong> (<em>float</em>) – default 0.05;
+<li><p><strong>critical_pval</strong> (<em>float</em>) – default 0.05.
 the p-value threshold in the statistical test to accept the alternative hypothesis.</p></li>
-<li><p><strong>train_only</strong> (<em>bool</em>) – default False;
+<li><p><strong>train_only</strong> (<em>bool</em>) – default False.
 if True, will exclude the test set from the ADF test (to avoid leakage).</p></li>
-<li><p><strong>max_integration</strong> (<em>int</em>) – one of {1,2}, default 2;
-if 1, will only difference data up to one time even if the results of the test indicate two integrations;
+<li><p><strong>max_integration</strong> (<em>int</em>) – one of {1,2}, default 2.
+if 1, will only difference data up to one time even if the results of the test indicate two integrations.
 if 2, behaves how you would expect.</p></li>
 </ul>
 </dd>
@@ -1077,11 +1078,11 @@ if 2, behaves how you would expect.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.keep_smaller_history">
 <span class="sig-name descname"><span class="pre">keep_smaller_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.keep_smaller_history" title="Permalink to this definition">¶</a></dt>
-<dd><p>cuts the amount of observations in the object (trims the current_dates and current_xreg attributes as well).</p>
+<dd><p>cuts the amount of y observations in the object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>str</em><em>, or </em><em>datetime.datetime</em>) – if int, the number of observations to keep;
-otherwise, the last observation to keep;
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>str</em><em>, or </em><em>datetime.datetime</em>) – if int, the number of observations to keep.
+otherwise, the last observation to keep.
 if str, must be ‘%Y-%m-%d’ format.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1101,9 +1102,9 @@ if str, must be ‘%Y-%m-%d’ format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em><em> or </em><em>float</em>) – if int, randomly selects that many parameter combinations;
+<li><p><strong>n</strong> (<em>int</em><em> or </em><em>float</em>) – if int, randomly selects that many parameter combinations.
 if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.</p></li>
-<li><p><strong>random_seed</strong> (<em>int</em>) – optional;
+<li><p><strong>random_seed</strong> (<em>int</em>) – optional.
 set a seed to make results consistent.</p></li>
 </ul>
 </dd>
@@ -1124,21 +1125,21 @@ set a seed to make results consistent.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.manual_forecast">
 <span class="sig-name descname"><span class="pre">manual_forecast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call_me</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.manual_forecast" title="Permalink to this definition">¶</a></dt>
-<dd><p>manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywoords.</p>
+<dd><p>manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>call_me</strong> (<em>str</em>) – optional;
-what to call the model when storing it in the object’s history dictionary;
-if not specified, the model’s nickname will be assigned the estimator value (‘mlp’ will be ‘mlp’, etc.);
+<li><p><strong>call_me</strong> (<em>str</em>) – optional.
+what to call the model when storing it in the object’s history dictionary.
+if not specified, the model’s nickname will be assigned the estimator value (‘mlp’ will be ‘mlp’, etc.).
 duplicated names will be overwritten with the most recently called model.</p></li>
-<li><p><strong>dynamic_testing</strong> (<em>bool</em>) – default True;
-whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<li><p><strong>dynamic_testing</strong> (<em>bool</em>) – default True.
+whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, test-set metrics effectively become an average of one-step forecasts.</p></li>
 <li><p><strong>**kwargs</strong> – passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model’s specific hyperparameters
-for sklearn models, can inlcude normalizer and Xvars;
-for ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer;
+for sklearn models, can inlcude normalizer and Xvars.
+for ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer.
 LSTM and RNN models have their own sets of possible keywords.</p></li>
 </ul>
 </dd>
@@ -1160,7 +1161,7 @@ LSTM and RNN models have their own sets of possible keywords.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>models</strong> (<em>list-like</em>) – each element must match an evaluated model’s nickname (which is the same as its estimator name by default).</p></li>
-<li><p><strong>determine_best_by</strong> (<em>str</em>) – default ‘TestSetRMSE’; one of _determine_best_by_.</p></li>
+<li><p><strong>determine_best_by</strong> (<em>str</em>) – default ‘TestSetRMSE’. one of _determine_best_by_.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1180,31 +1181,31 @@ LSTM and RNN models have their own sets of possible keywords.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot">
 <span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_attr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">png_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plot.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>plots all forecasts with the actuals, or just actuals if no forecasts available</p>
+<dd><p>plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>models</strong> (<em>list-like</em><em>, </em><em>str</em><em>, or </em><em>None</em>) – default ‘all’;
-the forecasted models to plot;
-can start with “<a href="#id9"><span class="problematic" id="id10">top_</span></a>” and the metric specified in order_by will be used to order the models appropriately;
+<li><p><strong>models</strong> (<em>list-like</em><em>, </em><em>str</em><em>, or </em><em>None</em>) – default ‘all’.
+the forecasted models to plot.
+can start with “<a href="#id9"><span class="problematic" id="id10">top_</span></a>” and the metric specified in order_by will be used to order the models appropriately.
 if None or models/order_by combo invalid, will plot only actual values.</p></li>
-<li><p><strong>order_by</strong> (<em>str</em>) – one of _determine_best_by_; optional.</p></li>
-<li><p><strong>level</strong> (<em>bool</em>) – default False;
-if True, will always plot level forecasts;
-if False, will plot the forecasts at whatever level they were called on;
+<li><p><strong>order_by</strong> (<em>str</em>) – one of _determine_best_by_. optional.</p></li>
+<li><p><strong>level</strong> (<em>bool</em>) – default False.
+if True, will always plot level forecasts.
+if False, will plot the forecasts at whatever level they were called on.
 if False and there are a mix of models passed with different integrations, will default to True.</p></li>
-<li><p><strong>print_attr</strong> (<em>list-like</em>) – default [];
-attributes from history dict to print to console;
+<li><p><strong>print_attr</strong> (<em>list-like</em>) – default [].
+attributes from history dict to print to console.
 if the attribute doesn’t exist for a passed model, will not raise error, will just skip that element.</p></li>
-<li><p><strong>to_png</strong> (<em>bool</em>) – default False;
+<li><p><strong>to_png</strong> (<em>bool</em>) – default False.
 whether to save the resulting image to a png file.</p></li>
-<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’;
+<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’.
 the path to save the png file to (ignored when <cite>to_png=False</cite>).</p></li>
-<li><p><strong>png_name</strong> (<em>str</em>) – default ‘./plot.png’;
+<li><p><strong>png_name</strong> (<em>str</em>) – default ‘./plot.png’.
 the name of the resulting png image (ignored when <cite>to_png=False</cite>).</p></li>
-<li><p><strong>ci</strong> (<em>bool</em>) – default False;
-whether to display the confidence intervals;
-change defaults by calling <cite>set_cilevel()</cite> and <cite>set_bootstrapped_samples()</cite> before forecasting;
+<li><p><strong>ci</strong> (<em>bool</em>) – default False.
+whether to display the confidence intervals.
+change defaults by calling <cite>set_cilevel()</cite> and <cite>set_bootstrapped_samples()</cite> before forecasting.
 ignored when level = True.</p></li>
 </ul>
 </dd>
@@ -1222,16 +1223,16 @@ ignored when level = True.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot_acf">
 <span class="sig-name descname"><span class="pre">plot_acf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_acf" title="Permalink to this definition">¶</a></dt>
-<dd><p>plots an autocorrelation function of the y values</p>
+<dd><p>plots an autocorrelation function of the y values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}; default False;
-whether to difference the data and how many times before passing the values to the function;
-if False or 0, does not difference;
-if True or 1, differences 1 time;
+<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}. default False.
+whether to difference the data and how many times before passing the values to the function.
+if False or 0, does not difference.
+if True or 1, differences 1 time.
 if 2, differences 2 times.</p></li>
-<li><p><strong>train_only</strong> (<em>bool</em>) – default False;
+<li><p><strong>train_only</strong> (<em>bool</em>) – default False.
 if True, will exclude the test set from the test (a measure added to avoid leakage).</p></li>
 <li><p><strong>**kwargs</strong> – passed to plot_acf() function from statsmodels.</p></li>
 </ul>
@@ -1257,15 +1258,15 @@ if True, will exclude the test set from the test (a measure added to avoid leaka
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>models</strong> (<em>list-like</em><em>,</em><em>str</em>) – default ‘all’;
-the forecated models to plot;
+<li><p><strong>models</strong> (<em>list-like</em><em>,</em><em>str</em>) – default ‘all’.
+the forecated models to plot.
 can start with “<a href="#id11"><span class="problematic" id="id12">top_</span></a>” and the metric specified in order_by will be used to order the models appropriately.</p></li>
 <li><p><strong>order_by</strong> (<em>str</em>) – one of _determine_best_by_, default None.</p></li>
-<li><p><strong>to_png</strong> (<em>bool</em>) – default False;
+<li><p><strong>to_png</strong> (<em>bool</em>) – default False.
 whether to save the resulting image to a png file.</p></li>
-<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’;
+<li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’.
 the path to save the png file to (ignored when <cite>to_png=False</cite>).</p></li>
-<li><p><strong>png_name</strong> (<em>str</em>) – default ‘./plot.png’;
+<li><p><strong>png_name</strong> (<em>str</em>) – default ‘./plot.png’.
 the name of the resulting png image (ignored when <cite>to_png=False</cite>).</p></li>
 </ul>
 </dd>
@@ -1287,12 +1288,12 @@ the name of the resulting png image (ignored when <cite>to_png=False</cite>).</p
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}; default False;
-whether to difference the data and how many times before passing the values to the function;
-if False or 0, does not difference;
-if True or 1, differences 1 time;
+<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}. default False.
+whether to difference the data and how many times before passing the values to the function.
+if False or 0, does not difference.
+if True or 1, differences 1 time.
 if 2, differences 2 times.</p></li>
-<li><p><strong>train_only</strong> (<em>bool</em>) – default False;
+<li><p><strong>train_only</strong> (<em>bool</em>) – default False.
 if True, will exclude the test set from the test (a measure added to avoid leakage).</p></li>
 <li><p><strong>**kwargs</strong> – passed to plot_pacf() function from statsmodels.</p></li>
 </ul>
@@ -1314,16 +1315,16 @@ if True, will exclude the test set from the test (a measure added to avoid leaka
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.plot_periodogram">
 <span class="sig-name descname"><span class="pre">plot_periodogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.plot_periodogram" title="Permalink to this definition">¶</a></dt>
-<dd><p>plots a periodogram of the y values (comes from scipy.signal)</p>
+<dd><p>plots a periodogram of the y values (comes from scipy.signal).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}; default False;
-whether to difference the data and how many times before passing the values to the function;
-if False or 0, does not difference;
-if True or 1, differences 1 time;
+<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}. default False.
+whether to difference the data and how many times before passing the values to the function.
+if False or 0, does not difference.
+if True or 1, differences 1 time.
 if 2, differences 2 times.</p></li>
-<li><p><strong>train_only</strong> (<em>bool</em>) – default False;
+<li><p><strong>train_only</strong> (<em>bool</em>) – default False.
 if True, will exclude the test set from the test (a measure added to avoid leakage).</p></li>
 </ul>
 </dd>
@@ -1349,29 +1350,29 @@ if True, will exclude the test set from the test (a measure added to avoid leaka
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>models</strong> (<em>list-like</em><em> or </em><em>str</em>) – default ‘all’;
-the forecated models to plot;
+<li><p><strong>models</strong> (<em>list-like</em><em> or </em><em>str</em>) – default ‘all’.
+the forecated models to plot.
 can start with “<a href="#id13"><span class="problematic" id="id14">top_</span></a>” and the metric specified in order_by will be used to order the models appropriately.</p></li>
 <li><p><strong>order_by</strong> (<em>str</em>) – one of _determine_best_by_, optional.</p></li>
-<li><p><strong>include_train</strong> (<em>bool</em><em> or </em><em>int</em>) – default True;
+<li><p><strong>include_train</strong> (<em>bool</em><em> or </em><em>int</em>) – default True.
 use to zoom into training resultsl
-if True, plots the test results with the entire history in y;
-if False, matches y history to test results and only plots this;
+if True, plots the test results with the entire history in y.
+if False, matches y history to test results and only plots this.
 if int, plots that length of y to match to test results.</p></li>
-<li><p><strong>level</strong> (<em>bool</em>) – default False;
-if True, will always plot level forecasts;
-if False, will plot the forecasts at whatever level they were called on;
+<li><p><strong>level</strong> (<em>bool</em>) – default False.
+if True, will always plot level forecasts.
+if False, will plot the forecasts at whatever level they were called on.
 if False and there are a mix of models passed with different integrations, will default to True.</p></li>
-<li><p><strong>to_png</strong> (<em>bool</em>) – default False;
+<li><p><strong>to_png</strong> (<em>bool</em>) – default False.
 whether to save the resulting image to a png file.</p></li>
 <li><p><strong>out_path</strong> (<em>str</em>) – default ‘./’,
 the path to save the png file to (ignored when <cite>to_png=False</cite>).</p></li>
-<li><p><strong>png_name</strong> (<em>str</em>) – default ‘./plot.png’;
+<li><p><strong>png_name</strong> (<em>str</em>) – default ‘./plot.png’.
 the name of the resulting png image (ignored when <cite>to_png=False</cite>).</p></li>
-<li><p><strong>ci</strong> (<em>bool</em>) – default False;
-whether to display the confidence intervals;
-default is 100 boostrapped samples and a 95% confidence interval;
-change defaults by calling <cite>set_cilevel()</cite> and <cite>set_bootstrapped_samples()</cite> before forecasting;
+<li><p><strong>ci</strong> (<em>bool</em>) – default False.
+whether to display the confidence intervals.
+default is 100 boostrapped samples and a 95% confidence interval.
+change defaults by calling <cite>set_cilevel()</cite> and <cite>set_bootstrapped_samples()</cite> before forecasting.
 ignored when level = False.</p></li>
 </ul>
 </dd>
@@ -1393,7 +1394,7 @@ ignored when level = False.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*args</strong> (<em>str</em>) – names of models matching what was passed to call_me;</p></li>
+<li><p><strong>*args</strong> (<em>str</em>) – names of models matching what was passed to call_me.</p></li>
 <li><p><strong>for call_me in a given model is the same as the estimator name.</strong> (<em>default</em>) – </p></li>
 </ul>
 </dd>
@@ -1415,8 +1416,8 @@ ignored when level = False.</p></li>
 <li><p><strong>metric</strong> (<em>str</em>) – one of _determine_best_by_ + [‘AnyPrediction’,’AnyLevelPrediction’].</p></li>
 <li><p><strong>evaluated_as</strong> (<em>str</em>) – one of {“&lt;”,”&lt;=”,”&gt;”,”&gt;=”,”==”}.</p></li>
 <li><p><strong>threshold</strong> (<em>float</em>) – the threshold to compare the metric and operator to.</p></li>
-<li><p><strong>delete_all</strong> (<em>bool</em>) – default True;
-if the passed criterion deletes all forecasts, whether to actually delete all forecasts;
+<li><p><strong>delete_all</strong> (<em>bool</em>) – default True.
+if the passed criterion deletes all forecasts, whether to actually delete all forecasts.
 if False and all forecasts meet criterion, will keep them all.</p></li>
 </ul>
 </dd>
@@ -1453,10 +1454,8 @@ call after evaluating the model you want it for and before changing the estimato
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.save_summary_stats">
 <span class="sig-name descname"><span class="pre">save_summary_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.save_summary_stats" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>save summary stats for models that offer it and will not raise errors if not available;</dt><dd><p>call after evaluating the model you want it for and before changing the estimator.</p>
-</dd>
-</dl>
+<dd><p>saves summary stats for models that offer it and will not raise errors if not available.
+call after evaluating the model you want it for and before changing the estimator.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;arima&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">manual_forecast</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">save_summary_stats</span><span class="p">()</span>
@@ -1467,16 +1466,16 @@ call after evaluating the model you want it for and before changing the estimato
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.seasonal_decompose">
 <span class="sig-name descname"><span class="pre">seasonal_decompose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.seasonal_decompose" title="Permalink to this definition">¶</a></dt>
-<dd><p>plots a signal/seasonal decomposition of the y values</p>
+<dd><p>plots a signal/seasonal decomposition of the y values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}; default False;
-whether to difference the data and how many times before passing the values to the function;
-if False or 0, does not difference;
-if True or 1, differences 1 time;
+<li><p><strong>diffy</strong> (<em>bool</em><em> or </em><em>int</em>) – one of {True,False,0,1,2}. default False.
+whether to difference the data and how many times before passing the values to the function.
+if False or 0, does not difference.
+if True or 1, differences 1 time.
 if 2, differences 2 times.</p></li>
-<li><p><strong>train_only</strong> (<em>bool</em>) – default False;
+<li><p><strong>train_only</strong> (<em>bool</em>) – default False.
 If True, will exclude the test set from the test (a measure added to avoid leakage).</p></li>
 <li><p><strong>**kwargs</strong> – passed to seasonal_decompose() function from statsmodels.</p></li>
 </ul>
@@ -1501,8 +1500,8 @@ If True, will exclude the test set from the test (a measure added to avoid leaka
 <dd><p>sets the number of bootstrap samples to set confidence intervals for each model (100 default).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – greater than or equal to 30;
-30 because you need around there to satisfy central limit theorem;
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – greater than or equal to 30.
+30 because you need around there to satisfy central limit theorem.
 the lower this number, the faster the performance, but the less confident in the resulting intervals you should be.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1534,7 +1533,7 @@ the lower this number, the faster the performance, but the less confident in the
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_estimator">
 <span class="sig-name descname"><span class="pre">set_estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_estimator" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets the estimator to forecast with</p>
+<dd><p>sets the estimator to forecast with.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>estimator</strong> (<em>str</em>) – one of _estimators_</p>
@@ -1554,21 +1553,24 @@ the lower this number, the faster the performance, but the less confident in the
 <dd><p>generates future dates in the same frequency as current_dates that ends on a specified date.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em><em>, </em><em>pd.Timestamp</em><em>, or </em><em>str</em>) – the date to end on; if str, must be in ‘%Y-%m-%d’ format.</p>
+<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em><em>, </em><em>pd.Timestamp</em><em>, or </em><em>str</em>) – the date to end on. if str, must be in ‘%Y-%m-%d’ format.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_last_future_date</span><span class="p">(</span><span class="s1">&#39;2021-06-01&#39;</span><span class="p">)</span> <span class="c1"># creates future dates up to this one in the expected frequency</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_test_length">
 <span class="sig-name descname"><span class="pre">set_test_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_test_length" title="Permalink to this definition">¶</a></dt>
-<dd><p>set the length of the test set.</p>
+<dd><p>sets the length of the test set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – default 1;
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – default 1.
 the length of the resulting test set.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1583,10 +1585,10 @@ the length of the resulting test set.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.scalecast.Forecaster.Forecaster.set_validation_length">
 <span class="sig-name descname"><span class="pre">set_validation_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.scalecast.Forecaster.Forecaster.set_validation_length" title="Permalink to this definition">¶</a></dt>
-<dd><p>set the length of the validation set.</p>
+<dd><p>sets the length of the validation set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – default 1;
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – default 1.
 the length of the resulting validation set.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1623,9 +1625,9 @@ the metric to optimize the models on using the validation set</p>
 any parameters you can pass as <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs to manual_forecast() can be tuned with this process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dynamic_tuning</strong> (<em>bool</em>) – default False;
-whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<dd class="field-odd"><p><strong>dynamic_tuning</strong> (<em>bool</em>) – default False.
+whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, metrics effectively become an average of one-step forecasts.</p>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1647,17 +1649,17 @@ when False, metrics effectively become an average of one-step forecasts.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>models</strong> (<em>list-like</em>) – each element must match an element in _estimators_ (except “combo”, which cannot be tuned).</p></li>
-<li><p><strong>dynamic_tuning</strong> (<em>bool</em>) – default False;
-whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<li><p><strong>dynamic_tuning</strong> (<em>bool</em>) – default False.
+whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, metrics effectively become an average of one-step forecasts.</p></li>
-<li><p><strong>dynamic_testing</strong> (<em>bool</em>) – default True;
-whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<li><p><strong>dynamic_testing</strong> (<em>bool</em>) – default True.
+whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, test-set metrics effectively become an average of one-step forecasts.</p></li>
-<li><p><strong>summary_stats</strong> (<em>bool</em>) – default False;
+<li><p><strong>summary_stats</strong> (<em>bool</em>) – default False.
 whether to save summary stats for the models that offer those.</p></li>
-<li><p><strong>feature_importance</strong> (<em>bool</em>) – default False;
+<li><p><strong>feature_importance</strong> (<em>bool</em>) – default False.
 whether to save permutation feature importance information for the models that offer those.</p></li>
 </ul>
 </dd>
@@ -1687,7 +1689,7 @@ automatically gets called when object is initiated.</p>
 <dd><p>undifferences y to original level and drops all regressors (such as AR terms).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>suppress_error</strong> (<em>bool</em>) – default False;
+<dd class="field-odd"><p><strong>suppress_error</strong> (<em>bool</em>) – default False.
 whether to suppress an error that gets raised if the series was never differenced.</p>
 </dd>
 <dt class="field-even">Returns</dt>

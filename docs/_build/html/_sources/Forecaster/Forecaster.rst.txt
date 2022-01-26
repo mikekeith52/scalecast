@@ -1,7 +1,7 @@
 Forecaster Class
 ============================================
 
-This is the main object that is utilized for data differencing, adding regressors to predict with, adding lagged values of y, and saving, visualizing, and exporting results.
+This is the main object that is utilized for making predictions on the test set, making forecasts, evaluating models, data differencing, adding regressors, and saving, visualizing, and exporting results.
 
 >>> from scalecast.Forecaster import Forecaster
 >>> array_of_dates = ['2021-01-01','2021-01-02','2021-01-03']

@@ -3,7 +3,7 @@ Notebook
 
 If you are using a Jupyter notebook, the notebook functions may come in handy to evaluate models and view results more easily.
 
-notebook.results_vis
+results_vis
 -----------------------------
 .. automodule:: src.scalecast.notebook.results_vis
     :members:
@@ -22,7 +22,7 @@ notebook.results_vis
 >>>   f_dict[sym] = f
 >>> results_vis(f)
 
-notebook.tune_test_forecast
+tune_test_forecast
 --------------------------------
 .. automodule:: src.scalecast.notebook.tune_test_forecast
     :members:

@@ -44,25 +44,25 @@
 <h1>Forecasting Different Model Types<a class="headerlink" href="#forecasting-different-model-types" title="Permalink to this headline">¶</a></h1>
 <p>Any time you set an estimator, different arguments become available to you when calling <cite>manual_forecast</cite> or tuning the model. Here is the documentation for all these models:</p>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_arima">
-<span id="forecaster-forecaster-forecast-arima"></span><h2>Forecaster.Forecaster._forecast_arima<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_arima" title="Permalink to this headline">¶</a></h2>
+<span id="arima"></span><h2>arima<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_arima" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
-<dd class="field-odd"><p>default False;
+<dd class="field-odd"><p>default False.
 whether the model is being tuned.</p>
 </dd>
 <dt class="field-even">type tune</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys;
+<dd class="field-odd"><p>all elements are in current_xreg keys.
 None means no Xvars used (unlike sklearn models).</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
 <dd class="field-even"><p>list, str, or None</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
+<dd class="field-odd"><p>default True.
 always ignored in ARIMA (for now) - everything is set to be dynamic using statsmodels.</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
@@ -93,64 +93,64 @@ always ignored in ARIMA (for now) - everything is set to be dynamic using statsm
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_combo">
-<span id="forecaster-forecaster-forecast-combo"></span><h2>Forecaster.Forecaster._forecast_combo<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_combo" title="Permalink to this headline">¶</a></h2>
+<span id="combo"></span><h2>combo<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_combo" title="Permalink to this headline">¶</a></h2>
 <p>combines at least two previously evaluted forecasts to create a new model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param how</dt>
-<dd class="field-odd"><p>one of {‘simple’,’weighted’,’splice’}, default ‘simple’;
-the type of combination;
+<dd class="field-odd"><p>one of {‘simple’,’weighted’,’splice’}, default ‘simple’.
+the type of combination.
 all test lengths must be the same for all combined models.</p>
 </dd>
 <dt class="field-even">type how</dt>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param models</dt>
-<dd class="field-odd"><p>default ‘all’;
-which models to combine;
+<dd class="field-odd"><p>default ‘all’.
+which models to combine.
 can start with top (‘top_5’).</p>
 </dd>
 <dt class="field-even">type models</dt>
 <dd class="field-even"><p>list-like or str</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
+<dd class="field-odd"><p>default True.
 always ignored for combo (for now and possibly forever).</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param determine_best_by</dt>
-<dd class="field-odd"><p>one of _determine_best_by_, default ‘ValidationMetricValue’;
-if (models does not start with ‘<a href="#id5"><span class="problematic" id="id6">top_</span></a>’ and how is not ‘weighted’, this is ignored;
+<dd class="field-odd"><p>one of _determine_best_by_, default ‘ValidationMetricValue’.
+if (models does not start with ‘<a href="#id5"><span class="problematic" id="id6">top_</span></a>’ and how is not ‘weighted’, this is ignored.
 if how is ‘weighted’ and manual weights are specified, this is ignored.</p>
 </dd>
 <dt class="field-even">type determine_best_by</dt>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param rebalance_weights</dt>
-<dd class="field-odd"><p>default 0.1;
-how to rebalance the weights when how = ‘weighted’;
-the higher, the closer the weights will be to each other for each model;
+<dd class="field-odd"><p>default 0.1.
+how to rebalance the weights when how = ‘weighted’.
+the higher, the closer the weights will be to each other for each model.
 if 0, the worst-performing model will be weighted with 0.</p>
 </dd>
 <dt class="field-even">type rebalance_weights</dt>
 <dd class="field-even"><p>float</p>
 </dd>
 <dt class="field-odd">param weights</dt>
-<dd class="field-odd"><p>optional;
-only applicable when how=’weighted’;
-manually specifies weights;
-must be the same size as models;
-if None and how=’weighted’, weights are set automatically;
+<dd class="field-odd"><p>optional.
+only applicable when how=’weighted’.
+manually specifies weights.
+must be the same size as models.
+if None and how=’weighted’, weights are set automatically.
 if manually passed weights do not add to 1, will rebalance them.</p>
 </dd>
 <dt class="field-even">type weights</dt>
 <dd class="field-even"><p>list-like</p>
 </dd>
 <dt class="field-odd">param splice_points</dt>
-<dd class="field-odd"><p>optional;
-only applicable when how=’splice’;
-elements in array must be str in yyyy-mm-dd or datetime object;
+<dd class="field-odd"><p>optional.
+only applicable when how=’splice’.
+elements in array must be str in yyyy-mm-dd or datetime object.
 must be exactly one less in length than the number of models</p>
 </dd>
 <dt class="field-even">type splice_points</dt>
@@ -169,19 +169,19 @@ must be exactly one less in length than the number of models</p>
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_hwes">
-<span id="forecaster-forecaster-forecast-hwes"></span><h2>Forecaster.Forecaster._forecast_hwes<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_hwes" title="Permalink to this headline">¶</a></h2>
+<span id="hwes"></span><h2>hwes<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_hwes" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with holt-winters exponential smoothing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
-<dd class="field-odd"><p>default False;
+<dd class="field-odd"><p>default False.
 whether the model is being tuned.</p>
 </dd>
 <dt class="field-even">type tune</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
-always ignored in HWES (for now) - everything is set to be dynamic using statsmodels;</p>
+<dd class="field-odd"><p>default True.
+always ignored in HWES (for now) - everything is set to be dynamic using statsmodels.</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
@@ -211,52 +211,52 @@ always ignored in HWES (for now) - everything is set to be dynamic using statsmo
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_lstm">
-<span id="forecaster-forecaster-forecast-lstm"></span><h2>Forecaster.Forecaster._forecast_lstm<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_lstm" title="Permalink to this headline">¶</a></h2>
+<span id="lstm"></span><h2>lstm<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_lstm" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>forecasts with a long-short term memory neural network from TensorFlow;</dt><dd><p>cannot be tuned;
-only xvar options are the series’ own history (specify in lags argument);
-always uses minmax normalizer;
+<dt>forecasts with a long-short term memory neural network from TensorFlow.</dt><dd><p>cannot be tuned.
+only xvar options are the series’ own history (specify in lags argument).
+always uses minmax normalizer.
 fitted values are the last fcst_length worth of values only.</p>
 </dd>
 </dl>
 <dl class="field-list">
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
+<dd class="field-odd"><p>default True.
 always ignored for lstm.</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param lags</dt>
-<dd class="field-odd"><p>greater than 0, default 1;
+<dd class="field-odd"><p>greater than 0, default 1.
 the number of y-variable lags to train the model with.</p>
 </dd>
 <dt class="field-even">type lags</dt>
 <dd class="field-even"><p>int</p>
 </dd>
 <dt class="field-odd">param lstm_layer_sizes</dt>
-<dd class="field-odd"><p>default (25,);
-the size of each lstm layer to add;
-the first element is for the input layer;
+<dd class="field-odd"><p>default (25,).
+the size of each lstm layer to add.
+the first element is for the input layer.
 the size of this array minus 1 will equal the number of hidden layers in the resulting model.</p>
 </dd>
 <dt class="field-even">type lstm_layer_sizes</dt>
 <dd class="field-even"><p>list-like</p>
 </dd>
 <dt class="field-odd">param dropout</dt>
-<dd class="field-odd"><p>default (0.0,);
-the dropout rate for each lstm layer;
+<dd class="field-odd"><p>default (0.0,).
+the dropout rate for each lstm layer.
 must be the same size as lstm_layer_sizes.</p>
 </dd>
 <dt class="field-even">type dropout</dt>
 <dd class="field-even"><p>list-like</p>
 </dd>
 <dt class="field-odd">param loss</dt>
-<dd class="field-odd"><p>default ‘mean_absolute_error’;
-the loss function to minimize;
+<dd class="field-odd"><p>default ‘mean_absolute_error’.
+the loss function to minimize.
 see available options here:</p>
 <blockquote>
-<div><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/losses">https://www.tensorflow.org/api_docs/python/tf/keras/losses</a>;</p>
+<div><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/losses">https://www.tensorflow.org/api_docs/python/tf/keras/losses</a>.</p>
 </div></blockquote>
 <p>be sure to choose one that is suitable for regression tasks.</p>
 </dd>
@@ -264,8 +264,8 @@ see available options here:</p>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param activation</dt>
-<dd class="field-odd"><p>default “tanh”;
-the activation function to use in each lstm layer;
+<dd class="field-odd"><p>default “tanh”.
+the activation function to use in each lstm layer.
 see available values here:</p>
 <blockquote>
 <div><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/activations">https://www.tensorflow.org/api_docs/python/tf/keras/activations</a>.</p>
@@ -275,8 +275,8 @@ see available values here:</p>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param optimizer</dt>
-<dd class="field-odd"><p>default “Adam”;
-the optimizer to use when compiling the model;
+<dd class="field-odd"><p>default “Adam”.
+the optimizer to use when compiling the model.
 see available values here:</p>
 <blockquote>
 <div><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/optimizers">https://www.tensorflow.org/api_docs/python/tf/keras/optimizers</a>.</p>
@@ -286,24 +286,24 @@ see available values here:</p>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param learning_rate</dt>
-<dd class="field-odd"><p>default 0.001;
+<dd class="field-odd"><p>default 0.001.
 the learning rate to use when compiling the model.</p>
 </dd>
 <dt class="field-even">type learning_rate</dt>
 <dd class="field-even"><p>float</p>
 </dd>
 <dt class="field-odd">param random_seed</dt>
-<dd class="field-odd"><p>optional;
-set a seed for consistent results;
+<dd class="field-odd"><p>optional.
+set a seed for consistent results.
 with tensorflow networks, setting seeds does not guarantee consistent results.</p>
 </dd>
 <dt class="field-even">type random_seed</dt>
 <dd class="field-even"><p>int</p>
 </dd>
 <dt class="field-odd">param plot_loss</dt>
-<dd class="field-odd"><p>default False;
-whether to plot the LSTM loss function stored in history for each epoch;
-if validation_split passed to kwargs, will plot the validation loss as well;
+<dd class="field-odd"><p>default False.
+whether to plot the LSTM loss function stored in history for each epoch.
+if validation_split passed to kwargs, will plot the validation loss as well.
 looks better if epochs &gt; 1 passed to <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs.</p>
 </dd>
 <dt class="field-even">type plot_loss</dt>
@@ -325,41 +325,41 @@ looks better if epochs &gt; 1 passed to <a href="#id1"><span class="problematic"
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_prophet">
-<span id="forecaster-forecaster-forecast-prophet"></span><h2>Forecaster.Forecaster._forecast_prophet<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_prophet" title="Permalink to this headline">¶</a></h2>
+<span id="prophet"></span><h2>prophet<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_prophet" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with the prophet model from facebook.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
-<dd class="field-odd"><p>default False;
-whether to tune the forecast;
-if True, returns a metric;
+<dd class="field-odd"><p>default False.
+whether to tune the forecast.
+if True, returns a metric.
 if False, returns a list of forecasted values.</p>
 </dd>
 <dt class="field-even">type tune</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys;
+<dd class="field-odd"><p>all elements are in current_xreg keys.
 None means no Xvars used (unlike sklearn models).</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
 <dd class="field-even"><p>list, str, or None</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
+<dd class="field-odd"><p>default True.
 always ignored for Prophet (for now).</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param cap</dt>
-<dd class="field-odd"><p>optional;
+<dd class="field-odd"><p>optional.
 specific to prophet when using logistic growth – the largest amount the model is allowed to evaluate to.</p>
 </dd>
 <dt class="field-even">type cap</dt>
 <dd class="field-even"><p>float</p>
 </dd>
 <dt class="field-odd">param floor</dt>
-<dd class="field-odd"><p>optional;
+<dd class="field-odd"><p>optional.
 specific to prophet when using logistic growth – the smallest amount the model is allowed to evaluate to.</p>
 </dd>
 <dt class="field-even">type floor</dt>
@@ -390,43 +390,43 @@ specific to prophet when using logistic growth – the smallest amount the model
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_rnn">
-<span id="forecaster-forecaster-forecast-rnn"></span><h2>Forecaster.Forecaster._forecast_rnn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_rnn" title="Permalink to this headline">¶</a></h2>
-<p>forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent;
-cannot be tuned;
-only xvar options are the series’ own history (specified in lags argument);
-always uses minmax normalizer;
-this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility;
+<span id="rnn"></span><h2>rnn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_rnn" title="Permalink to this headline">¶</a></h2>
+<p>forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent.
+cannot be tuned.
+only xvar options are the series’ own history (specified in lags argument).
+always uses minmax normalizer.
+this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility.
 fitted values are the last fcst_length worth of values only.</p>
 <dl class="field-list">
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
+<dd class="field-odd"><p>default True.
 always ignored for lstm.</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param lags</dt>
-<dd class="field-odd"><p>greater than 0, default 1;
+<dd class="field-odd"><p>greater than 0, default 1.
 the number of y-variable lags to train the model with.</p>
 </dd>
 <dt class="field-even">type lags</dt>
 <dd class="field-even"><p>int</p>
 </dd>
 <dt class="field-odd">param hidden_layers_struct</dt>
-<dd class="field-odd"><p>default {‘simple’:{‘size’:8,’activation’:’tanh’}};
-key is the type of each hidden layer, one of {‘simple’,’lstm’};
+<dd class="field-odd"><p>default {‘simple’:{‘size’:8,’activation’:’tanh’}}.
+key is the type of each hidden layer, one of {‘simple’,’lstm’}.
 val is a dict where:</p>
 <blockquote>
 <div><dl class="simple">
-<dt>key is str representing hyperparameter value: ‘units’,’activation’, etc;</dt><dd><dl class="simple">
-<dt>see all possible here for simple rnn:</dt><dd><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN">https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN</a>;</p>
+<dt>key is str representing hyperparameter value: ‘units’,’activation’, etc.</dt><dd><dl class="simple">
+<dt>see all possible here for simple rnn:</dt><dd><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN">https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN</a>.</p>
 </dd>
-<dt>here for lstm:</dt><dd><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM">https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM</a>;</p>
-</dd>
-</dl>
+<dt>here for lstm:</dt><dd><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM">https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM</a>.</p>
 </dd>
 </dl>
-<p>val is the desired hyperparam value;
+</dd>
+</dl>
+<p>val is the desired hyperparam value.
 do not pass <cite>return_sequences</cite> or <cite>input_shape</cite> as these will be set automatically.</p>
 </div></blockquote>
 </dd>
@@ -434,11 +434,11 @@ do not pass <cite>return_sequences</cite> or <cite>input_shape</cite> as these w
 <dd class="field-even"><p>dict[str,dict[str,Union[float,str]]]</p>
 </dd>
 <dt class="field-odd">param loss</dt>
-<dd class="field-odd"><p>default ‘mean_absolute_error’;
-the loss function to minimize;
+<dd class="field-odd"><p>default ‘mean_absolute_error’.
+the loss function to minimize.
 see available options here:</p>
 <blockquote>
-<div><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/losses">https://www.tensorflow.org/api_docs/python/tf/keras/losses</a>;</p>
+<div><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/losses">https://www.tensorflow.org/api_docs/python/tf/keras/losses</a>.</p>
 </div></blockquote>
 <p>be sure to choose one that is suitable for regression tasks.</p>
 </dd>
@@ -446,8 +446,8 @@ see available options here:</p>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param optimizer</dt>
-<dd class="field-odd"><p>default “Adam”;
-the optimizer to use when compiling the model;
+<dd class="field-odd"><p>default “Adam”.
+the optimizer to use when compiling the model.
 see available values here:</p>
 <blockquote>
 <div><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/optimizers">https://www.tensorflow.org/api_docs/python/tf/keras/optimizers</a>.</p>
@@ -457,24 +457,24 @@ see available values here:</p>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param learning_rate</dt>
-<dd class="field-odd"><p>default 0.001;
+<dd class="field-odd"><p>default 0.001.
 the learning rate to use when compiling the model.</p>
 </dd>
 <dt class="field-even">type learning_rate</dt>
 <dd class="field-even"><p>float</p>
 </dd>
 <dt class="field-odd">param random_seed</dt>
-<dd class="field-odd"><p>optional;
-set a seed for consistent results;
+<dd class="field-odd"><p>optional.
+set a seed for consistent results.
 with tensorflow networks, setting seeds does not guarantee consistent results.</p>
 </dd>
 <dt class="field-even">type random_seed</dt>
 <dd class="field-even"><p>int</p>
 </dd>
 <dt class="field-odd">param plot_loss</dt>
-<dd class="field-odd"><p>default False;
-whether to plot the LSTM loss function stored in history for each epoch;
-if validation_split passed to kwargs, will plot the validation loss as well;
+<dd class="field-odd"><p>default False.
+whether to plot the LSTM loss function stored in history for each epoch.
+if validation_split passed to kwargs, will plot the validation loss as well.
 looks better if epochs &gt; 1 passed to <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs.</p>
 </dd>
 <dt class="field-even">type plot_loss</dt>
@@ -496,27 +496,27 @@ looks better if epochs &gt; 1 passed to <a href="#id3"><span class="problematic"
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_silverkite">
-<span id="forecaster-forecaster-forecast-silverkite"></span><h2>Forecaster.Forecaster._forecast_silverkite<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_silverkite" title="Permalink to this headline">¶</a></h2>
+<span id="silverkite"></span><h2>silverkite<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_silverkite" title="Permalink to this headline">¶</a></h2>
 <p>forecasts with the silverkite model from LinkedIn greykite library.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param tune</dt>
-<dd class="field-odd"><p>default False;
-whether to tune the forecast;
-if True, returns a metric;
+<dd class="field-odd"><p>default False.
+whether to tune the forecast.
+if True, returns a metric.
 if False, returns a list of forecasted values.</p>
 </dd>
 <dt class="field-even">type tune</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
+<dd class="field-odd"><p>default True.
 always ignored for silverkite (for now).</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys;
+<dd class="field-odd"><p>all elements are in current_xreg keys.
 None means no Xvars used (unlike sklearn models).</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
@@ -547,7 +547,7 @@ None means no Xvars used (unlike sklearn models).</p>
 </div>
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_sklearn">
-<span id="forecaster-forecaster-forecast-sklearn"></span><h2>Forecaster.Forecaster._forecast_sklearn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_sklearn" title="Permalink to this headline">¶</a></h2>
+<span id="sklearn"></span><h2>sklearn<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_sklearn" title="Permalink to this headline">¶</a></h2>
 <p>runs an sklearn forecast start-to-finish.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param fcster</dt>
@@ -557,29 +557,29 @@ None means no Xvars used (unlike sklearn models).</p>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<dd class="field-odd"><p>whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, test-set metrics effectively become an average of one-step forecasts.</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param tune</dt>
-<dd class="field-odd"><p>default False;
+<dd class="field-odd"><p>default False.
 whether the model is being tuned.</p>
 </dd>
 <dt class="field-even">type tune</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param Xvars</dt>
-<dd class="field-odd"><p>all elements are in current_xreg keys;
+<dd class="field-odd"><p>all elements are in current_xreg keys.
 if None and Xvars are required, None becomes equivalent to ‘all’.</p>
 </dd>
 <dt class="field-even">type Xvars</dt>
 <dd class="field-even"><p>list, str, or None</p>
 </dd>
 <dt class="field-odd">param normalizer</dt>
-<dd class="field-odd"><p>one of _normalizer_;
+<dd class="field-odd"><p>one of _normalizer_.
 if not None, normalizer applied to training data only to not leak.</p>
 </dd>
 <dt class="field-even">type normalizer</dt>
