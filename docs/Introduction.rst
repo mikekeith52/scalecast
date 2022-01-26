@@ -1,4 +1,4 @@
 ReadMe
 =================================
-.. include:: ../README.md
+.. include:: src/README.md
    :parser: myst_parser.sphinx_
