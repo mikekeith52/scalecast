@@ -21,7 +21,7 @@ release = '0.5.6'
 extensions = ["sphinx.ext.napoleon", "autodocsumm", "nbsphinx", "m2r2", "myst_parser", "sphinxcontrib.confluencebuilder"]
 autodoc_default_options = {"autosummary": True}
 
-source_suffix = ['.rst', '.md']
+#source_suffix = ['.rst', '.md']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
