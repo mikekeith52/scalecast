@@ -15,10 +15,15 @@ results_vis
     from scalecast.Forecaster import Forecaster
     from scalecast import GridGenerator
     from scalecast.notebook import tune_test_forecast, results_vis
-    import pandas_datareader as pdr # pip install pandas-datareader
+    import pandas_datareader as pdr # !pip install pandas-datareader
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    sns.set(rc={"figure.figsize": (12, 8)})
+
     f_dict = {}
     models = ('mlr','elasticnet','mlp')
-    GridGenerator.get_example_grid() # writes the grids.py file to your working directory
+    GridGenerator.get_example_grids() # writes the Grids.py file to your working directory
 
     for sym in ('UNRATE','GDP'):
       df = pdr.get_data_fred(sym, start = '2000-01-01')
