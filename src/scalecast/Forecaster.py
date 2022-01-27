@@ -2916,6 +2916,11 @@ class Forecaster:
             ValueError,
             "call_me must be a str type or None",
         )
+
+        if 'tune' in kwargs.keys():
+            kwargs.pop('tune')
+            logging.warning('tune argument will be ignored')
+
         self.call_me = self.estimator if call_me is None else call_me
         self.forecast = (
             getattr(self, "_forecast_sklearn")(

@@ -52,7 +52,7 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
         me_selection = me_dd.value
         with output:
             clear_output()
-            display_user_selections(ts_selection,mo_selection,lv_selection,me_selection)
+            display_user_selections(ts_selection,mo_selection,lv_selection,ci_selection,me_selection)
     
     all_models = []
     for k,f in f_dict.items():
@@ -68,7 +68,7 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     button = widgets.Button(description="Select Time Series")
     output = widgets.Output()
 
-    display(ts_dd,mo_dd,lv_dd,me_dd)
+    display(ts_dd,mo_dd,lv_dd,ci_dd,me_dd)
     display(button, output)
     
     button.on_click(on_button_clicked)
