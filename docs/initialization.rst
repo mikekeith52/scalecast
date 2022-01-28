@@ -17,7 +17,7 @@ One of the best parts of using scalecast is the ability to automatically tune an
     from scalecast.Forecaster import Forecaster
     from scalecast import GridGenerator
     models = ('mlr','elasticnet','mlp') # many others available
-    GridGenerator.get_example_grid() # writes the Grids.py file to your working directory
+    GridGenerator.get_example_grids() # writes the Grids.py file to your working directory
     array_of_dates = ['2021-01-01','2021-01-02','2021-01-03','2021-01-04','2021-01-05']
     array_of_values = [1,2,3,4,5]
     f = Forecaster(y=array_of_values, current_dates=array_of_dates)

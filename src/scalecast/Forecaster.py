@@ -230,6 +230,7 @@ class Forecaster:
     ForecastsEvaluated={}
     CILevel={}
     BootstrapSamples={}
+    CurrentEstimator={}
 )""".format(self.current_dates.values[0].astype(str),
             self.current_dates.values[-1].astype(str),
             self.freq,
@@ -241,7 +242,8 @@ class Forecaster:
             self.validation_metric,
             list(self.history.keys()),
             self.cilevel,
-            self.bootstrap_samples)
+            self.bootstrap_samples,
+            None if not hasattr(self,'estimator') else self.estimator)
 
     def get_funcs(self,which) -> list:
         """ returns a group of functions based on what's passed to `which`
@@ -1496,12 +1498,13 @@ class Forecaster:
             dynamic_testing (bool): default True.
                 always ignored for combo (for now and possibly forever).
             determine_best_by (str): one of _determine_best_by_, default 'ValidationMetricValue'.
-                if (models does not start with 'top_' and how is not 'weighted', this is ignored.
+                if models does not start with 'top_' and how is not 'weighted', this is ignored.
                 if how is 'weighted' and manual weights are specified, this is ignored.
             rebalance_weights (float): default 0.1.
                 how to rebalance the weights when how = 'weighted'.
                 the higher, the closer the weights will be to each other for each model.
                 if 0, the worst-performing model will be weighted with 0.
+                must be greater than or equal to 0.
             weights (list-like): optional.
                 only applicable when how='weighted'.
                 manually specifies weights.
