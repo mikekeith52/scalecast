@@ -79,7 +79,7 @@ def tune_test_forecast(forecaster,models,dynamic_tuning=False,dynamic_testing=Tr
     Args:
         forecaster (Forecaster): the object to visualize.
         models (list-like):
-            each element must me in _can_be_tuned_.
+            each element must be in _can_be_tuned_.
         dynamic_tuning (bool): default False.
             whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
             setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.

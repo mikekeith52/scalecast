@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.5.8] -
+##
+- Added CurrentEstimator to `__repr__()` function.
+##
+##
+
+## [0.5.8] - 2022-01-27
+## Added
+## Changed
+- Made it impossible to pass tune argument to manual_forecast()
+## Fixed
+- Fixed results_vis in notebook (wasn't displaying one of the widgets)
+
 ## [0.5.7] - 2022-01-26
 ## Added
 ## Changed

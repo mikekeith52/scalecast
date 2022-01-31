@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Notebook &mdash; scalecast 0.5.7 documentation</title>
+  <title>Notebook &mdash; scalecast 0.5.8 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/logo2.png"/>
@@ -35,7 +35,7 @@
             <img src="../_static/logo2.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.5.7
+                0.5.8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -138,31 +138,32 @@
 <p>visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param f_dict</dt>
-<dd class="field-odd"><p>dictionary of forcaster objects.</p>
+<dd class="field-odd"><p>dictionary of forcaster objects.
+works best if two or more models have been evaluated in each dictionary value.</p>
 </dd>
 <dt class="field-even">type f_dict</dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>dict[str,Forecaster]</p>
 </dd>
 <dt class="field-odd">param plot_type</dt>
-<dd class="field-odd"><p>one of {“forecast”,”test”}, default “forecast”;
+<dd class="field-odd"><p>one of {“forecast”,”test”}, default “forecast”.
 the type of results to visualize.</p>
 </dd>
 <dt class="field-even">type plot_type</dt>
 <dd class="field-even"><p>str</p>
 </dd>
 <dt class="field-odd">param print_attr</dt>
-<dd class="field-odd"><p>optional;
-the attributes from history to print;
-passed to print_attr parameter when plot_type = ‘forecast’;
+<dd class="field-odd"><p>optional.
+the attributes from history to print.
+passed to print_attr parameter when plot_type = ‘forecast’.
 ignored when plot_type = ‘test’.</p>
 </dd>
 <dt class="field-even">type print_attr</dt>
 <dd class="field-even"><p>list</p>
 </dd>
 <dt class="field-odd">param include_train</dt>
-<dd class="field-odd"><p>optional;
-whether to include the complete training set in the plot or how many traning-set observations to include;
-passed to include_train parameter when plot_type = ‘test’;
+<dd class="field-odd"><p>optional.
+whether to include the complete training set in the plot or how many traning-set observations to include.
+passed to include_train parameter when plot_type = ‘test’.
 ignored when plot_type = ‘forecast’.</p>
 </dd>
 <dt class="field-even">type include_train</dt>
@@ -184,10 +185,15 @@ ignored when plot_type = ‘forecast’.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scalecast.Forecaster</span> <span class="kn">import</span> <span class="n">Forecaster</span>
 <span class="kn">from</span> <span class="nn">scalecast</span> <span class="kn">import</span> <span class="n">GridGenerator</span>
 <span class="kn">from</span> <span class="nn">scalecast.notebook</span> <span class="kn">import</span> <span class="n">tune_test_forecast</span><span class="p">,</span> <span class="n">results_vis</span>
-<span class="kn">import</span> <span class="nn">pandas_datareader</span> <span class="k">as</span> <span class="nn">pdr</span> <span class="c1"># pip install pandas-datareader</span>
+<span class="kn">import</span> <span class="nn">pandas_datareader</span> <span class="k">as</span> <span class="nn">pdr</span> <span class="c1"># !pip install pandas-datareader</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">rc</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">)})</span>
+
 <span class="n">f_dict</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="n">models</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mlr&#39;</span><span class="p">,</span><span class="s1">&#39;elasticnet&#39;</span><span class="p">,</span><span class="s1">&#39;mlp&#39;</span><span class="p">)</span>
-<span class="n">GridGenerator</span><span class="o">.</span><span class="n">get_example_grid</span><span class="p">()</span> <span class="c1"># writes the grids.py file to your working directory</span>
+<span class="n">GridGenerator</span><span class="o">.</span><span class="n">get_example_grids</span><span class="p">()</span> <span class="c1"># writes the Grids.py file to your working directory</span>
 
 <span class="k">for</span> <span class="n">sym</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;UNRATE&#39;</span><span class="p">,</span><span class="s1">&#39;GDP&#39;</span><span class="p">):</span>
   <span class="n">df</span> <span class="o">=</span> <span class="n">pdr</span><span class="o">.</span><span class="n">get_data_fred</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="s1">&#39;2000-01-01&#39;</span><span class="p">)</span>
@@ -209,44 +215,44 @@ ignored when plot_type = ‘forecast’.</p>
 <p>tunes, tests, and forecasts a series of models with a progress bar through tqdm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param forecaster</dt>
-<dd class="field-odd"><p>the object to visualize; works best if two or more models have been evaluated.</p>
+<dd class="field-odd"><p>the object to visualize.</p>
 </dd>
 <dt class="field-even">type forecaster</dt>
 <dd class="field-even"><p>Forecaster</p>
 </dd>
 <dt class="field-odd">param models</dt>
-<dd class="field-odd"><p>each element must match an element in scalecast.Forecaster._estimators_ (except “combo”, which cannot be tuned).</p>
+<dd class="field-odd"><p>each element must me in _can_be_tuned_.</p>
 </dd>
 <dt class="field-even">type models</dt>
 <dd class="field-even"><p>list-like</p>
 </dd>
 <dt class="field-odd">param dynamic_tuning</dt>
-<dd class="field-odd"><p>default False;
-whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<dd class="field-odd"><p>default False.
+whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, metrics effectively become an average of one-step forecasts.</p>
 </dd>
 <dt class="field-even">type dynamic_tuning</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param dynamic_testing</dt>
-<dd class="field-odd"><p>default True;
-whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values);
-setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods;
+<dd class="field-odd"><p>default True.
+whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
+setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
 when False, test-set metrics effectively become an average of one-step forecasts.</p>
 </dd>
 <dt class="field-even">type dynamic_testing</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param summary_stats</dt>
-<dd class="field-odd"><p>default False;
+<dd class="field-odd"><p>default False.
 whether to save summary stats for the models that offer those.</p>
 </dd>
 <dt class="field-even">type summary_stats</dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 <dt class="field-odd">param feature_importance</dt>
-<dd class="field-odd"><p>default False;
+<dd class="field-odd"><p>default False.
 whether to save permutation feature importance information for the models that offer those.</p>
 </dd>
 <dt class="field-even">type feature_importance</dt>
@@ -267,7 +273,10 @@ whether to save permutation feature importance information for the models that o
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../GridGenerator/GridGenerator.html" class="btn btn-neutral float-left" title="GridGenerator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../change_log.html" class="btn btn-neutral float-right" title="Changelog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

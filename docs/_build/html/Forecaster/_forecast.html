@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forecasting Different Model Types &mdash; scalecast 0.5.7 documentation</title>
+  <title>Forecasting Different Model Types &mdash; scalecast 0.5.8 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/logo2.png"/>
@@ -35,7 +35,7 @@
             <img src="../_static/logo2.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.5.7
+                0.5.8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -220,7 +220,7 @@ always ignored for combo (for now and possibly forever).</p>
 </dd>
 <dt class="field-odd">param determine_best_by</dt>
 <dd class="field-odd"><p>one of _determine_best_by_, default ‘ValidationMetricValue’.
-if (models does not start with ‘<a href="#id5"><span class="problematic" id="id6">top_</span></a>’ and how is not ‘weighted’, this is ignored.
+if models does not start with ‘<a href="#id5"><span class="problematic" id="id6">top_</span></a>’ and how is not ‘weighted’, this is ignored.
 if how is ‘weighted’ and manual weights are specified, this is ignored.</p>
 </dd>
 <dt class="field-even">type determine_best_by</dt>
@@ -230,7 +230,8 @@ if how is ‘weighted’ and manual weights are specified, this is ignored.</p>
 <dd class="field-odd"><p>default 0.1.
 how to rebalance the weights when how = ‘weighted’.
 the higher, the closer the weights will be to each other for each model.
-if 0, the worst-performing model will be weighted with 0.</p>
+if 0, the worst-performing model will be weighted with 0.
+must be greater than or equal to 0.</p>
 </dd>
 <dt class="field-even">type rebalance_weights</dt>
 <dd class="field-even"><p>float</p>
@@ -718,7 +719,10 @@ if not None, normalizer applied to training data only to not leak.</p>
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ForecasterGlobals.html" class="btn btn-neutral float-left" title="Forecaster Object Globals" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../GridGenerator/GridGenerator.html" class="btn btn-neutral float-right" title="GridGenerator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

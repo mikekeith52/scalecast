@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.5.8] -
+## Added
+- Added CurrentEstimator to `__repr__()` function.
+## Changed
+## Fixed
+- Made it impossible to forecast without adding future dates first
+
 ## [0.5.8] - 2022-01-27
 ## Added
 ## Changed

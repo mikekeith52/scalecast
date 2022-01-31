@@ -1327,10 +1327,12 @@ class Forecaster:
         **kwargs,
     ): 
         """ forecasts with a long-short term memory neural network from TensorFlow.
-            cannot be tuned.
-            only xvar options are the series' own history (specify in lags argument).
-            always uses minmax normalizer.
-            fitted values are the last fcst_length worth of values only.
+        cannot be tuned.
+        only xvar options are the series' own history (specify in lags argument).
+        always uses minmax normalizer.
+        fitted values are the last fcst_length worth of values only.
+        anything this function can do, rnn can also do. 
+        this function is simpler to set up than rnn.
             
         Args:
             dynamic_testing (bool): default True.
@@ -1513,7 +1515,7 @@ class Forecaster:
                 if manually passed weights do not add to 1, will rebalance them.
             splice_points (list-like): optional.
                 only applicable when how='splice'.
-                elements in array must be str in yyyy-mm-dd or datetime object.
+                elements in array must be str in '%Y-%m-%d' or datetime object.
                 must be exactly one less in length than the number of models.
                 models[0] --> :splice_points[0]
                 models[-1] --> splice_points[-1]:
@@ -1615,7 +1617,7 @@ class Forecaster:
                 descriptive_assert(
                     np.array([p in future_dates for p in splice_points]).all(),
                     TypeError,
-                    "all elements in splice_points must be datetime objects or str in yyyy-mm-dd format and must be present in future_dates attribute",
+                    "all elements in splice_points must be datetime objects or str in '%Y-%m-%d' format and must be present in future_dates attribute",
                 )
                 fcst = [None] * len(future_dates)
                 start = 0
@@ -2229,7 +2231,8 @@ class Forecaster:
 
         Args:
             *args: each of str type.
-                values that return a series of int type from pandas.dt and pandas.dt.isocalendar()
+                values that return a series of int type from pandas.dt and pandas.dt.isocalendar().
+                see https://pandas.pydata.org/docs/reference/api/pandas.Series.dt.year.html.
             raw (bool): default True.
                 whether to use the raw integer values
             sincos (bool): default False.
@@ -2809,7 +2812,7 @@ class Forecaster:
 
     def tune(self, dynamic_tuning=False):
         """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as the estimator by default).
-        any parameters you can pass as **kwargs to manual_forecast() can be tuned with this process.
+        any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
 
         Args:
             dynamic_tuning (bool): default False.
@@ -2920,6 +2923,12 @@ class Forecaster:
             "call_me must be a str type or None",
         )
 
+        descriptive_assert(
+            len(self.future_dates) > 0,
+            ForecastError,
+            "before calling a model, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)",
+        )
+
         if 'tune' in kwargs.keys():
             kwargs.pop('tune')
             logging.warning('tune argument will be ignored')
@@ -2982,7 +2991,7 @@ class Forecaster:
 
         Args:
             models (list-like):
-                each element must match an element in _estimators_ (except "combo", which cannot be tuned).
+                each element must be in _can_be_tuned_.
             dynamic_tuning (bool): default False.
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
@@ -3087,12 +3096,12 @@ class Forecaster:
         descriptive_assert(
             isinstance(n, int),
             ValueError,
-            "n must be an int, datetime object, or str in yyyy-mm-dd format and there must be more than 2 observations to keep",
+            "n must be an int, datetime object, or str in '%Y-%m-%d' format and there must be more than 2 observations to keep",
         )
         descriptive_assert(
             n > 2,
             ValueError,
-            "n must be an int, datetime object, or str in yyyy-mm-dd format and there must be more than 2 observations to keep",
+            "n must be an int, datetime object, or str in '%Y-%m-%d' format and there must be more than 2 observations to keep",
         )
         self.y = self.y[-n:]
         self.current_dates = self.current_dates[-n:]

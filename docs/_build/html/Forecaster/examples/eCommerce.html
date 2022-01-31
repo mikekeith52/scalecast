@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eCommerce Example &mdash; scalecast 0.5.7 documentation</title>
+  <title>eCommerce Example &mdash; scalecast 0.5.8 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../../_static/logo2.png"/>
@@ -37,7 +37,7 @@
             <img src="../../_static/logo2.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.5.7
+                0.5.8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -445,7 +445,6 @@ combination modeling.</p>
 </pre></div>
 </div>
 </div>
-<p>It is important to let pandas know that the date column should be datetime type. That’s why we pass the argument <code class="docutils literal notranslate"><span class="pre">parse_dates=['InvoiceDate']</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -710,7 +709,7 @@ first date in data: 2010-12-01 00:00:00
 last date in data: 2011-12-09 00:00:00
 </pre></div></div>
 </div>
-<p>It is possible that after making this aggregation to the business-daily level, some date observations in the range are missing. Some forecasting libraries will process missing data for you automatically, but because scalecast mixes so many model concepts, it is necessary to have every possible date in a given range represented. If we run the code below, we will limit the dataframe to only business days and any missing dates will have their sales filled with 0.</p>
+<p>It is possible that after making this aggregation to the daily level, some date observations in the range are missing. Some forecasting libraries will process missing data for you automatically, but because scalecast mixes so many model concepts, it is necessary to have every possible date in a given range represented. If we run the code below, we will limit the dataframe to only days and any missing dates will have their sales filled with 0.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -792,7 +791,7 @@ last date in data: 2011-12-09 00:00:00
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_17_0.png" src="../../_images/Forecaster_examples_eCommerce_17_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_16_0.png" src="../../_images/Forecaster_examples_eCommerce_16_0.png" />
 </div>
 </div>
 <p>We notice the last observation in the dataframe is an outlier. Let’s look at it more closely.</p>
@@ -857,7 +856,7 @@ last date in data: 2011-12-09 00:00:00
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_22_0.png" src="../../_images/Forecaster_examples_eCommerce_22_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_21_0.png" src="../../_images/Forecaster_examples_eCommerce_21_0.png" />
 </div>
 </div>
 <p>Much better. In the real world, we might want to know more about that outlier – why it exists, the best way to mitigate it, etc. This example is more interested in producing forecasts and showing the scalecast process, so we are going to sweep the issue of this outlier under the rug and forget about it. Let’s now try to get a better idea of how the data is distributed.</p>
@@ -945,7 +944,7 @@ last date in data: 2011-12-09 00:00:00
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_25_0.png" src="../../_images/Forecaster_examples_eCommerce_25_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_24_0.png" src="../../_images/Forecaster_examples_eCommerce_24_0.png" />
 </div>
 </div>
 <p>The remaining data looks somewhat normally distributed with a slight right skew. We see that one outlier far above all other values.</p>
@@ -1010,7 +1009,7 @@ Forecaster(
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_32_0.png" src="../../_images/Forecaster_examples_eCommerce_32_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_31_0.png" src="../../_images/Forecaster_examples_eCommerce_31_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1026,7 +1025,7 @@ Forecaster(
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_33_0.png" src="../../_images/Forecaster_examples_eCommerce_33_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_32_0.png" src="../../_images/Forecaster_examples_eCommerce_32_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1043,7 +1042,7 @@ Forecaster(
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_34_0.png" src="../../_images/Forecaster_examples_eCommerce_34_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_33_0.png" src="../../_images/Forecaster_examples_eCommerce_33_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1059,7 +1058,7 @@ Forecaster(
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_35_0.png" src="../../_images/Forecaster_examples_eCommerce_35_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_34_0.png" src="../../_images/Forecaster_examples_eCommerce_34_0.png" />
 </div>
 </div>
 <p>From these graphs, we get a sense that the data has a seasonal pattern over seven periods, or one week. The data appears to be significantly autocorrelated back 1, 6, 7, and 13, and 14 periods, possibly more. This is good information to use when deciding how to specify the forecasts.</p>
@@ -1094,7 +1093,7 @@ series might not be stationary
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_40_0.png" src="../../_images/Forecaster_examples_eCommerce_40_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_39_0.png" src="../../_images/Forecaster_examples_eCommerce_39_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1110,7 +1109,7 @@ series might not be stationary
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_41_0.png" src="../../_images/Forecaster_examples_eCommerce_41_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_40_0.png" src="../../_images/Forecaster_examples_eCommerce_40_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1126,7 +1125,7 @@ series might not be stationary
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_42_0.png" src="../../_images/Forecaster_examples_eCommerce_42_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_41_0.png" src="../../_images/Forecaster_examples_eCommerce_41_0.png" />
 </div>
 </div>
 <p>This doesn’t give us a very different view of the data, but reinforces that there is strong autocorrelation in our dataset. Some of that can be controlled by using the series’ first difference.</p>
@@ -1223,7 +1222,8 @@ get_freq
 </pre></div>
 </div>
 </div>
-<p>We can view the results of the model by plotting the test-set predictions with the actual test-set observations, setting ci=True to show 95% confidence intervals. All confidence intervals are evaluated with bootstrapping, and could be different than what is returned from the underlying statsmodels function. This is to make all forecast comparisons consistent across all model types.</p>
+<p>We can view the results of the model by plotting the test-set predictions with the actual test-set observations, setting ci=True to show 95% confidence intervals. Any confidence level can be set by using <code class="docutils literal notranslate"><span class="pre">f.setcilevel(...)</span></code>. The intervals are evaluated with bootstrapping on the fitted values, and could be different than what is returned from the underlying statsmodels function. This is to make all forecast comparisons consistent across all model types. If the forecast shows tight confidence
+intervals but are less accurate on the test set, this is a good indication that your model is overfit.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
@@ -1236,7 +1236,7 @@ get_freq
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_54_0.png" src="../../_images/Forecaster_examples_eCommerce_54_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_53_0.png" src="../../_images/Forecaster_examples_eCommerce_53_0.png" />
 </div>
 </div>
 <p>We can see the models’ performance over the 30-day forecast horizon as well:</p>
@@ -1261,7 +1261,7 @@ hwes_seasonal LevelTestSetRMSE: 29432.19251120192
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_56_1.png" src="../../_images/Forecaster_examples_eCommerce_56_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_55_1.png" src="../../_images/Forecaster_examples_eCommerce_55_1.png" />
 </div>
 </div>
 <p>You may have noticed we called a function save_summary_stats() after running each ARIMA model. Most models allow feature information to be saved from them using <code class="docutils literal notranslate"><span class="pre">save_feature_importance()</span></code> or <code class="docutils literal notranslate"><span class="pre">save_summary_stats()</span></code>. Some models don’t allow either. They should be called before running a new model because they automatically save that information for the last model run only. As a rule of thumb, saving summary stats is much less computationally expensive than saving feature importance, which
@@ -1401,7 +1401,7 @@ will be explored later.</p>
 </pre></div>
 </div>
 </div>
-<p>We can view the results of the model by plotting the test-set predictions with the actual test-set observations, setting <code class="docutils literal notranslate"><span class="pre">ci=True</span></code> to show 95% confidence intervals. All confidence intervals are evaluated with bootstrapping, and could be different than what is returned from the underlying statsmodels function. This is to make all forecast comparison consistent across all model types.</p>
+<p>We can view the results of the model by plotting the test-set predictions with the actual test-set observations.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
@@ -1414,7 +1414,7 @@ will be explored later.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_63_0.png" src="../../_images/Forecaster_examples_eCommerce_63_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_62_0.png" src="../../_images/Forecaster_examples_eCommerce_62_0.png" />
 </div>
 </div>
 <p>Those models appear to capture the daily trend fairly well. Let’s see how they look into future periods compared to the HWES models previously evaluated.</p>
@@ -1441,7 +1441,7 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_65_1.png" src="../../_images/Forecaster_examples_eCommerce_65_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_64_1.png" src="../../_images/Forecaster_examples_eCommerce_64_1.png" />
 </div>
 </div>
 <p>The ARIMA model without MA terms has really gone in a strange direction. It is also the worst performing model we have evaluated yet, using the test-set RMSE as our comparison metric. Let’s delete this model from memory.</p>
@@ -1590,7 +1590,7 @@ series appears to be stationary
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_77_0.png" src="../../_images/Forecaster_examples_eCommerce_77_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_76_0.png" src="../../_images/Forecaster_examples_eCommerce_76_0.png" />
 </div>
 </div>
 <p>Let’s now add additional seasonality to the model regressors. The main seasonality that we have been able to confirm is weekly, so we can add the ‘dayofweek’ regressor to our object. We have three options: we can use a sin/cos transformation that accounts for regular fluctuations in the data in a cyclical form; we can add the data as 6-7 dummies using <code class="docutils literal notranslate"><span class="pre">dummy=True</span></code> and specifying the <code class="docutils literal notranslate"><span class="pre">drop_first</span></code> parameter; or we can just use the raw 1-5 numerical output, which is the default (a decision tree
@@ -1702,7 +1702,7 @@ considerably if everything is kept dynamic. However, if AR terms have <em>not</e
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_90_0.png" src="../../_images/Forecaster_examples_eCommerce_90_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_89_0.png" src="../../_images/Forecaster_examples_eCommerce_89_0.png" />
 </div>
 </div>
 <p>Since the other models were run on level data and the MLR was run on differenced data, to compare them, the plots of the test set and forecasts will revert to level automatically, but <code class="docutils literal notranslate"><span class="pre">level=True</span></code> is available as an argument if all models were run on differenced data but you want to see their performance on the level test set.</p>
@@ -1718,7 +1718,7 @@ considerably if everything is kept dynamic. However, if AR terms have <em>not</e
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_92_0.png" src="../../_images/Forecaster_examples_eCommerce_92_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_91_0.png" src="../../_images/Forecaster_examples_eCommerce_91_0.png" />
 </div>
 </div>
 <p>Confidence intervals are no longer available since models were run at different levels.</p>
@@ -1746,7 +1746,7 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_95_1.png" src="../../_images/Forecaster_examples_eCommerce_95_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_94_1.png" src="../../_images/Forecaster_examples_eCommerce_94_1.png" />
 </div>
 </div>
 <p>We see that the MLR model performed better on the test set than the remaining ARIMA model, but still not as well as the best HWES model.</p>
@@ -1803,208 +1803,208 @@ The output of the exported data is therefore ranked in terms of which variables 
   <tbody>
     <tr>
       <th>AR1</th>
-      <td>1.361581</td>
-      <td>0.048865</td>
+      <td>1.314080</td>
+      <td>0.073512</td>
     </tr>
     <tr>
       <th>AR2</th>
-      <td>1.192099</td>
-      <td>0.055277</td>
+      <td>1.071012</td>
+      <td>0.060343</td>
     </tr>
     <tr>
       <th>AR3</th>
-      <td>0.857568</td>
-      <td>0.026342</td>
+      <td>0.863518</td>
+      <td>0.033001</td>
     </tr>
     <tr>
       <th>AR12</th>
-      <td>0.583114</td>
-      <td>0.014812</td>
+      <td>0.543600</td>
+      <td>0.034335</td>
     </tr>
     <tr>
       <th>AR4</th>
-      <td>0.478963</td>
-      <td>0.040052</td>
-    </tr>
-    <tr>
-      <th>AR6</th>
-      <td>0.393926</td>
-      <td>0.037958</td>
+      <td>0.453675</td>
+      <td>0.019668</td>
     </tr>
     <tr>
       <th>AR13</th>
-      <td>0.366810</td>
-      <td>0.041059</td>
+      <td>0.398375</td>
+      <td>0.036643</td>
+    </tr>
+    <tr>
+      <th>AR6</th>
+      <td>0.384533</td>
+      <td>0.018344</td>
     </tr>
     <tr>
       <th>AR5</th>
-      <td>0.365042</td>
-      <td>0.027757</td>
-    </tr>
-    <tr>
-      <th>AR23</th>
-      <td>0.330003</td>
-      <td>0.037069</td>
-    </tr>
-    <tr>
-      <th>AR15</th>
-      <td>0.316762</td>
-      <td>0.027188</td>
+      <td>0.370097</td>
+      <td>0.021654</td>
     </tr>
     <tr>
       <th>dayofweek_5</th>
-      <td>0.288735</td>
-      <td>0.025208</td>
+      <td>0.313611</td>
+      <td>0.034527</td>
     </tr>
     <tr>
-      <th>AR11</th>
-      <td>0.273210</td>
-      <td>0.028163</td>
+      <th>AR23</th>
+      <td>0.307204</td>
+      <td>0.015959</td>
+    </tr>
+    <tr>
+      <th>AR15</th>
+      <td>0.295117</td>
+      <td>0.030526</td>
     </tr>
     <tr>
       <th>AR14</th>
-      <td>0.272825</td>
-      <td>0.030271</td>
+      <td>0.277490</td>
+      <td>0.025026</td>
     </tr>
     <tr>
-      <th>AR22</th>
-      <td>0.237563</td>
-      <td>0.015261</td>
+      <th>AR11</th>
+      <td>0.248124</td>
+      <td>0.023914</td>
     </tr>
     <tr>
       <th>AR24</th>
-      <td>0.206462</td>
-      <td>0.025954</td>
+      <td>0.208423</td>
+      <td>0.019388</td>
     </tr>
     <tr>
       <th>AR9</th>
-      <td>0.193294</td>
-      <td>0.020129</td>
+      <td>0.206587</td>
+      <td>0.013182</td>
     </tr>
     <tr>
-      <th>AR8</th>
-      <td>0.190799</td>
-      <td>0.012876</td>
+      <th>AR22</th>
+      <td>0.206181</td>
+      <td>0.038638</td>
     </tr>
     <tr>
       <th>AR20</th>
-      <td>0.177669</td>
-      <td>0.018373</td>
+      <td>0.173113</td>
+      <td>0.009632</td>
     </tr>
     <tr>
-      <th>AR17</th>
-      <td>0.132064</td>
-      <td>0.014788</td>
+      <th>AR8</th>
+      <td>0.169191</td>
+      <td>0.023569</td>
     </tr>
     <tr>
       <th>AR10</th>
-      <td>0.126921</td>
-      <td>0.018454</td>
-    </tr>
-    <tr>
-      <th>AR21</th>
-      <td>0.114727</td>
-      <td>0.024589</td>
+      <td>0.127925</td>
+      <td>0.015004</td>
     </tr>
     <tr>
       <th>AR19</th>
-      <td>0.104920</td>
-      <td>0.006715</td>
+      <td>0.126180</td>
+      <td>0.026513</td>
     </tr>
     <tr>
-      <th>monthcos</th>
-      <td>0.100597</td>
-      <td>0.022104</td>
+      <th>AR17</th>
+      <td>0.124999</td>
+      <td>0.011934</td>
+    </tr>
+    <tr>
+      <th>AR21</th>
+      <td>0.113865</td>
+      <td>0.010676</td>
     </tr>
     <tr>
       <th>AR16</th>
-      <td>0.097380</td>
-      <td>0.004449</td>
-    </tr>
-    <tr>
-      <th>AR7</th>
-      <td>0.090623</td>
-      <td>0.012395</td>
+      <td>0.111326</td>
+      <td>0.020616</td>
     </tr>
     <tr>
       <th>AR18</th>
-      <td>0.089148</td>
-      <td>0.012601</td>
+      <td>0.104127</td>
+      <td>0.008001</td>
+    </tr>
+    <tr>
+      <th>AR7</th>
+      <td>0.094152</td>
+      <td>0.010217</td>
+    </tr>
+    <tr>
+      <th>monthcos</th>
+      <td>0.090720</td>
+      <td>0.026520</td>
     </tr>
     <tr>
       <th>dayofweek_6</th>
-      <td>0.084458</td>
-      <td>0.017751</td>
+      <td>0.077548</td>
+      <td>0.024611</td>
     </tr>
     <tr>
       <th>t</th>
-      <td>0.056415</td>
-      <td>0.004780</td>
+      <td>0.060184</td>
+      <td>0.017902</td>
     </tr>
     <tr>
       <th>AR27</th>
-      <td>0.051311</td>
-      <td>0.007776</td>
+      <td>0.057364</td>
+      <td>0.006633</td>
     </tr>
     <tr>
       <th>weeksin</th>
-      <td>0.046513</td>
-      <td>0.005039</td>
+      <td>0.051128</td>
+      <td>0.007120</td>
     </tr>
     <tr>
       <th>weekcos</th>
-      <td>0.043880</td>
-      <td>0.010293</td>
+      <td>0.046868</td>
+      <td>0.005986</td>
     </tr>
     <tr>
       <th>dayofweek_4</th>
-      <td>0.037765</td>
-      <td>0.010777</td>
+      <td>0.035563</td>
+      <td>0.005710</td>
     </tr>
     <tr>
       <th>AR26</th>
-      <td>0.031685</td>
-      <td>0.005943</td>
-    </tr>
-    <tr>
-      <th>AR25</th>
-      <td>0.029214</td>
-      <td>0.005976</td>
-    </tr>
-    <tr>
-      <th>dayofweek_1</th>
-      <td>0.021407</td>
-      <td>0.009135</td>
-    </tr>
-    <tr>
-      <th>dayofweek_2</th>
-      <td>0.018690</td>
-      <td>0.006764</td>
-    </tr>
-    <tr>
-      <th>AR28</th>
-      <td>0.011374</td>
-      <td>0.005876</td>
-    </tr>
-    <tr>
-      <th>quartersin</th>
-      <td>0.010209</td>
-      <td>0.005488</td>
-    </tr>
-    <tr>
-      <th>dayofweek_3</th>
-      <td>0.005569</td>
+      <td>0.029666</td>
       <td>0.002313</td>
     </tr>
     <tr>
+      <th>AR25</th>
+      <td>0.026536</td>
+      <td>0.006346</td>
+    </tr>
+    <tr>
+      <th>dayofweek_1</th>
+      <td>0.019746</td>
+      <td>0.001437</td>
+    </tr>
+    <tr>
+      <th>AR28</th>
+      <td>0.019454</td>
+      <td>0.007024</td>
+    </tr>
+    <tr>
+      <th>dayofweek_2</th>
+      <td>0.013402</td>
+      <td>0.004501</td>
+    </tr>
+    <tr>
+      <th>quartersin</th>
+      <td>0.008244</td>
+      <td>0.002880</td>
+    </tr>
+    <tr>
+      <th>dayofweek_3</th>
+      <td>0.005167</td>
+      <td>0.002338</td>
+    </tr>
+    <tr>
       <th>monthsin</th>
-      <td>0.000719</td>
-      <td>0.003264</td>
+      <td>0.000366</td>
+      <td>0.001204</td>
     </tr>
     <tr>
       <th>quartercos</th>
-      <td>0.000186</td>
-      <td>0.000293</td>
+      <td>0.000269</td>
+      <td>0.000377</td>
     </tr>
   </tbody>
 </table>
@@ -2055,7 +2055,7 @@ The output of the exported data is therefore ranked in terms of which variables 
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_105_0.png" src="../../_images/Forecaster_examples_eCommerce_105_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_104_0.png" src="../../_images/Forecaster_examples_eCommerce_104_0.png" />
 </div>
 </div>
 <p>Regularization really took the seasonal pattern out of this model and reverted the prediction to nearly a straight line. Let’s compare all model forecasts as we did before.</p>
@@ -2083,7 +2083,7 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_107_1.png" src="../../_images/Forecaster_examples_eCommerce_107_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_106_1.png" src="../../_images/Forecaster_examples_eCommerce_106_1.png" />
 </div>
 </div>
 <p>In this instance, the regularization performed by the Elasticnet model resulted in worse performance than the MLR. We can see what hyperparameter values were selected from the tuning process by exporting the evaluated validation grid to a dataframe.</p>
@@ -2310,208 +2310,208 @@ arima_ma_terms LevelTestSetRMSE: 46563.90435412486
   <tbody>
     <tr>
       <th>dayofweek_5</th>
-      <td>2.524764e-02</td>
-      <td>0.002553</td>
+      <td>2.749117e-02</td>
+      <td>7.907711e-04</td>
     </tr>
     <tr>
       <th>dayofweek_6</th>
-      <td>6.376736e-03</td>
-      <td>0.000954</td>
+      <td>7.436973e-03</td>
+      <td>6.541601e-04</td>
     </tr>
     <tr>
       <th>AR7</th>
-      <td>4.668536e-03</td>
-      <td>0.000362</td>
+      <td>4.317314e-03</td>
+      <td>2.615517e-04</td>
     </tr>
     <tr>
       <th>AR14</th>
-      <td>2.663682e-03</td>
-      <td>0.000374</td>
+      <td>2.717978e-03</td>
+      <td>4.329003e-04</td>
     </tr>
     <tr>
       <th>AR21</th>
-      <td>2.437721e-03</td>
-      <td>0.000222</td>
+      <td>2.573850e-03</td>
+      <td>3.267257e-04</td>
     </tr>
     <tr>
       <th>AR28</th>
-      <td>1.911884e-03</td>
-      <td>0.000271</td>
-    </tr>
-    <tr>
-      <th>dayofweek_4</th>
-      <td>1.700549e-03</td>
-      <td>0.000770</td>
-    </tr>
-    <tr>
-      <th>dayofweek_2</th>
-      <td>9.471373e-04</td>
-      <td>0.000450</td>
+      <td>2.196061e-03</td>
+      <td>1.418368e-04</td>
     </tr>
     <tr>
       <th>AR1</th>
-      <td>9.214553e-04</td>
-      <td>0.000158</td>
+      <td>9.725242e-04</td>
+      <td>1.756827e-04</td>
     </tr>
     <tr>
       <th>AR12</th>
-      <td>8.393193e-04</td>
-      <td>0.000090</td>
+      <td>8.878815e-04</td>
+      <td>3.761012e-05</td>
+    </tr>
+    <tr>
+      <th>dayofweek_4</th>
+      <td>8.175025e-04</td>
+      <td>4.177929e-04</td>
+    </tr>
+    <tr>
+      <th>dayofweek_2</th>
+      <td>8.131714e-04</td>
+      <td>5.075441e-04</td>
     </tr>
     <tr>
       <th>AR2</th>
-      <td>7.304451e-04</td>
-      <td>0.000192</td>
-    </tr>
-    <tr>
-      <th>AR19</th>
-      <td>7.197982e-04</td>
-      <td>0.000110</td>
-    </tr>
-    <tr>
-      <th>AR9</th>
-      <td>7.032065e-04</td>
-      <td>0.000132</td>
+      <td>8.120865e-04</td>
+      <td>2.122303e-04</td>
     </tr>
     <tr>
       <th>AR23</th>
-      <td>6.781578e-04</td>
-      <td>0.000101</td>
+      <td>7.662798e-04</td>
+      <td>1.259909e-04</td>
+    </tr>
+    <tr>
+      <th>AR9</th>
+      <td>7.189180e-04</td>
+      <td>2.141193e-04</td>
+    </tr>
+    <tr>
+      <th>AR19</th>
+      <td>6.809245e-04</td>
+      <td>1.632880e-04</td>
     </tr>
     <tr>
       <th>dayofweek_3</th>
-      <td>5.588932e-04</td>
-      <td>0.000502</td>
-    </tr>
-    <tr>
-      <th>AR16</th>
-      <td>4.336966e-04</td>
-      <td>0.000186</td>
+      <td>5.958526e-04</td>
+      <td>4.543544e-04</td>
     </tr>
     <tr>
       <th>AR26</th>
-      <td>3.885394e-04</td>
-      <td>0.000187</td>
-    </tr>
-    <tr>
-      <th>t</th>
-      <td>2.524591e-04</td>
-      <td>0.000168</td>
-    </tr>
-    <tr>
-      <th>quartercos</th>
-      <td>2.454747e-04</td>
-      <td>0.000246</td>
+      <td>3.956908e-04</td>
+      <td>9.078496e-05</td>
     </tr>
     <tr>
       <th>AR5</th>
-      <td>2.377288e-04</td>
-      <td>0.000154</td>
+      <td>3.227825e-04</td>
+      <td>1.072438e-04</td>
     </tr>
     <tr>
-      <th>AR6</th>
-      <td>1.819853e-04</td>
-      <td>0.000114</td>
-    </tr>
-    <tr>
-      <th>monthcos</th>
-      <td>1.219272e-04</td>
-      <td>0.000297</td>
-    </tr>
-    <tr>
-      <th>AR8</th>
-      <td>1.035100e-04</td>
-      <td>0.000062</td>
-    </tr>
-    <tr>
-      <th>AR18</th>
-      <td>5.723864e-05</td>
-      <td>0.000041</td>
-    </tr>
-    <tr>
-      <th>AR15</th>
-      <td>4.220264e-05</td>
-      <td>0.000026</td>
-    </tr>
-    <tr>
-      <th>AR22</th>
-      <td>4.169538e-05</td>
-      <td>0.000020</td>
-    </tr>
-    <tr>
-      <th>AR10</th>
-      <td>2.042367e-05</td>
-      <td>0.000008</td>
-    </tr>
-    <tr>
-      <th>AR25</th>
-      <td>1.674803e-05</td>
-      <td>0.000039</td>
-    </tr>
-    <tr>
-      <th>AR17</th>
-      <td>1.668208e-05</td>
-      <td>0.000027</td>
-    </tr>
-    <tr>
-      <th>AR4</th>
-      <td>9.392779e-06</td>
-      <td>0.000015</td>
+      <th>AR16</th>
+      <td>2.884897e-04</td>
+      <td>6.450203e-05</td>
     </tr>
     <tr>
       <th>dayofweek_1</th>
-      <td>6.705639e-06</td>
-      <td>0.000624</td>
+      <td>2.188073e-04</td>
+      <td>3.046482e-04</td>
     </tr>
     <tr>
-      <th>AR11</th>
-      <td>4.239243e-06</td>
-      <td>0.000005</td>
+      <th>monthcos</th>
+      <td>1.825427e-04</td>
+      <td>1.120517e-04</td>
     </tr>
     <tr>
-      <th>monthsin</th>
-      <td>3.421046e-06</td>
-      <td>0.000014</td>
-    </tr>
-    <tr>
-      <th>AR24</th>
-      <td>2.676908e-06</td>
-      <td>0.000005</td>
-    </tr>
-    <tr>
-      <th>weeksin</th>
-      <td>1.202793e-06</td>
-      <td>0.000002</td>
-    </tr>
-    <tr>
-      <th>AR13</th>
-      <td>4.208357e-07</td>
-      <td>0.000005</td>
-    </tr>
-    <tr>
-      <th>AR20</th>
-      <td>-2.269004e-07</td>
-      <td>0.000002</td>
-    </tr>
-    <tr>
-      <th>AR3</th>
-      <td>-1.461391e-06</td>
-      <td>0.000014</td>
-    </tr>
-    <tr>
-      <th>AR27</th>
-      <td>-8.850249e-06</td>
-      <td>0.000016</td>
-    </tr>
-    <tr>
-      <th>quartersin</th>
-      <td>-9.815362e-06</td>
-      <td>0.000032</td>
+      <th>AR6</th>
+      <td>1.677917e-04</td>
+      <td>1.095012e-04</td>
     </tr>
     <tr>
       <th>weekcos</th>
-      <td>-2.958930e-05</td>
-      <td>0.000118</td>
+      <td>1.174737e-04</td>
+      <td>1.778393e-04</td>
+    </tr>
+    <tr>
+      <th>AR8</th>
+      <td>1.129823e-04</td>
+      <td>4.858206e-05</td>
+    </tr>
+    <tr>
+      <th>quartercos</th>
+      <td>6.973386e-05</td>
+      <td>2.521774e-04</td>
+    </tr>
+    <tr>
+      <th>AR18</th>
+      <td>6.639154e-05</td>
+      <td>4.093531e-05</td>
+    </tr>
+    <tr>
+      <th>AR4</th>
+      <td>2.102775e-05</td>
+      <td>1.002385e-05</td>
+    </tr>
+    <tr>
+      <th>AR22</th>
+      <td>1.986738e-05</td>
+      <td>2.717691e-05</td>
+    </tr>
+    <tr>
+      <th>AR25</th>
+      <td>1.664419e-05</td>
+      <td>1.248833e-05</td>
+    </tr>
+    <tr>
+      <th>AR15</th>
+      <td>1.512428e-05</td>
+      <td>3.388058e-05</td>
+    </tr>
+    <tr>
+      <th>AR27</th>
+      <td>1.303510e-05</td>
+      <td>3.138985e-05</td>
+    </tr>
+    <tr>
+      <th>AR17</th>
+      <td>1.016360e-05</td>
+      <td>2.489665e-05</td>
+    </tr>
+    <tr>
+      <th>AR13</th>
+      <td>3.045983e-06</td>
+      <td>2.660378e-06</td>
+    </tr>
+    <tr>
+      <th>AR24</th>
+      <td>2.851832e-06</td>
+      <td>3.287063e-06</td>
+    </tr>
+    <tr>
+      <th>AR20</th>
+      <td>1.742056e-06</td>
+      <td>1.811364e-06</td>
+    </tr>
+    <tr>
+      <th>monthsin</th>
+      <td>3.803045e-07</td>
+      <td>1.101982e-05</td>
+    </tr>
+    <tr>
+      <th>AR10</th>
+      <td>1.464026e-07</td>
+      <td>7.522306e-06</td>
+    </tr>
+    <tr>
+      <th>weeksin</th>
+      <td>-1.380882e-07</td>
+      <td>5.346109e-07</td>
+    </tr>
+    <tr>
+      <th>AR11</th>
+      <td>-1.707905e-06</td>
+      <td>7.185485e-06</td>
+    </tr>
+    <tr>
+      <th>AR3</th>
+      <td>-5.989313e-06</td>
+      <td>1.292480e-05</td>
+    </tr>
+    <tr>
+      <th>quartersin</th>
+      <td>-7.928743e-06</td>
+      <td>4.664887e-05</td>
+    </tr>
+    <tr>
+      <th>t</th>
+      <td>-7.204049e-05</td>
+      <td>1.807528e-04</td>
     </tr>
   </tbody>
 </table>
@@ -2583,7 +2583,7 @@ xgboost; can be tuned: True; from scikit-learn: True
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "46bfaedc56004021a6ca9e2e68f40a6f", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "356d45727dc2467faafb38f269eecd62", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>See the results on the test set.</p>
 <div class="nbinput docutils container">
@@ -2598,7 +2598,7 @@ xgboost; can be tuned: True; from scikit-learn: True
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_117_0.png" src="../../_images/Forecaster_examples_eCommerce_117_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_116_0.png" src="../../_images/Forecaster_examples_eCommerce_116_0.png" />
 </div>
 </div>
 <p>All of these models appear to have performed well on test-set data. Using a variety of models and tuning them carefully, a couple (or more) usually emerge as appearing reasonable to implement. Let’s now see the forecasts and level test-set RMSE from all these models.</p>
@@ -2616,12 +2616,12 @@ xgboost; can be tuned: True; from scikit-learn: True
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 mlr LevelTestSetRMSE: 32487.009054880975
-rf LevelTestSetRMSE: 35831.41728470146
 lightgbm LevelTestSetRMSE: 36585.121542121844
+rf LevelTestSetRMSE: 37323.21380044613
 mlp LevelTestSetRMSE: 39120.33092263862
 elasticnet LevelTestSetRMSE: 39522.6929766469
 svr LevelTestSetRMSE: 44003.8044654691
-gbt LevelTestSetRMSE: 57599.607371822385
+gbt LevelTestSetRMSE: 48686.507886779866
 xgboost LevelTestSetRMSE: 62488.67436538539
 knn LevelTestSetRMSE: 92000.73638283063
 </pre></div></div>
@@ -2630,7 +2630,7 @@ knn LevelTestSetRMSE: 92000.73638283063
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_119_1.png" src="../../_images/Forecaster_examples_eCommerce_119_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_118_1.png" src="../../_images/Forecaster_examples_eCommerce_118_1.png" />
 </div>
 </div>
 <p>Surprisingly perhaps, nothing outperformed the MLR model. Sometimes the simplest model is the best model. Let’s see the forecasted plots for each model, but to avoid clutter, we focus on only the models that came out further ahead than the others. We pass the <code class="docutils literal notranslate"><span class="pre">models='top_5'</span></code> argument to this function and rerun. Note, now that the HWES model will not be displayed (which was run on level data), we will have to set <code class="docutils literal notranslate"><span class="pre">level=True</span></code> to view the forecasts at level.</p>
@@ -2649,16 +2649,16 @@ knn LevelTestSetRMSE: 92000.73638283063
 <div class="highlight"><pre>
 hwes_seasonal LevelTestSetRMSE: 29432.19251120192
 mlr LevelTestSetRMSE: 32487.009054880975
-rf LevelTestSetRMSE: 35831.41728470146
 hwes LevelTestSetRMSE: 36031.56799119545
 lightgbm LevelTestSetRMSE: 36585.121542121844
+rf LevelTestSetRMSE: 37323.21380044613
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_121_1.png" src="../../_images/Forecaster_examples_eCommerce_121_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_120_1.png" src="../../_images/Forecaster_examples_eCommerce_120_1.png" />
 </div>
 </div>
 <p>These various patterns are interesting, and one has to believe the last value being an outlier signficantly influenced the resulting trends of the random forest and lightGBM models.</p>
@@ -2746,7 +2746,7 @@ Forecaster(
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_130_0.png" src="../../_images/Forecaster_examples_eCommerce_130_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_129_0.png" src="../../_images/Forecaster_examples_eCommerce_129_0.png" />
 </div>
 </div>
 <p>And their trends into the future:</p>
@@ -2773,7 +2773,7 @@ silverkite LevelTestSetRMSE: 44999.94290460528
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_132_1.png" src="../../_images/Forecaster_examples_eCommerce_132_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_131_1.png" src="../../_images/Forecaster_examples_eCommerce_131_1.png" />
 </div>
 </div>
 <p>Neither the prophet or silverkite models proved to be as accurate as the MLR or HWES models.</p>
@@ -2788,7 +2788,7 @@ you run. It also tests the model on the same test set and bootsraps confidence i
 <p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
 <p>See the <a class="reference external" href="https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_rnn">documentation</a> for the ‘rnn’ estimator. In practice, calling this model looks like:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[70]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[69]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;rnn&#39;</span><span class="p">)</span>
@@ -2814,72 +2814,72 @@ you run. It also tests the model on the same test set and bootsraps confidence i
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/15
-7/7 [==============================] - 1s 48ms/step - loss: 0.2074 - val_loss: 0.1279
+7/7 [==============================] - 1s 46ms/step - loss: 0.2078 - val_loss: 0.1211
 Epoch 2/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.1611 - val_loss: 0.1003
+7/7 [==============================] - 0s 8ms/step - loss: 0.1542 - val_loss: 0.0969
 Epoch 3/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.1394 - val_loss: 0.0871
+7/7 [==============================] - 0s 8ms/step - loss: 0.1322 - val_loss: 0.0845
 Epoch 4/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.1268 - val_loss: 0.0948
+7/7 [==============================] - 0s 8ms/step - loss: 0.1232 - val_loss: 0.0810
 Epoch 5/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.1233 - val_loss: 0.0767
+7/7 [==============================] - 0s 9ms/step - loss: 0.1185 - val_loss: 0.0811
 Epoch 6/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.1159 - val_loss: 0.0758
+7/7 [==============================] - 0s 10ms/step - loss: 0.1161 - val_loss: 0.0733
 Epoch 7/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.1113 - val_loss: 0.0714
+7/7 [==============================] - 0s 10ms/step - loss: 0.1130 - val_loss: 0.0711
 Epoch 8/15
-7/7 [==============================] - 0s 11ms/step - loss: 0.1069 - val_loss: 0.0706
+7/7 [==============================] - 0s 9ms/step - loss: 0.1104 - val_loss: 0.0746
 Epoch 9/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.1025 - val_loss: 0.0682
+7/7 [==============================] - 0s 9ms/step - loss: 0.1073 - val_loss: 0.0714
 Epoch 10/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.1006 - val_loss: 0.0678
+7/7 [==============================] - 0s 8ms/step - loss: 0.1037 - val_loss: 0.0718
 Epoch 11/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0969 - val_loss: 0.0675
+7/7 [==============================] - 0s 9ms/step - loss: 0.1006 - val_loss: 0.0641
 Epoch 12/15
-7/7 [==============================] - 0s 11ms/step - loss: 0.0941 - val_loss: 0.0625
+7/7 [==============================] - 0s 9ms/step - loss: 0.0961 - val_loss: 0.0619
 Epoch 13/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0920 - val_loss: 0.0626
+7/7 [==============================] - 0s 10ms/step - loss: 0.0925 - val_loss: 0.0618
 Epoch 14/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0913 - val_loss: 0.0610
+7/7 [==============================] - 0s 9ms/step - loss: 0.0909 - val_loss: 0.0589
 Epoch 15/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0899 - val_loss: 0.0623
+7/7 [==============================] - 0s 9ms/step - loss: 0.0893 - val_loss: 0.0580
 Epoch 1/15
-7/7 [==============================] - 1s 47ms/step - loss: 0.1185 - val_loss: 0.0669
+7/7 [==============================] - 1s 32ms/step - loss: 0.1212 - val_loss: 0.0673
 Epoch 2/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0907 - val_loss: 0.0555
+7/7 [==============================] - 0s 7ms/step - loss: 0.0921 - val_loss: 0.0555
 Epoch 3/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0793 - val_loss: 0.0550
+7/7 [==============================] - 0s 7ms/step - loss: 0.0784 - val_loss: 0.0483
 Epoch 4/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0729 - val_loss: 0.0478
+7/7 [==============================] - 0s 8ms/step - loss: 0.0713 - val_loss: 0.0462
 Epoch 5/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0691 - val_loss: 0.0444
+7/7 [==============================] - 0s 8ms/step - loss: 0.0677 - val_loss: 0.0443
 Epoch 6/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0665 - val_loss: 0.0432
+7/7 [==============================] - 0s 8ms/step - loss: 0.0658 - val_loss: 0.0437
 Epoch 7/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0646 - val_loss: 0.0423
+7/7 [==============================] - 0s 8ms/step - loss: 0.0646 - val_loss: 0.0419
 Epoch 8/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0627 - val_loss: 0.0460
+7/7 [==============================] - 0s 7ms/step - loss: 0.0624 - val_loss: 0.0414
 Epoch 9/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0616 - val_loss: 0.0410
+7/7 [==============================] - 0s 8ms/step - loss: 0.0599 - val_loss: 0.0398
 Epoch 10/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0589 - val_loss: 0.0408
+7/7 [==============================] - 0s 8ms/step - loss: 0.0585 - val_loss: 0.0388
 Epoch 11/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0584 - val_loss: 0.0393
+7/7 [==============================] - 0s 8ms/step - loss: 0.0578 - val_loss: 0.0373
 Epoch 12/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0569 - val_loss: 0.0394
+7/7 [==============================] - 0s 8ms/step - loss: 0.0568 - val_loss: 0.0395
 Epoch 13/15
-7/7 [==============================] - 0s 9ms/step - loss: 0.0566 - val_loss: 0.0397
+7/7 [==============================] - 0s 7ms/step - loss: 0.0560 - val_loss: 0.0367
 Epoch 14/15
-7/7 [==============================] - 0s 8ms/step - loss: 0.0569 - val_loss: 0.0388
+7/7 [==============================] - 0s 8ms/step - loss: 0.0556 - val_loss: 0.0377
 Epoch 15/15
-7/7 [==============================] - 0s 10ms/step - loss: 0.0555 - val_loss: 0.0360
+7/7 [==============================] - 0s 8ms/step - loss: 0.0549 - val_loss: 0.0353
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_136_1.png" src="../../_images/Forecaster_examples_eCommerce_136_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_135_1.png" src="../../_images/Forecaster_examples_eCommerce_135_1.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -2888,72 +2888,72 @@ Epoch 15/15
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/15
-7/7 [==============================] - 2s 93ms/step - loss: 0.1984 - val_loss: 0.1344
+7/7 [==============================] - 2s 71ms/step - loss: 0.1927 - val_loss: 0.1278
 Epoch 2/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.1579 - val_loss: 0.0984
+7/7 [==============================] - 0s 14ms/step - loss: 0.1520 - val_loss: 0.1011
 Epoch 3/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.1302 - val_loss: 0.0804
+7/7 [==============================] - 0s 14ms/step - loss: 0.1279 - val_loss: 0.0797
 Epoch 4/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.1202 - val_loss: 0.0798
+7/7 [==============================] - 0s 13ms/step - loss: 0.1194 - val_loss: 0.0804
 Epoch 5/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.1181 - val_loss: 0.0754
+7/7 [==============================] - 0s 14ms/step - loss: 0.1178 - val_loss: 0.0758
 Epoch 6/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.1172 - val_loss: 0.0765
+7/7 [==============================] - 0s 15ms/step - loss: 0.1174 - val_loss: 0.0755
 Epoch 7/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.1169 - val_loss: 0.0744
+7/7 [==============================] - 0s 15ms/step - loss: 0.1169 - val_loss: 0.0742
 Epoch 8/15
-7/7 [==============================] - 0s 18ms/step - loss: 0.1170 - val_loss: 0.0748
+7/7 [==============================] - 0s 14ms/step - loss: 0.1163 - val_loss: 0.0741
 Epoch 9/15
-7/7 [==============================] - 0s 18ms/step - loss: 0.1167 - val_loss: 0.0743
+7/7 [==============================] - 0s 15ms/step - loss: 0.1162 - val_loss: 0.0740
 Epoch 10/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.1168 - val_loss: 0.0742
+7/7 [==============================] - 0s 15ms/step - loss: 0.1165 - val_loss: 0.0738
 Epoch 11/15
-7/7 [==============================] - 0s 18ms/step - loss: 0.1162 - val_loss: 0.0737
+7/7 [==============================] - 0s 15ms/step - loss: 0.1160 - val_loss: 0.0737
 Epoch 12/15
-7/7 [==============================] - 0s 18ms/step - loss: 0.1161 - val_loss: 0.0737
+7/7 [==============================] - 0s 15ms/step - loss: 0.1160 - val_loss: 0.0740
 Epoch 13/15
-7/7 [==============================] - 0s 21ms/step - loss: 0.1158 - val_loss: 0.0734
+7/7 [==============================] - 0s 15ms/step - loss: 0.1159 - val_loss: 0.0737
 Epoch 14/15
-7/7 [==============================] - 0s 21ms/step - loss: 0.1158 - val_loss: 0.0736
+7/7 [==============================] - 0s 15ms/step - loss: 0.1158 - val_loss: 0.0739
 Epoch 15/15
-7/7 [==============================] - 0s 21ms/step - loss: 0.1158 - val_loss: 0.0739
+7/7 [==============================] - 0s 15ms/step - loss: 0.1158 - val_loss: 0.0742
 Epoch 1/15
-7/7 [==============================] - 2s 93ms/step - loss: 0.1203 - val_loss: 0.0723
+7/7 [==============================] - 2s 63ms/step - loss: 0.1221 - val_loss: 0.0743
 Epoch 2/15
-7/7 [==============================] - 0s 14ms/step - loss: 0.0969 - val_loss: 0.0553
+7/7 [==============================] - 0s 11ms/step - loss: 0.1009 - val_loss: 0.0540
 Epoch 3/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0807 - val_loss: 0.0464
+7/7 [==============================] - 0s 12ms/step - loss: 0.0815 - val_loss: 0.0468
 Epoch 4/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0737 - val_loss: 0.0456
+7/7 [==============================] - 0s 12ms/step - loss: 0.0726 - val_loss: 0.0465
 Epoch 5/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0719 - val_loss: 0.0453
+7/7 [==============================] - 0s 12ms/step - loss: 0.0720 - val_loss: 0.0447
 Epoch 6/15
-7/7 [==============================] - 0s 15ms/step - loss: 0.0713 - val_loss: 0.0437
+7/7 [==============================] - 0s 12ms/step - loss: 0.0712 - val_loss: 0.0446
 Epoch 7/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.0711 - val_loss: 0.0440
+7/7 [==============================] - 0s 12ms/step - loss: 0.0708 - val_loss: 0.0426
 Epoch 8/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0706 - val_loss: 0.0435
+7/7 [==============================] - 0s 13ms/step - loss: 0.0705 - val_loss: 0.0441
 Epoch 9/15
-7/7 [==============================] - 0s 16ms/step - loss: 0.0704 - val_loss: 0.0432
+7/7 [==============================] - 0s 14ms/step - loss: 0.0704 - val_loss: 0.0430
 Epoch 10/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.0702 - val_loss: 0.0429
+7/7 [==============================] - 0s 14ms/step - loss: 0.0703 - val_loss: 0.0419
 Epoch 11/15
-7/7 [==============================] - 0s 18ms/step - loss: 0.0699 - val_loss: 0.0422
+7/7 [==============================] - 0s 14ms/step - loss: 0.0697 - val_loss: 0.0429
 Epoch 12/15
-7/7 [==============================] - 0s 19ms/step - loss: 0.0697 - val_loss: 0.0431
+7/7 [==============================] - 0s 13ms/step - loss: 0.0696 - val_loss: 0.0424
 Epoch 13/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.0695 - val_loss: 0.0423
+7/7 [==============================] - 0s 14ms/step - loss: 0.0695 - val_loss: 0.0420
 Epoch 14/15
-7/7 [==============================] - 0s 17ms/step - loss: 0.0694 - val_loss: 0.0429
+7/7 [==============================] - 0s 14ms/step - loss: 0.0693 - val_loss: 0.0424
 Epoch 15/15
-7/7 [==============================] - 0s 18ms/step - loss: 0.0692 - val_loss: 0.0425
+7/7 [==============================] - 0s 14ms/step - loss: 0.0694 - val_loss: 0.0423
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_136_3.png" src="../../_images/Forecaster_examples_eCommerce_136_3.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_135_3.png" src="../../_images/Forecaster_examples_eCommerce_135_3.png" />
 </div>
 </div>
 <p>Anything the lstm can do in scalecast, the rnn can also do. Using the lstm estimator instead of rnn is simpler, and that is explored below.</p>
@@ -2963,7 +2963,7 @@ Epoch 15/15
 <p><a class="reference external" href="#eCommerce-Example">Back to top</a></p>
 <p>See the <a class="reference external" href="https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_lstm">documentation</a> for the ‘lstm’ estimator. There are more parameters to explicitly specify, but that makes it a lot easier to navigate as well. In practice, calling this model looks like:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[72]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[70]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;lstm&#39;</span><span class="p">)</span>
@@ -2983,77 +2983,77 @@ Epoch 15/15
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Epoch 1/15
-7/7 [==============================] - 7s 294ms/step - loss: 0.1886 - val_loss: 0.1009
+7/7 [==============================] - 5s 188ms/step - loss: 0.1909 - val_loss: 0.1114
 Epoch 2/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.1343 - val_loss: 0.0823
+7/7 [==============================] - 0s 34ms/step - loss: 0.1384 - val_loss: 0.0840
 Epoch 3/15
-7/7 [==============================] - 0s 46ms/step - loss: 0.1209 - val_loss: 0.0857
+7/7 [==============================] - 0s 36ms/step - loss: 0.1234 - val_loss: 0.0775
 Epoch 4/15
-7/7 [==============================] - 0s 48ms/step - loss: 0.1197 - val_loss: 0.0776
+7/7 [==============================] - 0s 39ms/step - loss: 0.1189 - val_loss: 0.0797
 Epoch 5/15
-7/7 [==============================] - 0s 49ms/step - loss: 0.1196 - val_loss: 0.0800
+7/7 [==============================] - 0s 39ms/step - loss: 0.1188 - val_loss: 0.0753
 Epoch 6/15
-7/7 [==============================] - 0s 49ms/step - loss: 0.1174 - val_loss: 0.0752
+7/7 [==============================] - 0s 43ms/step - loss: 0.1179 - val_loss: 0.0775
 Epoch 7/15
-7/7 [==============================] - 0s 49ms/step - loss: 0.1179 - val_loss: 0.0785
+7/7 [==============================] - 0s 43ms/step - loss: 0.1181 - val_loss: 0.0754
 Epoch 8/15
-7/7 [==============================] - 0s 49ms/step - loss: 0.1174 - val_loss: 0.0745
+7/7 [==============================] - 0s 42ms/step - loss: 0.1178 - val_loss: 0.0775
 Epoch 9/15
-7/7 [==============================] - 0s 48ms/step - loss: 0.1177 - val_loss: 0.0763
+7/7 [==============================] - 0s 42ms/step - loss: 0.1180 - val_loss: 0.0748
 Epoch 10/15
-7/7 [==============================] - 0s 49ms/step - loss: 0.1168 - val_loss: 0.0767
+7/7 [==============================] - 0s 41ms/step - loss: 0.1179 - val_loss: 0.0743
 Epoch 11/15
-7/7 [==============================] - 0s 48ms/step - loss: 0.1176 - val_loss: 0.0743
+7/7 [==============================] - 0s 40ms/step - loss: 0.1176 - val_loss: 0.0753
 Epoch 12/15
-7/7 [==============================] - 0s 49ms/step - loss: 0.1177 - val_loss: 0.0754
+7/7 [==============================] - 0s 42ms/step - loss: 0.1176 - val_loss: 0.0762
 Epoch 13/15
-7/7 [==============================] - 0s 49ms/step - loss: 0.1173 - val_loss: 0.0744
+7/7 [==============================] - 0s 40ms/step - loss: 0.1171 - val_loss: 0.0758
 Epoch 14/15
-7/7 [==============================] - 0s 48ms/step - loss: 0.1177 - val_loss: 0.0757
+7/7 [==============================] - 0s 41ms/step - loss: 0.1169 - val_loss: 0.0750
 Epoch 15/15
-7/7 [==============================] - 0s 47ms/step - loss: 0.1166 - val_loss: 0.0745
+7/7 [==============================] - 0s 44ms/step - loss: 0.1173 - val_loss: 0.0757
 Epoch 1/15
-7/7 [==============================] - 5s 238ms/step - loss: 0.1132 - val_loss: 0.0617
+7/7 [==============================] - 4s 187ms/step - loss: 0.1096 - val_loss: 0.0658
 Epoch 2/15
-7/7 [==============================] - 0s 37ms/step - loss: 0.0845 - val_loss: 0.0461
+7/7 [==============================] - 0s 30ms/step - loss: 0.0816 - val_loss: 0.0456
 Epoch 3/15
-7/7 [==============================] - 0s 39ms/step - loss: 0.0749 - val_loss: 0.0514
+7/7 [==============================] - 0s 34ms/step - loss: 0.0744 - val_loss: 0.0483
 Epoch 4/15
-7/7 [==============================] - 0s 41ms/step - loss: 0.0722 - val_loss: 0.0436
+7/7 [==============================] - 0s 36ms/step - loss: 0.0717 - val_loss: 0.0437
 Epoch 5/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.0725 - val_loss: 0.0431
+7/7 [==============================] - 0s 36ms/step - loss: 0.0718 - val_loss: 0.0440
 Epoch 6/15
-7/7 [==============================] - 0s 42ms/step - loss: 0.0711 - val_loss: 0.0447
+7/7 [==============================] - 0s 38ms/step - loss: 0.0709 - val_loss: 0.0435
 Epoch 7/15
-7/7 [==============================] - 0s 42ms/step - loss: 0.0708 - val_loss: 0.0429
+7/7 [==============================] - 0s 38ms/step - loss: 0.0710 - val_loss: 0.0421
 Epoch 8/15
-7/7 [==============================] - 0s 44ms/step - loss: 0.0706 - val_loss: 0.0431
+7/7 [==============================] - 0s 38ms/step - loss: 0.0718 - val_loss: 0.0445
 Epoch 9/15
-7/7 [==============================] - 0s 42ms/step - loss: 0.0708 - val_loss: 0.0428
+7/7 [==============================] - 0s 38ms/step - loss: 0.0710 - val_loss: 0.0423
 Epoch 10/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.0708 - val_loss: 0.0453
+7/7 [==============================] - 0s 39ms/step - loss: 0.0702 - val_loss: 0.0423
 Epoch 11/15
-7/7 [==============================] - 0s 42ms/step - loss: 0.0707 - val_loss: 0.0440
+7/7 [==============================] - 0s 39ms/step - loss: 0.0701 - val_loss: 0.0426
 Epoch 12/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.0702 - val_loss: 0.0427
+7/7 [==============================] - 0s 39ms/step - loss: 0.0709 - val_loss: 0.0431
 Epoch 13/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.0699 - val_loss: 0.0438
+7/7 [==============================] - 0s 39ms/step - loss: 0.0704 - val_loss: 0.0427
 Epoch 14/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.0706 - val_loss: 0.0434
+7/7 [==============================] - 0s 38ms/step - loss: 0.0698 - val_loss: 0.0430
 Epoch 15/15
-7/7 [==============================] - 0s 43ms/step - loss: 0.0708 - val_loss: 0.0427
+7/7 [==============================] - 0s 38ms/step - loss: 0.0706 - val_loss: 0.0430
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_139_1.png" src="../../_images/Forecaster_examples_eCommerce_139_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_138_1.png" src="../../_images/Forecaster_examples_eCommerce_138_1.png" />
 </div>
 </div>
 <p>Finally, we can see how all these models performed on the test set:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[73]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[71]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">models</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;simple_rnn&#39;</span><span class="p">,</span><span class="s1">&#39;lstm&#39;</span><span class="p">,</span><span class="s1">&#39;lstm_regularized&#39;</span><span class="p">],</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">)</span>
@@ -3064,12 +3064,12 @@ Epoch 15/15
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_141_0.png" src="../../_images/Forecaster_examples_eCommerce_141_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_140_0.png" src="../../_images/Forecaster_examples_eCommerce_140_0.png" />
 </div>
 </div>
 <p>And into the future:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[74]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[72]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">models</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;simple_rnn&#39;</span><span class="p">,</span><span class="s1">&#39;lstm&#39;</span><span class="p">,</span><span class="s1">&#39;lstm_regularized&#39;</span><span class="p">],</span><span class="n">ci</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">print_attr</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">])</span>
@@ -3081,19 +3081,19 @@ Epoch 15/15
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-simple_rnn LevelTestSetRMSE: 40249.15563421383
-lstm LevelTestSetRMSE: 40332.36818693822
-lstm_regularized LevelTestSetRMSE: 43743.325532266164
+simple_rnn LevelTestSetRMSE: 39136.43125093719
+lstm LevelTestSetRMSE: 40525.52590577089
+lstm_regularized LevelTestSetRMSE: 42748.6379268873
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_143_1.png" src="../../_images/Forecaster_examples_eCommerce_143_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_142_1.png" src="../../_images/Forecaster_examples_eCommerce_142_1.png" />
 </div>
 </div>
-<p>None of these models arrived at the level of the MLR or HWES models. That’s not to say they couldn’t if more time weren’t spent with them. Theoretically, they can specify thousands of parameters and find the true long-term trends in the data that none of the other models would be capable. For some datasets, this makes a big difference. But some datasets are too random to be fit effectively by one of these more advanced models. Again, sometimes the simplest is most accurate, fastest, and most
+<p>None of these models arrived at the level of the MLR or HWES models. That’s not to say they couldn’t if more time weren’t spent with them. Theoretically, they can specify thousands of parameters and find the true long-term trends in the data that none of the other models would be capable of. For some datasets, this makes a big difference. But some datasets are too random to be fit effectively by one of these more advanced models. Sometimes the simplest is most accurate, fastest, and most
 interpretable.</p>
 </section>
 </section>
@@ -3106,7 +3106,7 @@ identical to the simple average.</div>
 </div>
 <p>We will be using simple and weighted average combination modeling only.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[75]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[73]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="s1">&#39;combo&#39;</span><span class="p">)</span>
@@ -3120,7 +3120,7 @@ a list.</p>
 <p>The weighted average model can accept weights as arguments that add to 0 or not–if not, they will be rebalanced to do so. If determine_best_by is specified, weights can be left to None and the weights will be chosen automatically. Again, be careful to not overfit models this way.</p>
 <p>All information available for other models, including fitted values and test-set metrics, are also available for these combo models.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[76]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[74]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot_test_set</span><span class="p">(</span><span class="n">models</span><span class="o">=</span><span class="s1">&#39;top_5&#39;</span><span class="p">,</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3131,12 +3131,12 @@ a list.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_148_0.png" src="../../_images/Forecaster_examples_eCommerce_148_0.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_147_0.png" src="../../_images/Forecaster_examples_eCommerce_147_0.png" />
 </div>
 </div>
 <p>Again, we see the usual suspects. One more time on future data:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[77]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[75]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">models</span><span class="o">=</span><span class="s1">&#39;top_5&#39;</span><span class="p">,</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="n">print_attr</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">],</span><span class="n">level</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3151,20 +3151,20 @@ a list.</p>
 hwes_seasonal LevelTestSetRMSE: 29432.19251120192
 mlr LevelTestSetRMSE: 32487.009054880975
 prophet LevelTestSetRMSE: 34148.79734132142
-rf LevelTestSetRMSE: 35831.41728470146
 hwes LevelTestSetRMSE: 36031.56799119545
+lightgbm LevelTestSetRMSE: 36585.121542121844
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_150_1.png" src="../../_images/Forecaster_examples_eCommerce_150_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_149_1.png" src="../../_images/Forecaster_examples_eCommerce_149_1.png" />
 </div>
 </div>
 <p>And just as a grand finale, let’s see all evaluated models plotted together:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[78]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[76]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="n">print_attr</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">],</span><span class="n">level</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3179,20 +3179,20 @@ hwes LevelTestSetRMSE: 36031.56799119545
 hwes_seasonal LevelTestSetRMSE: 29432.19251120192
 mlr LevelTestSetRMSE: 32487.009054880975
 prophet LevelTestSetRMSE: 34148.79734132142
-rf LevelTestSetRMSE: 35831.41728470146
 hwes LevelTestSetRMSE: 36031.56799119545
 lightgbm LevelTestSetRMSE: 36585.121542121844
-avg_lvl_models LevelTestSetRMSE: 37706.15468474031
+rf LevelTestSetRMSE: 37323.21380044613
+avg_lvl_models LevelTestSetRMSE: 37405.41340106671
 mlp LevelTestSetRMSE: 39120.33092263862
+simple_rnn LevelTestSetRMSE: 39136.43125093719
 elasticnet LevelTestSetRMSE: 39522.6929766469
-simple_rnn LevelTestSetRMSE: 40249.15563421383
-lstm LevelTestSetRMSE: 40332.36818693822
-lstm_regularized LevelTestSetRMSE: 43743.325532266164
+lstm LevelTestSetRMSE: 40525.52590577089
+lstm_regularized LevelTestSetRMSE: 42748.6379268873
 svr LevelTestSetRMSE: 44003.8044654691
 silverkite LevelTestSetRMSE: 44999.94290460528
 arima_ma_terms LevelTestSetRMSE: 46563.90435412486
-gbt LevelTestSetRMSE: 57599.607371822385
-weighted_differenced_models LevelTestSetRMSE: 60439.097276978595
+gbt LevelTestSetRMSE: 48686.507886779866
+weighted_differenced_models LevelTestSetRMSE: 60531.99069667154
 xgboost LevelTestSetRMSE: 62488.67436538539
 knn LevelTestSetRMSE: 92000.73638283063
 </pre></div></div>
@@ -3201,7 +3201,7 @@ knn LevelTestSetRMSE: 92000.73638283063
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/Forecaster_examples_eCommerce_152_1.png" src="../../_images/Forecaster_examples_eCommerce_152_1.png" />
+<img alt="../../_images/Forecaster_examples_eCommerce_151_1.png" src="../../_images/Forecaster_examples_eCommerce_151_1.png" />
 </div>
 </div>
 </section>
@@ -3214,18 +3214,214 @@ knn LevelTestSetRMSE: 92000.73638283063
 automatically put each model’s info on a seperate tab.</div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[79]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[77]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">to_excel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">determine_best_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="n">excel_name</span><span class="o">=</span><span class="s1">&#39;eCommerce_results.xlsx&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">to_excel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">determine_best_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="n">excel_name</span><span class="o">=</span><span class="s1">&#39;eCommerce_results.xlsx&#39;</span><span class="p">)</span>
 <span class="n">f</span><span class="o">.</span><span class="n">all_feature_info_to_excel</span><span class="p">(</span><span class="n">excel_name</span><span class="o">=</span><span class="s1">&#39;eCommerce_feature_info.xlsx&#39;</span><span class="p">)</span>
 <span class="n">f</span><span class="o">.</span><span class="n">all_validation_grids_to_excel</span><span class="p">(</span><span class="n">sort_by_metric_value</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">excel_name</span><span class="o">=</span><span class="s1">&#39;eCommerce_validation_grids.xlsx&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<p>One of the most interesting of the exports above is the model summaries dataframe. It has many columns that you can view in the exported Excel workbook, but a sample of this dataframe is displayed below.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[81]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;model_summaries&#39;</span><span class="p">][[</span><span class="s1">&#39;ModelNickname&#39;</span><span class="p">,</span><span class="s1">&#39;Estimator&#39;</span><span class="p">,</span><span class="s1">&#39;HyperParams&#39;</span><span class="p">,</span><span class="s1">&#39;LevelTestSetRMSE&#39;</span><span class="p">,</span><span class="s1">&#39;LevelTestSetR2&#39;</span><span class="p">]]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[81]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ModelNickname</th>
+      <th>Estimator</th>
+      <th>HyperParams</th>
+      <th>LevelTestSetRMSE</th>
+      <th>LevelTestSetR2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>hwes_seasonal</td>
+      <td>hwes</td>
+      <td>{'trend': 'add', 'seasonal': 'add'}</td>
+      <td>29432.192511</td>
+      <td>0.354237</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>mlr</td>
+      <td>mlr</td>
+      <td>{}</td>
+      <td>32487.009055</td>
+      <td>0.213230</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>prophet</td>
+      <td>prophet</td>
+      <td>{}</td>
+      <td>34148.797341</td>
+      <td>0.130682</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>hwes</td>
+      <td>hwes</td>
+      <td>{'trend': 'add'}</td>
+      <td>36031.567991</td>
+      <td>0.032180</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>lightgbm</td>
+      <td>lightgbm</td>
+      <td>{'max_depth': 3}</td>
+      <td>36585.121542</td>
+      <td>0.002215</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>rf</td>
+      <td>rf</td>
+      <td>{'max_depth': 2, 'n_estimators': 1000}</td>
+      <td>37323.213800</td>
+      <td>-0.038451</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>avg_lvl_models</td>
+      <td>combo</td>
+      <td>{'how': 'simple', 'models': ['hwes', 'hwes_sea...</td>
+      <td>37405.413401</td>
+      <td>-0.043030</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>mlp</td>
+      <td>mlp</td>
+      <td>{'activation': 'tanh', 'hidden_layer_sizes': (...</td>
+      <td>39120.330923</td>
+      <td>-0.140862</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>simple_rnn</td>
+      <td>rnn</td>
+      <td>{'lags': 30, 'hidden_layers_struct': {'simple'...</td>
+      <td>39136.431251</td>
+      <td>-0.141801</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>elasticnet</td>
+      <td>elasticnet</td>
+      <td>{'alpha': 2.0, 'l1_ratio': 0.0}</td>
+      <td>39522.692977</td>
+      <td>-0.164451</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>lstm</td>
+      <td>rnn</td>
+      <td>{'lags': 30, 'hidden_layers_struct': {'lstm': ...</td>
+      <td>40525.525906</td>
+      <td>-0.224293</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>lstm_regularized</td>
+      <td>lstm</td>
+      <td>{'lags': 30, 'lstm_layer_sizes': (64, 64, 64),...</td>
+      <td>42748.637927</td>
+      <td>-0.362300</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>svr</td>
+      <td>svr</td>
+      <td>{'kernel': 'linear', 'C': 0.5, 'epsilon': 0.01}</td>
+      <td>44003.804465</td>
+      <td>-0.443473</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>silverkite</td>
+      <td>silverkite</td>
+      <td>{}</td>
+      <td>44999.942905</td>
+      <td>-0.509566</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>arima_ma_terms</td>
+      <td>arima</td>
+      <td>{'order': (1, 1, 1), 'seasonal_order': (0, 1, ...</td>
+      <td>46563.904354</td>
+      <td>-0.616318</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>gbt</td>
+      <td>gbt</td>
+      <td>{'max_depth': 2, 'max_features': 'sqrt'}</td>
+      <td>48686.507887</td>
+      <td>-0.767036</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>weighted_differenced_models</td>
+      <td>combo</td>
+      <td>{'how': 'weighted', 'models': ['elasticnet', '...</td>
+      <td>60531.990697</td>
+      <td>-1.731480</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>xgboost</td>
+      <td>xgboost</td>
+      <td>{'max_depth': 3}</td>
+      <td>62488.674365</td>
+      <td>-1.910923</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>knn</td>
+      <td>knn</td>
+      <td>{'n_neighbors': 20, 'weights': 'uniform'}</td>
+      <td>92000.736383</td>
+      <td>-5.309728</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
 <p>Here is a list of all export functions. Most of these output results to a pandas dataframe.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[80]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[79]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">get_funcs</span><span class="p">(</span><span class="s1">&#39;exporter&#39;</span><span class="p">),</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -3249,7 +3445,6 @@ export_test_set_preds_with_cis
 export_fitted_vals
 </pre></div></div>
 </div>
-<p>Thank you for following along!</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -3259,14 +3454,17 @@ export_fitted_vals
 </div>
 </div>
 <script type="application/vnd.jupyter.widget-state+json">
-{"state": {}, "version_major": 2, "version_minor": 0}
+{"state": {"1077ede3b06e45bc8f3b0d26f263d70b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"bar_style": "success", "layout": "IPY_MODEL_6f6e368741e24a48b1624c160208f535", "max": 9, "style": "IPY_MODEL_52424b9fc02d4835bb36e678943277e1", "value": 9}}, "356d45727dc2467faafb38f269eecd62": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"children": ["IPY_MODEL_7467ae85cc384bf38bf9d982907a1fe4", "IPY_MODEL_1077ede3b06e45bc8f3b0d26f263d70b", "IPY_MODEL_96d574d59205492ca5c0e94c5240c1bc"], "layout": "IPY_MODEL_8730b8931210455b9a2a36dd885d6b9c"}}, "52424b9fc02d4835bb36e678943277e1": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"description_width": ""}}, "6f6e368741e24a48b1624c160208f535": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "707d3e000f3e4fcc96111cabc3e40196": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "7467ae85cc384bf38bf9d982907a1fe4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_fade6c5d7a694096a9074b9346063b4e", "style": "IPY_MODEL_afd1eb5236054a64b7ece5ffc758744e", "value": "100%"}}, "7ee7f93a2993425aab8ce096da53a3bc": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "8730b8931210455b9a2a36dd885d6b9c": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}, "96d574d59205492ca5c0e94c5240c1bc": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"layout": "IPY_MODEL_7ee7f93a2993425aab8ce096da53a3bc", "style": "IPY_MODEL_707d3e000f3e4fcc96111cabc3e40196", "value": " 9/9 [00:47&lt;00:00,  6.13s/it]"}}, "afd1eb5236054a64b7ece5ffc758744e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"description_width": ""}}, "fade6c5d7a694096a9074b9346063b4e": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {}}}, "version_major": 2, "version_minor": 0}
 </script></section>
 </section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../initialization.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="LSTM.html" class="btn btn-neutral float-right" title="LSTM Example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

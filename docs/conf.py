@@ -45,7 +45,7 @@ html_theme_options = {
     'logo_only': True,
     'navigation_depth': 5,
     'style_nav_header_background':'black',
-    'prev_next_buttons_location':'top'
+    'prev_next_buttons_location':'both'
 }
 html_context = {}
 

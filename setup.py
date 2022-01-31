@@ -1,19 +1,22 @@
 
 from setuptools import setup, find_packages
 import shutil
-import re
 from src.scalecast.__init__ import __version__ as version
-
 
 shutil.copy('./examples/eCommerce.ipynb','./docs/Forecaster/examples/eCommerce.ipynb')
 shutil.copy('./examples/LSTM.ipynb','./docs/Forecaster/examples/LSTM.ipynb')
 
-long_description = open('README.md', 'r', encoding="UTF-8").read()
+logo = """<p align="center">
+  <img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" />
+</p>"""
+
+long_description = open('README.md', 'r', encoding="UTF-8").read().replace(logo,"")
 
 setup(
   name = 'SCALECAST',
   version = version,
   license='MIT',
+  short_description='Dynamic forecasting at scale in Python',
   long_description=long_description,
   long_description_content_type='text/markdown',
   author = 'Michael Keith',
@@ -21,7 +24,10 @@ setup(
   packages=find_packages('src'),
   package_dir={'': 'src'},
   numpydoc_show_class_members = False,
-  url = 'https://github.com/mikekeith52/scalecast',
+  project_urls = {
+    'GitHub': 'https://github.com/mikekeith52/scalecast',
+    'Read the Docs': 'https://scalecast.readthedocs.io/en/latest/'
+  },
   keywords = ['FORECAST', 'SCALE', 'DYNAMIC'],
   install_requires = [
     'scikit-learn',

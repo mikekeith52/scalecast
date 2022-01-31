@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forecaster Object Globals &mdash; scalecast 0.5.7 documentation</title>
+  <title>Forecaster Object Globals &mdash; scalecast 0.5.8 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/logo2.png"/>
@@ -37,7 +37,7 @@
             <img src="../_static/logo2.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.5.7
+                0.5.8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -62,15 +62,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Forecaster.html">Forecaster Class</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Forecaster Object Globals</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#estimators">estimators</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#estimators-that-can-be-tuned">estimators that can be tuned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#estimators-that-cannot-be-tuned">estimators that cannot be tuned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sklearn-estimators">sklearn estimators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#_estimators_"><code class="docutils literal notranslate"><span class="pre">_estimators_</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#_can_be_tuned_"><code class="docutils literal notranslate"><span class="pre">_can_be_tuned_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_cannot_be_tuned_"><code class="docutils literal notranslate"><span class="pre">_cannot_be_tuned_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#_sklearn_estimators_"><code class="docutils literal notranslate"><span class="pre">_sklearn_estimators_</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#metrics">metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#determine_best_by">determine_best_by</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#normalizer">normalizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#_metrics_"><code class="docutils literal notranslate"><span class="pre">_metrics_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#_determine_best_by_"><code class="docutils literal notranslate"><span class="pre">_determine_best_by_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#_normalizer_"><code class="docutils literal notranslate"><span class="pre">_normalizer_</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="_forecast.html">Forecasting Different Model Types</a></li>
@@ -388,25 +388,14 @@ div.rendered_html tbody tr:hover {
 <section id="Forecaster-Object-Globals">
 <h1>Forecaster Object Globals<a class="headerlink" href="#Forecaster-Object-Globals" title="Permalink to this headline"></a></h1>
 <ul class="simple">
-<li><p>In scalecast, it is helpful to know the following terms:</p></li>
+<li><p>In scalecast, when reading documentation, it is helpful to know the following terms: <code class="docutils literal notranslate"><span class="pre">_estimators_</span></code>, <code class="docutils literal notranslate"><span class="pre">_can_be_tuned_</span></code>, <code class="docutils literal notranslate"><span class="pre">_cannot_be_tuned_</span></code>, <code class="docutils literal notranslate"><span class="pre">_sklearn_estimators_</span></code>, <code class="docutils literal notranslate"><span class="pre">_metrics_</span></code>, <code class="docutils literal notranslate"><span class="pre">_determine_best_by_</span></code>, <code class="docutils literal notranslate"><span class="pre">_normalizer_</span></code>.</p></li>
 </ul>
-<p><a class="reference external" href="#estimators">estimators</a></p>
+<section id="_estimators_">
+<h2><code class="docutils literal notranslate"><span class="pre">_estimators_</span></code><a class="headerlink" href="#_estimators_" title="Permalink to this headline"></a></h2>
 <ul class="simple">
-<li><p><a class="reference external" href="#estimators-that-can-be-tuned">estimators that can be tuned</a></p></li>
-<li><p><a class="reference external" href="#estimators-that-cannot-be-tuned">estimators that cannot be tuned</a></p></li>
-<li><p><a class="reference external" href="#sklearn-estimators">sklearn estimators</a></p></li>
-</ul>
-<div class="line-block">
-<div class="line"><a class="reference external" href="#metrics">metrics</a></div>
-<div class="line"><a class="reference external" href="#determine_best_by">determine_best_by</a></div>
-<div class="line"><a class="reference external" href="#normalizer">normalizer</a></div>
-</div>
-<section id="estimators">
-<h2>estimators<a class="headerlink" href="#estimators" title="Permalink to this headline"></a></h2>
-<ul class="simple">
-<li><p>estimators (<code class="docutils literal notranslate"><span class="pre">_estimators_</span></code> in the docs) are the models that actually forecast</p></li>
+<li><p>these are the the models that forecast and can be set by using <code class="docutils literal notranslate"><span class="pre">f.set_estimator(...)</span></code></p></li>
 <li><p>they come from popular machine learning libraries like scikit-learn, keras, statsmodels, and others</p></li>
-<li><p>here is a list of all estimators:</p></li>
+<li><p>here is a list of all:</p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -440,26 +429,11 @@ svr
 xgboost
 </pre></div></div>
 </div>
-<section id="estimators-that-can-be-tuned">
-<h3>estimators that can be tuned<a class="headerlink" href="#estimators-that-can-be-tuned" title="Permalink to this headline"></a></h3>
+<section id="_can_be_tuned_">
+<h3><code class="docutils literal notranslate"><span class="pre">_can_be_tuned_</span></code><a class="headerlink" href="#_can_be_tuned_" title="Permalink to this headline"></a></h3>
 <ul class="simple">
-<li><p>the following estimators can be tuned by using a process similar to the following:</p></li>
+<li><p>the following estimators can be tuned:</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scalecast.Forecaster</span> <span class="kn">import</span> <span class="n">Forecaster</span>
-<span class="kn">from</span> <span class="nn">scalecast</span> <span class="kn">import</span> <span class="n">GridGenerator</span>
-
-<span class="n">GridGenerator</span><span class="o">.</span><span class="n">get_example_grids</span><span class="p">()</span>
-
-<span class="n">models</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;arima&#39;</span><span class="p">,</span><span class="s1">&#39;elasticnet&#39;</span><span class="p">,</span><span class="s1">&#39;gbt&#39;</span><span class="p">)</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">Forecaster</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">current_dates</span><span class="o">=</span><span class="n">current_dates</span><span class="p">)</span>
-<span class="n">f</span><span class="o">.</span><span class="n">set_validation_length</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">set_estimator</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">tune</span><span class="p">()</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">auto_forecast</span><span class="p">()</span>
-</pre></div>
-</div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -490,8 +464,11 @@ xgboost
 </pre></div></div>
 </div>
 </section>
-<section id="estimators-that-cannot-be-tuned">
-<h3>estimators that cannot be tuned<a class="headerlink" href="#estimators-that-cannot-be-tuned" title="Permalink to this headline"></a></h3>
+<section id="_cannot_be_tuned_">
+<h3><code class="docutils literal notranslate"><span class="pre">_cannot_be_tuned_</span></code><a class="headerlink" href="#_cannot_be_tuned_" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>the following cannot be tuned:</p></li>
+</ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -512,10 +489,10 @@ rnn
 </pre></div></div>
 </div>
 </section>
-<section id="sklearn-estimators">
-<h3>sklearn estimators<a class="headerlink" href="#sklearn-estimators" title="Permalink to this headline"></a></h3>
+<section id="_sklearn_estimators_">
+<h3><code class="docutils literal notranslate"><span class="pre">_sklearn_estimators_</span></code><a class="headerlink" href="#_sklearn_estimators_" title="Permalink to this headline"></a></h3>
 <ul class="simple">
-<li><p>all sklearn estimators accept an Xvars and normalizer argument and these can be tuned as well:</p></li>
+<li><p>these all come from scikit-learn or use a scikit-learn API and behave similarly (including being easy-to-tune, accepting a <code class="docutils literal notranslate"><span class="pre">normalizer</span></code> argument, and accpeting an <code class="docutils literal notranslate"><span class="pre">Xvars</span></code> argument):</p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -544,10 +521,10 @@ xgboost
 </div>
 </section>
 </section>
-<section id="metrics">
-<h2>metrics<a class="headerlink" href="#metrics" title="Permalink to this headline"></a></h2>
+<section id="_metrics_">
+<h2><code class="docutils literal notranslate"><span class="pre">_metrics_</span></code><a class="headerlink" href="#_metrics_" title="Permalink to this headline"></a></h2>
 <ul class="simple">
-<li><p>these are all the metrics available to use for model validation</p></li>
+<li><p>these are all the metrics available to use for model validation <code class="docutils literal notranslate"><span class="pre">f.set_validation_metric(...)</span></code>:</p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -570,10 +547,10 @@ mae
 </pre></div></div>
 </div>
 </section>
-<section id="determine_best_by">
-<h2>determine_best_by<a class="headerlink" href="#determine_best_by" title="Permalink to this headline"></a></h2>
+<section id="_determine_best_by_">
+<h2><code class="docutils literal notranslate"><span class="pre">_determine_best_by_</span></code><a class="headerlink" href="#_determine_best_by_" title="Permalink to this headline"></a></h2>
 <ul class="simple">
-<li><p>these are all the metrics available to use for model comparison and sorting models best-to-worst</p></li>
+<li><p>these are all the metrics available to use for model comparison and sorting models best-to-worst <code class="docutils literal notranslate"><span class="pre">f.export(determine_best_by=...)</span></code>:</p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -605,10 +582,10 @@ LevelTestSetR2
 </pre></div></div>
 </div>
 </section>
-<section id="normalizer">
-<h2>normalizer<a class="headerlink" href="#normalizer" title="Permalink to this headline"></a></h2>
+<section id="_normalizer_">
+<h2><code class="docutils literal notranslate"><span class="pre">_normalizer_</span></code><a class="headerlink" href="#_normalizer_" title="Permalink to this headline"></a></h2>
 <ul class="simple">
-<li><p>these are all the options to scale your data before using an sklearn estimator</p></li>
+<li><p>these are all the options to scale your data when using an sklearn estimator <code class="docutils literal notranslate"><span class="pre">f.manual_forecast(normalizer=...)</span></code>:</p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -647,7 +624,10 @@ None
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Forecaster.html" class="btn btn-neutral float-left" title="Forecaster Class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="_forecast.html" class="btn btn-neutral float-right" title="Forecasting Different Model Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
