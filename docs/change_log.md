@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
-## [0.5.9] -
+## [0.5.9] - 2022-02-01
 ### Added
 - Added CurrentEstimator to `__repr__()` function.
 ### Changed

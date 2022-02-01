@@ -250,7 +250,7 @@ if manually passed weights do not add to 1, will rebalance them.</p>
 <dt class="field-odd">param splice_points</dt>
 <dd class="field-odd"><p>optional.
 only applicable when how=’splice’.
-elements in array must be str in yyyy-mm-dd or datetime object.
+elements in array must be str in ‘%Y-%m-%d’ or datetime object.
 must be exactly one less in length than the number of models.
 models[0] –&gt; :splice_points[0]
 models[-1] –&gt; splice_points[-1]:</p>
@@ -314,13 +314,13 @@ always ignored in HWES (for now) - everything is set to be dynamic using statsmo
 </section>
 <section id="module-src.scalecast.Forecaster.Forecaster._forecast_lstm">
 <span id="lstm"></span><h2>lstm<a class="headerlink" href="#module-src.scalecast.Forecaster.Forecaster._forecast_lstm" title="Permalink to this headline"></a></h2>
-<dl class="simple">
-<dt>forecasts with a long-short term memory neural network from TensorFlow.</dt><dd><p>cannot be tuned.
+<p>forecasts with a long-short term memory neural network from TensorFlow.
+cannot be tuned.
 only xvar options are the series’ own history (specify in lags argument).
 always uses minmax normalizer.
-fitted values are the last fcst_length worth of values only.</p>
-</dd>
-</dl>
+fitted values are the last fcst_length worth of values only.
+anything this function can do, rnn can also do.
+this function is simpler to set up than rnn.</p>
 <dl class="field-list">
 <dt class="field-odd">param dynamic_testing</dt>
 <dd class="field-odd"><p>default True.

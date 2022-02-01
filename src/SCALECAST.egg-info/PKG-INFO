@@ -1,16 +1,16 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.5.8
+Version: 0.5.9
 Summary: UNKNOWN
-Home-page: https://github.com/mikekeith52/scalecast
+Home-page: UNKNOWN
 Author: Michael Keith
 Author-email: mikekeith52@gmail.com
 License: MIT
+Project-URL: GitHub, https://github.com/mikekeith52/scalecast
+Project-URL: Read the Docs, https://scalecast.readthedocs.io/en/latest/
 Description: # 🌄 Scalecast: Dynamic Forecasting at Scale
         
-        <p align="center">
-          <img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" />
-        </p>
+        
         
         ## About
         
