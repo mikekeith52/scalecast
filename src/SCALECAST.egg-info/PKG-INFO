@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.5.9
-Summary: UNKNOWN
+Version: 0.6.0
+Summary: Dynamic forecasting at scale in Python
 Home-page: UNKNOWN
 Author: Michael Keith
 Author-email: mikekeith52@gmail.com

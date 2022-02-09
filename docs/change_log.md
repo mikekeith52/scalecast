@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.6.0] - 2022-02-09
+### Added
+- Added drop argument to several adder functions, giving the user the option to drop the original regressors after making certain transformations on them
+### Changed
+- `add_ar_terms()` now accepts 0 as an argument but it doesn't do anything
+### Fixed
+- fixed issue with `pop_using_criterion()` function that wasn't dropping models correctly in some instances
+- fixed the default parameters for the rnn model which weren't working due to mislabeling of one of the parameters in TensorFlow. updated the docstring accordingly
+
 ## [0.5.9] - 2022-02-01
 ### Added
 - Added CurrentEstimator to `__repr__()` function.
@@ -11,7 +20,7 @@ All notable changes to this project will be documented in this file. We keep tra
 ## [0.5.8] - 2022-01-27
 ### Added
 ### Changed
-- Made it impossible to pass tune argument to manual_forecast()
+- Made it impossible to pass tune argument to `manual_forecast()`
 ### Fixed
 - Fixed results_vis in notebook (wasn't displaying one of the widgets)
 

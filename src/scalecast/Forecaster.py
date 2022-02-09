@@ -1177,7 +1177,7 @@ class Forecaster:
                 always ignored for lstm.
             lags (int): greater than 0, default 1.
                 the number of y-variable lags to train the model with.
-            hidden_layers_struct (dict[str,dict[str,Union[float,str]]]): default {'simple':{'size':8,'activation':'tanh'}}.
+            hidden_layers_struct (dict[str,dict[str,Union[float,str]]]): default {'simple':{'units':8,'activation':'tanh'}}.
                 key is the type of each hidden layer, one of {'simple','lstm'}.
                 val is a dict where:
                     key is str representing hyperparameter value: 'units','activation', etc.
@@ -1900,8 +1900,12 @@ class Forecaster:
         >>> f.add_ar_terms(4) # adds four lags of y to predict with
         """
         self._adder()
+        
+        if n == 0:
+            return
+
         descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
-        descriptive_assert(n > 0, ValueError, f"n must be greater than 0, got {n}")
+        descriptive_assert(n >= 0, ValueError, f"n must be greater than or equal to 0, got {n}")
         descriptive_assert(
             self.integration == 0,
             ForecastError,
@@ -2453,7 +2457,7 @@ class Forecaster:
                 self.current_xreg[f"{a}{sep}{i}"] = self.current_xreg[a] ** i
                 self.future_xreg[f"{a}{sep}{i}"] = [x ** i for x in self.future_xreg[a]]
 
-    def add_exp_terms(self, *args, pwr, sep="^", cutoff=2):
+    def add_exp_terms(self, *args, pwr, sep="^", cutoff=2, drop=False):
         """ raises all passed variables (no AR terms) to exponential powers (ints or floats).
 
         Args:
@@ -2466,6 +2470,8 @@ class Forecaster:
             cutoff (int): default 2.
                 the resulting variable name will be rounded to this number based on the passed pwr.
                 for instance, if pwr = 0.33333333333 and 't' is passed as an arg to *args, the resulting name will be t^0.33 by default.
+            drop (bool): default False.
+                whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -2487,7 +2493,10 @@ class Forecaster:
                 x ** pwr for x in self.future_xreg[a]
             ]
 
-    def add_logged_terms(self, *args, base=math.e, sep=""):
+        if drop:
+            self.drop_Xvars(*args)
+
+    def add_logged_terms(self, *args, base=math.e, sep="", drop=False):
         """ logs all passed variables (no AR terms).
 
         Args:
@@ -2497,6 +2506,8 @@ class Forecaster:
             sep (str): default ''.
                 the separator between each term in arg to create the final variable name.
                 resulting variable names will be like "log2t" or "lnt" by default
+            drop (bool): default False.
+                whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -2529,7 +2540,10 @@ class Forecaster:
                 math.log(x, base) for x in self.future_xreg[a]
             ]
 
-    def add_pt_terms(self, *args, method="box-cox", sep="_"):
+        if drop:
+            self.drop_Xvars(*args)
+
+    def add_pt_terms(self, *args, method="box-cox", sep="_", drop=False):
         """ applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).
 
         Args:
@@ -2542,6 +2556,8 @@ class Forecaster:
             sep (str): default ''.
                 the separator between each term in arg to create the final variable name.
                 resulting variable names will be like "box-cox_t" or "yeo-johnson_t" by default.
+            drop (bool): default False.
+                whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -2566,7 +2582,10 @@ class Forecaster:
                 x[0] for x in pt.fit_transform(reshaped_future)
             ]
 
-    def add_diffed_terms(self, *args, diff=1, sep="_"):
+        if drop:
+            self.drop_Xvars(*args)
+
+    def add_diffed_terms(self, *args, diff=1, sep="_", drop=False):
         """ differences all passed variables (no AR terms) up to 2 times.
 
         Args:
@@ -2576,6 +2595,8 @@ class Forecaster:
             sep (str): default '_'.
                 the separator between each term in arg to create the final variable name.
                 resulting variable names will be like "tdiff_1" or "tdiff_2" by default.
+            drop (bool): default False.
+                whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -2605,6 +2626,9 @@ class Forecaster:
 
         obs_to_keep = len(self.y) - diff
         self.keep_smaller_history(obs_to_keep)
+
+        if drop:
+            self.drop_Xvars(*args)
 
     def add_lagged_terms(self, *args, lags=1, upto=True, sep="_"):
         """ lags all passed variables (no AR terms) 1 or more times.
@@ -3603,9 +3627,9 @@ class Forecaster:
                 if "evaluated_as" == "<="
                 else [m for m, v in self.history.items() if threshold in v[metric]]
             )
-        self.pop(*fcsts) if len(fcsts) < len(
-            self.history.keys()
-        ) or delete_all else None
+
+        if (len(fcsts) < len(self.history.keys())) | delete_all:
+            self.pop(*fcsts)
 
     def export(
         self,
@@ -3647,7 +3671,7 @@ class Forecaster:
 
         Returns:
             (DataFrame or Dict[str,DataFrame]): either a single pandas dataframe if one element passed to dfs 
-                or a dictionary where the keys match what was passed to dfs and the values are dataframes. 
+            or a dictionary where the keys match what was passed to dfs and the values are dataframes. 
 
         >>> f.export(dfs=['model_summaries','lvl_fcsts'],to_excel=True)
         """

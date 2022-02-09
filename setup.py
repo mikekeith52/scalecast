@@ -16,14 +16,13 @@ setup(
   name = 'SCALECAST',
   version = version,
   license='MIT',
-  short_description='Dynamic forecasting at scale in Python',
+  description='Easy dynamic time series forecasting in Python',
   long_description=long_description,
   long_description_content_type='text/markdown',
   author = 'Michael Keith',
   author_email = 'mikekeith52@gmail.com',
   packages=find_packages('src'),
   package_dir={'': 'src'},
-  numpydoc_show_class_members = False,
   project_urls = {
     'GitHub': 'https://github.com/mikekeith52/scalecast',
     'Read the Docs': 'https://scalecast.readthedocs.io/en/latest/'
