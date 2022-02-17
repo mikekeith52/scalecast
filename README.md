@@ -1,4 +1,4 @@
-# 🌄 Scalecast: Dynamic Forecasting at Scale
+# 🌄 Scalecast: Easy dynamic time series forecasting in Python
 
 <p align="center">
   <img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" />
