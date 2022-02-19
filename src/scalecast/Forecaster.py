@@ -1180,7 +1180,7 @@ class Forecaster:
             hidden_layers_struct (dict[str,dict[str,Union[float,str]]]): default {'simple':{'units':8,'activation':'tanh'}}.
                 key is the type of each hidden layer, one of {'simple','lstm'}.
                 val is a dict where:
-                    key is str representing hyperparameter value: 'units','activation', etc.
+                    key is a str representing hyperparameter value: 'units','activation', etc.
                         see all possible here for simple rnn: 
                           https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN.
                         here for lstm: 
@@ -2794,7 +2794,7 @@ class Forecaster:
             None
 
         >>> from scalecast import GridGenerator
-        >>> f.get_example_grids()
+        >>> GridGenerator.get_example_grids()
         >>> f.set_estimator('mlp')
         >>> f.ingest_grid('mlp')
         >>> f.limit_grid_size(10,random_seed=20) # limits grid to 10 iterations
@@ -2816,8 +2816,9 @@ class Forecaster:
         """ sets the metric that will be used to tune all subsequent models.
 
         Args:
-            metric: one of _metrics_, default 'rmse'
-                the metric to optimize the models on using the validation set
+            metric: one of _metrics_, default 'rmse'.
+                the metric to optimize the models with using the validation set.
+
         Returns:
             None
 
@@ -2830,7 +2831,7 @@ class Forecaster:
         )
         if (metric == "r2") & (self.validation_length < 2):
             raise ValueError(
-                "can only validate with r2 if the validation length is at least 2, try set_validation_length()"
+                "can only validate with r2 if the validation length is at least 2, try calling set_validation_length()"
             )
         self.validation_metric = metric
 
@@ -2934,6 +2935,7 @@ class Forecaster:
                 for sklearn models, can inlcude normalizer and Xvars.
                 for ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer.
                 LSTM and RNN models have their own sets of possible keywords.
+                see https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
 
         Returns:
             None
