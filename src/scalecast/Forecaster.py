@@ -863,11 +863,12 @@ class Forecaster:
         if len(self.current_xreg.keys()) > 0:
             X_train, X_test, y_train, y_test = self._train_test_split(X, y, test_size)
         else:
-            y_train = self.y.values[:test_size]
+            y_train = self.y.values[:-test_size]
             y_test = self.y.values[-test_size:]
         if Xvars_orig is None:
             X, X_train, X_test = None, None, None
             self.Xvars = None
+
         arima_train = ARIMA(
             y_train,
             exog=X_train,
@@ -880,6 +881,7 @@ class Forecaster:
             start=len(y_train),
             end=len(y_train) + len(y_test) - 1,
             typ="levels",
+            dynamic=True,
         )
         self._metrics(y_test, pred)
         if tune:
@@ -1219,6 +1221,7 @@ class Forecaster:
             logging.warning(
                 "dynamic_testing argument will be ignored for the rnn model"
             )
+        self._clear_the_deck()
         self.dynamic_testing = True
 
         from tensorflow.keras.models import Sequential
@@ -1387,6 +1390,7 @@ class Forecaster:
             logging.warning(
                 "dynamic_testing argument will be ignored for the lstm model"
             )
+        self._clear_the_deck()
         self.dynamic_testing = True
 
         from tensorflow.keras.models import Sequential
@@ -3183,9 +3187,6 @@ class Forecaster:
     def get_freq(self) -> str:
         """ gets the pandas inferred date frequency
         
-        Args:
-            None
-
         Returns:
             (str): The inferred frequency of the current_dates array.
 

@@ -1,14 +1,14 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.6.0
-Summary: Dynamic forecasting at scale in Python
+Version: 0.6.1
+Summary: Easy dynamic time series forecasting in Python
 Home-page: UNKNOWN
 Author: Michael Keith
 Author-email: mikekeith52@gmail.com
 License: MIT
 Project-URL: GitHub, https://github.com/mikekeith52/scalecast
 Project-URL: Read the Docs, https://scalecast.readthedocs.io/en/latest/
-Description: # 🌄 Scalecast: Dynamic Forecasting at Scale
+Description: # 🌄 Scalecast: Easy dynamic time series forecasting in Python
         
         
         

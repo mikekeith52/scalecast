@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.6.1] - 2022-02-23
+### Added
+### Changed
+### Fixed
+- fixed an issue when calling RNN or LSTM models after a combo model that saved attributes of the combo model illogically in history
+- fixed an issue that caused test-set evaluation of ARIMA models to be inaccurate (causing severe underperformance)
+
 ## [0.6.0] - 2022-02-09
 ### Added
 - Added drop argument to several adder functions, giving the user the option to drop the original regressors after making certain transformations on them
