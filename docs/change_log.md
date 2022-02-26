@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.6.4] - 2022-02-25
+### Added
+- added residuals to the function `export_fitted_vals()`. Now gives dates, actuals, fitted vals, and residuals
+- added `multiseries.export_model_summaries()` function
+### Changed
+### Fixed
+- `notebook.results_vis()` broke after last update and has now been fixed
+
+## [0.6.2] - 2022-02-25
+### Added
+### Changed
+- the `plot()`, `plot_test_set()`, and `plot_fitted()` functions now return figures instead of automatically plotting for you. This means more customization is now possible. Took out `to_png` and related args from these functions since that can be done now with matplotlib
+### Fixed
+- changed the insample metric evaluations for RNN and LSTM to be on the full training set instead of just the last few observations.
+
 ## [0.6.1] - 2022-02-23
 ### Added
 ### Changed

@@ -1308,7 +1308,8 @@ class Forecaster:
             plt.show()
 
         fcst = model.predict(fut)
-        self.fitted_values = [p * (self.y.max()-self.y.min()) + self.y.min() for p in model.predict(X)[0]] # only last fcst amount of values
+        fvs = model.predict(X)
+        self.fitted_values = [p[0] * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[1:][::-1]] + [p * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[0]]
         self.Xvars = None
         self.univariate = True
 
@@ -1474,7 +1475,8 @@ class Forecaster:
             plt.show()
 
         fcst = model.predict(fut)
-        self.fitted_values = [p * (self.y.max()-self.y.min()) + self.y.min() for p in model.predict(X)[0]] # only last fcst amount of values
+        fvs = model.predict(X)
+        self.fitted_values = [p[0] * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[1:][::-1]] + [p * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[0]]
         self.Xvars = None
         self.univariate = True
 
@@ -1565,7 +1567,7 @@ class Forecaster:
             if weights is None:
                 weights = pd.DataFrame(
                     {m: [self.history[m][determine_best_by]] for m in models}
-                )  # always use r2 since higher is better (could use maxmin scale for other metrics?)
+                )
             else:
                 descriptive_assert(
                     len(weights) == len(models),
@@ -3217,9 +3219,6 @@ class Forecaster:
         order_by=None,
         level=False,
         print_attr=[],
-        to_png=False,
-        out_path="./",
-        png_name="plot.png",
         ci=False,
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
@@ -3237,37 +3236,32 @@ class Forecaster:
             print_attr (list-like): default [].
                 attributes from history dict to print to console.
                 if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
-            to_png (bool): default False.
-                whether to save the resulting image to a png file.
-            out_path (str): default './'.
-                the path to save the png file to (ignored when `to_png=False`).
-            png_name (str): default './plot.png'.
-                the name of the resulting png image (ignored when `to_png=False`).
             ci (bool): default False.
                 whether to display the confidence intervals.
                 change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting.
                 ignored when level = True.
 
         Returns:
-            None (just plots)
+            (Figure): the created figure
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
         >>> f.plot(order_by='LevelTestSetMAPE') # plots all forecasts
+        >>> plt.show()
         """
         try:
             models = self._parse_models(models, order_by)
         except (ValueError, TypeError):
             models = None
 
+        _, ax = plt.subplots()
+
         if models is None:
-            sns.lineplot(x=self.current_dates.values, y=self.y.values, label="actuals")
+            sns.lineplot(x=self.current_dates.values, y=self.y.values, label="actuals", ax=ax)
             plt.legend()
             plt.xlabel("Date")
             plt.ylabel("Values")
-            plt.title("Plot of y Vals")
-            plt.show()
-            return
+            return ax
 
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -3297,6 +3291,7 @@ class Forecaster:
             x=plot["date"][-plot["actuals_len"] :],
             y=plot["actuals"][-plot["actuals_len"] :],
             label="actuals",
+            ax=ax,
         )
         for i, m in enumerate(models):
             plot[m] = (
@@ -3305,7 +3300,11 @@ class Forecaster:
                 else self.history[m]["LevelForecast"]
             )
             sns.lineplot(
-                x=self.future_dates.to_list(), y=plot[m], color=_colors_[i], label=m
+                x=self.future_dates.to_list(), 
+                y=plot[m], 
+                color=_colors_[i], 
+                label=m, 
+                ax = ax
             )
             if ci and not level:
                 plt.fill_between(
@@ -3327,10 +3326,7 @@ class Forecaster:
         plt.legend()
         plt.xlabel("Date")
         plt.ylabel("Values")
-        plt.title("Forecast Results")
-        if to_png:
-            plt.savefig(os.path.join(out_path, png_name))
-        plt.show()
+        return ax
 
     def plot_test_set(
         self,
@@ -3338,9 +3334,6 @@ class Forecaster:
         order_by=None,
         include_train=True,
         level=False,
-        to_png=False,
-        out_path="./",
-        png_name="./plot.png",
         ci=False,
     ):
         """ plots all test-set predictions with the actuals.
@@ -3359,12 +3352,6 @@ class Forecaster:
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
                 if False and there are a mix of models passed with different integrations, will default to True.
-            to_png (bool): default False.
-                whether to save the resulting image to a png file.
-            out_path (str): default './',
-                the path to save the png file to (ignored when `to_png=False`).
-            png_name (str): default './plot.png'.
-                the name of the resulting png image (ignored when `to_png=False`).
             ci (bool): default False.
                 whether to display the confidence intervals.
                 default is 100 boostrapped samples and a 95% confidence interval.
@@ -3372,12 +3359,14 @@ class Forecaster:
                 ignored when level = False.
 
         Returns:
-            None
+            (Figure): the created figure
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
         >>> f.plot(order_by='LevelTestSetMAPE') # plots all test-set results
+        >>> plt.show()
         """
+        _, ax = plt.subplots()
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -3423,6 +3412,7 @@ class Forecaster:
             x=plot["date"][-plot["actuals_len"] :],
             y=plot["actuals"][-plot["actuals_len"] :],
             label="actuals",
+            ax = ax,
         )
 
         for i, m in enumerate(models):
@@ -3439,6 +3429,7 @@ class Forecaster:
                 color=_colors_[i],
                 alpha=0.7,
                 label=m,
+                ax=ax
             )
             if ci and not level:
                 plt.fill_between(
@@ -3453,18 +3444,12 @@ class Forecaster:
         plt.legend()
         plt.xlabel("Date")
         plt.ylabel("Values")
-        plt.title("Test Set Results")
-        if to_png:
-            plt.savefig(os.path.join(out_path, png_name))
-        plt.show()
+        return ax
 
     def plot_fitted(
         self,
         models="all",
         order_by=None,
-        to_png=False,
-        out_path="./",
-        png_name="./plot.png",
     ):
         """ plots all fitted values with the actuals.
 
@@ -3473,20 +3458,16 @@ class Forecaster:
                the forecated models to plot.
                can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
             order_by (str): one of _determine_best_by_, default None.
-            to_png (bool): default False.
-                whether to save the resulting image to a png file.
-            out_path (str): default './'.
-                the path to save the png file to (ignored when `to_png=False`).
-            png_name (str): default './plot.png'.
-                the name of the resulting png image (ignored when `to_png=False`).
 
         Returns:
-            None
+            (Figure): the created figure
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
         >>> f.plot_fitted(order_by='LevelTestSetMAPE') # plots all fitted values
+        >>> plt.show()
         """
+        _, ax = plt.subplots()
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -3505,7 +3486,7 @@ class Forecaster:
             "date": self.current_dates.to_list()[-len(y.dropna()) :],
             "actuals": y.dropna().to_list(),
         }
-        sns.lineplot(x=plot["date"], y=plot["actuals"], label="actuals")
+        sns.lineplot(x=plot["date"], y=plot["actuals"], label="actuals", ax=ax)
 
         for i, m in enumerate(models):
             plot[m] = self.history[m]["FittedVals"]
@@ -3516,15 +3497,13 @@ class Forecaster:
                 color=_colors_[i],
                 alpha=0.7,
                 label=m,
+                ax=ax,
             )
 
         plt.legend()
         plt.xlabel("Date")
         plt.ylabel("Values")
-        plt.title("Fitted Values")
-        if to_png:
-            plt.savefig(os.path.join(out_path, png_name))
-        plt.show()
+        return ax
 
     def drop_regressors(self, *args):
         """ drops regressors.
@@ -4029,19 +4008,19 @@ class Forecaster:
         )
 
     def export_fitted_vals(self,model):
-        """ exports a single dataframe with fitted values and actuals.
+        """ exports a single dataframe with dates, fitted values, actuals, and residuals.
 
         Args:
             model (str):
                 the model nickname (must exist in history.keys()).
 
         Returns:
-            (DataFrame): A dataframe with fitted values and actuals.
+            (DataFrame): A dataframe with dates, fitted values, actuals, and residuals.
         """
-        return pd.DataFrame(
-            {
+        df = pd.DataFrame({
                 "DATE": self.current_dates.to_list()[-len(self.history[model]["FittedVals"]):],
                 "Actuals": self.y.to_list()[-len(self.history[model]["FittedVals"]):],
-                "FittedVals": self.history[model]["FittedVals"]
-            }
-        )
+                "FittedVals": self.history[model]["FittedVals"]})
+
+        df['Residuals'] = df['Actuals'] - df['FittedVals']
+        return df

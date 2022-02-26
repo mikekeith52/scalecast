@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forecasting Different Model Types &mdash; scalecast 0.5.8 documentation</title>
+  <title>Forecasting Different Model Types &mdash; scalecast 0.6.4 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="../_static/logo2.png"/>
@@ -35,7 +35,7 @@
             <img src="../_static/logo2.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.5.8
+                0.6.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -53,7 +53,6 @@
 </ul>
 <p class="caption"><span class="caption-text">Examples:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="examples/eCommerce.html">eCommerce Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/LSTM.html">LSTM Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Forecaster:</span></p>
@@ -79,6 +78,10 @@
 <p class="caption"><span class="caption-text">Notebook:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../Notebook/Notebook.html">Notebook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Multi-Series:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Multiseries/Multiseries.html">Multi-series</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ChangeLog:</span></p>
 <ul>
@@ -516,12 +519,12 @@ the number of y-variable lags to train the model with.</p>
 <dd class="field-even"><p>int</p>
 </dd>
 <dt class="field-odd">param hidden_layers_struct</dt>
-<dd class="field-odd"><p>default {‘simple’:{‘size’:8,’activation’:’tanh’}}.
+<dd class="field-odd"><p>default {‘simple’:{‘units’:8,’activation’:’tanh’}}.
 key is the type of each hidden layer, one of {‘simple’,’lstm’}.
 val is a dict where:</p>
 <blockquote>
 <div><dl class="simple">
-<dt>key is str representing hyperparameter value: ‘units’,’activation’, etc.</dt><dd><dl class="simple">
+<dt>key is a str representing hyperparameter value: ‘units’,’activation’, etc.</dt><dd><dl class="simple">
 <dt>see all possible here for simple rnn:</dt><dd><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN">https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN</a>.</p>
 </dd>
 <dt>here for lstm:</dt><dd><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM">https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM</a>.</p>

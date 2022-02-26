@@ -77,6 +77,13 @@ Index
    Notebook/Notebook
 
 .. toctree::
+   :maxdepth: 4
+   :caption: Multi-Series:  
+   :hidden:
+
+   Multiseries/Multiseries
+
+.. toctree::
    :maxdepth: 1
    :caption: ChangeLog:  
    :hidden:

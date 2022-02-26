@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-series &mdash; scalecast 0.6.4 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/logo2.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Changelog" href="../change_log.html" />
+    <link rel="prev" title="Notebook" href="../Notebook/Notebook.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: black" >
+            <a href="../index.html">
+            <img src="../_static/logo2.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialization.html">Getting Started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Forecaster/examples/LSTM.html">LSTM Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Forecaster:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Forecaster/Forecaster.html">Forecaster Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Forecaster/ForecasterGlobals.html">Forecaster Object Globals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Forecaster/_forecast.html">Forecasting Different Model Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GridGenerator:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../GridGenerator/GridGenerator.html">GridGenerator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Notebook:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Notebook/Notebook.html">Notebook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Multi-Series:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multi-series</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.scalecast.multiseries.export_model_summaries">export_model_summaries</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ChangeLog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../change_log.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: black" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scalecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Multi-series</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Multiseries/Multiseries.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="../Notebook/Notebook.html" class="btn btn-neutral float-left" title="Notebook" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../change_log.html" class="btn btn-neutral float-right" title="Changelog" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+  </div>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="multi-series">
+<h1>Multi-series<a class="headerlink" href="#multi-series" title="Permalink to this headline"></a></h1>
+<p>If you are forecasting with many series in a loop, these functions and code examples may facilitate setting up the process and getting key information for each model and series.</p>
+<section id="module-src.scalecast.multiseries.export_model_summaries">
+<span id="export-model-summaries"></span><h2>export_model_summaries<a class="headerlink" href="#module-src.scalecast.multiseries.export_model_summaries" title="Permalink to this headline"></a></h2>
+<p>exports a pandas dataframe with information about each model run on each
+series when doing forecasting using many different series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param f_dict</dt>
+<dd class="field-odd"><p>dictionary of forcaster objects.</p>
+</dd>
+<dt class="field-even">type f_dict</dt>
+<dd class="field-even"><p>dict[str,Forecaster]</p>
+</dd>
+<dt class="field-odd">param **kwargs</dt>
+<dd class="field-odd"><p>passed to the Forecaster.export() function (do not pass dfs arg as that is set automatically to ‘model_summaries’)</p>
+</dd>
+<dt class="field-even">returns</dt>
+<dd class="field-even"><p>(dataframe) the combined model summaries</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scalecast.Forecaster</span> <span class="kn">import</span> <span class="n">Forecaster</span>
+<span class="kn">from</span> <span class="nn">scalecast</span> <span class="kn">import</span> <span class="n">GridGenerator</span>
+<span class="kn">from</span> <span class="nn">scalecast.notebook</span> <span class="kn">import</span> <span class="n">tune_test_forecast</span>
+<span class="kn">from</span> <span class="nn">scalecast.multiseries</span> <span class="kn">import</span> <span class="n">export_model_summaries</span>
+<span class="kn">import</span> <span class="nn">pandas_datareader</span> <span class="k">as</span> <span class="nn">pdr</span> <span class="c1"># !pip install pandas-datareader</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">rc</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">)})</span>
+
+<span class="n">f_dict</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">models</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mlr&#39;</span><span class="p">,</span><span class="s1">&#39;elasticnet&#39;</span><span class="p">,</span><span class="s1">&#39;mlp&#39;</span><span class="p">)</span>
+<span class="n">GridGenerator</span><span class="o">.</span><span class="n">get_example_grids</span><span class="p">()</span> <span class="c1"># writes the Grids.py file to your working directory</span>
+
+<span class="k">for</span> <span class="n">sym</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;UNRATE&#39;</span><span class="p">,</span><span class="s1">&#39;GDP&#39;</span><span class="p">):</span>
+  <span class="n">df</span> <span class="o">=</span> <span class="n">pdr</span><span class="o">.</span><span class="n">get_data_fred</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="s1">&#39;2000-01-01&#39;</span><span class="p">)</span>
+  <span class="n">f</span> <span class="o">=</span> <span class="n">Forecaster</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="n">sym</span><span class="p">],</span><span class="n">current_dates</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">generate_future_dates</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># forecast 12 periods to the future</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">set_test_length</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="c1"># test models on 12 periods</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">set_validation_length</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># validate on the previous 4 periods</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">add_time_trend</span><span class="p">()</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">add_seasonal_regressors</span><span class="p">(</span><span class="s1">&#39;quarter&#39;</span><span class="p">,</span><span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">dummy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+  <span class="n">tune_test_forecast</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">models</span><span class="p">)</span> <span class="c1"># adds a progress bar that is nice for notebooks</span>
+  <span class="n">f_dict</span><span class="p">[</span><span class="n">sym</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+
+<span class="n">model_summaries</span> <span class="o">=</span> <span class="n">export_model_summaries</span><span class="p">(</span><span class="n">f_dict</span><span class="p">,</span><span class="n">determine_best_by</span><span class="o">=</span><span class="s1">&#39;LevelTestSetMAPE&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Notebook/Notebook.html" class="btn btn-neutral float-left" title="Notebook" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../change_log.html" class="btn btn-neutral float-right" title="Changelog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Michael Keith.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

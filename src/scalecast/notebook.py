@@ -43,6 +43,8 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
         else:
             selected_data.plot_test_set(models=f'top_{mo_selection}',order_by=me_selection,include_train=include_train,level=lv_selection,
                                         ci=ci_selection)
+        plt.title(ts_selection + ' Forecast Results', size = 16)
+        plt.show()
             
     def on_button_clicked(b):
         mo_selection = mo_dd.value
