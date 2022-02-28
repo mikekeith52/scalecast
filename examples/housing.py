@@ -30,6 +30,7 @@ f.add_ar_terms(4) # add AR terms before differencing
 f.add_AR_terms((2,12)) # seasonal AR terms
 f.diff() # differences the y term and all ar terms to make a series stationary (also supports 2-level integration)
 f.plot()
+plt.show()
 f.adf_test(quiet=False) # it is now stationary
 f.add_seasonal_regressors('month',raw=False,sincos=True) # uses pandas attributes: raw=True creates integers (default), sincos=True creates wave functions (not default), dummy=True creates dummy vars (not default)
 f.add_seasonal_regressors('year')
@@ -47,9 +48,13 @@ f.manual_forecast(how='weighted',models=models,determine_best_by='ValidationMetr
 # plot results
 matplotlib.use('QT5Agg')
 f.plot(models='top_5',order_by='TestSetRMSE',print_attr=['TestSetRMSE','TestSetR2','TestSetMAPE','HyperParams','Xvars','models']) # plots the forecast differences or levels based on the level the forecast was performed on
+plt.show()
 f.plot(models='top_5',order_by='LevelTestSetMAPE',level=True,print_attr=['LevelTestSetRMSE','LevelTestSetR2','LevelTestSetMAPE']) # plot the level forecast
+plt.show()
 f.plot_test_set(models='top_5',order_by='TestSetR2',include_train=60) # see test-set performance visually of top 5 best models by r2 (last 60 obs only)
+plt.show()
 f.plot_fitted(order_by='TestSetR2') # plot fitted values of all models ordered by r2
+plt.show()
 
 # export key results
 f.export(to_excel=True,determine_best_by='LevelTestSetMAPE',excel_name='housing_results.xlsx') # export interesting model metrics and forecasts (both level and non-level)

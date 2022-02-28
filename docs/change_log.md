@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
 
+## [0.6.6] - 2022-02-28
+### Added
+- added the `add_sklearn_estimator()` function so a user can add any sklearn regression model to forecast with.
+### Changed
+### Fixed
+- some of the examples weren't plotting correctly after recent updates.
+
 ## [0.6.4] - 2022-02-25
 ### Added
 - added residuals to the function `export_fitted_vals()`. Now gives dates, actuals, fitted vals, and residuals

@@ -139,6 +139,7 @@ _adder_funcs_ = [
     'dd_pt_terms',
     'add_diffed_terms',
     'add_lagged_terms',
+    'add_sklearn_estimator'
 ]
 _exporter_funcs_ = [
     'export',
@@ -3010,6 +3011,36 @@ class Forecaster:
         self.forecast = self.manual_forecast(
             call_me=call_me, dynamic_testing=dynamic_testing, **self.best_params
         )
+
+    def add_sklearn_estimator(self,imported_module,called):
+        """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
+        be careful to choose regression models only.
+        
+        Args:
+            imported_module (sklearn regression model):
+                the model from sklearn to add. must have already been imported locally.
+                supports models from sklearn and sklearn APIs.
+            called (str):
+                the name of the estimator that can be called using set_estimator().
+
+        Returns:
+            None
+
+        >>> from sklearn.linear_model import Lasso
+        >>> f.add_sklearn_estimator(Lasso,called='lasso')
+        >>> f.set_estimator('lasso')
+        >>> f.ingest_grid({'alpha':[.1,.5,1,1.5,2]})
+        >>> f.tune()
+        >>> f.auto_forecast()
+        """
+        globals()[called + '_'] = imported_module
+        _sklearn_imports_[called] = globals()[called + '_']
+        _sklearn_estimators_.append(called)
+        _sklearn_estimators_.sort()
+        _estimators_.append(called)
+        _estimators_.sort()
+        _can_be_tuned_.append(called)
+        _can_be_tuned_.sort()
 
     def tune_test_forecast(
         self,
