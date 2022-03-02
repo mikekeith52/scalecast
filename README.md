@@ -11,6 +11,7 @@ This package uses a scaleable forecasting approach in Python with [scikit-learn]
 ```python
 import pandas as pd
 import pandas_datareader as pdr
+import matplotlib.pyplot as plt
 from scalecast import GridGenerator
 from scalecast.Forecaster import Forecaster
 
@@ -30,7 +31,9 @@ f.add_time_trend()
 f.set_validation_length(6) # length, different than test_length, to tune the hyperparameters 
 f.tune_test_forecast(models)
 f.plot_test_set(models='top_3',order_by='LevelTestSetMAPE',ci=True) # plots the differenced test set with confidence intervals
+plt.show()
 f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
+plt.show()
 ```
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast_test_set.png)
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast.png)
