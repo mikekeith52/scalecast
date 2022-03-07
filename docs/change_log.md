@@ -1,5 +1,14 @@
 # Changelog
-All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for all releases is available on GitHub.
+All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
+
+## [0.6.7] - 2022-03-07
+### Added
+- added `N_actuals` to `__repr__()` function
+### Changed
+- Took pt normalizer out of all example grids since it still errors out sometimes without being obvious why
+- `notebook.results_vis()` no longer prints anything and automatically sets the plot title instead
+- `Forecaster.set_test_length()` now accepts fractional splits
+### Fixed
 
 ## [0.6.6] - 2022-02-28
 ### Added

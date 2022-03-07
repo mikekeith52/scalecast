@@ -222,6 +222,7 @@ class Forecaster:
     DateStartActuals={}
     DateEndActuals={}
     Freq={}
+    N_actuals={}
     ForecastLength={}
     Xvars={}
     Differenced={}
@@ -235,6 +236,7 @@ class Forecaster:
 )""".format(self.current_dates.values[0].astype(str),
             self.current_dates.values[-1].astype(str),
             self.freq,
+            len(self.y),
             len(self.future_dates),
             list(self.current_xreg.keys()),
             self.integration,
@@ -2009,17 +2011,32 @@ class Forecaster:
         """ sets the length of the test set.
 
         Args:
-            n (int): default 1.
+            n (int or float): default 1.
                 the length of the resulting test set.
+                fractional splits are supported by passing a float less than 1 and greater than 0.
 
         Returns:
             None
 
         >>> f.set_test_length(12) # test set of 12
+        >>> f.set_test_length(.2) # 20% test split
         """
-        descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
-        self.test_length = n
-
+        float(n)
+        if n >= 1:
+            descriptive_assert(
+                isinstance(n, int), 
+                ValueError, 
+                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n}"
+            )
+            self.test_length = n
+        else:
+            descriptive_assert(
+                n > 0, 
+                ValueError,
+                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n}"
+            )
+            self.test_length = int(len(self.y) * n)
+        
     def set_validation_length(self, n=1):
         """ sets the length of the validation set.
 

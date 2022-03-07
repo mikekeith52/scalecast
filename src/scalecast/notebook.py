@@ -36,7 +36,6 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
 
     def display_user_selections(ts_selection,mo_selection,lv_selection,ci_selection,me_selection):
         selected_data = f_dict[ts_selection]
-        print(ts_selection)
         if plot_type == 'forecast':
             selected_data.plot(models=f'top_{mo_selection}',order_by=me_selection,level=lv_selection,
                                print_attr=print_attr,ci=ci_selection)

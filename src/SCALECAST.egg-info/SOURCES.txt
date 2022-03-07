@@ -4,6 +4,7 @@ README.md
 license.txt
 setup.cfg
 setup.py
+warnings.log
 __pycache__/Forecaster.cpython-37.pyc
 __pycache__/Forecaster.cpython-38.pyc
 __pycache__/Grids.cpython-37.pyc
@@ -222,8 +223,3 @@ src/scalecast/GridGenerator.py
 src/scalecast/__init__.py
 src/scalecast/multiseries.py
 src/scalecast/notebook.py
-src/scalecast/__pycache__/Forecaster.cpython-38.pyc
-src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
-src/scalecast/__pycache__/__init__.cpython-38.pyc
-src/scalecast/__pycache__/multiseries.cpython-38.pyc
-src/scalecast/__pycache__/notebook.cpython-38.pyc

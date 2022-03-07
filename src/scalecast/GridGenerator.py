@@ -37,12 +37,12 @@ mlp = {
 	'activation':['relu','tanh'],
 	'hidden_layer_sizes':[(25,),(25,25,)],
 	'solver':['lbfgs','adam'],
-	'normalizer':['pt','minmax'],
+	'normalizer':['minmax','scale'],
 	'random_state':[20]
 }
 
 mlr = {
-	'normalizer':['scale','minmax','pt',None]
+	'normalizer':['scale','minmax',None]
 }
 
 prophet = {
