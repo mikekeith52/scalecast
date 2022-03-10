@@ -1496,6 +1496,20 @@ class Forecaster:
         splice_points=None,
     ):
         """ combines at least two previously evaluted forecasts to create a new model.
+        see the following explanation for the weighted-average model:
+        The weighted model in scalecast uses a weighted average of all selected models, 
+        applying the same weights to the fitted values, test-set metrics, and predictions. 
+        A user can supply their own weights or let the algorithm determine optimal weights 
+        based on a passed error metric (such as "TestSetMAPE"). To avoid overfitting, it is 
+        recommended to use the default value, "ValidationSetMetric" to determine weights, 
+        although this is not possible if the selected models have not all been tuned on the 
+        validation set. The weighting uses a MaxMin scaler when an error metric is passed, 
+        and a MinMax scaler when r-squared is selected as the metric to base weights on. 
+        When this scaler is applied, the resulting values are then rebalanced to add to 1. 
+        Since the worst-performing model in this case will always be weighted zero, 
+        the user can select a factor to add to all scaled values before the rebalancing 
+        is applied; by default, this is 0.1. The higher this factor is, the closer the weighted 
+        average will be to a simple average and vice-versa.
 
         Args:
             how (str): one of {'simple','weighted','splice'}, default 'simple'.
