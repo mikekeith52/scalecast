@@ -1162,7 +1162,8 @@ class Forecaster:
         self,
         dynamic_testing=True,
         lags=1,
-        hidden_layers_struct={'simple':{'units':8,'activation':'tanh'}},
+        hidden_layers_type='SimpleRNN',
+        hidden_layers_struct=[{'units':8,'activation':'tanh'}],
         loss="mean_absolute_error",
         optimizer="Adam",
         learning_rate=0.001,
@@ -1182,16 +1183,15 @@ class Forecaster:
                 always ignored for lstm.
             lags (int): greater than 0, default 1.
                 the number of y-variable lags to train the model with.
-            hidden_layers_struct (dict[str,dict[str,Union[float,str]]]): default {'simple':{'units':8,'activation':'tanh'}}.
-                key is the type of each hidden layer, one of {'simple','lstm'}.
-                val is a dict where:
-                    key is a str representing hyperparameter value: 'units','activation', etc.
-                        see all possible here for simple rnn: 
-                          https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN.
-                        here for lstm: 
-                          https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM.
-                    val is the desired hyperparam value.
-                    do not pass `return_sequences` or `input_shape` as these will be set automatically.
+            hidden_layers_type (str): one of 'LSTM','SimpleRNN'.
+                see here for info on SimpleRNN: 
+                    https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
+                see here for info on LSTM:
+                    https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
+            hidden_layers_struct (list[dict[str,Union[float,str]]]): default [{'units':8,'activation':'tanh'}].
+                each element in the list is a dict.
+                key is a str representing hyperparameter name: 'units','activation', etc.
+                val is hyperparameter value.
             loss (str): default 'mean_absolute_error'.
                 the loss function to minimize.
                 see available options here: 
@@ -1216,10 +1216,15 @@ class Forecaster:
             (list): The predictions.
         """
         descriptive_assert(
-            len(hidden_layers_struct.keys()) >= 1,
+            len(hidden_layers_struct) >= 1,
             ValueError,
             f"must pass at least one layer to hidden_layers_struct, got {hidden_layers_struct}",
         )
+        descriptive_assert(
+                    hidden_layers_type in ('SimpleRNN','LSTM'),
+                    ValueError,
+                    f'hidden_layers_type must be one of ("SimpleRNN","LSTM"), got {hidden_layers_type}'
+                )
         if not dynamic_testing:
             logging.warning(
                 "dynamic_testing argument will be ignored for the rnn model"
@@ -1256,31 +1261,26 @@ class Forecaster:
         X_test = X_test.reshape(X_test.shape[0],X_test.shape[1],1)
         X = X.reshape(X.shape[0],X.shape[1],1)
         fut = fut.reshape(fut.shape[0],fut.shape[1],1)
+        layer = SimpleRNN if hidden_layers_type == 'SimpleRNN' else LSTM
 
         def get_compiled_model(y):
             # build model
-            for i, kv in enumerate(hidden_layers_struct.items()):
-                descriptive_assert(
-                    kv[0] in ('simple','lstm'),
-                    ValueError,
-                    f'each key in the hidden_layers_struct dict must be one of ("simple","lstm"), got {kv[0]}'
-                )
-                layer = SimpleRNN if kv[0] == 'simple' else LSTM
+            for i, kv in enumerate(hidden_layers_struct):                
                 if i == 0:
                     model = Sequential(
                         [
                             layer(
-                                **kv[1],
+                                **kv,
                                 input_shape=(n_timesteps, n_features),
-                                return_sequences=len(hidden_layers_struct.keys()) > 1,
+                                return_sequences=len(hidden_layers_struct) > 1,
                             )
                         ]
                     )
                 else:
                     model.add(
                         layer(
-                            **kv[1],
-                            return_sequences=(not i == (len(hidden_layers_struct.keys()) - 1))
+                            **kv,
+                            return_sequences=(not i == (len(hidden_layers_struct) - 1))
                         )
                     )
             model.add(Dense(y.shape[1]))  # output layer

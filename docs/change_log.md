@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.6.9] - 2022-03-15
+### Added
+### Changed
+### Fixed
+- fixed the default hidden_layers_type arg in `_forecast_rnn()`
+
+## [0.6.8] - 2022-03-15
+### Added
+### Changed
+### Fixed
+- fixed the rnn estimator which was using a dict to set hidden layers without unique keys, causing all layers except the last to be ignored, so all rnns were returning one layer results. Now the args in that function are different, but tested and it works to add more layers.
+
 ## [0.6.7] - 2022-03-07
 ### Added
 - added `N_actuals` to `__repr__()` function
