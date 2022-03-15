@@ -1183,7 +1183,7 @@ class Forecaster:
                 always ignored for lstm.
             lags (int): greater than 0, default 1.
                 the number of y-variable lags to train the model with.
-            hidden_layers_type (str): one of 'LSTM','SimpleRNN'.
+            hidden_layers_type (str): one of 'LSTM','SimpleRNN'. default 'SimpleRNN'.
                 see here for info on SimpleRNN: 
                     https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
                 see here for info on LSTM:
