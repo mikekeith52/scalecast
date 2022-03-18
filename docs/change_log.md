@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.7.0] - 2022-03-18
+### Added
+- added the `add_cycle()` method for identification of irregular cycles
+### Changed
+### Fixed
+
 ## [0.6.9] - 2022-03-15
 ### Added
 ### Changed

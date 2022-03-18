@@ -2371,6 +2371,33 @@ class Forecaster:
             range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
         )
 
+    def add_cycle(self,cycle_length,called=None):
+        """ adds a regressor that acts as a seasonal cycle.
+        use this function to capture non-normal seasonality.
+
+        Args:
+            cycle_length (int): how many time steps make one complete cycle.
+            called (str): optional. what to call the resulting variable.
+                two variables will be created--one for a sin transformation and the other for cos
+                resulting variable names will have "sin" or "cos" at the end.
+                example, called = 'cycle5' will become 'cycle5sin', 'cycle5cos'.
+                if left unspecified, 'cycle{cycle_length}' will be used as the name.
+
+        Returns:
+            None
+
+        >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations
+        """
+        self._adder()
+        if called is None:
+            called = f'cycle{cycle_length}'
+        full_sin = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(lambda x: np.sin(np.pi * x / (cycle_length / 2)))
+        full_cos = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(lambda x: np.cos(np.pi * x / (cycle_length / 2)))
+        self.current_xreg[called + 'sin'] = pd.Series(full_sin.values[:len(self.y)])
+        self.current_xreg[called + 'cos'] = pd.Series(full_cos.values[:len(self.y)])
+        self.future_xreg[called + 'sin'] = list(full_sin.values[len(self.y):])
+        self.future_xreg[called + 'cos'] = list(full_cos.values[len(self.y):])
+
     def add_other_regressor(self, called, start, end):
         """ adds dummy variable that is 1 during the specified time period, 0 otherwise.
 
