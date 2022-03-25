@@ -72,7 +72,7 @@ plt.show()
 |Any Scikit-learn Regressor or API|✔️|
 |Differencing|✔️|
 |Undifferencing|✔️|
-|Level Results|✔️|
+|Level Results|✔️| 
 
 ## Installation
 1. `pip install scalecast`  
