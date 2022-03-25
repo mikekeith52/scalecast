@@ -55,33 +55,16 @@ Index
 
 .. toctree::
    :maxdepth: 4
-   :caption: Forecaster:
+   :caption: Scalecast:
    :hidden:
 
-   Forecaster/Forecaster
    Forecaster/ForecasterGlobals
+   Forecaster/Forecaster
+   Forecaster/MVForecaster
    Forecaster/_forecast
-
-.. toctree::
-   :maxdepth: 4
-   :caption: GridGenerator:
-   :hidden:
-
-   GridGenerator/GridGenerator
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Notebook:  
-   :hidden:
-
-   Notebook/Notebook
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Multi-Series:  
-   :hidden:
-
-   Multiseries/Multiseries
+   Forecaster/GridGenerator
+   Forecaster/Notebook
+   Forecaster/Multiseries
 
 .. toctree::
    :maxdepth: 1

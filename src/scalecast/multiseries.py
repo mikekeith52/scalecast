@@ -17,3 +17,16 @@ def export_model_summaries(f_dict,**kwargs):
         df['Series'] = k
         forecast_info = pd.concat([forecast_info,df],ignore_index=True)
     return forecast_info
+
+def keep_smallest_first_date(*fs):
+    """ trims all passed Forecaster objects so they all have the same first date.
+    
+    Args:
+        *fs (Forecaster objects): the objects to check and trim
+
+    Returns:
+        None
+    """
+    first_date = max([min(f.current_dates) for f in fs])
+    for f in fs:
+        f.keep_smaller_history(first_date)

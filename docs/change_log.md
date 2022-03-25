@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.7.1] - 
+### Added
+- added the MVForecaster object for multivariate vector forecasting
+- added mv_grids to GridGenerator, which is written out to working directory as MVGrids (due to the added "lags" arg)
+- added `multiseries.keep_smallest_first_date()` function to make the series of multiple Forecaster objects the same lengths
+### Changed
+### Fixed
+
 ## [0.7.0] - 2022-03-18
 ### Added
 - added the `add_cycle()` method for identification of irregular cycles

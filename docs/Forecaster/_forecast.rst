@@ -42,6 +42,13 @@ lstm
 >>> f.set_estimator('lstm')
 >>> f.manual_forecast() # above args are now available in this function
 
+multivariate
+---------------------------------------------------------------
+.. automodule:: src.scalecast.MVForecaster.MVForecaster._forecast
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 prophet
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_prophet

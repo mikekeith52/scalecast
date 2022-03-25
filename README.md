@@ -38,13 +38,42 @@ plt.show()
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast_test_set.png)
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast.png)
 
-## Why switch to Scalecast?
-- The modeling process is streamlined for forecasting tasks. If you have ever written code to forecast with sklearn or TensorFlow, scalecast will let you implement a similar model but with much less code.
-- Many of the simpler available models are faster to evaluate and just as accurate as Prophet, TensorFlow, and other libraries. You can benchmark many models and compare what is best for your task.
-- It consistently applies bootstrapped confidence intervals at any level you want to see them.
+## Dynamic forecasting is easier than ever
+- The modeling process is streamlined for forecasting tasks. If you have ever written code to forecast with sklearn, statsmodels, or TensorFlow, scalecast will let you implement a similar model but with less code.
+- Consistently applied bootstrapped confidence intervals at any level you want to see them are available.
 - Your results and accuracy metrics can always be level, even if you need to difference the series to model it effectively.
-- Dynamic forecasting, where lagged dependent-variable values are propogated forward for prediction-making, is easier than ever.
-  
+
+## What can it do?
+|||
+|---|---|
+|Dynamic Univariate Forecasting|✔️|
+|Dynamic Forecasting with Exogenous Regressors|✔️|
+|Dynamic Multivariate Vector Forecasting|✔️|
+|Dynamic Multivariate Vector Forecasting with Exogenous Regressors|✔️|
+|Hyperparameter Tuning|✔️|
+|Model Validation|✔️|
+|Model Summary Generation|✔️|
+|Future Period Forecasting|✔️|
+|Plotting|✔️|
+|Bootstrapped Confidence Intervals|✔️|
+|Seasonality Capturing|✔️|
+|Feature Importance|✔️|
+|Feature Selection|✔️|
+|Linear Models|✔️|
+|Non-linear Models|✔️|
+|Tree Models|✔️|
+|Dense Neural Networks|✔️|
+|Recurrent Neural Networks|✔️|
+|ARIMA|✔️|
+|Exponential Smoothing|✔️|
+|Facebook Prophet|✔️|
+|LinkedIn Silverkite|✔️|
+|Ensemble Modeling|✔️|
+|Any Scikit-learn Regressor or API|✔️|
+|Differencing|✔️|
+|Undifferencing|✔️|
+|Level Results|✔️|
+
 ## Installation
 1. `pip install scalecast`  
     - installs the base package and most dependencies
@@ -59,7 +88,6 @@ plt.show()
     - `pip install ipywidgets`
     - `jupyter nbextension enable --py widgetsnbextension`
     - if using Jupyter Lab: `jupyter labextension install @jupyter-widgets/jupyterlab-manager`
-
 
 ## Initialization
 ```python

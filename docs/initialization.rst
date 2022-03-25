@@ -56,4 +56,37 @@ If you are working on Jupyter notebook and are forecasting many series, you can 
 
     results_vis(f_dict) # toggle through results with jupyter widgets
 
+If you want to predict two or more series together and use the lags of all to predict the others, check out the MVForecaster object:
+
+.. code:: python
+
+    from Forecaster import Forecaster
+    from MVForecaster import MVForecaster
+    import GridGenerator
+    import matplotlib.pyplot as plt
+    import pandas_datareader as pdr # pip install pandas-datareader
+    
+    for s in ('UNRATE','UTUR'):
+      df = pdr.get_data_fred(s,start='2000-01-01',end='2022-01-01') # fetch data
+      f = Forecaster(y=df[s],current_dates=df.index) # load it into a Forecaster object
+      f.generate_future_dates(24) # create the forecast horizon
+      f.add_seasonal_regressors('month','quarter','daysinmonth') # add regressors
+      f.integrate() # take differences to make data stationary
+      f_dict[s] = f # store everything in a dictionary
+    
+    mvf = MVForecaster(f_dict['UNRATE'],
+      f_dict['UTUR'],
+      not_same_len_action='trim',
+      merge_Xvars='union',
+      merge_future_dates='longest',
+      names=f_dict.keys()) 
+    
+    GridGenerator.get_mv_grids()
+    
+    mvf.set_test_length(.2)
+    mvf.set_optimize_on('UTUR')
+    mvf.tune_test_forecast(('mlr','gbt','mlp'))
+    mvf.plot(ci=True)
+    plt.show()
+
 These are simple procedures that barely scratch the surface of what scalecast can do! Happy reading!

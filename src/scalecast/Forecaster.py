@@ -139,7 +139,8 @@ _adder_funcs_ = [
     'dd_pt_terms',
     'add_diffed_terms',
     'add_lagged_terms',
-    'add_sklearn_estimator'
+    'add_sklearn_estimator',
+    'add_cycle',
 ]
 _exporter_funcs_ = [
     'export',
@@ -2923,8 +2924,7 @@ class Forecaster:
             except SyntaxError:
                 raise
             except:
-                raise
-                # raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
+                raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
 
         if self.estimator in _cannot_be_tuned_:
             raise ForecastError(f"{self.estimator} models cannot be tuned")
@@ -3066,7 +3066,7 @@ class Forecaster:
                 f"since tune() has not been called, {self.estimator} model will be run with default hyperparameters"
             )
             self.best_params = {}
-        self.forecast = self.manual_forecast(
+        self.manual_forecast(
             call_me=call_me, dynamic_testing=dynamic_testing, **self.best_params
         )
 
@@ -3323,7 +3323,7 @@ class Forecaster:
                 if False, will plot the forecasts at whatever level they were called on.
                 if False and there are a mix of models passed with different integrations, will default to True.
             print_attr (list-like): default [].
-                attributes from history dict to print to console.
+                attributes from history to print to console.
                 if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
             ci (bool): default False.
                 whether to display the confidence intervals.

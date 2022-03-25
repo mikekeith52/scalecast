@@ -4,7 +4,6 @@ README.md
 license.txt
 setup.cfg
 setup.py
-warnings.log
 __pycache__/Forecaster.cpython-37.pyc
 __pycache__/Forecaster.cpython-38.pyc
 __pycache__/Grids.cpython-37.pyc
@@ -21,6 +20,7 @@ assets/plot_pacf.png
 assets/plot_periodogram.png
 assets/plot_seasonal_decompose.png
 assets/plot_test_set.png
+dist/SCALECAST-0.7.0.tar.gz
 docs/0.17
 docs/Makefile
 docs/about.rst
@@ -39,9 +39,6 @@ docs/Forecaster/warnings.log
 docs/Forecaster/.ipynb_checkpoints/ForecasterGlobals-checkpoint.ipynb
 docs/Forecaster/examples/LSTM.ipynb
 docs/Forecaster/examples/eCommerce.ipynb
-docs/GridGenerator/GridGenerator.rst
-docs/Multiseries/Multiseries.rst
-docs/Notebook/Notebook.rst
 examples/AirPassengers.csv
 examples/Grids.py
 examples/LSTM.ipynb
@@ -80,8 +77,10 @@ src/SCALECAST.egg-info/requires.txt
 src/SCALECAST.egg-info/top_level.txt
 src/scalecast/Forecaster.py
 src/scalecast/GridGenerator.py
+src/scalecast/MVForecaster.py
 src/scalecast/__init__.py
 src/scalecast/multiseries.py
 src/scalecast/notebook.py
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
+src/scalecast/__pycache__/Grids.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
