@@ -136,7 +136,7 @@ _adder_funcs_ = [
     'add_poly_terms',
     'add_exp_terms',
     'add_logged_terms',
-    'dd_pt_terms',
+    'add_pt_terms',
     'add_diffed_terms',
     'add_lagged_terms',
     'add_sklearn_estimator',

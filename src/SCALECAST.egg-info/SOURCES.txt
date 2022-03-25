@@ -20,7 +20,6 @@ assets/plot_pacf.png
 assets/plot_periodogram.png
 assets/plot_seasonal_decompose.png
 assets/plot_test_set.png
-dist/SCALECAST-0.7.0.tar.gz
 docs/0.17
 docs/Makefile
 docs/about.rst
@@ -34,6 +33,10 @@ docs/requirements.txt
 docs/warnings.log
 docs/Forecaster/Forecaster.rst
 docs/Forecaster/ForecasterGlobals.ipynb
+docs/Forecaster/GridGenerator.rst
+docs/Forecaster/MVForecaster.rst
+docs/Forecaster/Multiseries.rst
+docs/Forecaster/Notebook.rst
 docs/Forecaster/_forecast.rst
 docs/Forecaster/warnings.log
 docs/Forecaster/.ipynb_checkpoints/ForecasterGlobals-checkpoint.ipynb
@@ -59,15 +62,6 @@ examples/housing_different_levels_results.xlsx
 examples/housing_feature_info.xlsx
 examples/housing_results.xlsx
 examples/warnings.log
-examples/.ipynb_checkpoints/Grids-checkpoint.py
-examples/.ipynb_checkpoints/LSTM-checkpoint.ipynb
-examples/.ipynb_checkpoints/avocado-checkpoint.csv
-examples/.ipynb_checkpoints/avocado_model_summaries-checkpoint.csv
-examples/.ipynb_checkpoints/avocados-checkpoint.ipynb
-examples/.ipynb_checkpoints/eCommerce-checkpoint.ipynb
-examples/.ipynb_checkpoints/eCommerce_hourly-checkpoint.ipynb
-examples/.ipynb_checkpoints/housing-checkpoint.py
-examples/.ipynb_checkpoints/housing_different_levels-checkpoint.py
 examples/__pycache__/Grids.cpython-37.pyc
 examples/__pycache__/Grids.cpython-38.pyc
 src/SCALECAST.egg-info/PKG-INFO
@@ -82,5 +76,11 @@ src/scalecast/__init__.py
 src/scalecast/multiseries.py
 src/scalecast/notebook.py
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
+src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/Grids.cpython-38.pyc
+src/scalecast/__pycache__/MVForecaster.cpython-38.pyc
+src/scalecast/__pycache__/MVForecaster_dev_.cpython-38.pyc
+src/scalecast/__pycache__/MVGrids.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
+src/scalecast/__pycache__/multiseries.cpython-38.pyc
+src/scalecast/__pycache__/notebook.cpython-38.pyc

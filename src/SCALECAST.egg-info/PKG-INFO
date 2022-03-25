@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.7.1
+Version: 0.7.2
 Summary: Easy dynamic time series forecasting in Python
 Home-page: UNKNOWN
 Author: Michael Keith
@@ -80,7 +80,7 @@ Description: # 🌄 Scalecast: Easy dynamic time series forecasting in Python
         |Any Scikit-learn Regressor or API|✔️|
         |Differencing|✔️|
         |Undifferencing|✔️|
-        |Level Results|✔️|
+        |Level Results|✔️| 
         
         ## Installation
         1. `pip install scalecast`  

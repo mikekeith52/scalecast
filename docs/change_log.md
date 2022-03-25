@@ -1,7 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.7.1] - 2022-03-25
+## [0.7.2] - 2022-03-25
+### Added
+### Changed
+### Fixed
+- MVForecaster wasn't combining xvars with AR terms correctly
+- MVForecaster wasn't plotting some series correctly
+- MVForecaster wasn't making copies of arrays in dictionaries when copying xvars
+
+## [0.7.1] - 2022-03-24
 ### Added
 - added the MVForecaster object for multivariate vector forecasting
 - added mv_grids to GridGenerator, which is written out to working directory as MVGrids (due to the added "lags" arg)

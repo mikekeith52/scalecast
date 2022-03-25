@@ -108,12 +108,13 @@ class MVForecaster:
                 self.current_dates = f.current_dates.copy()
             if merge_Xvars in ('union','u'):
                 if i == 0:
-                    self.current_xreg = {k:v for k, v in f.current_xreg.items() if not k.startswith('AR')}
-                    self.future_xreg = {k:v for k, v in f.future_xreg.items() if not k.startswith('AR')}
+                    self.current_xreg = {k:v.copy() for k, v in f.current_xreg.items() if not k.startswith('AR')}
+                    self.future_xreg = {k:v[:] for k, v in f.future_xreg.items() if not k.startswith('AR')}
                 else:
                     for k, v in f.current_xreg.items():
-                        self.current_xreg[k] = v
-                        self.future_xreg[k] = f.future_xreg[k]
+                        if not k.startswith('AR'):
+                            self.current_xreg[k] = v.copy()
+                            self.future_xreg[k] = f.future_xreg[k][:]
             elif merge_Xvars in ('intersection','i'):
                 if i == 0:
                     self.current_xreg = {k:v in f.current_xreg.items()}
@@ -577,7 +578,7 @@ class MVForecaster:
                 needs to use at least one lag (otherwise, use a univariate approach).
                 if int, that many lags will be added for all series
                 if list, each element must be ints, and only those lags will be added for each series.
-                if dict, the key must be 'seriesx' or 'yx' and key is list or int.
+                if dict, the key must be the user-selected series name, 'series{n}' or 'y{n}' and key is list or int.
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
 
         Returns:
@@ -602,7 +603,7 @@ class MVForecaster:
                 elif isinstance(lags,dict):
                     series, labels = self._parse_series(lags.keys())
                     if 'y' + str(i+1) in series:
-                        idx = [k for k, s in enumerate(series) if s == 'y' + str(i+1)][0]
+                        idx = series.index(f'y{i+1}')
                         lag = lags[labels[idx]]
                     else:
                         continue
@@ -981,7 +982,7 @@ class MVForecaster:
         k = 0
         for i, s in enumerate(series):
             sns.lineplot(x=self.current_dates.to_list(),
-                y=getattr(self,f'series{i+1}')['y'].to_list() if not level else getattr(self,f'series{i+1}')['levely'][-len(self.current_dates):],
+                y=getattr(self,'series{}'.format(s.split('y')[-1])).to_list() if not level else getattr(self,f'series{i+1}')['levely'][-len(self.current_dates):],
                 label = f'{labels[i]} actual',
                 ax=ax,
                 color = _series_colors_[i])
@@ -1056,7 +1057,7 @@ class MVForecaster:
 
         k = 0
         for i, s in enumerate(series):
-            y = getattr(self,f'series{i+1}')['y'].to_list() if not level else getattr(self,f'series{i+1}')['levely'][-len(self.current_dates):]
+            y = getattr(self,'series{}'.format(s.split('y')[-1]))['y'].to_list() if not level else getattr(self,s)['levely'][-len(self.current_dates):]
             sns.lineplot(x=self.current_dates.to_list()[-include_train:],
                 y=y[-include_train:],
                 label = f'{labels[i]} actual',
@@ -1111,7 +1112,7 @@ class MVForecaster:
         k = 0
         for i, s in enumerate(series):
             sns.lineplot(x=self.current_dates.to_list(),
-                y=getattr(self,f'series{i+1}')['y'].to_list(),
+                y=getattr(self,'series{}'.format(s.split('y')[-1]))['y'].to_list(),
                 label = f'{labels[i]} actual',
                 ax=ax,
                 color = _series_colors_[i])
@@ -1141,7 +1142,7 @@ class MVForecaster:
         series, labels = self._parse_series(series)
         models = self._parse_models(models,hasattr(self,'best_model'))
         cols = [
-            "SeriesName",
+            "Series",
             "ModelNickname",
             "Estimator",
             "Xvars",
@@ -1179,10 +1180,10 @@ class MVForecaster:
         model_summaries = pd.DataFrame()
         for l, s in zip(labels,series):
             for m in models:
-                model_summary_sm = pd.DataFrame({"SeriesName": [l], "ModelNickname": [m]})
+                model_summary_sm = pd.DataFrame({"Series": [l], "ModelNickname": [m]})
                 for c in cols:
                     if c not in (
-                        "SeriesName",
+                        "Series",
                         "ModelNickname",
                         "LastTestSetPrediction",
                         "LastTestSetActual",
