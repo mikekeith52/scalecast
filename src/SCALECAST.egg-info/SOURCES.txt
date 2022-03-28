@@ -31,8 +31,6 @@ docs/Forecaster/Notebook.rst
 docs/Forecaster/_forecast.rst
 docs/Forecaster/warnings.log
 docs/Forecaster/.ipynb_checkpoints/ForecasterGlobals-checkpoint.ipynb
-docs/Forecaster/examples/LSTM.ipynb
-docs/Forecaster/examples/eCommerce.ipynb
 src/SCALECAST.egg-info/PKG-INFO
 src/SCALECAST.egg-info/SOURCES.txt
 src/SCALECAST.egg-info/dependency_links.txt

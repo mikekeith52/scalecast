@@ -986,7 +986,7 @@ class MVForecaster:
         k = 0
         for i, s in enumerate(series):
             sns.lineplot(x=self.current_dates.to_list(),
-                y=getattr(self,'series{}'.format(s.split('y')[-1])).to_list() if not level else getattr(self,f'series{i+1}')['levely'][-len(self.current_dates):],
+                y=getattr(self,'series{}'.format(s.split('y')[-1]))['y'].to_list() if not level else getattr(self,f'series{i+1}')['levely'][-len(self.current_dates):],
                 label = f'{labels[i]} actual',
                 ax=ax,
                 color = _series_colors_[i])

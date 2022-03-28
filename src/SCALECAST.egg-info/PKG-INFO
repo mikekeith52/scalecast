@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.7.4
+Version: 0.7.5
 Summary: Easy dynamic time series forecasting in Python
 Home-page: UNKNOWN
 Author: Michael Keith
@@ -8,6 +8,7 @@ Author-email: mikekeith52@gmail.com
 License: MIT
 Project-URL: GitHub, https://github.com/mikekeith52/scalecast
 Project-URL: Read the Docs, https://scalecast.readthedocs.io/en/latest/
+Project-URL: Examples, https://scalecast-examples.readthedocs.io/en/latest/
 Description: # 🌄 Scalecast: Easy dynamic time series forecasting in Python
         
         
@@ -109,9 +110,7 @@ Description: # 🌄 Scalecast: Easy dynamic time series forecasting in Python
         |Links||
         |----|----|
         |[📚 Read the Docs](https://scalecast.readthedocs.io/en/latest/)|Official scalecast docs|
-        |[📋 Examples](https://github.com/mikekeith52/scalecast/tree/main/examples)|Get straight to the process|
-        |[💻 Towards Data Science Latest](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)|Check out the new LSTM Recurrent Neural Net application|
-        |[➡ Towards Data Science Series](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)|Read the introductory 3-part series|
+        |[📋 Examples](https://scalecast-examples.readthedocs.io/en/latest/)|Get straight to the process|
         |[📓 Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
         |[🛠️ Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)|See what's changed|
 Keywords: FORECAST,SCALE,DYNAMIC

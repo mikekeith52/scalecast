@@ -22,7 +22,8 @@ setup(
   package_dir={'': 'src'},
   project_urls = {
     'GitHub': 'https://github.com/mikekeith52/scalecast',
-    'Read the Docs': 'https://scalecast.readthedocs.io/en/latest/'
+    'Read the Docs': 'https://scalecast.readthedocs.io/en/latest/',
+    'Examples': 'https://scalecast-examples.readthedocs.io/en/latest/',
   },
   keywords = ['FORECAST', 'SCALE', 'DYNAMIC'],
   install_requires = [
