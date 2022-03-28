@@ -78,7 +78,7 @@ class MVForecaster:
                 raise ValueError('all series must be same length')
             elif not_same_len_action == 'trim':
                 from scalecast.multiseries import keep_smallest_first_date
-                make_same_length(*fs)
+                keep_smallest_first_date(*fs)
             else:
                 raise ValueError(f'not_same_len_action must be one of ("trim","fail"), got {not_same_len_action}')
         if len(set([min(f.current_dates) for f in fs])) > 1:
@@ -549,6 +549,9 @@ class MVForecaster:
                 if 'series...', 'y...', or the series name, will choose the model that did the best on that series.
                 by default, this is set to 'mean' when the object is initiated.
         """
+        if how == 'mean':
+            self.optimize_on = 'mean'
+            return
         if 'name_series_map' in globals():
             how = name_series_map[how][0]
         descriptive_assert(how.startswith('series') or how.startswith('y') or how == 'mean',ValueError,f'value passed to how not usable: {how}')
@@ -562,6 +565,7 @@ class MVForecaster:
         lags=1,
         **kwargs):
         """ runs the vector multi-variate forecast start-to-finish. all Xvars used always. all sklearn estimators supported.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html
 
         Args:
             fcster (str): one of _sklearn_estimators_.
@@ -1175,7 +1179,7 @@ class MVForecaster:
             "LevelTestSetR2",
             "OptimizedOn",
             "MetricOptimized",
-            "BestModel",
+            "best_model",
         ]
         model_summaries = pd.DataFrame()
         for l, s in zip(labels,series):
@@ -1189,7 +1193,7 @@ class MVForecaster:
                         "LastTestSetActual",
                         "OptimizedOn",
                         "MetricOptimized",
-                        "BestModel",
+                        "best_model",
                     ):
                         attr = self.history[m][c]
                         if not isinstance(attr,dict) or c in ('HyperParams','Lags'):
@@ -1201,13 +1205,15 @@ class MVForecaster:
                     elif c == "LastTestSetActual":
                         model_summary_sm[c] = [self.history[m]["TestSetActuals"][s][-1]]
                     elif c == "OptimizedOn" and hasattr(self,'best_model'): 
-                        if 'series_name_map' in globals():
-                            model_summary_sm['OptimizedOn'] = series_name_map[self.optimize_on]
+                        if self.optimize_on == 'mean':
+                            model_summary_sm['OptimizedOn'] = ['mean']
+                        elif 'series_name_map' in globals():
+                            model_summary_sm['OptimizedOn'] = [series_name_map[self.optimize_on]]
                         else:
-                            model_summary_sm['OptimizedOn'] = self.optimize_on
+                            model_summary_sm['OptimizedOn'] = [self.optimize_on]
                         if hasattr(self,'optimize_metric'):
                             model_summary_sm['MetricOptimized'] = self.optimize_metric
-                        model_summary_sm["BestModel"] = m == self.best_model
+                        model_summary_sm["best_model"] = m == self.best_model
                 model_summaries = pd.concat(
                     [model_summaries, model_summary_sm], ignore_index=True
                 )

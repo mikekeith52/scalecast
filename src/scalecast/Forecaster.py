@@ -697,6 +697,7 @@ class Forecaster:
         **kwargs,
     ) -> Union[float, list]:
         """ runs an sklearn forecast start-to-finish.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html
 
         Args:
             fcster (str): one of _sklearn_estimators_.
@@ -776,6 +777,7 @@ class Forecaster:
         self, tune=False, dynamic_testing=True, **kwargs
     ) -> Union[float, list]:
         """ forecasts with holt-winters exponential smoothing.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html
 
         Args:
             tune (bool): default False.
@@ -832,6 +834,7 @@ class Forecaster:
         self, tune=False, Xvars=None, dynamic_testing=True, **kwargs
     ) -> Union[float, list]:
         """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).
+        see example: https://scalecast-examples.readthedocs.io/en/latest/arima/arima.html
 
         Args:
             tune (bool): default False.
@@ -931,6 +934,7 @@ class Forecaster:
         **kwargs,
     ) -> Union[float, list]:
         """ forecasts with the prophet model from facebook.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html
 
         Args:
             tune (bool): default False.
@@ -1016,6 +1020,7 @@ class Forecaster:
         self, tune=False, dynamic_testing=True, Xvars=None, **kwargs
     ) -> Union[float, list]:
         """ forecasts with the silverkite model from LinkedIn greykite library.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html
 
         Args:
             tune (bool): default False.
@@ -1124,6 +1129,7 @@ class Forecaster:
 
     def _prepare_lstm(self, yvals, lags, forecast_length):
         """ prepares and scales the data for rnn models.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/lstm.html
 
         Args:
             yvals (ndarray): dependent variable values to prepare
@@ -1178,6 +1184,7 @@ class Forecaster:
         always uses minmax normalizer.
         this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility.
         fitted values are the last fcst_length worth of values only.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
 
         Args:
             dynamic_testing (bool): default True.
@@ -1341,6 +1348,7 @@ class Forecaster:
         fitted values are the last fcst_length worth of values only.
         anything this function can do, rnn can also do. 
         this function is simpler to set up than rnn.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html
             
         Args:
             dynamic_testing (bool): default True.
@@ -1511,6 +1519,7 @@ class Forecaster:
         the user can select a factor to add to all scaled values before the rebalancing 
         is applied; by default, this is 0.1. The higher this factor is, the closer the weighted 
         average will be to a simple average and vice-versa.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html
 
         Args:
             how (str): one of {'simple','weighted','splice'}, default 'simple'.

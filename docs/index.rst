@@ -47,14 +47,6 @@ Index
 
 .. toctree::
    :maxdepth: 4
-   :caption: Examples:
-   :hidden: 
-
-   Forecaster/examples/eCommerce
-   Forecaster/examples/LSTM
-
-.. toctree::
-   :maxdepth: 4
    :caption: Scalecast:
    :hidden:
 
@@ -65,6 +57,13 @@ Index
    Forecaster/GridGenerator
    Forecaster/Notebook
    Forecaster/Multiseries
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Examples:
+   :hidden: 
+
+   https://scalecast-examples.readthedocs.io/en/latest/index.html
 
 .. toctree::
    :maxdepth: 1

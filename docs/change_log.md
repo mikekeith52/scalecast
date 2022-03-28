@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.7.4] - 2022-03-28
+### Added
+### Changed
+### Fixed
+- `MVForecaster.export()` wasn't working after last update, fixed now
+
+
+## [0.7.3] - 2022-03-28
+### Added
+### Changed
+- changed "BestModel" key in MVForecaster.export() method to "best_model" to be consistent with Forecaster notation
+### Fixed
+- was calling the wrong function when the series weren't the same length in the `MVForecaster.__init__()` method
+- fixed `MVForecaster.set_optimize_on()` so that it accepts "mean" as an argument without error
+
 ## [0.7.2] - 2022-03-25
 ### Added
 ### Changed

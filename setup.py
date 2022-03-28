@@ -3,9 +3,6 @@ from setuptools import setup, find_packages
 import shutil
 from src.scalecast.__init__ import __version__ as version
 
-shutil.copy('./examples/eCommerce.ipynb','./docs/Forecaster/examples/eCommerce.ipynb')
-shutil.copy('./examples/LSTM.ipynb','./docs/Forecaster/examples/LSTM.ipynb')
-
 logo = """<p align="center">
   <img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" />
 </p>"""
