@@ -1064,7 +1064,7 @@ class Forecaster:
             validation_length = (
                 validation_length if validation_length > 0 else -(df.shape[0] + 1)
             )
-            pred_df = df.iloc[:-test_length, :]
+            pred_df = df.iloc[:-test_length, :].dropna()
             if validation_length > 0:
                 pred_df.loc[:-validation_length, "y"] = None
             metadata = MetadataParam(time_col="ts", value_col="y", freq=self.freq)

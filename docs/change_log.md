@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.7.6] - 2022-03-30
+### Added
+### Changed
+### Fixed
+- Noticed an error when forecasting with Silverkite on differenced data and fixed it.
 
 ## [0.7.5] - 2022-03-28
 ### Added
