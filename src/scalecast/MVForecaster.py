@@ -568,16 +568,17 @@ class MVForecaster:
         see example: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html
 
         Args:
-            fcster (str): one of _sklearn_estimators_.
+            fcster (str): one of _sklearn_estimators_. reads the estimator set to `set_estimator()` method.
             dynamic_testing (bool):
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, test-set metrics effectively become an average of one-step forecasts.
             tune (bool): default False.
                 whether the model is being tuned.
-            normalizer (str): one of _normalizer_.
+                does not need to be specified by user.
+            normalizer (str): one of _normalizer_. default 'minmax'.
                 if not None, normalizer applied to training data only to not leak.
-            lags (int, list[int], dict[str,int|list[int]]): default 1.
+            lags (int | list[int] | dict[str,int | list[int]]): default 1.
                 the lags to add from each series to forecast with.
                 needs to use at least one lag (otherwise, use a univariate approach).
                 if int, that many lags will be added for all series

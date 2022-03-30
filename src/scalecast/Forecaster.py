@@ -700,17 +700,18 @@ class Forecaster:
         see example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html
 
         Args:
-            fcster (str): one of _sklearn_estimators_.
+            fcster (str): one of _sklearn_estimators_. reads the estimator set to `set_estimator()` method.
             dynamic_testing (bool):
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, test-set metrics effectively become an average of one-step forecasts.
             tune (bool): default False.
                 whether the model is being tuned.
+                does not need to be specified by user.
             Xvars (list-like, str, or None): the regressors to predict with.
                 be sure to have added them to the Forecaster object first.
                 None means all Xvars added to the Forecaster object will be used.
-            normalizer (str): one of _normalizer_.
+            normalizer (str): one of _normalizer_. default 'minmax'.
                 if not None, normalizer applied to training data only to not leak.
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
 
@@ -782,6 +783,7 @@ class Forecaster:
         Args:
             tune (bool): default False.
                 whether the model is being tuned.
+                does not need to be specified by user.
             dynamic_testing (bool): default True.
                 always ignored in HWES (for now) - everything is set to be dynamic using statsmodels.
             **kwargs: passed to the HWES() function from statsmodels
@@ -839,6 +841,7 @@ class Forecaster:
         Args:
             tune (bool): default False.
                 whether the model is being tuned.
+                does not need to be specified by user.
             Xvars (list-like, str, or None): the regressors to predict with.
                 be sure to have added them to the Forecaster object first.
                 None means no Xvars used (unlike sklearn models).
@@ -939,8 +942,7 @@ class Forecaster:
         Args:
             tune (bool): default False.
                 whether to tune the forecast.
-                if True, returns a metric.
-                if False, returns a list of forecasted values.
+                does not need to be specified by user.
             Xvars (list-like, str, or None): the regressors to predict with.
                 be sure to have added them to the Forecaster object first.
                 None means no Xvars used (unlike sklearn models).
@@ -1025,8 +1027,7 @@ class Forecaster:
         Args:
             tune (bool): default False.
                 whether to tune the forecast.
-                if True, returns a metric.
-                if False, returns a list of forecasted values.
+                does not need to be specified by user.
             dynamic_testing (bool): default True.
                 always ignored for silverkite (for now).
             Xvars (list-like, str, or None): the regressors to predict with.
