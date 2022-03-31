@@ -22,7 +22,8 @@ One of the best parts of using scalecast is the ability to automatically tune an
     array_of_values = [1,2,3,4,5]
     f = Forecaster(y=array_of_values, current_dates=array_of_dates)
     f.generate_future_dates(5) # forecast length of 5
-    f.add_time_trend()
+    f.add_ar_terms(1) # one lag
+    f.add_time_trend() # time trend
     f.tune_test_forecast(models)
     f.plot(ci=True) # see the results visually
 
@@ -50,13 +51,15 @@ If you are working on Jupyter notebook and are forecasting many series, you can 
       f.set_test_length(12) # test models on 12 periods
       f.set_validation_length(4) # validate on the previous 4 periods
       f.add_time_trend()
+      f.integrate() # take differences to make data stationary
+      f.add_ar_terms(2)
       f.add_seasonal_regressors('quarter',raw=False,dummy=True)
       tune_test_forecast(f,models) # adds a progress bar that is nice for notebooks
       f_dict[sym] = f
 
     results_vis(f_dict) # toggle through results with jupyter widgets
 
-If you want to predict two or more series together and use the lags of all to predict the others, check out the MVForecaster object:
+If you want to predict two or more series together and use the lags of all to predict the others, check out the **MVForecaster** object:
 
 .. code:: python
 

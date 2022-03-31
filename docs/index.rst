@@ -6,7 +6,7 @@
 Official Docs
 ==========================
 
-Welcome to the official docs for scalecast, an easy-to-use dynamic forecasting library for time series in Python.
+Welcome to the scalecast official docs!
 
 .. image:: https://img.shields.io/badge/python-3.7+-blue.svg
  :target: https://pepy.tech/project/scalecast
@@ -14,6 +14,8 @@ Welcome to the official docs for scalecast, an easy-to-use dynamic forecasting l
  :target: https://pepy.tech/project/scalecast
 .. image:: https://static.pepy.tech/personalized-badge/scalecast?period=month&units=international_system&left_color=black&right_color=brightgreen&left_text=Downloads/Month
  :target: https://pepy.tech/project/scalecast
+.. image:: https://img.shields.io/github/workflow/status/unit8co/darts/darts%20release%20workflow/master
+ :target: https://img.shields.io/github/workflow/status/unit8co/darts/darts%20release%20workflow/master
 
 Overview
 --------------
