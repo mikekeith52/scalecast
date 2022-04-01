@@ -6,10 +6,15 @@ Scalecast is a package meant for those who have at least an intermediate underst
 Scalecast has the following estimators available: 
 
 * Any regression model from `Sklearn <https://scikit-learn.org/stable/>`_, including Sklearn APIs (like `Xgboost <https://xgboost.readthedocs.io/en/stable/>`_ and `LightGBM <https://lightgbm.readthedocs.io/en/latest/>`_)
+
 * Recurrent neural nets from `Keras TensorFlow <https://keras.io/>`_
+
 * Classic econometric models from `statsmodels <https://www.statsmodels.org/stable/>`_: Holt-Winters Exponential Smoothing and ARIMA
+
 * `Facebook Prophet <https://facebook.github.io/prophet/>`_
+
 * `LinkedIn Silverkite <https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library>`_
+
 * Native combo/ensemble model
 
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
@@ -27,7 +32,7 @@ Scalecast has the following estimators available:
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
 | Holt-Winters ES  | N            | N               | Y               | Y      | N           | N          | Y      | Y         |
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
-| Prophet          | N            | Y               | N               | Y      | Y           | N          | Y      | N         |
+| Prophet          | N            | Y               | Y               | Y      | Y           | N          | Y      | N         |
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
 | Silverkite       | Y            | Y               | Y               | Y      | Y           | N          | Y      | N         |
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
@@ -39,10 +44,15 @@ The above table might be overly simplistic, but gives an idea of the various way
 Scalecast offers the following advantages:  
 
 * All models are validated out-of-sample with dynamic multi-step forecasting and this process extends to the future automatically, making implementation of any model on any series fast!
+
 * Most models can be tuned by using a grid search on a validation slice of data.
+
 * The package relies on new object types as little as possible, with only two native classes that each behave logically and with explicit commands. 
+  
   * When a list-like object is required in an argument, lists, tuples, arrays, series, or other similar objects are all accepted.
-  * Calling esitmators or scaling the data requires str arguments, which the objects know how to parse.
-* Many different approaches available for mixing and matching time series concepts
+  
+  * Calling esitmators or scaling the data requires ``str`` arguments, which the objects know how to parse.
+
+* Many different approaches are available for mixing and matching time series concepts.
 
 Next, check out how to install the library and get started!
