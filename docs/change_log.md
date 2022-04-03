@@ -1,10 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.7.7] - 2022-03-31
+## [0.8.0] - 2022-04-03
 ### Added
 - Added more description to the `MVForecaster.__repr__()` method
 ### Changed
+- Changed arguments in the rnn estimator to make it more flexible and dynamic
 ### Fixed
 
 ## [0.7.6] - 2022-03-30

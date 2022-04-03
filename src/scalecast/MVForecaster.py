@@ -139,7 +139,7 @@ class MVForecaster:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        if names is not None:
+        if names is not None: # checking for these objects is how we know whether user supplied names later
             names = list(names)
             globals()['name_series_map'] = {names[i]:[f'series{i+1}',f'y{i+1}'] for i in range(self.n_series)}
             globals()['y_name_map'] = {f'y{i+1}':names[i] for i in range(self.n_series)}
@@ -152,6 +152,7 @@ class MVForecaster:
     Freq={}
     N_actuals={}
     N_series={}
+    SeriesNames={}
     ForecastLength={}
     Xvars={}
     TestLength={}
@@ -167,6 +168,9 @@ class MVForecaster:
             self.freq,
             len(self.current_dates),
             self.n_series,
+            [f'series{i+1}' for i in range(self.n_series)] 
+            if 'name_series_map' not in globals() 
+            else list(name_series_map.keys()),
             len(self.future_dates),
             list(self.current_xreg.keys()),
             self.test_length,

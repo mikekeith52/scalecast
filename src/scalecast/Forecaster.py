@@ -1170,8 +1170,7 @@ class Forecaster:
         self,
         dynamic_testing=True,
         lags=1,
-        hidden_layers_type='SimpleRNN',
-        hidden_layers_struct=[{'units':8,'activation':'tanh'}],
+        layers_struct=[('SimpleRNN',{'units':8,'activation':'tanh'})],
         loss="mean_absolute_error",
         optimizer="Adam",
         learning_rate=0.001,
@@ -1183,8 +1182,7 @@ class Forecaster:
         cannot be tuned.
         only xvar options are the series' own history (specified in lags argument).
         always uses minmax normalizer.
-        this is a similar function to _forecast_lstm() but it is more complex to allow more flexibility.
-        fitted values are the last fcst_length worth of values only.
+        this is similar to forecasting with lstm but it is more complex to allow more flexibility.
         see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
 
         Args:
@@ -1192,26 +1190,30 @@ class Forecaster:
                 always ignored for lstm.
             lags (int): greater than 0, default 1.
                 the number of y-variable lags to train the model with.
-            hidden_layers_type (str): one of 'LSTM','SimpleRNN'. default 'SimpleRNN'.
-                see here for info on SimpleRNN: 
-                    https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
-                see here for info on LSTM:
-                    https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-            hidden_layers_struct (list[dict[str,Union[float,str]]]): default [{'units':8,'activation':'tanh'}].
-                each element in the list is a dict.
-                key is a str representing hyperparameter name: 'units','activation', etc.
+            layers_struct (list[tuple[str,dict[str,Union[float,str]]]]): default [('SimpleRNN',{'units':8,'activation':'tanh'})].
+                each element in the list is a tuple with two elements.
+                first element of the list is the input layer (input_shape set automatically).
+                first element of the tuple in the list is the type of layer ('SimpleRNN','LSTM', or 'Dense').
+                second element is a dict.
+                in the dict, key is a str representing hyperparameter name: 'units','activation', etc.
                 val is hyperparameter value.
+                see here for options related to SimpleRNN: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
+                for LSTM: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
+                for Dense: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
             loss (str): default 'mean_absolute_error'.
                 the loss function to minimize.
                 see available options here: 
                   https://www.tensorflow.org/api_docs/python/tf/keras/losses.
                 be sure to choose one that is suitable for regression tasks.
-            optimizer (str): default "Adam".
+            optimizer (str or tf Optimizer): default "Adam".
                 the optimizer to use when compiling the model.
                 see available values here: 
                   https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
+                if str, will use the optimizer with default args
+                if type Optimizer, will use the optimizer exactly as specified
             learning_rate (float): default 0.001.
                 the learning rate to use when compiling the model.
+                ignored if you pass your own optimizer with a learning rate
             random_seed (int): optional.
                 set a seed for consistent results.
                 with tensorflow networks, setting seeds does not guarantee consistent results.
@@ -1225,27 +1227,16 @@ class Forecaster:
             (list): The predictions.
         """
         descriptive_assert(
-            len(hidden_layers_struct) >= 1,
+            len(layers_struct) >= 1,
             ValueError,
-            f"must pass at least one layer to hidden_layers_struct, got {hidden_layers_struct}",
+            f"must pass at least one layer to layers_struct, got {layers_struct}",
         )
-        descriptive_assert(
-                    hidden_layers_type in ('SimpleRNN','LSTM'),
-                    ValueError,
-                    f'hidden_layers_type must be one of ("SimpleRNN","LSTM"), got {hidden_layers_type}'
-                )
         if not dynamic_testing:
             logging.warning(
                 "dynamic_testing argument will be ignored for the rnn model"
             )
         self._clear_the_deck()
         self.dynamic_testing = True
-
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
-        import tensorflow.keras.optimizers
-
-        optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")
 
         if random_seed is not None:
             random.seed(random_seed)
@@ -1270,32 +1261,41 @@ class Forecaster:
         X_test = X_test.reshape(X_test.shape[0],X_test.shape[1],1)
         X = X.reshape(X.shape[0],X.shape[1],1)
         fut = fut.reshape(fut.shape[0],fut.shape[1],1)
-        layer = SimpleRNN if hidden_layers_type == 'SimpleRNN' else LSTM
 
         def get_compiled_model(y):
             # build model
-            for i, kv in enumerate(hidden_layers_struct):                
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
+            import tensorflow.keras.optimizers
+            if isinstance(optimizer,str):
+                local_optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")(learning_rate=learning_rate)
+            else:
+                local_optimizer = optimizer
+            for i, kv in enumerate(layers_struct):                
+                layer = locals()[kv[0]]
+
                 if i == 0:
+                    if kv[0] in ('LSTM','SimpleRNN'):
+                        kv[1]['return_sequences'] = len(layers_struct) > 1
                     model = Sequential(
                         [
                             layer(
-                                **kv,
+                                **kv[1],
                                 input_shape=(n_timesteps, n_features),
-                                return_sequences=len(hidden_layers_struct) > 1,
                             )
                         ]
                     )
                 else:
-                    model.add(
-                        layer(
-                            **kv,
-                            return_sequences=(not i == (len(hidden_layers_struct) - 1))
-                        )
-                    )
+                    if kv[0] in ('LSTM','SimpleRNN'):
+                        kv[1]['return_sequences'] = (not i == (len(layers_struct) - 1))
+                        if kv[1]['return_sequences']:
+                            kv[1]['return_sequences'] = layers_struct[i+1][0] != 'Dense'
+
+                    model.add(layer(**kv[1]))
             model.add(Dense(y.shape[1]))  # output layer
 
             # compile model
-            model.compile(optimizer=optimizer(learning_rate=learning_rate), loss=loss)
+            model.compile(optimizer=local_optimizer, loss=loss)
             return model
 
         test_model = get_compiled_model(y_train_new)
