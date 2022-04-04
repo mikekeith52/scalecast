@@ -75,7 +75,7 @@ f = Forecaster(y=array_of_values, current_dates=array_of_dates)
 |Links||
 |----|----|
 |[📚 Read the Docs](https://scalecast.readthedocs.io/en/latest/)|Official scalecast docs|
-|[📋 Examples](https://scalecast-examples.readthedocs.io/en/latest/)|Get straight to the process|
+|[📋 Examples](https://scalecast-examples.readthedocs.io/en/latest/)|Official scalecast notebooks|
 |[📓 Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
 |[🛠️ Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)|See what's changed|
 
@@ -83,7 +83,7 @@ f = Forecaster(y=array_of_values, current_dates=array_of_dates)
 |||
 |---|---|
 |Dynamic Univariate Forecasting|✔️|
-|Dynamic Forecasting with Exogenous Regressors|✔️|
+|Dynamic Univariate Forecasting with Exogenous Regressors|✔️|
 |Dynamic Multivariate Vector Forecasting|✔️|
 |Dynamic Multivariate Vector Forecasting with Exogenous Regressors|✔️|
 |Hyperparameter Tuning|✔️|

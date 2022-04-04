@@ -65,7 +65,7 @@ Index
    :caption: Examples:
    :hidden: 
 
-   https://scalecast-examples.readthedocs.io/en/latest/index.html
+   https://scalecast-examples.readthedocs.io/en/latest/
 
 .. toctree::
    :maxdepth: 1

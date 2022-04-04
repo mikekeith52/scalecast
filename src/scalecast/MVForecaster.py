@@ -101,24 +101,24 @@ class MVForecaster:
         self.freq = fs[0].freq
         self.n_series = len(fs)
         for i, f in enumerate(fs):
-            setattr(self, f'series{i+1}', {'y':f.y.copy(),
+            setattr(self, f'series{i+1}', {'y':f.y.copy().reset_index(drop=True),
                 'levely':f.levely.copy(),
                 'integration':f.integration})
             if i == 0:
-                self.current_dates = f.current_dates.copy()
+                self.current_dates = f.current_dates.copy().reset_index(drop=True)
             if merge_Xvars in ('union','u'):
                 if i == 0:
-                    self.current_xreg = {k:v.copy() for k, v in f.current_xreg.items() if not k.startswith('AR')}
+                    self.current_xreg = {k:v.copy().reset_index(drop=True) for k, v in f.current_xreg.items() if not k.startswith('AR')}
                     self.future_xreg = {k:v[:] for k, v in f.future_xreg.items() if not k.startswith('AR')}
                 else:
                     for k, v in f.current_xreg.items():
                         if not k.startswith('AR'):
-                            self.current_xreg[k] = v.copy()
+                            self.current_xreg[k] = v.copy().reset_index(drop=True)
                             self.future_xreg[k] = f.future_xreg[k][:]
             elif merge_Xvars in ('intersection','i'):
                 if i == 0:
-                    self.current_xreg = {k:v in f.current_xreg.items()}
-                    self.future_xreg = {k:v in f.future_xreg.items()}
+                    self.current_xreg = {k:v.copy().reset_index(drop=True) in f.current_xreg.items()}
+                    self.future_xreg = {k:v[:] in f.future_xreg.items()}
                 else:
                     for k, v in f.current_xreg.items():
                         if k not in self.current_xreg.keys():
@@ -991,7 +991,7 @@ class MVForecaster:
         k = 0
         for i, s in enumerate(series):
             sns.lineplot(x=self.current_dates.to_list(),
-                y=getattr(self,'series{}'.format(s.split('y')[-1]))['y'].to_list() if not level else getattr(self,f'series{i+1}')['levely'][-len(self.current_dates):],
+                y = list(getattr(self,'series{}'.format(s.split('y')[-1]))['y' if not level else 'levely'])[-len(self.current_dates):],
                 label = f'{labels[i]} actual',
                 ax=ax,
                 color = _series_colors_[i])
@@ -1066,7 +1066,7 @@ class MVForecaster:
 
         k = 0
         for i, s in enumerate(series):
-            y = getattr(self,'series{}'.format(s.split('y')[-1]))['y'].to_list() if not level else getattr(self,s)['levely'][-len(self.current_dates):]
+            y = list(getattr(self,'series{}'.format(s.split('y')[-1]))['y' if not level else 'levely'])[-len(self.current_dates):]
             sns.lineplot(x=self.current_dates.to_list()[-include_train:],
                 y=y[-include_train:],
                 label = f'{labels[i]} actual',

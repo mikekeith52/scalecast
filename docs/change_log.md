@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.8.1] - 2022-04-04
+### Added
+### Changed
+### Fixed
+- Fixed inconsistent indexing in MVForecaster that was causing some models to fail when different Forecaster objects' dates didn't align
+- Fixed an issue where `level=True` wasn't working in `plot_test_set()` sometimes
+
 ## [0.8.0] - 2022-04-03
 ### Added
 - Added more description to the `MVForecaster.__repr__()` method
