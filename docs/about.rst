@@ -1,7 +1,7 @@
 About
 ========
 
-Scalecast is a package meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results, usually on small-to-medium sized datasets (less than 1,000 data points). It can certainly be used for larger, more complex datasets, but probably isn't the best option for such a task. It is meant for standardizing and scaling an approach to many smaller series. For a package with more emphasis on deep learning and larger datasets that offers many of the same features as scalecast, I recommend `darts <https://unit8co.github.io/darts/>`_.
+Scalecast is a package meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results, usually on small-to-medium sized datasets (less than 1,000 data points). It can certainly be used for larger, more complex datasets, but probably isn't the best option for such a task. It is meant for standardizing and scaling an approach to many smaller series. For a package with more emphasis on deep learning and larger datasets that offers many of the same features as scalecast, `darts <https://unit8co.github.io/darts/>`_ is recommended.
 
 Scalecast has the following estimators available: 
 

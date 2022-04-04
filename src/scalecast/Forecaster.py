@@ -1179,6 +1179,7 @@ class Forecaster:
         **kwargs,
     ):
         """ forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent.
+        not all features from tensorflow are available, but it is possible that more features will be added in the future.
         cannot be tuned.
         only xvar options are the series' own history (specified in lags argument).
         always uses minmax normalizer.
@@ -1200,7 +1201,7 @@ class Forecaster:
                 see here for options related to SimpleRNN: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
                 for LSTM: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
                 for Dense: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
-            loss (str): default 'mean_absolute_error'.
+            loss (str or tf.keras.losses.Loss): default 'mean_absolute_error'.
                 the loss function to minimize.
                 see available options here: 
                   https://www.tensorflow.org/api_docs/python/tf/keras/losses.

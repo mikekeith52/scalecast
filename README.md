@@ -6,7 +6,17 @@
 
 ## About
 
-This package uses a scaleable forecasting approach in Python with [scikit-learn](https://scikit-learn.org/stable/), [statsmodels](https://www.statsmodels.org/stable/), [Facebook Prophet](https://facebook.github.io/prophet/), [Microsoft LightGBM](https://lightgbm.readthedocs.io/en/latest/), [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library), and [Keras](https://keras.io/) models to forecast time series. Use your own regressors or load the object with its own seasonal, auto-regressive, and other regressors, or combine all of the above. All forecasting is dynamic by default so that auto-regressive terms can be used without leaking data into the test set, setting it apart from other time-series libraries. Dynamic model testing can be disabled to improve model evaluation speed. Differencing to achieve stationarity is built into the library and metrics can be compared across the time series' original level or first or second difference. Bootstrapped confidence intervals consistently applied across all models for comparable results. This library was written to easily apply and compare many forecasts fairly across the same series.
+Scalecast is a package meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results, usually on small-to-medium sized datasets (less than 1,000 data points). It can certainly be used for larger, more complex datasets, but probably isn't the best option for such a task. It is meant for standardizing and scaling an approach to many smaller series. For a package with more emphasis on deep learning and larger datasets that offers many of the same features as scalecast, [darts](https://unit8co.github.io/darts/) is recommended.
+
+Scalecast has the following estimators available: 
+- Any regression model from [Sklearn](https://scikit-learn.org/stable/), including Sklearn APIs (like [Xgboost](https://xgboost.readthedocs.io/en/stable/), and [LightGBM](https://lightgbm.readthedocs.io/en/latest/)).
+- Recurrent neural nets from [Keras TensorFlow](https://keras.io/)
+- Classic econometric models from [statsmodels](https://www.statsmodels.org/stable/): Holt-Winters Exponential Smoothing and ARIMA
+- [Facebook Prophet](https://facebook.github.io/prophet)
+- [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
+- Native combo/ensemble model
+
+A very simple scalecast process to load data, add regressors, and create validated forecasts looks like this:
 
 ```python
 import pandas as pd
@@ -38,42 +48,6 @@ plt.show()
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast_test_set.png)
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast.png)
 
-## Dynamic forecasting is easier than ever
-- The modeling process is streamlined for forecasting tasks. If you have ever written code to forecast with sklearn, statsmodels, or TensorFlow, scalecast will let you implement a similar model but with less code.
-- Consistently applied bootstrapped confidence intervals at any level you want to see them are available.
-- Your results and accuracy metrics can always be level, even if you need to difference the series to model it effectively.
-
-## What can it do?
-|||
-|---|---|
-|Dynamic Univariate Forecasting|✔️|
-|Dynamic Forecasting with Exogenous Regressors|✔️|
-|Dynamic Multivariate Vector Forecasting|✔️|
-|Dynamic Multivariate Vector Forecasting with Exogenous Regressors|✔️|
-|Hyperparameter Tuning|✔️|
-|Model Validation|✔️|
-|Model Summary Generation|✔️|
-|Future Period Forecasting|✔️|
-|Plotting|✔️|
-|Bootstrapped Confidence Intervals|✔️|
-|Seasonality Capturing|✔️|
-|Feature Importance|✔️|
-|Feature Selection|✔️|
-|Linear Models|✔️|
-|Non-linear Models|✔️|
-|Tree Models|✔️|
-|Dense Neural Networks|✔️|
-|Recurrent Neural Networks|✔️|
-|ARIMA|✔️|
-|Exponential Smoothing|✔️|
-|Facebook Prophet|✔️|
-|LinkedIn Silverkite|✔️|
-|Ensemble Modeling|✔️|
-|Any Scikit-learn Regressor or API|✔️|
-|Differencing|✔️|
-|Undifferencing|✔️|
-|Level Results|✔️| 
-
 ## Installation
 1. `pip install scalecast`  
     - installs the base package and most dependencies
@@ -104,3 +78,34 @@ f = Forecaster(y=array_of_values, current_dates=array_of_dates)
 |[📋 Examples](https://scalecast-examples.readthedocs.io/en/latest/)|Get straight to the process|
 |[📓 Binder Notebook](https://mybinder.org/v2/gh/mikekeith52/housing_prices/HEAD?filepath=housing_prices.ipynb)|Play with an example in your browser|
 |[🛠️ Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)|See what's changed|
+
+## What can scalecast do?
+|||
+|---|---|
+|Dynamic Univariate Forecasting|✔️|
+|Dynamic Forecasting with Exogenous Regressors|✔️|
+|Dynamic Multivariate Vector Forecasting|✔️|
+|Dynamic Multivariate Vector Forecasting with Exogenous Regressors|✔️|
+|Hyperparameter Tuning|✔️|
+|Model Validation|✔️|
+|Model Summary Generation|✔️|
+|Future Period Forecasting|✔️|
+|Plotting|✔️|
+|Bootstrapped Confidence Intervals|✔️|
+|Seasonality Capturing|✔️|
+|Feature Importance|✔️|
+|Feature Selection|✔️|
+|Linear Models|✔️|
+|Non-linear Models|✔️|
+|Tree Models|✔️|
+|Dense Neural Networks|✔️|
+|Recurrent Neural Networks|✔️|
+|ARIMA|✔️|
+|Exponential Smoothing|✔️|
+|Facebook Prophet|✔️|
+|LinkedIn Silverkite|✔️|
+|Ensemble Modeling|✔️|
+|Any Scikit-learn Regressor or API|✔️|
+|Differencing|✔️|
+|Undifferencing|✔️|
+|Level Results|✔️| 

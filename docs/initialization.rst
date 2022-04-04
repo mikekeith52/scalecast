@@ -63,9 +63,9 @@ If you want to predict two or more series together and use the lags of all to pr
 
 .. code:: python
 
-    from Forecaster import Forecaster
-    from MVForecaster import MVForecaster
-    import GridGenerator
+    from scalecast.Forecaster import Forecaster
+    from scalecast.MVForecaster import MVForecaster
+    import scalecast.GridGenerator
     import matplotlib.pyplot as plt
     import pandas_datareader as pdr # pip install pandas-datareader
     
