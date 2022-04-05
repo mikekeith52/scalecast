@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.8.3] - 2022-04-05
+### Added
+### Changed
+### Fixed
+- fixed an issue when plotting in MVForecaster that occurs when you didn't initially pass names to `__init__()`
+- fixed an instance where labels was spelled wrong
+
 ## [0.8.1] - 2022-04-04
 ### Added
 ### Changed

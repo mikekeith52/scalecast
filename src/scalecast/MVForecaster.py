@@ -914,8 +914,8 @@ class MVForecaster:
         """
         def parse_str_arg(arg):
             if arg.startswith('series'):
-                series = [f'y{i}'.format(arg.split('series')[-1])]
-                labels = arg.copy()
+                series = ['y{}'.format(arg.split('series')[-1])]
+                labels = series.copy()
             elif arg.startswith('y'):
                 series = [arg]
                 labels = series.copy()
@@ -929,7 +929,7 @@ class MVForecaster:
             if 'name_series_map' in globals():
                 labels = list(name_series_map.keys())
             else:
-                lables = series.copy()
+                labels = series.copy()
         elif isinstance(series,str):
             series, labels = parse_str_arg(series)
         else:

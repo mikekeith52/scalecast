@@ -74,6 +74,9 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     
     button.on_click(on_button_clicked)
 
+def results_vis_mv():
+    pass
+
 def tune_test_forecast(forecaster,models,dynamic_tuning=False,dynamic_testing=True,summary_stats=False,feature_importance=False):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm.
 
