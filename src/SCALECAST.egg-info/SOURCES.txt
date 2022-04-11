@@ -11,6 +11,7 @@ __pycache__/Grids.cpython-38.pyc
 assets/logo2.png
 assets/main_forecast.png
 assets/main_forecast_test_set.png
+dist/SCALECAST-0.8.3.tar.gz
 docs/0.17
 docs/Makefile
 docs/about.rst

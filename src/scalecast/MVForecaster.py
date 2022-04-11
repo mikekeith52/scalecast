@@ -141,9 +141,9 @@ class MVForecaster:
 
         if names is not None: # checking for these objects is how we know whether user supplied names later
             names = list(names)
-            globals()['name_series_map'] = {names[i]:[f'series{i+1}',f'y{i+1}'] for i in range(self.n_series)}
-            globals()['y_name_map'] = {f'y{i+1}':names[i] for i in range(self.n_series)}
-            globals()['series_name_map'] = {f'series{i+1}':names[i] for i in range(self.n_series)}
+            self.name_series_map = {names[i]:[f'series{i+1}',f'y{i+1}'] for i in range(self.n_series)}
+            self.y_name_map = {f'y{i+1}':names[i] for i in range(self.n_series)}
+            self.series_name_map = {f'series{i+1}':names[i] for i in range(self.n_series)}
 
     def __repr__(self):
         return """MVForecaster(
@@ -169,8 +169,8 @@ class MVForecaster:
             len(self.current_dates),
             self.n_series,
             [f'series{i+1}' for i in range(self.n_series)] 
-            if 'name_series_map' not in globals() 
-            else list(name_series_map.keys()),
+            if not hasattr(self,'name_series_map') 
+            else list(self.name_series_map.keys()),
             len(self.future_dates),
             list(self.current_xreg.keys()),
             self.test_length,
@@ -556,8 +556,8 @@ class MVForecaster:
         if how == 'mean':
             self.optimize_on = 'mean'
             return
-        if 'name_series_map' in globals():
-            how = name_series_map[how][0]
+        if hasattr(self,'name_series_map'):
+            how = self.name_series_map[how][0]
         descriptive_assert(how.startswith('series') or how.startswith('y') or how == 'mean',ValueError,f'value passed to how not usable: {how}')
         self.optimize_on = how if how.startswith('series') else 'series{}'.format(how.split('y')[-1])
 
@@ -921,13 +921,13 @@ class MVForecaster:
                 labels = series.copy()
             else:
                 labels = [arg]
-                series = [name_series_map[arg][1]]
+                series = [self.name_series_map[arg][1]]
             return series, labels
 
         if series == 'all':
             series = [f'y{i+1}' for i in range(self.n_series)]
-            if 'name_series_map' in globals():
-                labels = list(name_series_map.keys())
+            if hasattr(self,'name_series_map'):
+                labels = list(self.name_series_map.keys())
             else:
                 labels = series.copy()
         elif isinstance(series,str):
@@ -1212,8 +1212,8 @@ class MVForecaster:
                     elif c == "OptimizedOn" and hasattr(self,'best_model'): 
                         if self.optimize_on == 'mean':
                             model_summary_sm['OptimizedOn'] = ['mean']
-                        elif 'series_name_map' in globals():
-                            model_summary_sm['OptimizedOn'] = [series_name_map[self.optimize_on]]
+                        elif hasattr(self,'series_name_map'):
+                            model_summary_sm['OptimizedOn'] = [self.series_name_map[self.optimize_on]]
                         else:
                             model_summary_sm['OptimizedOn'] = [self.optimize_on]
                         if hasattr(self,'optimize_metric'):
