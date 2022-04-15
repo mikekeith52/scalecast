@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.9.0] - 2022-04-15
+### Added
+- added `backcast()` method to `Forecaster` and `MVForecaster` objects
+- added `copy()` and `deepcopy()` methods to the same objects
+- added `test_only` options to all models in `Forecaster`. ignored in combo models. a future dist will have this for `MVForecaster`
+- added `plot_loss_test` as arg in lstm and rnn models
+- added `notebook.results_vis_mv()` function
+### Changed
+### Fixed
+
 ## [0.8.4] - 2022-04-11
 ### Added
 ### Changed

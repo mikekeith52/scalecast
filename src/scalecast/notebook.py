@@ -74,8 +74,83 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     
     button.on_click(on_button_clicked)
 
-def results_vis_mv():
-    pass
+def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
+    """ visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
+
+    Args:
+        f_dict (dict[str,Forecaster]): dictionary of forcaster objects.
+            works best if two or more models have been evaluated in each dictionary value.
+        plot_type (str): one of {"forecast","test"}, default "forecast".
+            the type of results to visualize.
+        include_train (bool or int): optional.
+            whether to include the complete training set in the plot or how many traning-set observations to include.
+            passed to include_train parameter when plot_type = 'test'.
+            ignored when plot_type = 'forecast'.
+
+    Returns:
+        None
+    """
+    if plot_type not in {"forecast", "test"}:
+        raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
+
+    def display_user_selections(
+        mo_selection, ts_selection, lv_selection, ci_selection, se_selection
+    ):
+        selected_data = f_dict[ts_selection]
+        if plot_type == "forecast":
+            selected_data.plot(
+                models=mo_selection,
+                series=se_selection,
+                level=lv_selection,
+                ci=ci_selection,
+            )
+        else:
+            selected_data.plot_test_set(
+                models=mo_selection,
+                series=se_selection,
+                level=lv_selection,
+                ci=ci_selection,
+                include_train=include_train,
+            )
+        plt.title(ts_selection + " Forecast Results", size=16)
+        plt.show()
+
+    def on_button_clicked(b):
+        mo_selection = mo_se.value
+        ts_selection = ts_dd.value
+        lv_selection = lv_dd.value
+        ci_selection = ci_dd.value
+        se_selection = se_se.value
+        with output:
+            clear_output()
+            display_user_selections(
+                mo_selection, ts_selection, lv_selection, ci_selection, se_selection
+            )
+
+    all_models = []
+    n_series = 2
+    for k, f in f_dict.items():
+        all_models += [fcst for fcst in f.history.keys() if fcst not in all_models]
+        n_series = max(n_series, f.n_series)
+    series = [f"series{i+1}" for i in range(n_series)]
+    ts_dd = widgets.Dropdown(options=f_dict.keys(), description="Time Series:")
+    mo_se = widgets.SelectMultiple(
+        options=all_models, description="Models", selected=all_models
+    )
+    se_se = widgets.SelectMultiple(options=series, description="Series", selected=series)
+    lv_dd = widgets.Dropdown(options=[True, False], description="View Level")
+    ci_dd = widgets.Dropdown(
+        options=[True, False], description="View Confidence Intervals"
+    )
+
+    # never changes
+    button = widgets.Button(description="Select Time Series")
+    output = widgets.Output()
+
+    display(ts_dd, se_se, mo_se, lv_dd, ci_dd)
+    display(button, output)
+
+    button.on_click(on_button_clicked)
 
 def tune_test_forecast(forecaster,models,dynamic_tuning=False,dynamic_testing=True,summary_stats=False,feature_importance=False):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm.

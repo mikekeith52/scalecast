@@ -21,6 +21,7 @@ from scalecast.Forecaster import (
     _colors_,
     ForecastError
 )
+import copy
 
 # LOGGING
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
@@ -181,6 +182,27 @@ class MVForecaster:
             self.bootstrap_samples,
             self.estimator,
             self.optimize_on)
+
+    def __copy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        return obj
+
+    def __deepcopy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        obj.__dict__ = copy.deepcopy(obj.__dict__)
+        return obj
+
+    def copy(self):
+        """ creates an object copy.
+        """
+        return self.__copy__() 
+
+    def deepcopy(self):
+        """ creates an object deepcopy.
+        """
+        return self.__deepcopy__()
 
     def add_sklearn_estimator(self,imported_module,called):
         """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
@@ -590,9 +612,6 @@ class MVForecaster:
                 if dict, the key must be the user-selected series name, 'series{n}' or 'y{n}' and key is list or int.
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
 
-        Returns:
-            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions.
-        
         >>> mvf.set_estimator('gbt')
         >>> mvf.manual_forecast(lags=3) # adds three lags for each series
         >>> mvf.manual_forecast(lags=[1,3]) # first and third lags added for each series
@@ -1362,4 +1381,93 @@ class MVForecaster:
             (DataFrame): the validation grid
         """
         return self.history[model]['grid_evaluated'].copy()
-        
+
+    def backcast(self,model,fcst_length='auto',n_iter=10):
+        """ runs a backcast of a selected evaluated model over a certain 
+        amount of iterations to test the average error if that model were 
+        implemented over the last so-many actual forecast intervals.
+        all scoring is dynamic to give a true out-of-sample result.
+        all metrics are specific to level data.
+        two results are extracted: a dataframe of actuals and predictions across each iteration and
+        a dataframe of test-set metrics across each iteration with a mean total as the last column.
+        these results are stored in the Forecaster object's history and can be extracted by calling 
+        `export_backcast_metrics()` and `export_backcast_values()`.
+
+        Args:
+            model (str): the model to run the backcast for. use the model nickname.
+            fcst_length (int or str): default 'auto'. 
+                if 'auto', uses the same forecast length as saved in the object currently.
+                if int, uses that as the forecast length.
+            n_iter (int): default 10. the number of iterations to backcast.
+                models will iteratively trained on all data before the fcst_length worth of values.
+                each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
+
+        Returns:
+            None
+        """
+        if fcst_length == 'auto':
+            fcst_length = len(self.future_dates)
+        fcst_length = int(fcst_length)
+        series, labels = self._parse_series('all')
+        mets = ['RMSE','MAE','R2','MAPE']
+        tuples = []
+        for s in labels:
+            for m in mets:
+                tuples.append((s,m))
+        index = pd.MultiIndex.from_tuples(tuples,names=['series','metric'])
+        metric_results = pd.DataFrame(columns=[f'iter{i}' for i in range(1,n_iter+1)],
+            index=index)
+        value_results = pd.DataFrame()
+        for i in range(n_iter):
+            f = self.__deepcopy__()
+            if i > 0:
+                f.current_xreg = {k:pd.Series(v.values[:-i]) for k, v in f.current_xreg.items()}
+                f.current_dates = pd.Series(f.current_dates.values[:-i])
+                for k in range(f.n_series):
+                    getattr(f,f'series{k+1}')['y'] = pd.Series(getattr(f,f'series{k+1}')['y'].values[:-i])
+                    getattr(f,f'series{k+1}')['levely'] = getattr(f,f'series{k+1}')['levely'][:-i]
+                f.future_dates = pd.Series(f.future_dates.values[:-i])
+
+            f.set_test_length(fcst_length)
+            f.set_estimator(f.history[model]['Estimator'])
+            params = f.history[model]['HyperParams'].copy()
+            params['lags'] = f.history[model]['Lags']
+            params['normalizer'] = f.history[model]['Scaler']
+            f.history = {}
+            f.manual_forecast(**params)
+            test_mets = f.export_model_summaries()
+            test_preds = f.export_level_test_set_preds()
+            for s in labels:
+                metric_results.loc[(s,'RMSE'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetRMSE'].values[0]
+                metric_results.loc[(s,'MAE'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetMAE'].values[0]
+                metric_results.loc[(s,'R2'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetR2'].values[0]
+                metric_results.loc[(s,'MAPE'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetMAPE'].values[0]
+                value_results[f'{s}_iter{i+1}actuals'] = test_preds[f'{s}_actuals']
+                value_results[f'{s}_iter{i+1}preds'] = test_preds[f'{s}_{model}_test_preds']
+        metric_results['mean'] = metric_results.mean(axis=1)
+        self.history[model]['BackcastMetrics'] = metric_results
+        self.history[model]['BackcastValues'] = value_results
+    
+    def export_backcast_metrics(self,model):
+        """ extracts the backcast metrics for a given model.
+        only works if `backcast()` has been called.
+
+        Args:
+            model (str): the model nickname to extract metrics for.
+
+        Returns:
+            (DataFrame): a copy of the backcast metrics.
+        """
+        return self.history[model]['BackcastMetrics'].copy()
+
+    def export_backcast_values(self,model):
+        """ extracts the backcast values for a given model.
+        only works if `backcast()` has been called.
+
+        Args:
+            model (str): the model nickname to extract values for.
+
+        Returns:
+            (DataFrame): a copy of the backcast values.
+        """
+        return self.history[model]['BackcastValues'].copy()

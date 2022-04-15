@@ -38,6 +38,13 @@ results_vis
 
     results_vis(f_dict) # toggle through results with jupyter widgets
 
+results_vis_mv
+-----------------------------
+.. automodule:: src.scalecast.notebook.results_vis_mv
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 tune_test_forecast
 --------------------------------
 .. automodule:: src.scalecast.notebook.tune_test_forecast

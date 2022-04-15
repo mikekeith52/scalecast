@@ -14,6 +14,7 @@ import random
 from collections import Counter
 from scipy import stats
 import sklearn
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer
 from sklearn.metrics import (
     r2_score,
@@ -24,6 +25,8 @@ from sklearn.metrics import (
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
+
+import copy
 
 # LOGGING
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
@@ -44,9 +47,7 @@ from sklearn.neighbors import KNeighborsRegressor as knn_
 
 # custom metrics - are what you expect except MAPE, which can return None
 def mape(y, pred):
-    return (
-        None if 0 in y else mean_absolute_percentage_error(y, pred)
-    )  # average o(1) worst-case o(n)
+    return (np.nan if 0 in y else mean_absolute_percentage_error(y, pred))  # average o(1) worst-case o(n)
 
 
 def rmse(y, pred):
@@ -60,6 +61,62 @@ def mae(y, pred):
 def r2(y, pred):
     return r2_score(y, pred)
 
+def prepare_data(Xvars, y, current_xreg):
+    if Xvars is None or Xvars == "all":
+        Xvars = [x for x in current_xreg.keys()]
+    elif isinstance(Xvars,str):
+        Xvars = [Xvars]
+
+    y = [i for i in y]
+    X = pd.DataFrame(current_xreg)
+    X = X[Xvars].values
+    return Xvars, y, X
+
+def prepare_rnn(yvals, lags, forecast_length):
+    """ prepares and scales the data for rnn models.
+
+    Args:
+        yvals (ndarray): dependent variable values to prepare
+        lags (int): the number of lags to use as predictors and to make the X matrix with
+        forecast_length (int): the amount of time to forecast out
+
+    Returns:
+        (ndarray,ndarray): The new X matrix and y array.
+    """
+    ylist = [(y - yvals.min()) / (yvals.max() - yvals.min()) for y in yvals]
+
+    n_future = forecast_length
+    n_past = lags
+    total_period = n_future + n_past
+    
+    idx_end = len(ylist)
+    idx_start = idx_end - total_period
+    
+    X_new = []
+    y_new = []
+
+    while idx_start > 0:
+        x_line = ylist[idx_start:idx_start+n_past]
+        y_line = ylist[idx_start+n_past:idx_start+total_period]
+
+        X_new.append(x_line)
+        y_new.append(y_line)
+        
+        idx_start = idx_start - 1
+        
+    X_new = np.array(X_new)
+    y_new = np.array(y_new)
+
+    return X_new, y_new
+
+def plot_loss_rnn(history,title):
+    plt.plot(history.history['loss'],label='train_loss')
+    if 'val_loss' in history.history.keys():
+        plt.plot(history.history['val_loss'],label='val_loss')
+    plt.title(title)
+    plt.xlabel('epoch')
+    plt.legend(loc='upper right')
+    plt.show()
 
 # descriptive assert statement for error catching
 def descriptive_assert(statement, ErrorType, error_message):
@@ -67,7 +124,6 @@ def descriptive_assert(statement, ErrorType, error_message):
         assert statement
     except AssertionError:
         raise ErrorType(error_message)
-
 
 # KEY GLOBALS
 
@@ -86,9 +142,9 @@ _sklearn_imports_ = {
 _sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 
 # to add non-sklearn models, add to the list below
-_non_sklearn_estimators_ = ["arima", "hwes", "lstm", "prophet", "silverkite", "rnn", "combo"]
+_non_sklearn_estimators_ = ["arima", "hwes", "prophet", "silverkite", "rnn", "lstm", "combo"]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
-_cannot_be_tuned_ = ['combo','lstm','rnn']
+_cannot_be_tuned_ = ['combo','rnn','lstm']
 _can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
 _metrics_ = ["r2", "rmse", "mape", "mae"]
 _determine_best_by_ = [
@@ -106,7 +162,7 @@ _determine_best_by_ = [
     "LevelTestSetMAE",
     "LevelTestSetR2",
 ]
-_normalizer_ = ["minmax", "normalize", "scale", "pt", None]
+_normalizer_ = ["minmax", "normalize", "scale", None]
 _colors_ = [
     "#FFA500",
     "#DC143C",
@@ -176,6 +232,7 @@ _getter_funcs_ = [
     'get_regressor_names',
     'get_freq',
 ]
+_not_hyperparams_ = ["Xvars", "normalizer", "tuned", "plot_loss","plot_loss_test"]
 
 # DESCRIPTIVE ERRORS
 class ForecastError(Exception):
@@ -195,7 +252,6 @@ class ForecastError(Exception):
 # MAIN OBJECT
 class Forecaster:
     def __init__(self, y, current_dates, **kwargs):
-
         self.y = y
         self.current_dates = current_dates
         self.future_dates = pd.Series([])
@@ -214,6 +270,27 @@ class Forecaster:
             setattr(self, key, value)
 
         self.typ_set()  # ensures that the passed values are the right types
+
+    def __copy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        return obj
+
+    def __deepcopy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        obj.__dict__ = copy.deepcopy(obj.__dict__)
+        return obj
+
+    def copy(self):
+        """ creates an object copy.
+        """
+        return self.__copy__() 
+
+    def deepcopy(self):
+        """ creates an object deepcopy.
+        """
+        return self.__deepcopy__()
 
     def __str__(self):
         return self.__repr__()
@@ -262,7 +339,19 @@ class Forecaster:
         """
         return globals()[f'_{which}_funcs_']
 
-    def _adder(self):
+    def _split_data(self, X, y, test_length, tune):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_length, shuffle=False)
+        X_test, y_test = (X_test, y_test) if not tune else (X_test[:-self.test_length], y_test[:-self.test_length])
+        return X_train, X_test, y_train, y_test
+
+    def _validate_no_test_only(self,models):
+        descriptive_assert(
+            max([int(self.history[m]['TestOnly']) for m in models]) == 0,
+            ForecastError,
+            'this method does not accept any models run test_only = True',
+        )
+
+    def _validate_future_dates_exist(self):
         """ makes sure future periods have been specified before adding regressors
         """
         descriptive_assert(
@@ -271,38 +360,44 @@ class Forecaster:
             "before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)",
         )
 
-    def _find_cis(self):
+    def _find_cis(self,y,fvs):
         """ bootstraps the upper and lower forecast estimates using the info stored in cilevel and bootstrap_samples
         """
         random.seed(20)
         resids = [
             fv - ac
-            for fv, ac in zip(self.fitted_values[:], self.y[-len(self.fitted_values):])
+            for fv, ac in zip(fvs, y[-len(fvs):])
         ]
         bootstrapped_resids = np.random.choice(resids, size=self.bootstrap_samples)
         bootstrap_mean = np.mean(bootstrapped_resids)
         bootstrap_std = np.std(bootstrapped_resids)
-        return (
-            stats.norm.ppf(1 - (1 - self.cilevel) / 2) * bootstrap_std + bootstrap_mean
-        )
+        return (stats.norm.ppf(1 - (1 - self.cilevel) / 2) * bootstrap_std + bootstrap_mean)
 
     def _bank_history(self, **kwargs):
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
             **kwargs: passed from each model, depending on how that model uses Xvars, normalizer, and other args
         """
+        # since test only, what gets saved to history is relevant to the train set only, the genesis of the next line
+        y_use = self.y.values.copy() if not self.test_only else self.y.values[:-self.test_length].copy()
+        fvs_use = self.fitted_values[:] if not self.test_only else self.fitted_values[:-self.test_length]
         call_me = self.call_me
-        ci_range = self._find_cis()
+        # originally, the ci_range used object attributes only, but test_only makes using args necessary
+        ci_range = self._find_cis(y_use,fvs_use)
         self.history[call_me] = {
             "Estimator": self.estimator,
+            "TestOnly": self.test_only,
             "Xvars": self.Xvars,
-            "HyperParams": {k: v for k, v in kwargs.items() if k not in ("Xvars", "normalizer", "auto", "plot_loss")},
-            "Scaler": kwargs["normalizer"] if "normalizer" in kwargs.keys() else 'minmax' if self.estimator in ("lstm","rnn") else None if self.estimator in ("prophet", "combo") else None if hasattr(self, "univariate") else "minmax",
-            "Observations": len(self.y),
+            "HyperParams": {k: v for k, v in kwargs.items() if k not in _not_hyperparams_},
+            "Scaler": None
+                      if self.estimator not in ['rnn','lstm'] + _sklearn_estimators_ 
+                      else 'minmax' if 'normalizer' not in kwargs
+                      else kwargs['normalizer'],
+            "Observations": len(y_use),
             "Forecast": self.forecast[:],
             "UpperCI": [f + ci_range for f in self.forecast],
             "LowerCI": [f - ci_range for f in self.forecast],
             "FittedVals": self.fitted_values[:],
-            "Tuned": False if not kwargs["auto"] else "Dynamically" if self.dynamic_tuning else True,
+            "Tuned": False if not kwargs["tuned"] else "Dynamically" if self.dynamic_tuning else True,
             "DynamicallyTested": self.dynamic_testing,
             "Integration": self.integration,
             "TestSetLength": self.test_length,
@@ -314,20 +409,20 @@ class Forecaster:
             "TestSetUpperCI": [f + ci_range for f in self.test_set_pred],  # not exactly right, but close enough with caveat
             "TestSetLowerCI": [f - ci_range for f in self.test_set_pred],  # not exactly right, but close enough with caveat
             "TestSetActuals": self.test_set_actuals[:],
-            "InSampleRMSE": rmse(self.y.values[-len(self.fitted_values) :], self.fitted_values),
-            "InSampleMAPE": mape(self.y.values[-len(self.fitted_values) :], self.fitted_values),
-            "InSampleMAE": mae(self.y.values[-len(self.fitted_values) :], self.fitted_values),
-            "InSampleR2": r2(self.y.values[-len(self.fitted_values) :], self.fitted_values),
+            "InSampleRMSE": rmse(y_use[-len(fvs_use) :], fvs_use),
+            "InSampleMAPE": mape(y_use[-len(fvs_use) :], fvs_use),
+            "InSampleMAE": mae(y_use[-len(fvs_use) :], fvs_use),
+            "InSampleR2": r2(y_use[-len(fvs_use) :], fvs_use),
             "CILevel":self.cilevel,
             "CIPlusMinus":ci_range,
         }
 
-        if kwargs["auto"]:
+        if kwargs["tuned"]:
             self.history[call_me]["ValidationSetLength"] = self.validation_length
             self.history[call_me]["ValidationMetric"] = self.validation_metric
             self.history[call_me]["ValidationMetricValue"] = self.validation_metric_value
 
-        for attr in ("univariate", "grid_evaluated", "models", "weights"):
+        for attr in ("grid_evaluated", "models", "weights"):
             if hasattr(self, attr):
                 self.history[call_me][attr] = getattr(self, attr)
 
@@ -336,74 +431,38 @@ class Forecaster:
             integration = self.integration
 
             fcst = self.forecast[::-1]
-            # fcstuci = [f + ci_range for f in self.forecast][::-1]
-            # fcstlci = [f - ci_range for f in self.forecast][::-1]
             pred = self.history[call_me]["TestSetPredictions"][::-1]
-            # preduci = [f + ci_range for f in self.test_set_pred][::-1]
-            # predlci = [f - ci_range for f in self.test_set_pred][::-1]
 
             if integration == 2:
-                fcst.append(self.y.values[-2] + self.y.values[-1])
-                # fcstuci.append(self.history[call_me]['UpperCI'][-2] + self.history[call_me]['UpperCI'][-1])
-                # fcstlci.append(self.history[call_me]['LowerCI'][-2] + self.history[call_me]['LowerCI'][-1])
+                fcst.append(y_use[-2] + y_use[-1])
                 pred.append(
-                    self.y.values[-(len(pred) + 2)] + self.y.values[-(len(pred) + 1)]
+                    y_use[-(len(pred) + 2)] + y_use[-(len(pred) + 1)]
                 )
-                # preduci.append(self.history[call_me]['TestSetUpperCI'][-2] + self.history[call_me]['TestSetUpperCI'][-1])
-                # predlci.append(self.history[call_me]['TestSetLowerCI'][-2] + self.history[call_me]['TestSetLowerCI'][-1])
             else:
                 fcst.append(self.levely[-1])
-                # fcstuci.append(self.history[call_me]['UpperCI'][-1])
-                # fcstlci.append(self.history[call_me]['LowerCI'][-1])
                 pred.append(self.levely[-(len(pred) + 1)])
-                # preduci.append(self.history[call_me]['TestSetUpperCI'][-1])
-                # predlci.append(self.history[call_me]['TestSetLowerCI'][-1])
 
             fcst = list(np.cumsum(fcst[::-1]))[1:]
-            # fcstuci = list(np.cumsum(fcstuci[::-1]))[1:]
-            # fcstlci = list(np.cumsum(fcstlci[::-1]))[1:]
             pred = list(np.cumsum(pred[::-1]))[1:]
-            # preduci = list(np.cumsum(preduci[::-1]))[1:]
-            # predlci = list(np.cumsum(predlci[::-1]))[1:]
 
             if integration == 2:
                 fcst.reverse()
                 fcst.append(self.levely[-1])
                 fcst = list(np.cumsum(fcst[::-1]))[1:]
-                # fcstuci.reverse()
-                # fcstuci.append(self.history[call_me]['UpperCI'][-1])
-                # fcstuci = list(np.cumsum(fcstuci[::-1]))[1:]
-                # fcstlci.reverse()
-                # fcstlci.append(self.history[call_me]['LowerCI'][-1])
-                # fcstlci = list(np.cumsum(fcstlci[::-1]))[1:]
 
                 pred.reverse()
                 pred.append(self.levely[-(len(pred) + 1)])
                 pred = list(np.cumsum(pred[::-1]))[1:]
-                # preduci.reverse()
-                # preduci.append(self.history[call_me]['TestSetUpperCI'][-1])
-                # preduci = list(np.cumsum(preduci[::-1]))[1:]
-                # predlci.reverse()
-                # predlci.append(self.history[call_me]['TestSetLowerCI'][-1])
-                # predlci = list(np.cumsum(predlci[::-1]))[1:]
 
             self.history[call_me]["LevelForecast"] = fcst[:]
-            # self.history[call_me]['LevelForecastUpperCI'] = fcstuci[:]
-            # self.history[call_me]['LevelForecastLowerCI'] = fcstlci[:]
             self.history[call_me]["LevelTestSetPreds"] = pred[:]
-            # self.history[call_me]['LevelTestSetPredsUpperCI'] = preduci[:]
-            # self.history[call_me]['LevelTestSetPredsLowerCI'] = predlci[:]
             self.history[call_me]["LevelTestSetRMSE"] = rmse(self.levely[-len(pred) :], pred)
             self.history[call_me]["LevelTestSetMAPE"] = mape(self.levely[-len(pred) :], pred)
             self.history[call_me]["LevelTestSetMAE"] = mae(self.levely[-len(pred) :], pred)
             self.history[call_me]["LevelTestSetR2"] = r2(self.levely[-len(pred) :], pred)
         else:  # better to have these attributes populated for all series
             self.history[call_me]["LevelForecast"] = self.forecast[:]
-            # self.history[call_me]['LevelForecastUpperCI'] = [f + ci_range for f in self.forecast]
-            # self.history[call_me]['LevelForecastLowerCI'] = [f - ci_range for f in self.forecast]
             self.history[call_me]["LevelTestSetPreds"] = self.test_set_pred[:]
-            # self.history[call_me]['LevelTestSetPredsUpperCI'] = [f + ci_range for f in self.test_set_pred]
-            # self.history[call_me]['LevelTestSetPredsLowerCI'] = [f - ci_range for f in self.test_set_pred]
             self.history[call_me]["LevelTestSetRMSE"] = self.rmse
             self.history[call_me]["LevelTestSetMAPE"] = self.mape
             self.history[call_me]["LevelTestSetMAE"] = self.mae
@@ -427,81 +486,6 @@ class Forecaster:
         """
         call_me = self.call_me
         self.history[call_me]["summary_stats"] = self.summary_stats
-
-    def _parse_normalizer(
-        self, X_train, normalizer
-    ) -> Union[
-        sklearn.preprocessing.MinMaxScaler,
-        sklearn.preprocessing.Normalizer,
-        sklearn.preprocessing.StandardScaler,
-        None,
-    ]:
-        """ fits an appropriate scaler to training data that will then be applied to test and future data
-
-        Args:
-            X_train (DataFrame): the independent values.
-            normalizer (str): one of _normalizer_.
-                if 'minmax', uses the MinMaxScaler from sklearn.preprocessing.
-                if 'scale', uses the StandardScaler from sklearn.preprocessing.
-                if 'normalize', uses the Normalizer from sklearn.preprocessing.
-                if 'pt', uses the PowerTransformer from sklearn.preprocessing.
-                if None, returns None.
-
-        Returns:
-            (scikit-learn preprecessing scaler/normalizer): The normalizer fitted on training data only.
-        """
-        descriptive_assert(
-            normalizer in _normalizer_,
-            ForecastError,
-            f"normalizer must be one of {_normalizer_}, got {normalizer}",
-        )
-        if normalizer == "minmax":
-            from sklearn.preprocessing import MinMaxScaler as Scaler
-        elif normalizer == "normalize":
-            from sklearn.preprocessing import Normalizer as Scaler
-        elif normalizer == "scale":
-            from sklearn.preprocessing import StandardScaler as Scaler
-        elif normalizer == "pt":  # fixing an issue with 0.3.7
-            try:
-                from sklearn.preprocessing import PowerTransformer as Scaler
-                scaler = Scaler()
-                scaler.fit(X_train)
-                return scaler
-            except ValueError:
-                logging.warning(
-                    f"the pt normalizer did not work for the {self.estimator} model, defaulting to a StandardScaler"
-                )
-                normalizer = "scale"
-                from sklearn.preprocessing import StandardScaler as Scaler
-        else:
-            return None
-
-        scaler = Scaler()
-        scaler.fit(X_train)
-        return scaler
-
-    def _train_test_split(
-        self, X, y, test_size
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """ splits data chronologically into training and testing set--the last observations in order will be used in test set.
-
-        Args:
-            X (ndarray or DataFrame):
-                regressor values
-            y (ndarray or Series):
-                dependent-variable values
-            test_size (int):
-                size of resulting test set
-
-        Returns:
-            (ndarray,ndarray,ndarray,ndarray): X training set, X testing set, y training array, y testing array.
-        """
-        from sklearn.model_selection import train_test_split
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, shuffle=False
-        )
-        return X_train, X_test, y_train, y_test
 
     def _metrics(self, y, pred):
         """ creates the following attributes: test_set_actuals, test_set_pred, rmse, r2, mae, mape.
@@ -531,29 +515,12 @@ class Forecaster:
             delattr(self, attr)
         return metric
 
-    def _scale(self, scaler, X) -> np.ndarray:
-        """ uses scaler parsed from _parse_normalizer() function to transform matrix passed to X.
-
-        Args:
-            scaler (MinMaxScaler, Normalizer, StandardScaler, PowerTransformer, or None): 
-                the fitted scaler or None type
-            X (ndarray or DataFrame):
-                the matrix to transform
-
-        Returns:
-            (ndarray): The scaled x values.
-        """
-        if not scaler is None:
-            return scaler.transform(X)
-        else:
-            return X.values if hasattr(X, "values") else X
 
     def _clear_the_deck(self):
         """ deletes the following attributes to prepare a new forecast:
             'univariate','fitted_values','regr','X','feature_importance','summary_stats','models','weights'
         """
         for attr in (
-            "univariate",
             "fitted_values",
             "regr",
             "X",
@@ -567,125 +534,6 @@ class Forecaster:
             except AttributeError:
                 pass
 
-    def _prepare_sklearn(
-        self, tune, Xvars, y, current_xreg
-    ) -> Tuple[list, list, pd.DataFrame, int]:
-        """ returns objects specific to forecasting with sklearn.
-
-        Args:
-            tune (bool):
-                whether the forecasting interation is for tuning the model.
-            Xvars (str, list-like, or None):
-                if None, uses all Xvars.
-                if list-like, uses only those Xvars.
-                if str, uses only that Xvar.
-
-        Returns:
-            (list,list,DataFrame,int): The names of the Xvars, the y values, the X values, the test size.
-        """
-        if Xvars is None or Xvars == "all":
-            Xvars = list(current_xreg.keys())
-
-        if tune:
-            y = list(y)[: -self.test_length]
-            X = pd.DataFrame({k: list(v) for k, v in current_xreg.items()}).iloc[
-                : -self.test_length, :
-            ]
-            test_size = self.validation_length
-        else:
-            y = list(y)
-            X = pd.DataFrame({k: list(v) for k, v in current_xreg.items()})
-            test_size = self.test_length
-        X = X[Xvars]
-        self.Xvars = Xvars
-        return Xvars, y, X, test_size
-
-    def _evaluate_sklearn(
-        self,
-        scaler,
-        regr,
-        X,
-        y,
-        Xvars,
-        future_dates,
-        future_xreg,
-        dynamic_testing,
-        true_forecast=False
-    ) -> list:
-        """ forecasts an sklearn model into the unknown.
-            uses loops to dynamically plug in AR values without leaking in either a tune/test process or true forecast, unless dynamic_testing is False.
-        
-        Args:
-            scaler (MinMaxScaler, Normalizer, StandardScaler, PowerTransformer, or None):
-                the scaling to use on the future xreg values if not None.
-            regr (sklearn model):
-                the regression model to forecast with.
-            X (ndarray):
-                a matrix of regressor values.
-            y (ndarray):
-                the known dependent-variable values.
-            Xvars (list or None):
-                the name of the regressors to use.
-                must be stored in the current_xreg and future_xreg attributes.
-            true_forecast (bool): default False.
-                False if testing or tuning.
-                if True, saves regr, X, and fitted_values attributes.
-
-        Returns:
-            (list): The resulting forecast or test-set predictions.
-        """
-        # not tuning/testing
-        if true_forecast:
-            self._clear_the_deck()
-            self.dynamic_testing = dynamic_testing
-
-        # apply the normalizer fit on training data only
-        X = self._scale(scaler, X)
-        regr.fit(X, y)
-
-        # not tuning/testing
-        if true_forecast:
-            self.regr = regr
-            self.X = X
-            self.fitted_values = (
-                list(regr.predict(X))
-            )
-
-        # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
-        if (len([x for x in Xvars if x.startswith("AR")]) == 0) | (
-            (not true_forecast) & (not dynamic_testing)
-        ):
-            p = pd.DataFrame(future_xreg)
-            p = self._scale(scaler, p)
-            fcst = list(regr.predict(p))
-
-        # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
-        else:
-            fcst = []
-            for i, _ in enumerate(future_dates):
-                p = pd.DataFrame(
-                    {k: [v[i]] for k, v in future_xreg.items() if k in Xvars}
-                )
-                p = self._scale(scaler, p)
-                fcst.append(
-                    regr.predict(p)[0]
-                )
-                if not i == len(future_dates) - 1:
-                    for k, v in future_xreg.items():
-                        if k.startswith("AR"):
-                            ar = int(k[2:])
-                            idx = i + 1 - ar
-                            if idx > -1:
-                                try:
-                                    future_xreg[k][i + 1] = fcst[idx]
-                                except IndexError:
-                                    future_xreg[k].append(fcst[idx])
-                            else:
-                                try:
-                                    future_xreg[k][i + 1] = y[idx]
-                                except IndexError:
-                                    future_xreg[k].append(y[idx])
-        return fcst
 
     def _forecast_sklearn(
         self,
@@ -694,8 +542,9 @@ class Forecaster:
         tune=False,
         Xvars=None,
         normalizer="minmax",
+        test_only=False,
         **kwargs,
-    ) -> Union[float, list]:
+    ):
         """ runs an sklearn forecast start-to-finish.
         see example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html
 
@@ -713,11 +562,70 @@ class Forecaster:
                 None means all Xvars added to the Forecaster object will be used.
             normalizer (str): one of _normalizer_. default 'minmax'.
                 if not None, normalizer applied to training data only to not leak.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail 
+                and not all methods will raise descriptive errors.
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
-
-        Returns:
-            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions. 
         """
+        def fit_normalizer(X, normalizer):
+            descriptive_assert(
+                normalizer in _normalizer_,
+                ForecastError,
+                f"normalizer must be one of {_normalizer_}, got {normalizer}",
+            )
+            if normalizer == "minmax":
+                from sklearn.preprocessing import MinMaxScaler as Scaler
+            elif normalizer == "normalize":
+                from sklearn.preprocessing import Normalizer as Scaler
+            elif normalizer == "scale":
+                from sklearn.preprocessing import StandardScaler as Scaler
+            else:
+                return None
+            
+            scaler = Scaler()
+            scaler.fit(X)
+            return scaler
+
+        def evaluate_model(scaler,regr,X,y,Xvars,fcst_horizon,future_xreg,dynamic_testing,true_forecast):
+            def scale(scaler,X):
+                return scaler.transform(X) if scaler is not None else X
+
+            self.X = X # for feature importance setting
+            # apply the normalizer fit on training data only
+            X = scale(scaler, X)
+            regr.fit(X, y)
+            # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
+            if (len([x for x in Xvars if x.startswith("AR")]) == 0) | (not dynamic_testing):
+                p = pd.DataFrame(future_xreg).values[:fcst_horizon]
+                p = scale(scaler, p)
+                return (regr.predict(p),regr.predict(X),Xvars,regr)
+            # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
+            fcst = []
+            for i in range(fcst_horizon):
+                p = pd.DataFrame({k: [v[i]] for k, v in future_xreg.items() if k in Xvars}).values
+                p = scale(scaler, p)
+                fcst.append(regr.predict(p)[0])
+                if not i == (fcst_horizon - 1):
+                    for k, v in future_xreg.items():
+                        if k.startswith("AR"):
+                            ar = int(k[2:])
+                            idx = i + 1 - ar
+                            if idx > -1:
+                                try:
+                                    future_xreg[k][i + 1] = fcst[idx]
+                                except IndexError:
+                                    future_xreg[k].append(fcst[idx])
+                            else:
+                                try:
+                                    future_xreg[k][i + 1] = y[idx]
+                                except IndexError:
+                                    future_xreg[k].append(y[idx])
+            
+            return (fcst,regr.predict(X),Xvars,regr)
+
         descriptive_assert(
             len(self.current_xreg.keys()) > 0,
             ForecastError,
@@ -725,58 +633,56 @@ class Forecaster:
         )
 
         # list of integers, each one representing the n/a values in each AR term
-        ars = [
-            v.isnull().sum() for x, v in self.current_xreg.items() if x.startswith("AR")
-        ]
+        ars = [v.isnull().sum() for x, v in self.current_xreg.items() if x.startswith("AR")]
         # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
         obs_to_drop = max(ars) if len(ars) > 0 else 0
         y = self.y.values[obs_to_drop:].copy()
-        current_xreg = {
-            xvar: x.values[obs_to_drop:].copy() for xvar, x in self.current_xreg.items()
-        }
+        current_xreg = {xvar: x.values[obs_to_drop:].copy() for xvar, x in self.current_xreg.items()}
+        test_length = self.test_length if not tune else self.validation_length + self.test_length
         # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
-        Xvars, y, X, test_size = self._prepare_sklearn(tune, Xvars, y, current_xreg)
+        Xvars, y, X = prepare_data(Xvars, y, current_xreg)
         # split the data
-        X_train, X_test, y_train, y_test = self._train_test_split(X, y, test_size)
+        X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
         # fit the normalizer to training data only
-        scaler = self._parse_normalizer(X_train, normalizer)
+        scaler = fit_normalizer(X_train, normalizer)
         # get the sklearn regressor
         regr = _sklearn_imports_[fcster](**kwargs)
         # train/test the model
-        pred = self._evaluate_sklearn(
+        result = evaluate_model(
             scaler,
             regr,
             X_train,
             y_train,
             Xvars,
-            self.current_dates.values[-test_size:],
-            {x: v[-test_size:] for x, v in current_xreg.items() if x in Xvars},
+            test_length - self.test_length if tune else test_length, # fcst_horizon
+            {x: v[-test_length:] for x, v in current_xreg.items() if x in Xvars}, # for AR processing
             dynamic_testing,
+            False
         )
+        pred = [i for i in result[0]]
         # set the test-set metrics
         self._metrics(y_test, pred)
+        if tune: 
+            return self._tune()
+        if test_only:
+            # last fitted val has to match last date in current_dates or a bunch of stuff breaks
+            result = (result[0],[i for i in result[1]] + [np.nan]*self.test_length,result[2],result[3])
+            return result
 
-        # if we are tuning, return the relevant test-set metric only and delete other metrics out of memory
-        # otherwise, get me my entire forecast into the future
-        return (
-            self._tune()
-            if tune
-            else self._evaluate_sklearn(
-                scaler,
-                regr,
-                X,
-                y,
-                Xvars,
-                self.future_dates.copy(),
-                {x: v[:] for x, v in self.future_xreg.items() if x in Xvars},
-                dynamic_testing,
-                true_forecast=True,
-            )
+        # run full model
+        return evaluate_model(
+            scaler,
+            regr,
+            X,
+            y,
+            Xvars,
+            len(self.future_dates),
+            {x: v[:] for x, v in self.future_xreg.items() if x in Xvars},
+            True,
+            True,
         )
 
-    def _forecast_hwes(
-        self, tune=False, dynamic_testing=True, **kwargs
-    ) -> Union[float, list]:
+    def _forecast_hwes(self, tune=False, dynamic_testing=True, test_only=False, **kwargs):
         """ forecasts with holt-winters exponential smoothing.
         see example: https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html
 
@@ -786,55 +692,52 @@ class Forecaster:
                 does not need to be specified by user.
             dynamic_testing (bool): default True.
                 always ignored in HWES (for now) - everything is set to be dynamic using statsmodels.
-            **kwargs: passed to the HWES() function from statsmodels
-
-        Returns:
-            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions. 
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
+            **kwargs: passed to the HWES() function from statsmodels 
         """
-        if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument will be ignored for the hwes model"
-            )
+        if not dynamic_testing: logging.warning("dynamic_testing is True always for hwes model")
         self.dynamic_testing = True
         from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
 
         y = self.y.to_list()
-        if tune:
-            y_train = y[: -(self.validation_length + self.test_length)]
-            y_test = y[-(self.test_length + self.validation_length) : -self.test_length]
-        else:
-            y_train = y[: -self.test_length]
-            y_test = y[-self.test_length :]
-        self.Xvars = None
-        hwes_train = HWES(
+        test_length = self.test_length if not tune else self.validation_length + self.test_length
+        y_train = y[: -test_length]
+        y_test = y[-test_length :]
+        regr = HWES(
             y_train,
             dates=self.current_dates.values[: -self.test_length],
             freq=self.freq,
             **kwargs,
         ).fit(optimized=True, use_brute=True)
-        pred = hwes_train.predict(
-            start=len(y_train), end=len(y_train) + len(y_test) - 1
+        pred = regr.predict(
+            start=len(y_train), 
+            end=len(y_train) + (len(y_test) if not tune else len(y_test) - self.test_length) - 1
         )
-        self._metrics(y_test, pred)
+        self._metrics(y_test if not tune else y_test[:-self.test_length], pred)
+        # tune
         if tune:
             return self._tune()
-        else:  # forecast
-            self._clear_the_deck()
-            self.univariate = True
-            self.X = None
-            regr = HWES(self.y, dates=self.current_dates, freq=self.freq, **kwargs).fit(
-                optimized=True, use_brute=True
-            )
-            self.fitted_values = list(regr.fittedvalues)
-            self.regr = regr
-            self._set_summary_stats()
-            return list(
-                regr.predict(start=len(y), end=len(y) + len(self.future_dates) - 1)
-            )
+        
+        # test only
+        if test_only:
+            return (pred,list(regr.fittedvalues) + [np.nan]*self.test_length,None,regr)
 
-    def _forecast_arima(
-        self, tune=False, Xvars=None, dynamic_testing=True, **kwargs
-    ) -> Union[float, list]:
+        # full
+        regr = HWES(
+            self.y, 
+            dates=self.current_dates, 
+            freq=self.freq, 
+            **kwargs
+        ).fit(optimized=True, use_brute=True)
+        pred = regr.predict(start=len(y), end=len(y) + len(self.future_dates) - 1)
+        return (pred,regr.fittedvalues,None,regr)
+
+    def _forecast_arima(self, tune=False, Xvars=None, dynamic_testing=True, test_only=False, **kwargs):
         """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).
         see example: https://scalecast-examples.readthedocs.io/en/latest/arima/arima.html
 
@@ -847,10 +750,13 @@ class Forecaster:
                 None means no Xvars used (unlike sklearn models).
             dynamic_testing (bool): default True.
                 always ignored in ARIMA (for now) - everything is set to be dynamic using statsmodels.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
             **kwargs: passed to the ARIMA() function from statsmodels.
-
-        Returns:
-            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions.
         """
         if not dynamic_testing:
             logging.warning(
@@ -867,26 +773,19 @@ class Forecaster:
             else Xvars
         )
         Xvars_orig = None if Xvars is None else None if len(Xvars) == 0 else Xvars
-        Xvars, y, X, test_size = self._prepare_sklearn(
-            tune, Xvars, self.y, self.current_xreg
-        )
-        if len(self.current_xreg.keys()) > 0:
-            X_train, X_test, y_train, y_test = self._train_test_split(X, y, test_size)
-        else:
-            y_train = self.y.values[:-test_size]
-            y_test = self.y.values[-test_size:]
+        test_length = self.test_length if not tune else self.validation_length + self.test_length
+        Xvars, y, X = prepare_data(Xvars, self.y, self.current_xreg)
+        X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
         if Xvars_orig is None:
-            X, X_train, X_test = None, None, None
-            self.Xvars = None
-
-        arima_train = ARIMA(
+            X, X_train, X_test, Xvars = None, None, None, None
+        regr = ARIMA(
             y_train,
             exog=X_train,
-            dates=self.current_dates.values[: -self.test_length],
+            dates=self.current_dates.values[: -test_length],
             freq=self.freq,
             **kwargs,
         ).fit()
-        pred = arima_train.predict(
+        pred = regr.predict(
             exog=X_test,
             start=len(y_train),
             end=len(y_train) + len(y_test) - 1,
@@ -894,38 +793,33 @@ class Forecaster:
             dynamic=True,
         )
         self._metrics(y_test, pred)
+        # tune
         if tune:
             return self._tune()
-        else:
-            self._clear_the_deck()
-            if Xvars_orig is None:
-                self.univariate = True
-            self.X = X
-            regr = ARIMA(
-                self.y.values[:],
-                exog=X,
-                dates=self.current_dates,
-                freq=self.freq,
-                **kwargs,
-            ).fit()
-            self.fitted_values = list(regr.fittedvalues)
-            self.regr = regr
-            self._set_summary_stats()
-            p = (
-                pd.DataFrame(
-                    {k: v for k, v in self.future_xreg.items() if k in self.Xvars}
-                )
-                if self.Xvars is not None
-                else None
-            )
-            fcst = regr.predict(
-                exog=p,
-                start=len(y),
-                end=len(y) + len(self.future_dates) - 1,
-                typ="levels",
-                dynamic=True,
-            )
-            return list(fcst)
+        # test only
+        if test_only:
+            return (pred,list(regr.fittedvalues) + [np.nan]*self.test_length,Xvars,regr)
+        # full
+        regr = ARIMA(
+            self.y.to_list(),
+            exog=X,
+            dates=self.current_dates,
+            freq=self.freq,
+            **kwargs,
+        ).fit()
+        p = (
+            pd.DataFrame({k: v for k, v in self.future_xreg.items() if k in self.Xvars})
+            if Xvars is not None
+            else None
+        )
+        fcst = regr.predict(
+            exog=p,
+            start=len(y),
+            end=len(y) + len(self.future_dates) - 1,
+            typ="levels",
+            dynamic=True,
+        )
+        return (fcst,list(regr.fittedvalues),Xvars,regr)
 
     def _forecast_prophet(
         self,
@@ -934,6 +828,7 @@ class Forecaster:
         dynamic_testing=True,
         cap=None,
         floor=None,
+        test_only=False,
         **kwargs,
     ) -> Union[float, list]:
         """ forecasts with the prophet model from facebook.
@@ -952,10 +847,13 @@ class Forecaster:
                 specific to prophet when using logistic growth -- the largest amount the model is allowed to evaluate to.
             floor (float): optional.
                 specific to prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
             **kwargs: passed to the Prophet() function from fbprophet.
-
-        Returns:
-            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions.
         """
         if not dynamic_testing:
             logging.warning(
@@ -964,12 +862,8 @@ class Forecaster:
         self.dynamic_testing = True
         from fbprophet import Prophet
 
-        X = pd.DataFrame(
-            {k: v for k, v in self.current_xreg.items() if not k.startswith("AR")}
-        )
-        p = pd.DataFrame(
-            {k: v for k, v in self.future_xreg.items() if not k.startswith("AR")}
-        )
+        X = pd.DataFrame({k: v for k, v in self.current_xreg.items() if not k.startswith("AR")})
+        p = pd.DataFrame({k: v[-len(self.future_dates):] for k, v in self.future_xreg.items() if not k.startswith("AR")})
         Xvars = (
             [x for x in self.current_xreg.keys() if not x.startswith("AR")]
             if Xvars == "all"
@@ -984,43 +878,39 @@ class Forecaster:
         X["y"] = self.y.to_list()
         X["ds"] = self.current_dates.to_list()
         p["ds"] = self.future_dates.to_list()
-
         model = Prophet(**kwargs)
         for x in Xvars:
             model.add_regressor(x)
+        # tune
         if tune:
             X_train = X.iloc[: -(self.test_length + self.validation_length)]
-            X_test = X.iloc[
-                -(self.test_length + self.validation_length) : -self.test_length
-            ]
-            y_test = X["y"].values[
-                -(self.test_length + self.validation_length) : -self.test_length
-            ]
+            X_test = X.iloc[-(self.test_length + self.validation_length) : -self.test_length]
+            y_test = X["y"].values[-(self.test_length + self.validation_length) : -self.test_length]
             model.fit(X_train)
             pred = model.predict(X_test)
             self._metrics(y_test, pred["yhat"].to_list())
             return self._tune()
-        else:
-            model.fit(X.iloc[: -self.test_length])
-            pred = model.predict(X.iloc[-self.test_length :])
-            self._metrics(X["y"].values[-self.test_length :], pred["yhat"].to_list())
-            self._clear_the_deck()
-            self.X = X[Xvars]
-            if len(Xvars) == 0:
-                self.univariate = True
-                self.X = None
-            self.Xvars = Xvars if Xvars != [] else None
 
-            regr = Prophet(**kwargs)
-            regr.fit(X)
-            self.fitted_values = regr.predict(X)["yhat"].to_list()
-            self.regr = regr
-            fcst = regr.predict(p)
-            return fcst["yhat"].to_list()
+        model.fit(X.iloc[: -self.test_length])
+        pred = model.predict(X.iloc[-self.test_length :])
+        self._metrics(X["y"].values[-self.test_length :], pred["yhat"].values)
+        
+        # test only
+        if test_only:
+            return (
+                pred['yhat'], 
+                model.predict(X.iloc[: -self.test_length])["yhat"].to_list() + [np.nan]*self.test_length, 
+                model, 
+                Xvars
+            )
 
-    def _forecast_silverkite(
-        self, tune=False, dynamic_testing=True, Xvars=None, **kwargs
-    ) -> Union[float, list]:
+        # full
+        regr = Prophet(**kwargs)
+        regr.fit(X)
+        fcst = regr.predict(p)
+        return (fcst["yhat"],regr.predict(X)["yhat"],Xvars,regr)
+
+    def _forecast_silverkite(self, tune=False, dynamic_testing=True, Xvars=None, test_only=False, **kwargs):
         """ forecasts with the silverkite model from LinkedIn greykite library.
         see example: https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html
 
@@ -1033,10 +923,13 @@ class Forecaster:
             Xvars (list-like, str, or None): the regressors to predict with.
                 be sure to have added them to the Forecaster object first.
                 None means no Xvars used (unlike sklearn models).
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
             **kwargs: passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
-
-        Returns:
-            (float or list): The evaluated metric value on the validation set if tuning a model otherwise, the list of predictions.
         """
         if not dynamic_testing:
             logging.warning(
@@ -1095,239 +988,33 @@ class Forecaster:
                 "y": self.y.to_list() + [None] * fcst_length,
             }
         )
-        reg_df = pd.DataFrame(
-            {x: self.current_xreg[x].to_list() + self.future_xreg[x] for x in Xvars}
-        )
+        reg_df = pd.DataFrame({x: self.current_xreg[x].to_list() + self.future_xreg[x] for x in Xvars})
         df = pd.concat([ts_df, reg_df], axis=1)
 
         if tune:
-            y_test = self.y.values[
-                -(self.test_length + self.validation_length) : -self.test_length
-            ]
-            pred = _forecast_sk(
+            y_test = self.y.values[-(self.test_length + self.validation_length) : -self.test_length]
+            result = _forecast_sk(
                 df,
                 Xvars,
                 self.validation_length,
                 self.test_length,
                 self.validation_length,
-            )[0]
+            )
+            pred = result[0]
             self._metrics(y_test, pred[-self.validation_length:])
             return self._tune()
-        else:
-            pred = _forecast_sk(df, Xvars, self.test_length, 0, self.test_length)[0]
-            self._metrics(self.y.values[-self.test_length :], pred[-self.test_length :])
-            self._clear_the_deck()
-            self.X = df[Xvars]
-            if len(Xvars) == 0:
-                self.univariate = True
-                self.X = None
-            self.Xvars = Xvars if Xvars != [] else None
-            self.regr = None  # placeholder to make feature importance work
-            result = _forecast_sk(df, Xvars, 0, 0, fcst_length)
+
+        result = _forecast_sk(df, Xvars, self.test_length, 0, self.test_length)
+        Xvars = Xvars if Xvars != [] else None
+        pred = result[0]
+        self._metrics(self.y.values[-self.test_length :], pred[-self.test_length :])        
+        if test_only:
             self.summary_stats = result[1].set_index("Pred_col")
-            self.fitted_values = result[0][:-fcst_length]
-            return result[0][-fcst_length:]
-
-    def _prepare_lstm(self, yvals, lags, forecast_length):
-        """ prepares and scales the data for rnn models.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/lstm.html
-
-        Args:
-            yvals (ndarray): dependent variable values to prepare
-            lags (int): the number of lags to use as predictors and to make the X matrix with
-            forecast_length (int): the amount of time to forecast out
-
-        Returns:
-            (ndarray,ndarray): The new X matrix and y array.
-        """
-        ylist = [(y - yvals.min()) / (yvals.max() - yvals.min()) for y in yvals]
-
-        n_future = forecast_length
-        n_past = lags
-        total_period = n_future + n_past
+            return (pred,pred[:-self.test_length],Xvars,None)
         
-        idx_end = len(ylist)
-        idx_start = idx_end - total_period
-        
-        X_new = []
-        y_new = []
-
-        while idx_start > 0:
-            x_line = ylist[idx_start:idx_start+n_past]
-            y_line = ylist[idx_start+n_past:idx_start+total_period]
-
-            X_new.append(x_line)
-            y_new.append(y_line)
-            
-            idx_start = idx_start - 1
-            
-        X_new = np.array(X_new)
-        y_new = np.array(y_new)
-
-        return X_new, y_new
-
-    def _forecast_rnn(
-        self,
-        dynamic_testing=True,
-        lags=1,
-        layers_struct=[('SimpleRNN',{'units':8,'activation':'tanh'})],
-        loss="mean_absolute_error",
-        optimizer="Adam",
-        learning_rate=0.001,
-        random_seed=None,
-        plot_loss=False,
-        **kwargs,
-    ):
-        """ forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent.
-        not all features from tensorflow are available, but it is possible that more features will be added in the future.
-        cannot be tuned.
-        only xvar options are the series' own history (specified in lags argument).
-        always uses minmax normalizer.
-        this is similar to forecasting with lstm but it is more complex to allow more flexibility.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
-
-        Args:
-            dynamic_testing (bool): default True.
-                always ignored for lstm.
-            lags (int): greater than 0, default 1.
-                the number of y-variable lags to train the model with.
-            layers_struct (list[tuple[str,dict[str,Union[float,str]]]]): default [('SimpleRNN',{'units':8,'activation':'tanh'})].
-                each element in the list is a tuple with two elements.
-                first element of the list is the input layer (input_shape set automatically).
-                first element of the tuple in the list is the type of layer ('SimpleRNN','LSTM', or 'Dense').
-                second element is a dict.
-                in the dict, key is a str representing hyperparameter name: 'units','activation', etc.
-                val is hyperparameter value.
-                see here for options related to SimpleRNN: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
-                for LSTM: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-                for Dense: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
-            loss (str or tf.keras.losses.Loss): default 'mean_absolute_error'.
-                the loss function to minimize.
-                see available options here: 
-                  https://www.tensorflow.org/api_docs/python/tf/keras/losses.
-                be sure to choose one that is suitable for regression tasks.
-            optimizer (str or tf Optimizer): default "Adam".
-                the optimizer to use when compiling the model.
-                see available values here: 
-                  https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
-                if str, will use the optimizer with default args
-                if type Optimizer, will use the optimizer exactly as specified
-            learning_rate (float): default 0.001.
-                the learning rate to use when compiling the model.
-                ignored if you pass your own optimizer with a learning rate
-            random_seed (int): optional.
-                set a seed for consistent results.
-                with tensorflow networks, setting seeds does not guarantee consistent results.
-            plot_loss (bool): default False.
-                whether to plot the LSTM loss function stored in history for each epoch.
-                if validation_split passed to kwargs, will plot the validation loss as well.
-                looks better if epochs > 1 passed to **kwargs.
-            **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
-
-        Returns:
-            (list): The predictions.
-        """
-        descriptive_assert(
-            len(layers_struct) >= 1,
-            ValueError,
-            f"must pass at least one layer to layers_struct, got {layers_struct}",
-        )
-        if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument will be ignored for the rnn model"
-            )
-        self._clear_the_deck()
-        self.dynamic_testing = True
-
-        if random_seed is not None:
-            random.seed(random_seed)
-
-        y_train = self.y.values[:-self.test_length].copy()
-        y_test = self.y.values[-self.test_length:].copy()
-
-        ymin = y_train.min()
-        ymax = y_train.max()
-
-        X_train, y_train_new = self._prepare_lstm(y_train,lags,self.test_length)
-        X, y_new = self._prepare_lstm(self.y.values.copy(),lags,len(self.future_dates))
-
-        X_test = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-(lags + self.test_length):-self.test_length].copy()]])
-        y_test_new = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-self.test_length:].copy()]])
-        fut = np.array([[(i - self.y.min()) / (self.y.max() - self.y.min()) for i in self.y.values[-lags:].copy()]])
-
-        n_timesteps = X_train.shape[1]
-        n_features = 1
-
-        X_train = X_train.reshape(X_train.shape[0],X_train.shape[1],1)
-        X_test = X_test.reshape(X_test.shape[0],X_test.shape[1],1)
-        X = X.reshape(X.shape[0],X.shape[1],1)
-        fut = fut.reshape(fut.shape[0],fut.shape[1],1)
-
-        def get_compiled_model(y):
-            # build model
-            from tensorflow.keras.models import Sequential
-            from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
-            import tensorflow.keras.optimizers
-            if isinstance(optimizer,str):
-                local_optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")(learning_rate=learning_rate)
-            else:
-                local_optimizer = optimizer
-            for i, kv in enumerate(layers_struct):                
-                layer = locals()[kv[0]]
-
-                if i == 0:
-                    if kv[0] in ('LSTM','SimpleRNN'):
-                        kv[1]['return_sequences'] = len(layers_struct) > 1
-                    model = Sequential(
-                        [
-                            layer(
-                                **kv[1],
-                                input_shape=(n_timesteps, n_features),
-                            )
-                        ]
-                    )
-                else:
-                    if kv[0] in ('LSTM','SimpleRNN'):
-                        kv[1]['return_sequences'] = (not i == (len(layers_struct) - 1))
-                        if kv[1]['return_sequences']:
-                            kv[1]['return_sequences'] = layers_struct[i+1][0] != 'Dense'
-
-                    model.add(layer(**kv[1]))
-            model.add(Dense(y.shape[1]))  # output layer
-
-            # compile model
-            model.compile(optimizer=local_optimizer, loss=loss)
-            return model
-
-        test_model = get_compiled_model(y_train_new)
-        test_model.fit(X_train,y_train_new,**kwargs)
-        pred = test_model.predict(X_test)
-
-        pred = [p * (ymax-ymin) + ymin for p in pred[0]] # un-minmax
-
-        # set the test-set metrics
-        self._metrics(y_test, pred)
-
-        model = get_compiled_model(y_new)
-        hist = model.fit(X,y_new,**kwargs)
-
-        if plot_loss:
-            plt.plot(hist.history['loss'],label='train_loss')
-            if 'val_loss' in hist.history.keys():
-                plt.plot(hist.history['val_loss'],label='val_loss')
-            plt.title('model loss')
-            plt.xlabel('epoch')
-            plt.legend(loc='upper right')
-            plt.show()
-
-        fcst = model.predict(fut)
-        fvs = model.predict(X)
-        self.fitted_values = [p[0] * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[1:][::-1]] + [p * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[0]]
-        self.Xvars = None
-        self.univariate = True
-
-        return [p * (self.y.max()-self.y.min()) + self.y.min() for p in fcst[0]]
-
+        result = _forecast_sk(df, Xvars, 0, 0, fcst_length)
+        self.summary_stats = result[1].set_index("Pred_col")
+        return (result[0][-fcst_length:],result[0][:-fcst_length],Xvars,None)
 
     def _forecast_lstm(
         self,
@@ -1341,6 +1028,7 @@ class Forecaster:
         learning_rate=0.001,
         random_seed=None,
         plot_loss=False,
+        test_only=False,
         **kwargs,
     ): 
         """ forecasts with a long-short term memory neural network from TensorFlow.
@@ -1386,33 +1074,154 @@ class Forecaster:
                 whether to plot the LSTM loss function stored in history for each epoch.
                 if validation_split passed to kwargs, will plot the validation loss as well.
                 looks better if epochs > 1 passed to **kwargs.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
             **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
-
-        Returns:
-            (list): The predictions.
         """
-        descriptive_assert(
-            len(lstm_layer_sizes) >= 1,
-            ValueError,
-            f"must pass at least one layer to lstm_layer_sizes, got {lstm_layer_sizes}",
+        def convert_lstm_args_to_rnn(**kwargs):
+            new_kwargs = {k:v for k,v in kwargs.items() if k not in ('lstm_layer_sizes','dropout','activation')}
+            new_kwargs['layers_struct'] = [('LSTM',
+                {
+                    'units':v,
+                    'activation':kwargs['activation'],
+                    'dropout':kwargs['dropout'][i]
+                }) for i,v in enumerate(kwargs['lstm_layer_sizes'])]
+            return new_kwargs
+
+        new_kwargs = convert_lstm_args_to_rnn(        
+            dynamic_testing=dynamic_testing,
+            lags=lags,
+            lstm_layer_sizes=lstm_layer_sizes,
+            dropout=dropout,
+            loss=loss,
+            activation=activation,
+            optimizer=optimizer,
+            learning_rate=learning_rate,
+            random_seed=random_seed,
+            plot_loss=plot_loss,
+            **kwargs,
         )
+        return self._forecast_rnn(**new_kwargs)
+
+    def _forecast_rnn(
+        self,
+        dynamic_testing=True,
+        lags=1,
+        layers_struct=[('SimpleRNN',{'units':8,'activation':'tanh'})],
+        loss="mean_absolute_error",
+        optimizer="Adam",
+        learning_rate=0.001,
+        random_seed=None,
+        plot_loss_test=False,
+        plot_loss=False,
+        test_only=False,
+        **kwargs,
+    ):
+        """ forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent.
+        not all features from tensorflow are available, but it is possible that more features will be added in the future.
+        cannot be tuned.
+        only xvar options are the series' own history (specified in lags argument).
+        always uses minmax normalizer.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
+
+        Args:
+            dynamic_testing (bool): default True.
+                always ignored for rnn.
+            lags (int): greater than 0, default 1.
+                the number of y-variable lags to train the model with.
+            layers_struct (list[tuple[str,dict[str,Union[float,str]]]]): default [('SimpleRNN',{'units':8,'activation':'tanh'})].
+                each element in the list is a tuple with two elements.
+                first element of the list is the input layer (input_shape set automatically).
+                first element of the tuple in the list is the type of layer ('SimpleRNN','LSTM', or 'Dense').
+                second element is a dict.
+                in the dict, key is a str representing hyperparameter name: 'units','activation', etc.
+                val is hyperparameter value.
+                see here for options related to SimpleRNN: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
+                for LSTM: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
+                for Dense: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
+            loss (str or tf.keras.losses.Loss): default 'mean_absolute_error'.
+                the loss function to minimize.
+                see available options here: 
+                  https://www.tensorflow.org/api_docs/python/tf/keras/losses.
+                be sure to choose one that is suitable for regression tasks.
+            optimizer (str or tf Optimizer): default "Adam".
+                the optimizer to use when compiling the model.
+                see available values here: 
+                  https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
+                if str, will use the optimizer with default args
+                if type Optimizer, will use the optimizer exactly as specified
+            learning_rate (float): default 0.001.
+                the learning rate to use when compiling the model.
+                ignored if you pass your own optimizer with a learning rate
+            random_seed (int): optional.
+                set a seed for consistent results.
+                with tensorflow networks, setting seeds does not guarantee consistent results.
+            plot_loss_test (bool): default False.
+                whether to plot the loss trend stored in history for each epoch on the test set.
+                if validation_split passed to kwargs, will plot the validation loss as well.
+                looks better if epochs > 1 passed to **kwargs.
+            plot_loss (bool): default False.
+                whether to plot the loss trend stored in history for each epoch on the full model.
+                if validation_split passed to kwargs, will plot the validation loss as well.
+                looks better if epochs > 1 passed to **kwargs.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
+            **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
+        """
+        def get_compiled_model(y):
+            # build model
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
+            import tensorflow.keras.optimizers
+            if isinstance(optimizer,str):
+                local_optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")(learning_rate=learning_rate)
+            else:
+                local_optimizer = optimizer
+            for i, kv in enumerate(layers_struct):                
+                layer = locals()[kv[0]]
+
+                if i == 0:
+                    if kv[0] in ('LSTM','SimpleRNN'):
+                        kv[1]['return_sequences'] = len(layers_struct) > 1
+                    model = Sequential(
+                        [
+                            layer(
+                                **kv[1],
+                                input_shape=(n_timesteps, n_features),
+                            )
+                        ]
+                    )
+                else:
+                    if kv[0] in ('LSTM','SimpleRNN'):
+                        kv[1]['return_sequences'] = (not i == (len(layers_struct) - 1))
+                        if kv[1]['return_sequences']:
+                            kv[1]['return_sequences'] = layers_struct[i+1][0] != 'Dense'
+
+                    model.add(layer(**kv[1]))
+            model.add(Dense(y.shape[1]))  # output layer
+
+            # compile model
+            model.compile(optimizer=local_optimizer, loss=loss)
+            return model
+        
         descriptive_assert(
-            len(dropout) == len(lstm_layer_sizes),
+            len(layers_struct) >= 1,
             ValueError,
-            f"length of dropout must be the same size as lstm_layer_sizes, got {len(dropout)} and {len(lstm_layer_sizes)}",
+            f"must pass at least one layer to layers_struct, got {layers_struct}",
         )
         if not dynamic_testing:
             logging.warning(
-                "dynamic_testing argument will be ignored for the lstm model"
+                "dynamic_testing argument will be ignored for the rnn model"
             )
-        self._clear_the_deck()
-        self.dynamic_testing = True
-
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Dense, LSTM
-        import tensorflow.keras.optimizers
-
-        optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")
+        self.dynamic_testing = None
 
         if random_seed is not None:
             random.seed(random_seed)
@@ -1423,8 +1232,8 @@ class Forecaster:
         ymin = y_train.min()
         ymax = y_train.max()
 
-        X_train, y_train_new = self._prepare_lstm(y_train,lags,self.test_length)
-        X, y_new = self._prepare_lstm(self.y.values.copy(),lags,len(self.future_dates))
+        X_train, y_train_new = prepare_rnn(y_train,lags,self.test_length)
+        X, y_new = prepare_rnn(self.y.values.copy(),lags,len(self.future_dates))
 
         X_test = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-(lags + self.test_length):-self.test_length].copy()]])
         y_test_new = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-self.test_length:].copy()]])
@@ -1438,63 +1247,33 @@ class Forecaster:
         X = X.reshape(X.shape[0],X.shape[1],1)
         fut = fut.reshape(fut.shape[0],fut.shape[1],1)
 
-        def get_compiled_model(y):
-            # build model
-            model = Sequential(
-                [
-                    LSTM(
-                        lstm_layer_sizes[0],
-                        activation=activation,
-                        input_shape=(n_timesteps, n_features),
-                        dropout=dropout[0],
-                        return_sequences=len(lstm_layer_sizes) > 1,
-                    )
-                ]
-            )
-            for i, layer in enumerate(lstm_layer_sizes):
-                if i > 0:  # since we already added the first layer
-                    model.add(
-                        LSTM(
-                            layer,
-                            activation=activation,
-                            return_sequences=(not i == (len(lstm_layer_sizes) - 1)),
-                            dropout=dropout[i],
-                        )
-                    )
-            model.add(Dense(y.shape[1]))  # output layer
-
-            # compile model
-            model.compile(optimizer=optimizer(learning_rate=learning_rate), loss=loss)
-            return model
-
         test_model = get_compiled_model(y_train_new)
-        test_model.fit(X_train,y_train_new,**kwargs)
+        hist = test_model.fit(X_train,y_train_new,**kwargs)
         pred = test_model.predict(X_test)
 
         pred = [p * (ymax-ymin) + ymin for p in pred[0]] # un-minmax
 
         # set the test-set metrics
         self._metrics(y_test, pred)
+        if plot_loss_test:
+            plot_loss_rnn(hist,'model loss - test')
+        if test_only:
+            fvs = test_model.predict(X_train)
+            fvs = [p[0] * (ymax-ymin) + ymin for p in fvs[1:][::-1]] + [
+                                  p * (ymax-ymin) + ymin for p in fvs[0]]
+            return (pred, fvs + [np.nan]*self.test_length, None, None)
 
         model = get_compiled_model(y_new)
         hist = model.fit(X,y_new,**kwargs)
-
         if plot_loss:
-            plt.plot(hist.history['loss'],label='train_loss')
-            if 'val_loss' in hist.history.keys():
-                plt.plot(hist.history['val_loss'],label='val_loss')
-            plt.title('model loss')
-            plt.xlabel('epoch')
-            plt.legend(loc='upper right')
-            plt.show()
-
+            plot_loss_rnn(hist,'model loss - full')
         fcst = model.predict(fut)
         fvs = model.predict(X)
-        self.fitted_values = [p[0] * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[1:][::-1]] + [p * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[0]]
-        self.Xvars = None
-        self.univariate = True
+        fvs = [p[0] * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[1:][::-1]] + [
+                              p * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[0]]
+        fcst = [p * (self.y.max()-self.y.min()) + self.y.min() for p in fcst[0]] 
 
-        return [p * (self.y.max()-self.y.min()) + self.y.min() for p in fcst[0]]
+        return (fcst, fvs, None, None)
 
     def _forecast_combo(
         self,
@@ -1505,8 +1284,10 @@ class Forecaster:
         rebalance_weights=0.1,
         weights=None,
         splice_points=None,
+        test_only=False,
     ):
         """ combines at least two previously evaluted forecasts to create a new model.
+        this method cannot be run on models that were run test_only = True.
         see the following explanation for the weighted-average model:
         The weighted model in scalecast uses a weighted average of all selected models, 
         applying the same weights to the fitted values, test-set metrics, and predictions. 
@@ -1554,15 +1335,19 @@ class Forecaster:
                 must be exactly one less in length than the number of models.
                 models[0] --> :splice_points[0]
                 models[-1] --> splice_points[-1]:
-
-        Returns:
-            (list): The predictions.
+            test_only (bool): default False:
+                always ignored in combo model.
         """
         if not dynamic_testing:
             logging.warning(
-                "dynamic_testing argument will be ignored for the combo model"
+                "dynamic_testing argument ignored for the combo model"
+            )
+        if test_only:
+            logging.warning(
+                "test_only argument ignored for the combo model"
             )
         self.dynamic_testing = None
+        self.test_only = False
         determine_best_by = (
             determine_best_by
             if (weights is None) & ((models[:4] == "top_") | (how == "weighted"))
@@ -1579,6 +1364,7 @@ class Forecaster:
             | (weights is not None)
         )
         models = self._parse_models(models, determine_best_by)
+        self._validate_no_test_only(models)
         descriptive_assert(
             len(models) > 1,
             ForecastError,
@@ -1667,14 +1453,9 @@ class Forecaster:
                 fcst[start:] = fcsts[models[-1]].values[start:]
 
         self._metrics(actuals, pred)
-        self._clear_the_deck()
         self.weights = tuple(weights.values[0]) if weights is not None else None
         self.models = models
-        self.fitted_values = fv
-        self.Xvars = None
-        self.X = None
-        self.regr = None
-        return fcst
+        return (fcst, fv, None, None)
 
     def _parse_models(self, models, determine_best_by) -> list:
         """ takes a collection of models and orders them best-to-worst based on a given metric and returns the ordered list (of str type).
@@ -1934,7 +1715,7 @@ class Forecaster:
 
         >>> f.add_ar_terms(4) # adds four lags of y to predict with
         """
-        self._adder()
+        self._validate_future_dates_exist()
         
         if n == 0:
             return
@@ -1961,7 +1742,7 @@ class Forecaster:
 
         >>> f.add_AR_terms((2,12)) # adds 12th and 24th lags
         """
-        self._adder()
+        self._validate_future_dates_exist()
         descriptive_assert(
             (len(N) == 2) & (not isinstance(N, str)),
             ValueError,
@@ -2304,7 +2085,7 @@ class Forecaster:
         >>> f.add_seasonal_regressors('month','week','quarter',raw=False,sincos=True)
         >>> f.add_seasonal_regressors('dayofweek',raw=False,dummy=True,drop_first=True)
         """
-        self._adder()
+        self._validate_future_dates_exist()
         if not (raw | sincos | dummy):
             raise ValueError("at least one of raw, sincos, dummy must be True")
         for s in args:
@@ -2377,7 +2158,7 @@ class Forecaster:
 
         >>> f.add_time_trend()
         """
-        self._adder()
+        self._validate_future_dates_exist()
         self.current_xreg[called] = pd.Series(range(1, len(self.y) + 1))
         self.future_xreg[called] = list(
             range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
@@ -2400,7 +2181,7 @@ class Forecaster:
 
         >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations
         """
-        self._adder()
+        self._validate_future_dates_exist()
         if called is None:
             called = f'cycle{cycle_length}'
         full_sin = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(lambda x: np.sin(np.pi * x / (cycle_length / 2)))
@@ -2426,7 +2207,7 @@ class Forecaster:
 
         >>> f.add_other_regressor('january_2021','2021-01-01','2021-01-31')
         """
-        self._adder()
+        self._validate_future_dates_exist()
         if isinstance(start, str):
             start = datetime.datetime.strptime(start, "%Y-%m-%d")
         if isinstance(end, str):
@@ -2460,7 +2241,7 @@ class Forecaster:
         Returns:
             None
         """
-        self._adder()
+        self._validate_future_dates_exist()
         self.add_other_regressor(called=called, start=start, end=end)
 
     def add_combo_regressors(self, *args, sep="_"):
@@ -2477,7 +2258,7 @@ class Forecaster:
         >>> f.add_combo_regressors('t','monthsin') # multiplies these two together
         >>> f.add_combo_regressors('t','monthcos') # multiplies these two together
         """
-        self._adder()
+        self._validate_future_dates_exist()
         descriptive_assert(
             len(args) > 1,
             ForecastError,
@@ -2523,7 +2304,7 @@ class Forecaster:
 
         >>> f.add_poly_terms('t','year',pwr=3) ### raises t and year to 2nd and 3rd powers
         """
-        self._adder()
+        self._validate_future_dates_exist()
         for a in args:
             descriptive_assert(
                 not a.startswith("AR"),
@@ -2555,7 +2336,7 @@ class Forecaster:
 
         >>> f.add_exp_terms('t',pwr=.5) # adds square root t
         """
-        self._adder()
+        self._validate_future_dates_exist()
         pwr = float(pwr)
         for a in args:
             descriptive_assert(
@@ -2591,7 +2372,7 @@ class Forecaster:
 
         >>> f.add_logged_terms('t') # adds natural log t
         """
-        self._adder()
+        self._validate_future_dates_exist()
         for a in args:
             descriptive_assert(
                 not a.startswith("AR"),
@@ -2641,7 +2422,7 @@ class Forecaster:
 
         >>> f.add_pt_terms('t') # adds box cox of t
         """
-        self._adder()
+        self._validate_future_dates_exist()
         pt = PowerTransformer(method=method, standardize=False)
         for a in args:
             descriptive_assert(
@@ -2680,7 +2461,7 @@ class Forecaster:
 
         >>> add_diffed_terms('t') # adds first difference of t as regressor
         """
-        self._adder()
+        self._validate_future_dates_exist()
         descriptive_assert(
             diff in (1, 2), ValueError, f"diff must be 1 or 2, got {diff}"
         )
@@ -2728,7 +2509,7 @@ class Forecaster:
         >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t
         >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only
         """
-        self._adder()
+        self._validate_future_dates_exist()
         descriptive_assert(
             isinstance(lags, int),
             ValueError,
@@ -2947,7 +2728,7 @@ class Forecaster:
             try:
                 if self.estimator in _sklearn_estimators_:
                     metrics.append(
-                        getattr(self, "_forecast_sklearn")(
+                        self._forecast_sklearn(
                             fcster=self.estimator,
                             tune=True,
                             dynamic_testing=dynamic_tuning,
@@ -2995,7 +2776,7 @@ class Forecaster:
 
         self.dynamic_tuning = dynamic_tuning
 
-    def manual_forecast(self, call_me=None, dynamic_testing=True, **kwargs):
+    def manual_forecast(self, call_me=None, dynamic_testing=True, test_only=False, **kwargs):
         """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
 
         Args:
@@ -3007,6 +2788,12 @@ class Forecaster:
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, test-set metrics effectively become an average of one-step forecasts.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
             **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
                 for sklearn models, can inlcude normalizer and Xvars.
                 for ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer.
@@ -3035,24 +2822,30 @@ class Forecaster:
             kwargs.pop('tune')
             logging.warning('tune argument will be ignored')
 
+        self._clear_the_deck()
+        self.test_only = test_only
+        self.dynamic_testing = dynamic_testing
         self.call_me = self.estimator if call_me is None else call_me
-        self.forecast = (
-            getattr(self, "_forecast_sklearn")(
-                fcster=self.estimator, dynamic_testing=dynamic_testing, **kwargs
-            )
+        result = (
+            self._forecast_sklearn(fcster=self.estimator, dynamic_testing=dynamic_testing, test_only=test_only, **kwargs)
             if self.estimator in _sklearn_estimators_
-            else getattr(self, f"_forecast_{self.estimator}")(
-                dynamic_testing=dynamic_testing, **kwargs
-            )
-        )
+            else getattr(self, f"_forecast_{self.estimator}")(dynamic_testing=dynamic_testing, test_only=test_only, **kwargs)
+        ) # 0 - forecast, 1 - fitted vals, 2 - Xvars, 3 - regr
+        self.forecast = [i for i in result[0]]
+        self.fitted_values = [i for i in result[1]]
+        self.Xvars = result[2]
+        self.regr = result[3]
+        if self.estimator in ('arima','hwes'):
+            self._set_summary_stats()
+
         self._bank_history(
-            auto=False
+            tuned=False
             if not hasattr(self, "best_params")
             else len(self.best_params.keys()) > 0,
             **kwargs,
         )
 
-    def auto_forecast(self, call_me=None, dynamic_testing=True):
+    def auto_forecast(self, call_me=None, dynamic_testing=True, test_only=False):
         """ auto forecasts with the best parameters indicated from the tuning process.
 
         Args:
@@ -3064,6 +2857,12 @@ class Forecaster:
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, test-set metrics effectively become an average of one-step forecasts.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
 
         Returns:
             None
@@ -3078,7 +2877,7 @@ class Forecaster:
             )
             self.best_params = {}
         self.manual_forecast(
-            call_me=call_me, dynamic_testing=dynamic_testing, **self.best_params
+            call_me=call_me, dynamic_testing=dynamic_testing, test_only=test_only, **self.best_params
         )
 
     def add_sklearn_estimator(self,imported_module,called):
@@ -3322,6 +3121,7 @@ class Forecaster:
         ci=False,
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
+        if any models passed to models were run test_only=True, will raise an error.
 
         Args:
             models (list-like, str, or None): default 'all'.
@@ -3373,7 +3173,7 @@ class Forecaster:
         if self.integration == 0:
             for _ in range(max(integration)):
                 y = y.diff()
-
+        self._validate_no_test_only(models)
         plot = {
             "date": self.current_dates.to_list()[-len(y.dropna()) :]
             if not level
@@ -3818,7 +3618,6 @@ class Forecaster:
                 "ValidationSetLength",
                 "ValidationMetric",
                 "ValidationMetricValue",
-                "univariate",
                 "models",
                 "weights",
                 "LevelTestSetRMSE",
@@ -3852,6 +3651,7 @@ class Forecaster:
                 )
             output["model_summaries"] = model_summaries
         if "best_fcst" in dfs:
+            self._validate_no_test_only(models)
             best_fcst = pd.DataFrame(
                 {"DATE": self.current_dates.to_list() + self.future_dates.to_list()}
             )
@@ -3879,6 +3679,7 @@ class Forecaster:
                 test_set_predictions[m] = self.history[m]["LevelTestSetPreds"]
             output["lvl_test_set_predictions"] = test_set_predictions
         if "lvl_fcsts" in dfs:
+            self._validate_no_test_only(models)
             lvl_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
             for m in models:
                 if "LevelForecast" in self.history[m].keys():
@@ -4074,6 +3875,7 @@ class Forecaster:
         Returns:
             (DataFrame): A dataframe with forecasts to future dates and corresponding confidence intervals.
         """
+        self._validate_no_test_only([model])
         return pd.DataFrame(
             {
                 "DATE": self.future_dates.to_list(),
@@ -4124,3 +3926,89 @@ class Forecaster:
 
         df['Residuals'] = df['Actuals'] - df['FittedVals']
         return df
+
+    def backcast(self,model,fcst_length='auto',n_iter=10):
+        """ runs a backcast of a selected evaluated model over a certain 
+        amount of iterations to test the average error if that model were 
+        implemented over the last so-many actual forecast intervals.
+        all scoring is dynamic to give a true out-of-sample result.
+        all metrics are specific to level data.
+        if you ran the model on level data initially, this process will be faster since test_only is set to True.
+        two results are extracted: a dataframe of actuals and predictions across each iteration and
+        a dataframe of test-set metrics across each iteration with a mean total as the last column.
+        these results are stored in the Forecaster object's history and can be extracted by calling 
+        `export_backcast_metrics()` and `export_backcast_values()`.
+        combo models cannot be backcast and will raise an error if you attempt to do so.
+        cannot backcast models that were run with test_only = True
+
+        Args:
+            model (str): the model to run the backcast for. use the model nickname.
+            fcst_length (int or str): default 'auto'. 
+                if 'auto', uses the same forecast length as saved in the object currently.
+                if int, uses that as the forecast length.
+            n_iter (int): default 10. the number of iterations to backcast.
+                models will iteratively trained on all data before the fcst_length worth of values.
+                each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
+
+        Returns:
+            None
+        """
+        if fcst_length == 'auto':
+            fcst_length = len(self.future_dates)
+        fcst_length = int(fcst_length)
+        metric_results = pd.DataFrame(columns=[f'iter{i}' for i in range(1,n_iter+1)],index=['RMSE','MAE','R2','MAPE'])
+        value_results = pd.DataFrame()
+        for i in range(n_iter):
+            f = self.__deepcopy__()
+            if i > 0:
+                f.current_xreg = {k:pd.Series(v.values[:-i]) for k, v in f.current_xreg.items()}
+                f.current_dates = pd.Series(f.current_dates.values[:-i])
+                f.y = pd.Series(f.y.values[:-i])
+                f.levely = f.levely[:-i]
+            
+            f.set_test_length(fcst_length)
+            f.set_estimator(f.history[model]['Estimator'])
+            descriptive_assert(f.estimator!='combo',ValueError,'combo models cannot be backcast')
+            params = f.history[model]['HyperParams'].copy()
+            if f.history[model]['Xvars'] is not None:
+                params['Xvars'] = f.history[model]['Xvars'][:]
+            if f.estimator in _sklearn_estimators_:
+                params['normalizer'] = f.history[model]['Scaler']
+            f.history = {}
+            f.manual_forecast(**params,test_only=True)
+            test_mets = f.export('model_summaries')
+            test_preds = f.export('lvl_test_set_predictions')
+            metric_results.loc['RMSE',f'iter{i+1}'] = test_mets['LevelTestSetRMSE'].values[0]
+            metric_results.loc['MAE',f'iter{i+1}'] = test_mets['LevelTestSetMAE'].values[0]
+            metric_results.loc['R2',f'iter{i+1}'] = test_mets['LevelTestSetR2'].values[0]
+            metric_results.loc['MAPE',f'iter{i+1}'] = test_mets['LevelTestSetMAPE'].values[0]
+            value_results[f'iter{i+1}actuals'] = test_preds.iloc[:,1].values.copy()
+            value_results[f'iter{i+1}preds'] = test_preds.iloc[:,2].values.copy()
+
+        metric_results['mean'] = metric_results.mean(axis=1)
+        self.history[model]['BackcastMetrics'] = metric_results
+        self.history[model]['BackcastValues'] = value_results
+
+    def export_backcast_metrics(self,model):
+        """ extracts the backcast metrics for a given model.
+        only works if `backcast()` has been called.
+
+        Args:
+            model (str): the model nickname to extract metrics for.
+
+        Returns:
+            (DataFrame): a copy of the backcast metrics.
+        """
+        return self.history[model]['BackcastMetrics'].copy()
+
+    def export_backcast_values(self,model):
+        """ extracts the backcast values for a given model.
+        only works if `backcast()` has been called.
+
+        Args:
+            model (str): the model nickname to extract values for.
+
+        Returns:
+            (DataFrame): a copy of the backcast values.
+        """
+        return self.history[model]['BackcastValues'].copy()
