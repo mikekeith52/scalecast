@@ -3939,7 +3939,6 @@ class Forecaster:
         these results are stored in the Forecaster object's history and can be extracted by calling 
         `export_backcast_metrics()` and `export_backcast_values()`.
         combo models cannot be backcast and will raise an error if you attempt to do so.
-        cannot backcast models that were run with test_only = True
 
         Args:
             model (str): the model to run the backcast for. use the model nickname.
