@@ -87,6 +87,7 @@ f = Forecaster(y=array_of_values, current_dates=array_of_dates)
 |Dynamic Multivariate Vector Forecasting|✔️|
 |Dynamic Multivariate Vector Forecasting with Exogenous Regressors|✔️|
 |Hyperparameter Tuning|✔️|
+|Backcasting|✔️|
 |Model Validation|✔️|
 |Model Summary Generation|✔️|
 |Future Period Forecasting|✔️|
