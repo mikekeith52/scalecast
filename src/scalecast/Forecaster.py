@@ -2981,7 +2981,7 @@ class Forecaster:
             perm = PermutationImportance(self.regr).fit(
                 self.X, self.y.values[-len(self.X) :]
             )
-        except TypeError:
+        except (TypeError,AttributeError):
             logging.warning(
                 f"cannot set feature importance on the {self.estimator} model"
             )
