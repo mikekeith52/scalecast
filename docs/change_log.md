@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.9.1] - 2022-04-21
+### Added
+### Changed
+### Fixed
+- fixed an issue in ARIMA model where future x regressors weren't being read correctly
+- fixed an issue where `save_feature_importance()` was throwing an error sometimes
+
 ## [0.9.0] - 2022-04-15
 ### Added
 - added `backcast()` method to `Forecaster` and `MVForecaster` objects

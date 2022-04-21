@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.9.0
+Version: 0.9.1
 Summary: Easy dynamic time series forecasting in Python
 Home-page: UNKNOWN
 Author: Michael Keith
@@ -96,6 +96,7 @@ Description: # 🌄 Scalecast: Easy dynamic time series forecasting in Python
         |Dynamic Multivariate Vector Forecasting|✔️|
         |Dynamic Multivariate Vector Forecasting with Exogenous Regressors|✔️|
         |Hyperparameter Tuning|✔️|
+        |Backcasting|✔️|
         |Model Validation|✔️|
         |Model Summary Generation|✔️|
         |Future Period Forecasting|✔️|

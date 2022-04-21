@@ -1399,7 +1399,7 @@ class MVForecaster:
                 if 'auto', uses the same forecast length as saved in the object currently.
                 if int, uses that as the forecast length.
             n_iter (int): default 10. the number of iterations to backcast.
-                models will iteratively trained on all data before the fcst_length worth of values.
+                models will iteratively train on all data before the fcst_length worth of values.
                 each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
 
         Returns:
@@ -1413,7 +1413,7 @@ class MVForecaster:
         tuples = []
         for s in labels:
             for m in mets:
-                tuples.append((s,m))
+                tuples.append((s,m)) # no list comprehension to preserve order and because the lengths of labels and mets are different
         index = pd.MultiIndex.from_tuples(tuples,names=['series','metric'])
         metric_results = pd.DataFrame(columns=[f'iter{i}' for i in range(1,n_iter+1)],
             index=index)
@@ -1438,15 +1438,14 @@ class MVForecaster:
             test_mets = f.export_model_summaries()
             test_preds = f.export_level_test_set_preds()
             for s in labels:
-                metric_results.loc[(s,'RMSE'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetRMSE'].values[0]
-                metric_results.loc[(s,'MAE'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetMAE'].values[0]
-                metric_results.loc[(s,'R2'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetR2'].values[0]
-                metric_results.loc[(s,'MAPE'),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,'LevelTestSetMAPE'].values[0]
+                for m in mets:
+                    metric_results.loc[(s,m),f'iter{i+1}'] = test_mets.loc[test_mets['Series'] == s,f'LevelTestSet{m}'].values[0]
                 value_results[f'{s}_iter{i+1}actuals'] = test_preds[f'{s}_actuals']
                 value_results[f'{s}_iter{i+1}preds'] = test_preds[f'{s}_{model}_test_preds']
         metric_results['mean'] = metric_results.mean(axis=1)
         self.history[model]['BackcastMetrics'] = metric_results
         self.history[model]['BackcastValues'] = value_results
+        # TODO: value_results can be a dataframe subclass with a custom plot() method
     
     def export_backcast_metrics(self,model):
         """ extracts the backcast metrics for a given model.

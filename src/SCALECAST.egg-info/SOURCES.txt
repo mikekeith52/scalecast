@@ -11,7 +11,6 @@ __pycache__/Grids.cpython-38.pyc
 assets/logo2.png
 assets/main_forecast.png
 assets/main_forecast_test_set.png
-dist/SCALECAST-0.8.4.tar.gz
 docs/0.17
 docs/Makefile
 docs/about.rst
@@ -52,3 +51,4 @@ src/scalecast/__pycache__/MVGrids.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
 src/scalecast/__pycache__/multiseries.cpython-38.pyc
 src/scalecast/__pycache__/notebook.cpython-38.pyc
+src/scalecast/__pycache__/results_vis_mv.cpython-38.pyc
