@@ -524,6 +524,7 @@ class Forecaster:
             "fitted_values",
             "regr",
             "X",
+            "Xvars",
             "feature_importance",
             "summary_stats",
             "models",
@@ -808,7 +809,7 @@ class Forecaster:
             **kwargs,
         ).fit()
         p = (
-            pd.DataFrame({k: v for k, v in self.future_xreg.items() if k in self.Xvars})
+            pd.DataFrame({k: v for k, v in self.future_xreg.items() if k in Xvars})
             if Xvars is not None
             else None
         )
@@ -3946,7 +3947,7 @@ class Forecaster:
                 if 'auto', uses the same forecast length as saved in the object currently.
                 if int, uses that as the forecast length.
             n_iter (int): default 10. the number of iterations to backcast.
-                models will iteratively trained on all data before the fcst_length worth of values.
+                models will iteratively train on all data before the fcst_length worth of values.
                 each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
 
         Returns:
