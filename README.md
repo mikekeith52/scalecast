@@ -6,9 +6,9 @@
 
 ## About
 
-Scalecast is a package meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results, usually on small-to-medium sized datasets (less than 1,000 data points). It can certainly be used for larger, more complex datasets, but probably isn't the best option for such a task. It is meant for standardizing and scaling an approach to many smaller series. For a package with more emphasis on deep learning and larger datasets that offers many of the same features as scalecast, [darts](https://unit8co.github.io/darts/) is recommended.
+Scalecast is a light-weight modeling procedure and model wrapper meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results, usually on small-to-medium sized datasets (less than 1,000 data points). It can certainly be used for larger, more complex datasets, but if you are looking for a package with more emphasis on deep learning that offers many of the same features as scalecast, [darts](https://unit8co.github.io/darts/) is recommended.
 
-Scalecast has the following estimators available: 
+Scalecast provides a Forecaster wrapper around the following estimators: 
 - Any regression model from [Sklearn](https://scikit-learn.org/stable/), including Sklearn APIs (like [Xgboost](https://xgboost.readthedocs.io/en/stable/), and [LightGBM](https://lightgbm.readthedocs.io/en/latest/)).
 - Recurrent neural nets from [Keras TensorFlow](https://keras.io/)
 - Classic econometric models from [statsmodels](https://www.statsmodels.org/stable/): Holt-Winters Exponential Smoothing and ARIMA
