@@ -42,6 +42,7 @@ from sklearn.ensemble import RandomForestRegressor as rf_
 from sklearn.linear_model import ElasticNet as elasticnet_
 from sklearn.svm import SVR as svr_
 from sklearn.neighbors import KNeighborsRegressor as knn_
+from sklearn.linear_model import SGDRegressor as sgd_
 
 # FUNCTIONS
 
@@ -138,6 +139,7 @@ _sklearn_imports_ = {
     "elasticnet": elasticnet_,
     "svr": svr_,
     "knn": knn_,
+    "sgd": sgd_,
 }
 _sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 
@@ -3928,25 +3930,24 @@ class Forecaster:
         df['Residuals'] = df['Actuals'] - df['FittedVals']
         return df
 
-    def backcast(self,model,fcst_length='auto',n_iter=10):
-        """ runs a backcast of a selected evaluated model over a certain 
+    def backtest(self,model,fcst_length='auto',n_iter=10):
+        """ runs a backtest of a selected evaluated model over a certain 
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
         all scoring is dynamic to give a true out-of-sample result.
         all metrics are specific to level data.
-        if you ran the model on level data initially, this process will be faster since test_only is set to True.
         two results are extracted: a dataframe of actuals and predictions across each iteration and
         a dataframe of test-set metrics across each iteration with a mean total as the last column.
         these results are stored in the Forecaster object's history and can be extracted by calling 
-        `export_backcast_metrics()` and `export_backcast_values()`.
-        combo models cannot be backcast and will raise an error if you attempt to do so.
+        `export_backtest_metrics()` and `export_backtest_values()`.
+        combo models cannot be backtest and will raise an error if you attempt to do so.
 
         Args:
-            model (str): the model to run the backcast for. use the model nickname.
+            model (str): the model to run the backtest for. use the model nickname.
             fcst_length (int or str): default 'auto'. 
                 if 'auto', uses the same forecast length as saved in the object currently.
                 if int, uses that as the forecast length.
-            n_iter (int): default 10. the number of iterations to backcast.
+            n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
                 each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
 
@@ -3968,7 +3969,7 @@ class Forecaster:
             
             f.set_test_length(fcst_length)
             f.set_estimator(f.history[model]['Estimator'])
-            descriptive_assert(f.estimator!='combo',ValueError,'combo models cannot be backcast')
+            descriptive_assert(f.estimator!='combo',ValueError,'combo models cannot be backtest')
             params = f.history[model]['HyperParams'].copy()
             if f.history[model]['Xvars'] is not None:
                 params['Xvars'] = f.history[model]['Xvars'][:]
@@ -3986,29 +3987,29 @@ class Forecaster:
             value_results[f'iter{i+1}preds'] = test_preds.iloc[:,2].values.copy()
 
         metric_results['mean'] = metric_results.mean(axis=1)
-        self.history[model]['BackcastMetrics'] = metric_results
-        self.history[model]['BackcastValues'] = value_results
+        self.history[model]['BacktestMetrics'] = metric_results
+        self.history[model]['BacktestValues'] = value_results
 
-    def export_backcast_metrics(self,model):
-        """ extracts the backcast metrics for a given model.
-        only works if `backcast()` has been called.
+    def export_backtest_metrics(self,model):
+        """ extracts the backtest metrics for a given model.
+        only works if `backtest()` has been called.
 
         Args:
             model (str): the model nickname to extract metrics for.
 
         Returns:
-            (DataFrame): a copy of the backcast metrics.
+            (DataFrame): a copy of the backtest metrics.
         """
-        return self.history[model]['BackcastMetrics'].copy()
+        return self.history[model]['BacktestMetrics'].copy()
 
-    def export_backcast_values(self,model):
-        """ extracts the backcast values for a given model.
-        only works if `backcast()` has been called.
+    def export_backtest_values(self,model):
+        """ extracts the backtest values for a given model.
+        only works if `backtest()` has been called.
 
         Args:
             model (str): the model nickname to extract values for.
 
         Returns:
-            (DataFrame): a copy of the backcast values.
+            (DataFrame): a copy of the backtest values.
         """
-        return self.history[model]['BackcastValues'].copy()
+        return self.history[model]['BacktestValues'].copy()

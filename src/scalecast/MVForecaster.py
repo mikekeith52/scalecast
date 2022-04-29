@@ -1382,8 +1382,8 @@ class MVForecaster:
         """
         return self.history[model]['grid_evaluated'].copy()
 
-    def backcast(self,model,fcst_length='auto',n_iter=10):
-        """ runs a backcast of a selected evaluated model over a certain 
+    def backtest(self,model,fcst_length='auto',n_iter=10):
+        """ runs a backtest of a selected evaluated model over a certain 
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
         all scoring is dynamic to give a true out-of-sample result.
@@ -1391,14 +1391,14 @@ class MVForecaster:
         two results are extracted: a dataframe of actuals and predictions across each iteration and
         a dataframe of test-set metrics across each iteration with a mean total as the last column.
         these results are stored in the Forecaster object's history and can be extracted by calling 
-        `export_backcast_metrics()` and `export_backcast_values()`.
+        `export_backtest_metrics()` and `export_backtest_values()`.
 
         Args:
-            model (str): the model to run the backcast for. use the model nickname.
+            model (str): the model to run the backtest for. use the model nickname.
             fcst_length (int or str): default 'auto'. 
                 if 'auto', uses the same forecast length as saved in the object currently.
                 if int, uses that as the forecast length.
-            n_iter (int): default 10. the number of iterations to backcast.
+            n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
                 each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
 
@@ -1443,30 +1443,30 @@ class MVForecaster:
                 value_results[f'{s}_iter{i+1}actuals'] = test_preds[f'{s}_actuals']
                 value_results[f'{s}_iter{i+1}preds'] = test_preds[f'{s}_{model}_test_preds']
         metric_results['mean'] = metric_results.mean(axis=1)
-        self.history[model]['BackcastMetrics'] = metric_results
-        self.history[model]['BackcastValues'] = value_results
+        self.history[model]['BacktestMetrics'] = metric_results
+        self.history[model]['BacktestValues'] = value_results
         # TODO: value_results can be a dataframe subclass with a custom plot() method
     
-    def export_backcast_metrics(self,model):
-        """ extracts the backcast metrics for a given model.
-        only works if `backcast()` has been called.
+    def export_backtest_metrics(self,model):
+        """ extracts the backtest metrics for a given model.
+        only works if `backtest()` has been called.
 
         Args:
             model (str): the model nickname to extract metrics for.
 
         Returns:
-            (DataFrame): a copy of the backcast metrics.
+            (DataFrame): a copy of the backtest metrics.
         """
-        return self.history[model]['BackcastMetrics'].copy()
+        return self.history[model]['BacktestMetrics'].copy()
 
-    def export_backcast_values(self,model):
-        """ extracts the backcast values for a given model.
-        only works if `backcast()` has been called.
+    def export_backtest_values(self,model):
+        """ extracts the backtest values for a given model.
+        only works if `backtest()` has been called.
 
         Args:
             model (str): the model nickname to extract values for.
 
         Returns:
-            (DataFrame): a copy of the backcast values.
+            (DataFrame): a copy of the backtest values.
         """
-        return self.history[model]['BackcastValues'].copy()
+        return self.history[model]['BacktestValues'].copy()

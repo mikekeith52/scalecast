@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.9.2]
+### Added
+- Added `SGDRegressor` from sklearn as a default estimator (sgd)
+### Changed
+- Changed "backcast" nomenclature to "backtest", which is what it really is (oops!)
+### Fixed
+
 ## [0.9.1] - 2022-04-21
 ### Added
 ### Changed
