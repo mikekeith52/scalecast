@@ -2727,27 +2727,29 @@ class Forecaster:
             return
 
         metrics = []
-        for i, v in self.grid.iterrows():
+        iters = self.grid.shape[0]
+        for i in range(iters):
             try:
+                hp = {k:v[i] for k,v in self.grid.to_dict(orient='list').items()}
                 if self.estimator in _sklearn_estimators_:
                     metrics.append(
                         self._forecast_sklearn(
                             fcster=self.estimator,
                             tune=True,
                             dynamic_testing=dynamic_tuning,
-                            **v,
+                            **hp,
                         )
                     )
                 else:
                     metrics.append(
-                        getattr(self, f"_forecast_{self.estimator}")(tune=True, **v)
+                        getattr(self, f"_forecast_{self.estimator}")(tune=True,**hp)
                     )
             except TypeError:
                 raise
             except Exception as e:
                 self.grid.drop(i, axis=0, inplace=True)
                 logging.warning(
-                    f"could not evaluate the paramaters: {dict(v)}. error: {e}"
+                    f"could not evaluate the paramaters: {hp}. error: {e}"
                 )
 
         if len(metrics) > 0:
@@ -2760,14 +2762,12 @@ class Forecaster:
                     self.grid_evaluated["metric_value"]
                     == self.grid_evaluated["metric_value"].max()
                 ].index.to_list()[0]
-                self.best_params = dict(self.grid.loc[best_params_idx])
             else:
                 best_params_idx = self.grid.loc[
                     self.grid_evaluated["metric_value"]
                     == self.grid_evaluated["metric_value"].min()
                 ].index.to_list()[0]
-                self.best_params = dict(self.grid.loc[best_params_idx])
-
+            self.best_params = {k: v[best_params_idx] for k, v in self.grid.to_dict(orient='series').items()}
             self.validation_metric_value = self.grid_evaluated.loc[
                 best_params_idx, "metric_value"
             ]

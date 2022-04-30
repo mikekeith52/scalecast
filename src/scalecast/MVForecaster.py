@@ -413,10 +413,17 @@ class MVForecaster:
                 raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the MVGrids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
 
         metrics = {f'y{i+1}_metric':[] for i in range(self.n_series)}
-        for i, v in self.grid.iterrows():
+        iters = self.grid.shape[0]
+        for i in range(iters):
             try:
                 # returns a dict
-                val_preds, val_ac = self._forecast(fcster=self.estimator,tune=True,dynamic_testing=dynamic_tuning,**v)
+                hp = {k:v[i] for k,v in self.grid.to_dict(orient='list').items()}
+                val_preds, val_ac = self._forecast(
+                    fcster=self.estimator,
+                    tune=True,
+                    dynamic_testing=dynamic_tuning,
+                    **hp
+                )
                 for series, a in val_ac.items():
                     metrics[series + '_metric'].append(globals()[self.validation_metric](a,val_preds[series]))
             except TypeError:
@@ -424,7 +431,7 @@ class MVForecaster:
             except Exception as e:
                 self.grid.drop(i, axis=0, inplace=True)
                 logging.warning(
-                    f"could not evaluate the paramaters: {dict(v)}. error: {e}"
+                    f"could not evaluate the paramaters: {hp}. error: {e}"
                 )
         metrics = pd.DataFrame(metrics)
         if metrics.shape[0] > 0:
@@ -442,14 +449,13 @@ class MVForecaster:
                     self.grid_evaluated["optimized_metric"]
                     == self.grid_evaluated["optimized_metric"].max()
                 ].index.to_list()[0]
-                self.best_params = dict(self.grid.loc[best_params_idx])
             else:
                 best_params_idx = self.grid.loc[
                     self.grid_evaluated["optimized_metric"]
                     == self.grid_evaluated["optimized_metric"].min()
                 ].index.to_list()[0]
-                self.best_params = dict(self.grid.loc[best_params_idx])
-
+                
+            self.best_params = {k: v[best_params_idx] for k, v in self.grid.to_dict(orient='series').items()}
             self.validation_metric_value = self.grid_evaluated.loc[
                 best_params_idx, "optimized_metric"
             ]

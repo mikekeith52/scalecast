@@ -1,7 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.9.2]
+## [0.9.4] - 2022-04-29
+### Added
+### Changed
+### Fixed
+- fixed an issue where data types get changed from int to float when grid searching
+
+## [0.9.2] - 2022-04-29
 ### Added
 - Added `SGDRegressor` from sklearn as a default estimator (sgd)
 ### Changed
