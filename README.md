@@ -1,4 +1,4 @@
-# 🌄 Scalecast: The practioner's time series forecasting library
+# 🌄 Scalecast: The practitioner's time series forecasting library
 
 <p align="center">
   <img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" />
