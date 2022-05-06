@@ -778,9 +778,12 @@ class Forecaster:
         Xvars_orig = None if Xvars is None else None if len(Xvars) == 0 else Xvars
         test_length = self.test_length if not tune else self.validation_length + self.test_length
         Xvars, y, X = prepare_data(Xvars, self.y, self.current_xreg)
-        X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
         if Xvars_orig is None:
             X, X_train, X_test, Xvars = None, None, None, None
+            y_train = y[:-test_length]
+            y_test = y[-test_length:]
+        else:
+            X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
         regr = ARIMA(
             y_train,
             exog=X_train,
@@ -957,9 +960,7 @@ class Forecaster:
 
         def _forecast_sk(df, Xvars, validation_length, test_length, forecast_length):
             test_length = test_length if test_length > 0 else -(df.shape[0] + 1)
-            validation_length = (
-                validation_length if validation_length > 0 else -(df.shape[0] + 1)
-            )
+            validation_length = (validation_length if validation_length > 0 else -(df.shape[0] + 1))
             pred_df = df.iloc[:-test_length, :].dropna()
             if validation_length > 0:
                 pred_df.loc[:-validation_length, "y"] = None
@@ -979,6 +980,7 @@ class Forecaster:
                     ),  # makes it very much faster
                 ),
             )
+            print(result.forecast.df.tail(25))
             return (
                 result.forecast.df["forecast"].to_list(),
                 result.model[-1].summary().info_dict["coef_summary_df"],

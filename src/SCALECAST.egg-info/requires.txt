@@ -11,3 +11,4 @@ seaborn
 xgboost
 lightgbm
 openpyxl
+pandas-datareader

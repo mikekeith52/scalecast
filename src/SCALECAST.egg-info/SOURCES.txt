@@ -1,4 +1,5 @@
 CODE_OF_CONDUCT.md
+Contributing.md
 MANIFEST
 README.md
 license.txt
@@ -11,6 +12,7 @@ __pycache__/Grids.cpython-38.pyc
 assets/logo2.png
 assets/main_forecast.png
 assets/main_forecast_test_set.png
+dist/SCALECAST-0.9.4.tar.gz
 docs/0.17
 docs/Makefile
 docs/about.rst
