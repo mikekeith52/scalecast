@@ -1,8 +1,10 @@
 About
 ========
-Scalecast is a light-weight modeling procedure and model wrapper meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results, usually on small-to-medium sized datasets (less than 1,000 data points). It can certainly be used for larger, more complex datasets, but if you are looking for a package with more emphasis on deep learning that offers many of the same features as scalecast, `darts <https://unit8co.github.io/darts/>`_ is recommended.
+Scalecast is a light-weight modeling procedure and wrapper meant for those who are looking for the fastest way possible to apply, tune, and validate many different model classes for forecasting applications. In the Data Science industry, it is often asked of practitioners to deliver predictions and ranges of predictions for several lines of businesses or data slices, 100s or even 1000s. In such situations, it is common to see a simple linear regression or some other quick procedure applied to all lines due to the complexity of the task. This works well enough for people who need to deliver something, but more can be achieved.  
 
-Scalecast provides a Forecaster wrapper around the following estimators: 
+The scalecast package was designed to address this situation and offer advanced machine learning models that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
+
+The library provides the Forecaster (for one series) and MVForecaster (for multiple series) wrappers around the following estimators: 
 
 * Any regression model from `Sklearn <https://scikit-learn.org/stable/>`_, including Sklearn APIs (like `Xgboost <https://xgboost.readthedocs.io/en/stable/>`_ and `LightGBM <https://lightgbm.readthedocs.io/en/latest/>`_)
 
@@ -14,7 +16,7 @@ Scalecast provides a Forecaster wrapper around the following estimators:
 
 * `LinkedIn Silverkite <https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library>`_
 
-* Native combo/ensemble model
+* Average, weighted average, and spliced models
 
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
 | Scalecast Model  | ARComponents | ExogComponents  | SeasComponents  | Trends | AutoHoliday | MultSeries | Linear | NonLinear |
@@ -37,21 +39,3 @@ Scalecast provides a Forecaster wrapper around the following estimators:
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
 | Combo            | This model is a simple average, weighted average, or splice of 2+ already evaluated models.               |
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
-
-The above table might be overly simplistic, but gives an idea of the various ways different models can be specified using scalecast.  
-
-Scalecast offers the following advantages:  
-
-* All models are validated out-of-sample with dynamic multi-step forecasting and this process extends to the future automatically, making implementation of any model on any series fast!
-
-* Most models can be tuned by using a grid search on a validation slice of data.
-
-* The package relies on new object types as little as possible, with only two native classes that each behave logically and with explicit commands. 
-  
-  * When a list-like object is required in an argument, lists, tuples, arrays, series, or other similar objects are all accepted.
-  
-  * Calling esitmators or scaling the data requires ``str`` arguments, which the objects know how to parse.
-
-* Many different approaches are available for mixing and matching time series concepts.
-
-Next, check out how to install the library and get started!

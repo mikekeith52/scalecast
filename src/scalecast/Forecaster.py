@@ -2227,9 +2227,9 @@ class Forecaster:
         called="COVID19",
         start=datetime.datetime(2020, 3, 15),
         end=datetime.datetime(2021, 5, 13),
-    ):  # default is from when disney world closed to the end of the national (USA) mask mandate
+    ):
         """ adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise.
-        this function may be out of date as the pandemic has lasted longer than most expected, but we are keeping it for now.
+        the default dates are selected to be optimized for the time-span where the economy was most impacted by COVID.
 
         Args:
             called (str): default 'COVID19'.

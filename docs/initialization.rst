@@ -92,4 +92,4 @@ If you want to predict two or more series together and use the lags of all to pr
     mvf.plot(ci=True)
     plt.show()
 
-These are simple procedures that barely scratch the surface of what scalecast can do! Happy reading!
+These are simple procedures that barely scratch the surface of what scalecast can do. Be sure to check out the `examples <https://scalecast-examples.readthedocs.io/en/latest/>`_ if you want more.

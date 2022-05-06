@@ -13,7 +13,7 @@ setup(
   name = 'SCALECAST',
   version = version,
   license='MIT',
-  description='Easy dynamic time series forecasting in Python',
+  description="The practitioner's time series forecasting library",
   long_description=long_description,
   long_description_content_type='text/markdown',
   author = 'Michael Keith',
@@ -39,6 +39,7 @@ setup(
     'seaborn',
     'xgboost',
     'lightgbm',
-    'openpyxl'
+    'openpyxl',
+    'pandas-datareader',
   ],
 )

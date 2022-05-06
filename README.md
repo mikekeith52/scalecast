@@ -6,17 +6,20 @@
 
 ## About
 
-Scalecast is a light-weight modeling procedure and model wrapper meant for those who have at least an intermediate understanding of time series forecasting theory and want to cut the tedious part of data processing, applying autoregression to models, differencing and undifferencing series, and visualizing results, usually on small-to-medium sized datasets (less than 1,000 data points). It can certainly be used for larger, more complex datasets, but if you are looking for a package with more emphasis on deep learning that offers many of the same features as scalecast, [darts](https://unit8co.github.io/darts/) is recommended.
+Scalecast is a light-weight modeling procedure and wrapper meant for those who are looking for the fastest way possible to apply, tune, and validate many different model classes for forecasting applications. In the Data Science industry, it is often asked of practitioners to deliver predictions and ranges of predictions for several lines of businesses or data slices, 100s or even 1000s. In such situations, it is common to see a simple linear regression or some other quick procedure applied to all lines due to the complexity of the task. This works well enough for people who need to deliver something, but more can be achieved.  
 
-Scalecast provides a Forecaster wrapper around the following estimators: 
+The scalecast package was designed to address this situation and offer advanced machine learning models that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
+
+The library provides the Forecaster (for one series) and MVForecaster (for multiple series) wrappers around the following estimators: 
+
 - Any regression model from [Sklearn](https://scikit-learn.org/stable/), including Sklearn APIs (like [Xgboost](https://xgboost.readthedocs.io/en/stable/), and [LightGBM](https://lightgbm.readthedocs.io/en/latest/)).
 - Recurrent neural nets from [Keras TensorFlow](https://keras.io/)
 - Classic econometric models from [statsmodels](https://www.statsmodels.org/stable/): Holt-Winters Exponential Smoothing and ARIMA
 - [Facebook Prophet](https://facebook.github.io/prophet)
 - [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
-- Native combo/ensemble model
+- Average, weighted average, and spliced models
 
-A very simple scalecast process to load data, add regressors, and create validated forecasts looks like this:
+A simple scalecast process to load data, add regressors, and create validated forecasts looks like this:
 
 ```python
 import pandas as pd
@@ -25,21 +28,41 @@ import matplotlib.pyplot as plt
 from scalecast import GridGenerator
 from scalecast.Forecaster import Forecaster
 
-models = ('mlr','knn','svr','xgboost','elasticnet','mlp','prophet')
+# choose models:
+models = (
+    'mlr',
+    'knn',
+    'svr',
+    'xgboost',
+    'elasticnet',
+    'mlp',
+    'prophet',
+)
+# read data:
 df = pdr.get_data_fred('HOUSTNSA',start='2009-01-01',end='2021-06-01')
+
+# import validation grids to tune models:
 GridGenerator.get_example_grids() # saves Grids.py with validation grids for each model that can be used to tune the forecasts
+
+# create the Forecaster object
 f = Forecaster(y=df.HOUSTNSA,current_dates=df.index) # to initialize, specify y and current_dates (must be arrays of the same length)
+
+# prepare forecasts:
 f.set_test_length(12) # specify a test length for your models - do this before eda
 f.generate_future_dates(24) # this will create future dates that are on the same interval as the current dates and it will also set the forecast length
-f.add_ar_terms(4) # add AR terms before differencing
-f.add_AR_terms((2,12)) # seasonal AR terms
+f.add_ar_terms(4) # add lagged y terms before differencing
+f.add_AR_terms((2,12)) # seasonal lagged terms
 f.integrate() # automatically decides if the y term and all ar terms should be differenced to make the series stationary
-f.add_seasonal_regressors('month',raw=False,sincos=True) # uses pandas attributes: raw=True creates integers (default), sincos=True creates wave functions
-f.add_seasonal_regressors('year')
-f.add_covid19_regressor() # dates are flexible, default is from when disney world closed to when US CDC lifted mask recommendations
+f.add_seasonal_regressors('month',raw=False,sincos=True) # uses pandas attributes: raw=True creates integers (default), sincos=True creates fourier transformations, dummy=True also available
+f.add_seasonal_regressors('year') # to capture the yearly trend
+f.add_covid19_regressor() # dates are flexible, default is from when disney world closed to when US CDC lifted mask recommendations, the dates most likely to have affected the economy
 f.add_time_trend()
 f.set_validation_length(6) # length, different than test_length, to tune the hyperparameters 
+
+# call forecasts (tunes hyperparameters, tests, forecasts into future)
 f.tune_test_forecast(models)
+
+# plot results
 f.plot_test_set(models='top_3',order_by='LevelTestSetMAPE',ci=True) # plots the differenced test set with confidence intervals
 plt.show()
 f.plot(order_by='LevelTestSetMAPE',level=True) # plots the level forecast
@@ -49,27 +72,16 @@ plt.show()
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast.png)
 
 ## Installation
-1. `pip install scalecast`  
-    - installs the base package and most dependencies
-2. `pip install fbprophet`
-    - only necessary if you plan to forecast with Facebook prophet models
-    - to resolve a common installation issue, see this [Stack Overflow post](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet)
-3. `pip install greykite`
-    - only necessary if you plan to forecast with LinkedIn Silverkite
-4. If using notebook:
-    - `pip install tqdm`
-    - `pip install ipython`
-    - `pip install ipywidgets`
-    - `jupyter nbextension enable --py widgetsnbextension`
-    - if using Jupyter Lab: `jupyter labextension install @jupyter-widgets/jupyterlab-manager`
-
-## Initialization
-```python
-from scalecast.Forecaster import Forecaster
-array_of_dates = ['2021-01-01','2021-01-02','2021-01-03']
-array_of_values = [1,2,3]
-f = Forecaster(y=array_of_values, current_dates=array_of_dates)
-```
+- Base package only: `pip install scalecast`  
+- Prophet installs separately due to how big it is: `pip install fbprophet`
+  - to resolve a common installation issue for Anaconda, see this [Stack Overflow post](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet)
+- Greykite also installs separately: `pip install greykite`
+- Notebook functions require:
+  - `pip install tqdm`
+  - `pip install ipython`
+  - `pip install ipywidgets`
+  - `jupyter nbextension enable --py widgetsnbextension`
+  - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (if using Lab)
 
 ## Links
 |Links||
