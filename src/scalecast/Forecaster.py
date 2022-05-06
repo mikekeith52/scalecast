@@ -980,7 +980,6 @@ class Forecaster:
                     ),  # makes it very much faster
                 ),
             )
-            print(result.forecast.df.tail(25))
             return (
                 result.forecast.df["forecast"].to_list(),
                 result.model[-1].summary().info_dict["coef_summary_df"],
