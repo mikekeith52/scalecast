@@ -3735,13 +3735,13 @@ class Forecaster:
         return self.history[model]["feature_importance"]
 
     def export_validation_grid(self, model) -> pd.DataFrame:
-        """ exports the validation from a model.
-            raises an error if you never tuned the model.
+        """ exports the validation grid from a model.
+        raises an error if the model was not tuned.
 
         Args:
             model (str):
                 the name of them model to export for.
-                matches what was passed to call_me when calling the forecast (default is estimator name)
+                matches what was passed to call_me when calling the forecast.
 
         Returns:
             (DataFrame): The resulting validation grid of the evaluated model passed to model arg.
