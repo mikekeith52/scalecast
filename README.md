@@ -72,16 +72,16 @@ plt.show()
 ![](https://github.com/mikekeith52/scalecast/blob/main/assets/main_forecast.png)
 
 ## Installation
-- Base package only: `pip install scalecast`  
-- Prophet installs separately due to how big it is: `pip install fbprophet`
-  - to resolve a common installation issue for Anaconda, see this [Stack Overflow post](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet)
-- Greykite also installs separately: `pip install greykite`
-- Notebook functions require:
-  - `pip install tqdm`
-  - `pip install ipython`
-  - `pip install ipywidgets`
-  - `jupyter nbextension enable --py widgetsnbextension`
-  - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (if using Lab)
+- Only the base package is needed to get started:  
+`pip install scalecast`  
+- Optional add-ons:  
+`pip install fbprophet` (prophet model--see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
+`pip install greykite` (silverkite model)  
+`pip install tqdm` (progress bar with notebook)  
+`pip install ipython` (widgets with notebook)  
+`pip install ipywidgets` (widgets with notebook)  
+`jupyter nbextension enable --py widgetsnbextension` (widgets with notebook)  
+`jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets with Lab)  
 
 ## Links
 |Links||
