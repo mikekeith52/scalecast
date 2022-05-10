@@ -626,7 +626,7 @@ class MVForecaster:
         """
         def prepare_data(lags):
             observed = pd.DataFrame(self.current_xreg)
-            future = pd.DataFrame(self.future_xreg)
+            future = pd.DataFrame(self.future_xreg,index=range(len(self.future_dates)))
             for i in range(self.n_series):
                 if str(lags).isnumeric() or isinstance(lags,float):
                     lags = int(lags)
@@ -1433,6 +1433,7 @@ class MVForecaster:
                     getattr(f,f'series{k+1}')['y'] = pd.Series(getattr(f,f'series{k+1}')['y'].values[:-i])
                     getattr(f,f'series{k+1}')['levely'] = getattr(f,f'series{k+1}')['levely'][:-i]
                 f.future_dates = pd.Series(f.future_dates.values[:-i])
+                f.future_xreg = {k:v[:-i] for k, v in f.future_xreg.items()}
 
             f.set_test_length(fcst_length)
             f.set_estimator(f.history[model]['Estimator'])

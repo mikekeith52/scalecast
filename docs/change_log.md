@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.9.7] - 2022-05-10
+### Added
+### Changed
+### Fixed
+- fixed an issue where `MVForecaster` was not generating the correct forecast horizon worth of values for models run with lags only (no seasonality or trends)
+
 ## [0.9.6] - 2022-05-06
 ### Added
 ### Changed
