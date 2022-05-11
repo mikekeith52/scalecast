@@ -28,10 +28,6 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 
 import copy
 
-# LOGGING
-logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-logging.captureWarnings(True)
-
 # sklearn imports below
 from sklearn.linear_model import LinearRegression as mlr_
 from sklearn.neural_network import MLPRegressor as mlp_
@@ -183,57 +179,6 @@ _colors_ = [
     "#BDB76B",
     "#DEB887",
 ] * 10
-_adder_funcs_ = [
-    'add_ar_terms',
-    'add_AR_terms',
-    'add_seasonal_regressors',
-    'add_time_trend',
-    'add_other_regressor',
-    'add_covid19_regressor',
-    'add_combo_regressors',
-    'add_poly_terms',
-    'add_exp_terms',
-    'add_logged_terms',
-    'add_pt_terms',
-    'add_diffed_terms',
-    'add_lagged_terms',
-    'add_sklearn_estimator',
-    'add_cycle',
-]
-_exporter_funcs_ = [
-    'export',
-    'export_summary_stats',
-    'export_feature_importance',
-    'export_validation_grid',
-    'all_feature_info_to_excel',
-    'all_validation_grids_to_excel',
-    'export_Xvars_df',
-    'export_forecasts_with_cis',
-    'export_test_set_preds_with_cis',
-    'export_fitted_vals',
-]
-_setter_funcs_ = [
-    'set_last_future_date',
-    'set_test_length',
-    'set_validation_length',
-    'set_cilevel',
-    'set_bootstrap_samples',
-    'set_estimator',
-    'set_validation_metric',
-]
-_plotter_funcs_ = [
-    'plot_acf',
-    'plot_pacf',
-    'plot_periodogram',
-    'seasonal_decompose',
-    'plot',
-    'plot_test_set',
-    'plot_fitted',
-]
-_getter_funcs_ = [
-    'get_regressor_names',
-    'get_freq',
-]
 _not_hyperparams_ = ["Xvars", "normalizer", "tuned", "plot_loss","plot_loss_test"]
 
 # DESCRIPTIVE ERRORS
@@ -272,6 +217,8 @@ class Forecaster:
             setattr(self, key, value)
 
         self.typ_set()  # ensures that the passed values are the right types
+        logging.basicConfig(filename="warnings.log", level=logging.WARNING)
+        logging.captureWarnings(True)
 
     def __copy__(self):
         obj = type(self).__new__(self.__class__)
@@ -327,19 +274,6 @@ class Forecaster:
             self.cilevel,
             self.bootstrap_samples,
             None if not hasattr(self,'estimator') else self.estimator)
-
-    def get_funcs(self,which) -> list:
-        """ returns a group of functions based on what's passed to `which`
-        
-        Args:
-            which (str): one of {'adder','exporter','setter','plotter','getter'}
-        
-        Returns:
-            (list): the names of the relevant functions
-
-        >>> f.get_funcs('adder')
-        """
-        return globals()[f'_{which}_funcs_']
 
     def _split_data(self, X, y, test_length, tune):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_length, shuffle=False)

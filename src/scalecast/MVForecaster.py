@@ -23,10 +23,6 @@ from scalecast.Forecaster import (
 )
 import copy
 
-# LOGGING
-logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-logging.captureWarnings(True)
-
 _series_colors_ = [
     '#0000FF',
     '#00FFFF', 
@@ -145,6 +141,9 @@ class MVForecaster:
             self.name_series_map = {names[i]:[f'series{i+1}',f'y{i+1}'] for i in range(self.n_series)}
             self.y_name_map = {f'y{i+1}':names[i] for i in range(self.n_series)}
             self.series_name_map = {f'series{i+1}':names[i] for i in range(self.n_series)}
+
+        logging.basicConfig(filename="warnings.log", level=logging.WARNING)
+        logging.captureWarnings(True)
 
     def __repr__(self):
         return """MVForecaster(
@@ -1477,3 +1476,71 @@ class MVForecaster:
             (DataFrame): a copy of the backtest values.
         """
         return self.history[model]['BacktestValues'].copy()
+
+    def corr(self,train_only=False,disp='matrix',df=None,**kwargs):
+        """ displays pearson correlation between all stored series in object, at whatever level they are stored.
+
+        Args:
+            train_only (bool): default False.
+                whether to only include the training set (to avoid leakage).
+            disp (str): one of {'matrix','heatmap'}, default 'matrix'.
+                how to display results.
+            df (DataFrame): optional. a dataframe to display correlation for.
+                if specified, a dataframe will be created using all series with no lags.
+                this argument exists to make the corr_lags() method work and it is not recommended to use it manually.
+            **kwargs: passed to seaborn.heatmap() function and are ignored if disp == 'matrix'.
+
+        Returns:
+            (DataFrame or Figure): the created dataframe if disp == 'matrix' else the heatmap fig.
+        """
+        if df is None:
+            series, labels = self._parse_series('all')
+            df = pd.DataFrame({labels[n]:getattr(self,f'series{n+1}')['y'] for n in range(self.n_series)})
+
+        if train_only:
+            df = df.iloc[:-self.test_length]
+
+        corr = df.corr()
+        if disp == 'matrix':
+            logging.warning(f'{kwargs} ignored')
+            return corr
+
+        elif disp == 'heatmap':
+            _, ax = plt.subplots()
+            sns.heatmap(corr,**kwargs,ax=ax)
+            return ax
+
+        else:
+            raise ValueError(f'disp must be one of "matrix","heatmap", got {disp}')
+
+
+    def corr_lags(self,y='series1',x='series2',lags=1,**kwargs):
+        """ displays pearson correlation between one series and another series' lags.
+
+        Args:
+            y (str): default 'series1'. the series to display as the dependent series.
+                can use 'series{n}', 'y{n}' or user-selected name.
+            x (str): default 'series2'. the series to display as the independent series.
+                can use 'series{n}', 'y{n}' or user-selected name.
+            lags (int): default 1. the number of lags to display in the independent series.
+            **kwargs: passed to the MVForecaster.corr() method. will not pass the df arg.
+
+        Returns:
+            (DataFrame or Figure): the created dataframe if disp == 'matrix' else the heatmap fig.
+        """
+        series1, label1 = self._parse_series(y)
+        series2, label2 = self._parse_series(x)
+
+        df = pd.DataFrame(
+            {
+                label1[0]:getattr(self,'series'+series1[0].split('y')[-1])['y'],
+                label2[0]:getattr(self,'series'+series2[0].split('y')[-1])['y'],
+            }
+        )
+
+        for i in range(lags):
+            df[label2[0]+f'_lag{i+1}'] = df[label2[0]].shift(i+1)
+
+        df = df.dropna()
+        return self.corr(df=df,**kwargs)
+

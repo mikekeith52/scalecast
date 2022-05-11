@@ -2,12 +2,13 @@
 from setuptools import setup, find_packages
 import shutil
 from src.scalecast.__init__ import __version__ as version
+import os
 
-logo = """<p align="center">
-  <img src="https://github.com/mikekeith52/scalecast/blob/main/assets/logo2.png" />
-</p>"""
+if os.path.exists('warnings.log'):
+  os.remove('warnings.log')
+  os.system('jupyter nbconvert --execute --to markdown README.ipynb')
 
-long_description = open('README.md', 'r', encoding="UTF-8").read().replace(logo,"")
+long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
