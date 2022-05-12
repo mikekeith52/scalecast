@@ -43,8 +43,8 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 ## Example
 
 Let's say we wanted to forecast each of the 1-year, 5-year, 10-year, 20-year, and 30-year corporate bond rates through the next 12 months. There are two ways we could do this with scalecast:  
-1. Forecast each series individually (univariate)  
-2. Forecast all series together (multivariate)  
+1. Forecast each series individually (univariate): they will only have their own histories and any exogenous regressors we add to make forecasts. One series is predicted forward dynamically at a time.  
+2. Forecast all series together (multivariate): they will have their own histories, exogenous regressors, and each other's histories to make forecasts. All series will be predicted forward dynamically at the same time.    
 
 
 ```python
@@ -134,18 +134,18 @@ def prepare_fcst(f):
 ```
 
 #### Add seasonal regressors
-These are regressors like month, quarter, dayofweek, dayofyear, minute, hour, etc. Raw integer values, dummy variables, or fourier transformed variables are avialable to be applied this way.  
+These are regressors like month, quarter, dayofweek, dayofyear, minute, hour, etc. Raw integer values, dummy variables, or fourier transformed variables. They are determined by the series' own histories.  
 
 
 ```python
 def add_seasonal_regressors(f):
     f.add_seasonal_regressors('month',raw=False,sincos=True)
     f.add_seasonal_regressors('year')
-    f.add_seasonal_regressors('quarter',raw=False,dummy=True)
+    f.add_seasonal_regressors('quarter',raw=False,dummy=True,drop_first=True)
 ```
 
 #### Choose Autoregressive Terms
-A better way to do this would be to examine each series individually for autocorrelation, but this example uses three lags for each series and one seasonal seasonal lag (assuming 12-month seasonality).
+A better way to do this would be to examine each series individually for autocorrelation. This example uses three lags for each series and one seasonal seasonal lag (assuming 12-month seasonality).
 
 
 ```python
@@ -175,7 +175,7 @@ for k, f in f_dict.items():
     prepare_fcst(f)
     add_seasonal_regressors(f)
     add_ar_terms(f)
-    f.diff() # takes a first-difference in the series
+    f.integrate(critical_pval=0.01) # takes differences in series until they are stationary using the adf test
     tune_test_forecast(k,f,models)
 ```
 
@@ -335,16 +335,16 @@ results[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPara
       <th>2</th>
       <td>arima</td>
       <td>HQMCB1YR</td>
-      <td>5.053145</td>
-      <td>-4.459315</td>
+      <td>5.052915</td>
+      <td>-4.458788</td>
       <td>{'order': (1, 1, 1), 'seasonal_order': (0, 1, ...</td>
     </tr>
     <tr>
       <th>3</th>
       <td>xgboost</td>
       <td>HQMCB1YR</td>
-      <td>6.346458</td>
-      <td>-8.099860</td>
+      <td>5.881190</td>
+      <td>-6.700988</td>
       <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
     </tr>
     <tr>
@@ -375,8 +375,8 @@ results[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPara
       <th>7</th>
       <td>arima</td>
       <td>HQMCB5YR</td>
-      <td>1.693368</td>
-      <td>-7.332881</td>
+      <td>1.693632</td>
+      <td>-7.335685</td>
       <td>{'order': (1, 1, 1), 'seasonal_order': (0, 1, ...</td>
     </tr>
     <tr>
@@ -399,16 +399,16 @@ results[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPara
       <th>10</th>
       <td>xgboost</td>
       <td>HQMCB10YR</td>
-      <td>0.179618</td>
-      <td>0.271955</td>
+      <td>0.465610</td>
+      <td>-2.875923</td>
       <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
     </tr>
     <tr>
       <th>11</th>
       <td>arima</td>
       <td>HQMCB10YR</td>
-      <td>0.569389</td>
-      <td>-4.968184</td>
+      <td>0.569411</td>
+      <td>-4.968624</td>
       <td>{'order': (1, 1, 1), 'seasonal_order': (0, 1, ...</td>
     </tr>
     <tr>
@@ -439,17 +439,17 @@ results[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPara
       <th>15</th>
       <td>arima</td>
       <td>HQMCB20YR</td>
-      <td>0.118035</td>
-      <td>0.378294</td>
+      <td>0.118033</td>
+      <td>0.378309</td>
       <td>{'order': (1, 1, 1), 'seasonal_order': (0, 1, ...</td>
     </tr>
     <tr>
       <th>16</th>
       <td>knn</td>
       <td>HQMCB30YR</td>
-      <td>0.086472</td>
-      <td>0.559102</td>
-      <td>{'n_neighbors': 68}</td>
+      <td>0.075318</td>
+      <td>0.560975</td>
+      <td>{'n_neighbors': 22}</td>
     </tr>
     <tr>
       <th>17</th>
@@ -457,7 +457,7 @@ results[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPara
       <td>HQMCB30YR</td>
       <td>0.089038</td>
       <td>0.538360</td>
-      <td>{'l1_ratio': 0.25, 'alpha': 0.04040404040404041}</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.030303030303030304}</td>
     </tr>
     <tr>
       <th>18</th>
@@ -471,8 +471,8 @@ results[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPara
       <th>19</th>
       <td>arima</td>
       <td>HQMCB30YR</td>
-      <td>0.099879</td>
-      <td>0.498333</td>
+      <td>0.099816</td>
+      <td>0.498638</td>
       <td>{'order': (1, 1, 1), 'seasonal_order': (0, 1, ...</td>
     </tr>
   </tbody>
@@ -497,13 +497,13 @@ mv_models = (
 ```
 
 #### Create Grids
-We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as theirown lags) in each model that is called. Again, for mv forecasting, you can use:  
+We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as theirown lags) in each model that is called. Again, for mv forecasting, we can save default grids:  
 
 ```python
 GridGenerator.get_mv_grids()
 ```
 
-To save the MVGrids.py file to your working directory by default, which scalecast will know how to read.  
+This creates the MVGrids.py file in your working directory by default, which scalecast knows how to read.  
 
 
 ```python
@@ -544,7 +544,7 @@ mvf
         N_series=5
         SeriesNames=['HQMCB1YR', 'HQMCB5YR', 'HQMCB10YR', 'HQMCB20YR', 'HQMCB30YR']
         ForecastLength=12
-        Xvars=['monthsin', 'monthcos', 'year', 'quarter_1', 'quarter_2', 'quarter_3', 'quarter_4']
+        Xvars=['monthsin', 'monthcos', 'year', 'quarter_2', 'quarter_3', 'quarter_4']
         TestLength=53
         ValidationLength=12
         ValidationMetric=rmse
@@ -677,7 +677,7 @@ mvresults.columns
 
 
 ```python
-mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperParams']]
+mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperParams','Lags']]
 ```
 
 
@@ -706,6 +706,7 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>LevelTestSetMAPE</th>
       <th>LevelTestSetR2</th>
       <th>HyperParams</th>
+      <th>Lags</th>
     </tr>
   </thead>
   <tbody>
@@ -713,9 +714,10 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>0</th>
       <td>elasticnet</td>
       <td>HQMCB1YR</td>
-      <td>0.945331</td>
-      <td>0.218458</td>
-      <td>{'l1_ratio': 0.75, 'alpha': 0.7070707070707072}</td>
+      <td>1.030500</td>
+      <td>0.225427</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.030303030303030304}</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>1</th>
@@ -724,30 +726,34 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <td>3.793842</td>
       <td>-2.039209</td>
       <td>{}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>knn</td>
       <td>HQMCB1YR</td>
-      <td>1.524760</td>
-      <td>0.159438</td>
-      <td>{'n_neighbors': 26}</td>
+      <td>3.474530</td>
+      <td>-1.516816</td>
+      <td>{'n_neighbors': 4}</td>
+      <td>10</td>
     </tr>
     <tr>
       <th>3</th>
       <td>xgboost</td>
       <td>HQMCB1YR</td>
-      <td>6.137135</td>
-      <td>-7.077600</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 10, ...</td>
+      <td>5.670916</td>
+      <td>-6.105087</td>
+      <td>{'n_estimators': 250, 'scale_pos_weight': 10, ...</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>4</th>
       <td>elasticnet</td>
       <td>HQMCB5YR</td>
-      <td>0.367805</td>
-      <td>0.329170</td>
-      <td>{'l1_ratio': 0.75, 'alpha': 0.7070707070707072}</td>
+      <td>0.335826</td>
+      <td>0.317029</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.030303030303030304}</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>5</th>
@@ -756,30 +762,34 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <td>0.824692</td>
       <td>-0.856614</td>
       <td>{}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>6</th>
       <td>knn</td>
       <td>HQMCB5YR</td>
-      <td>0.375566</td>
-      <td>0.333009</td>
-      <td>{'n_neighbors': 26}</td>
+      <td>0.779814</td>
+      <td>-0.686044</td>
+      <td>{'n_neighbors': 4}</td>
+      <td>10</td>
     </tr>
     <tr>
       <th>7</th>
       <td>xgboost</td>
       <td>HQMCB5YR</td>
-      <td>1.177128</td>
-      <td>-2.750770</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 10, ...</td>
+      <td>0.950945</td>
+      <td>-1.413439</td>
+      <td>{'n_estimators': 250, 'scale_pos_weight': 10, ...</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>8</th>
       <td>elasticnet</td>
       <td>HQMCB10YR</td>
-      <td>0.145418</td>
-      <td>0.375622</td>
-      <td>{'l1_ratio': 0.75, 'alpha': 0.7070707070707072}</td>
+      <td>0.140970</td>
+      <td>0.357966</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.030303030303030304}</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>9</th>
@@ -788,30 +798,34 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <td>0.243091</td>
       <td>-0.063537</td>
       <td>{}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>10</th>
       <td>knn</td>
       <td>HQMCB10YR</td>
-      <td>0.139019</td>
-      <td>0.383252</td>
-      <td>{'n_neighbors': 26}</td>
+      <td>0.183685</td>
+      <td>0.205192</td>
+      <td>{'n_neighbors': 4}</td>
+      <td>10</td>
     </tr>
     <tr>
       <th>11</th>
       <td>xgboost</td>
       <td>HQMCB10YR</td>
-      <td>0.168247</td>
-      <td>0.151429</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 10, ...</td>
+      <td>0.228763</td>
+      <td>-0.546891</td>
+      <td>{'n_estimators': 250, 'scale_pos_weight': 10, ...</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>12</th>
       <td>elasticnet</td>
       <td>HQMCB20YR</td>
-      <td>0.096262</td>
-      <td>0.475912</td>
-      <td>{'l1_ratio': 0.75, 'alpha': 0.7070707070707072}</td>
+      <td>0.093214</td>
+      <td>0.478154</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.030303030303030304}</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>13</th>
@@ -820,30 +834,34 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <td>0.107826</td>
       <td>0.438056</td>
       <td>{}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>14</th>
       <td>knn</td>
       <td>HQMCB20YR</td>
-      <td>0.087558</td>
-      <td>0.509575</td>
-      <td>{'n_neighbors': 26}</td>
+      <td>0.101119</td>
+      <td>0.211878</td>
+      <td>{'n_neighbors': 4}</td>
+      <td>10</td>
     </tr>
     <tr>
       <th>15</th>
       <td>xgboost</td>
       <td>HQMCB20YR</td>
-      <td>0.318796</td>
-      <td>-3.920447</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 10, ...</td>
+      <td>0.287180</td>
+      <td>-3.125834</td>
+      <td>{'n_estimators': 250, 'scale_pos_weight': 10, ...</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>16</th>
       <td>elasticnet</td>
       <td>HQMCB30YR</td>
-      <td>0.089038</td>
-      <td>0.538360</td>
-      <td>{'l1_ratio': 0.75, 'alpha': 0.7070707070707072}</td>
+      <td>0.089549</td>
+      <td>0.536687</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.030303030303030304}</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>17</th>
@@ -852,22 +870,25 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <td>0.084045</td>
       <td>0.558262</td>
       <td>{}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>18</th>
       <td>knn</td>
       <td>HQMCB30YR</td>
-      <td>0.082244</td>
-      <td>0.581107</td>
-      <td>{'n_neighbors': 26}</td>
+      <td>0.092902</td>
+      <td>0.282574</td>
+      <td>{'n_neighbors': 4}</td>
+      <td>10</td>
     </tr>
     <tr>
       <th>19</th>
       <td>xgboost</td>
       <td>HQMCB30YR</td>
-      <td>0.353802</td>
-      <td>-5.572455</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 10, ...</td>
+      <td>0.296113</td>
+      <td>-3.985371</td>
+      <td>{'n_estimators': 250, 'scale_pos_weight': 10, ...</td>
+      <td>6</td>
     </tr>
   </tbody>
 </table>
@@ -938,287 +959,287 @@ mvf.export_backtest_metrics('elasticnet')
     <tr>
       <th rowspan="4" valign="top">HQMCB1YR</th>
       <th>RMSE</th>
-      <td>0.695918</td>
-      <td>0.497914</td>
-      <td>0.347547</td>
-      <td>0.262605</td>
-      <td>0.202716</td>
-      <td>0.158913</td>
-      <td>0.142525</td>
-      <td>0.123923</td>
-      <td>0.069821</td>
-      <td>0.091576</td>
-      <td>0.259346</td>
+      <td>0.725592</td>
+      <td>0.534963</td>
+      <td>0.392303</td>
+      <td>0.315456</td>
+      <td>0.248962</td>
+      <td>0.195551</td>
+      <td>0.166022</td>
+      <td>0.149639</td>
+      <td>0.096554</td>
+      <td>0.077662</td>
+      <td>0.290270</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.442004</td>
-      <td>0.345228</td>
-      <td>0.253083</td>
-      <td>0.189836</td>
-      <td>0.151863</td>
-      <td>0.125559</td>
-      <td>0.120367</td>
-      <td>0.102128</td>
-      <td>0.053825</td>
-      <td>0.079113</td>
-      <td>0.186301</td>
+      <td>0.47799</td>
+      <td>0.389942</td>
+      <td>0.303893</td>
+      <td>0.246868</td>
+      <td>0.192788</td>
+      <td>0.149612</td>
+      <td>0.128801</td>
+      <td>0.117281</td>
+      <td>0.06823</td>
+      <td>0.070199</td>
+      <td>0.214560</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-1.186279</td>
-      <td>-1.92443</td>
-      <td>-3.242853</td>
-      <td>-4.328906</td>
-      <td>-7.698407</td>
-      <td>-21.133118</td>
-      <td>-50.138597</td>
-      <td>-31.907457</td>
-      <td>-6.436495</td>
-      <td>-3.965478</td>
-      <td>-13.196202</td>
+      <td>-1.376698</td>
+      <td>-2.375829</td>
+      <td>-4.405994</td>
+      <td>-6.68971</td>
+      <td>-12.11978</td>
+      <td>-32.51554</td>
+      <td>-68.390247</td>
+      <td>-46.982554</td>
+      <td>-13.22089</td>
+      <td>-2.571235</td>
+      <td>-19.064848</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.573286</td>
-      <td>0.656146</td>
-      <td>0.615779</td>
-      <td>0.540222</td>
-      <td>0.506593</td>
-      <td>0.475989</td>
-      <td>0.489836</td>
-      <td>0.420338</td>
-      <td>0.220423</td>
-      <td>0.290318</td>
-      <td>0.478893</td>
+      <td>0.665375</td>
+      <td>0.789014</td>
+      <td>0.782594</td>
+      <td>0.741826</td>
+      <td>0.657389</td>
+      <td>0.568952</td>
+      <td>0.525489</td>
+      <td>0.484044</td>
+      <td>0.285592</td>
+      <td>0.262372</td>
+      <td>0.576265</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB5YR</th>
       <th>RMSE</th>
-      <td>0.726668</td>
-      <td>0.788958</td>
-      <td>0.721782</td>
-      <td>0.657441</td>
-      <td>0.585476</td>
-      <td>0.522427</td>
-      <td>0.522317</td>
-      <td>0.50351</td>
-      <td>0.403217</td>
-      <td>0.292447</td>
-      <td>0.572424</td>
+      <td>0.750104</td>
+      <td>0.821624</td>
+      <td>0.761485</td>
+      <td>0.704657</td>
+      <td>0.623032</td>
+      <td>0.549188</td>
+      <td>0.536401</td>
+      <td>0.519243</td>
+      <td>0.421549</td>
+      <td>0.308613</td>
+      <td>0.599590</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.467376</td>
-      <td>0.662728</td>
-      <td>0.638292</td>
-      <td>0.587521</td>
-      <td>0.508732</td>
-      <td>0.446055</td>
-      <td>0.455035</td>
-      <td>0.426819</td>
-      <td>0.311795</td>
-      <td>0.234031</td>
-      <td>0.473838</td>
+      <td>0.480825</td>
+      <td>0.69883</td>
+      <td>0.679522</td>
+      <td>0.634017</td>
+      <td>0.54114</td>
+      <td>0.464268</td>
+      <td>0.460102</td>
+      <td>0.436155</td>
+      <td>0.321836</td>
+      <td>0.240711</td>
+      <td>0.495741</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.953382</td>
-      <td>-3.756331</td>
-      <td>-6.253308</td>
-      <td>-7.589811</td>
-      <td>-6.147923</td>
-      <td>-5.727931</td>
-      <td>-6.902584</td>
-      <td>-5.703603</td>
-      <td>-2.920054</td>
-      <td>-1.062951</td>
-      <td>-4.701788</td>
+      <td>-1.08141</td>
+      <td>-4.158348</td>
+      <td>-7.073233</td>
+      <td>-8.867912</td>
+      <td>-7.094342</td>
+      <td>-6.434852</td>
+      <td>-7.334523</td>
+      <td>-6.129085</td>
+      <td>-3.284598</td>
+      <td>-1.297327</td>
+      <td>-5.275563</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.2237</td>
-      <td>0.408174</td>
-      <td>0.436632</td>
-      <td>0.431049</td>
-      <td>0.387795</td>
-      <td>0.355971</td>
-      <td>0.385392</td>
-      <td>0.36985</td>
-      <td>0.267759</td>
-      <td>0.213686</td>
-      <td>0.348001</td>
+      <td>0.228862</td>
+      <td>0.433297</td>
+      <td>0.466938</td>
+      <td>0.466774</td>
+      <td>0.412534</td>
+      <td>0.369078</td>
+      <td>0.387279</td>
+      <td>0.376624</td>
+      <td>0.274851</td>
+      <td>0.216635</td>
+      <td>0.363287</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB10YR</th>
       <th>RMSE</th>
-      <td>0.413162</td>
-      <td>0.53706</td>
-      <td>0.569658</td>
-      <td>0.62637</td>
-      <td>0.555175</td>
-      <td>0.492033</td>
-      <td>0.52184</td>
-      <td>0.570073</td>
-      <td>0.527967</td>
-      <td>0.342487</td>
-      <td>0.515583</td>
+      <td>0.424402</td>
+      <td>0.554482</td>
+      <td>0.587328</td>
+      <td>0.644055</td>
+      <td>0.573017</td>
+      <td>0.50978</td>
+      <td>0.539738</td>
+      <td>0.588302</td>
+      <td>0.546322</td>
+      <td>0.354832</td>
+      <td>0.532226</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.268802</td>
-      <td>0.462548</td>
-      <td>0.530208</td>
-      <td>0.591527</td>
-      <td>0.499755</td>
-      <td>0.42231</td>
-      <td>0.443545</td>
-      <td>0.486901</td>
-      <td>0.42114</td>
-      <td>0.292972</td>
-      <td>0.441971</td>
+      <td>0.276694</td>
+      <td>0.47943</td>
+      <td>0.547053</td>
+      <td>0.608347</td>
+      <td>0.51623</td>
+      <td>0.437994</td>
+      <td>0.460544</td>
+      <td>0.503907</td>
+      <td>0.437792</td>
+      <td>0.29787</td>
+      <td>0.456586</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.351327</td>
-      <td>-4.145307</td>
-      <td>-9.506926</td>
-      <td>-12.169451</td>
-      <td>-5.974719</td>
-      <td>-3.755598</td>
-      <td>-4.219371</td>
-      <td>-4.512336</td>
-      <td>-3.089403</td>
-      <td>-0.587915</td>
-      <td>-4.831235</td>
+      <td>-0.425851</td>
+      <td>-4.484536</td>
+      <td>-10.168845</td>
+      <td>-12.92358</td>
+      <td>-6.430217</td>
+      <td>-4.104847</td>
+      <td>-4.583535</td>
+      <td>-4.870505</td>
+      <td>-3.378678</td>
+      <td>-0.704456</td>
+      <td>-5.207505</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.090403</td>
-      <td>0.167273</td>
-      <td>0.20145</td>
-      <td>0.230762</td>
-      <td>0.195362</td>
-      <td>0.165859</td>
-      <td>0.176741</td>
-      <td>0.196157</td>
-      <td>0.168231</td>
-      <td>0.122209</td>
-      <td>0.171445</td>
+      <td>0.092749</td>
+      <td>0.173571</td>
+      <td>0.207944</td>
+      <td>0.237398</td>
+      <td>0.201887</td>
+      <td>0.172091</td>
+      <td>0.183718</td>
+      <td>0.203182</td>
+      <td>0.175097</td>
+      <td>0.123537</td>
+      <td>0.177117</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB20YR</th>
       <th>RMSE</th>
-      <td>0.34906</td>
-      <td>0.277221</td>
-      <td>0.36691</td>
-      <td>0.482713</td>
-      <td>0.408408</td>
-      <td>0.305705</td>
-      <td>0.372866</td>
-      <td>0.481968</td>
-      <td>0.493685</td>
-      <td>0.290549</td>
-      <td>0.382908</td>
+      <td>0.348835</td>
+      <td>0.280805</td>
+      <td>0.371494</td>
+      <td>0.487441</td>
+      <td>0.413191</td>
+      <td>0.310125</td>
+      <td>0.377706</td>
+      <td>0.487159</td>
+      <td>0.499037</td>
+      <td>0.293811</td>
+      <td>0.386960</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.301185</td>
-      <td>0.203105</td>
-      <td>0.333146</td>
-      <td>0.456921</td>
-      <td>0.366134</td>
-      <td>0.257816</td>
-      <td>0.306186</td>
-      <td>0.416652</td>
-      <td>0.414167</td>
-      <td>0.256084</td>
-      <td>0.331140</td>
+      <td>0.300349</td>
+      <td>0.205924</td>
+      <td>0.338252</td>
+      <td>0.461935</td>
+      <td>0.371079</td>
+      <td>0.262315</td>
+      <td>0.310882</td>
+      <td>0.421694</td>
+      <td>0.419208</td>
+      <td>0.257577</td>
+      <td>0.334922</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.382792</td>
-      <td>-0.575448</td>
-      <td>-3.578155</td>
-      <td>-6.821555</td>
-      <td>-3.447258</td>
-      <td>-1.271587</td>
-      <td>-2.336246</td>
-      <td>-4.447912</td>
-      <td>-4.089976</td>
-      <td>-0.58659</td>
-      <td>-2.753752</td>
+      <td>-0.381004</td>
+      <td>-0.616458</td>
+      <td>-3.693266</td>
+      <td>-6.975537</td>
+      <td>-3.552034</td>
+      <td>-1.337749</td>
+      <td>-2.42343</td>
+      <td>-4.565897</td>
+      <td>-4.200933</td>
+      <td>-0.622411</td>
+      <td>-2.836872</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.091886</td>
-      <td>0.059608</td>
-      <td>0.102169</td>
-      <td>0.142359</td>
-      <td>0.113466</td>
-      <td>0.079593</td>
-      <td>0.094226</td>
-      <td>0.129146</td>
-      <td>0.12799</td>
-      <td>0.081375</td>
-      <td>0.102182</td>
+      <td>0.091495</td>
+      <td>0.06043</td>
+      <td>0.10379</td>
+      <td>0.143967</td>
+      <td>0.115041</td>
+      <td>0.08101</td>
+      <td>0.09571</td>
+      <td>0.130745</td>
+      <td>0.129581</td>
+      <td>0.081743</td>
+      <td>0.103351</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB30YR</th>
       <th>RMSE</th>
-      <td>0.368001</td>
-      <td>0.222563</td>
-      <td>0.316135</td>
-      <td>0.448717</td>
-      <td>0.381911</td>
-      <td>0.257456</td>
-      <td>0.346873</td>
-      <td>0.459515</td>
-      <td>0.482774</td>
-      <td>0.286702</td>
-      <td>0.357065</td>
+      <td>0.368236</td>
+      <td>0.222437</td>
+      <td>0.31531</td>
+      <td>0.447674</td>
+      <td>0.380903</td>
+      <td>0.256759</td>
+      <td>0.345854</td>
+      <td>0.458258</td>
+      <td>0.48143</td>
+      <td>0.285959</td>
+      <td>0.356282</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.338561</td>
-      <td>0.183603</td>
-      <td>0.274438</td>
-      <td>0.419334</td>
-      <td>0.336793</td>
-      <td>0.209304</td>
-      <td>0.284308</td>
-      <td>0.396082</td>
-      <td>0.408056</td>
-      <td>0.244059</td>
-      <td>0.309454</td>
+      <td>0.338844</td>
+      <td>0.183826</td>
+      <td>0.273374</td>
+      <td>0.418146</td>
+      <td>0.335669</td>
+      <td>0.208416</td>
+      <td>0.283306</td>
+      <td>0.394831</td>
+      <td>0.406771</td>
+      <td>0.243644</td>
+      <td>0.308683</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.777435</td>
-      <td>0.024279</td>
-      <td>-1.706653</td>
-      <td>-4.370536</td>
-      <td>-2.46268</td>
-      <td>-0.531978</td>
-      <td>-1.808506</td>
-      <td>-4.089156</td>
-      <td>-4.162142</td>
-      <td>-0.677249</td>
-      <td>-2.056206</td>
+      <td>-0.779712</td>
+      <td>0.025377</td>
+      <td>-1.692544</td>
+      <td>-4.345615</td>
+      <td>-2.444436</td>
+      <td>-0.523689</td>
+      <td>-1.792018</td>
+      <td>-4.061341</td>
+      <td>-4.133446</td>
+      <td>-0.668563</td>
+      <td>-2.041599</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.104223</td>
-      <td>0.055007</td>
-      <td>0.081993</td>
-      <td>0.127449</td>
-      <td>0.101591</td>
-      <td>0.062785</td>
-      <td>0.084881</td>
-      <td>0.118896</td>
-      <td>0.122237</td>
-      <td>0.074425</td>
-      <td>0.093349</td>
+      <td>0.104324</td>
+      <td>0.055092</td>
+      <td>0.081659</td>
+      <td>0.127074</td>
+      <td>0.101239</td>
+      <td>0.06251</td>
+      <td>0.084573</td>
+      <td>0.11851</td>
+      <td>0.121844</td>
+      <td>0.074315</td>
+      <td>0.093114</td>
     </tr>
   </tbody>
 </table>
@@ -1227,6 +1248,7 @@ mvf.export_backtest_metrics('elasticnet')
 
 
 ## Correlation Matrices
+- If you want to see how correlated the series are in your MVForecaster object, you can use these correlation matrices  
 
 ### All Series, no lags
 
@@ -1237,6 +1259,7 @@ heatmap_kwargs = dict(
     vmin=-1,
     vmax=1,
     annot=True,
+    cmap = "Spectral",
 )
 mvf.corr(**heatmap_kwargs)
 plt.show()
