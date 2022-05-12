@@ -1,11 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.9.9] - 
+## [0.9.9] - 2022-05-12
 ### Added
 ### Changed
 - warning logs now called after `Forecaster` and `MVForecaster` objects are initiated
-- No more `get_funcs()` method, a bid idea from the start
+- No more `get_funcs()` method, a bad idea from the start
 ### Fixed
 
 
