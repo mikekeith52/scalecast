@@ -69,18 +69,6 @@ df = pdr.get_data_fred(
 f_dict = {c: Forecaster(y=df[c],current_dates=df.index) for c in df}
 ```
 
-    C:\Users\michaelkeith\Anaconda3\lib\site-packages\xgboost\compat.py:31: FutureWarning: pandas.Int64Index is deprecated and will be removed from pandas in a future version. Use pandas.Index with the appropriate dtype instead.
-      from pandas import MultiIndex, Int64Index
-    C:\Users\michaelkeith\Anaconda3\lib\site-packages\dask\dataframe\utils.py:369: FutureWarning: pandas.Int64Index is deprecated and will be removed from pandas in a future version. Use pandas.Index with the appropriate dtype instead.
-      _numeric_index_types = (pd.Int64Index, pd.Float64Index, pd.UInt64Index)
-    C:\Users\michaelkeith\Anaconda3\lib\site-packages\dask\dataframe\utils.py:369: FutureWarning: pandas.Float64Index is deprecated and will be removed from pandas in a future version. Use pandas.Index with the appropriate dtype instead.
-      _numeric_index_types = (pd.Int64Index, pd.Float64Index, pd.UInt64Index)
-    C:\Users\michaelkeith\Anaconda3\lib\site-packages\dask\dataframe\utils.py:369: FutureWarning: pandas.UInt64Index is deprecated and will be removed from pandas in a future version. Use pandas.Index with the appropriate dtype instead.
-      _numeric_index_types = (pd.Int64Index, pd.Float64Index, pd.UInt64Index)
-    C:\Users\michaelkeith\Anaconda3\lib\site-packages\scalecast\Forecaster.py:204: FutureWarning: The default dtype for empty Series will be 'object' instead of 'float64' in a future version. Specify a dtype explicitly to silence this warning.
-      self.future_dates = pd.Series([])
-    
-
 ### Option 1 - Univariate
 
 #### Select Models
