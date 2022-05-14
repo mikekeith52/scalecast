@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.10.0] - 2022-05-13
+### Added
+- added permutated feature dataset to history for sklearn models with feature importance
+### Changed
+- changed some pandas syntax to avoid some warnings
+### Fixed
+- fixed the order in which Xvars are parsed, which was causing issues when Xvar names were added in a function in a different order than they appeared in the object 
+
 ## [0.9.9] - 2022-05-12
 ### Added
 ### Changed

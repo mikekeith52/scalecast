@@ -201,7 +201,7 @@ class Forecaster:
     def __init__(self, y, current_dates, **kwargs):
         self.y = y
         self.current_dates = current_dates
-        self.future_dates = pd.Series([])
+        self.future_dates = pd.Series([],dtype='datetime64[ns]')
         self.current_xreg = {}  # values should be pandas series (to make differencing work more easily)
         self.future_xreg = {}  # values should be lists (to make iterative forecasting work more easily)
         self.history = {}
@@ -416,6 +416,7 @@ class Forecaster:
         """
         call_me = self.call_me
         self.history[call_me]["feature_importance"] = self.feature_importance
+        self.history[call_me]["per"] = self.perm
 
     def _bank_summary_stats_to_history(self):
         """ saves summary stats (where available) to history
@@ -451,7 +452,6 @@ class Forecaster:
             delattr(self, attr)
         return metric
 
-
     def _clear_the_deck(self):
         """ deletes the following attributes to prepare a new forecast:
             'univariate','fitted_values','regr','X','feature_importance','summary_stats','models','weights'
@@ -462,6 +462,7 @@ class Forecaster:
             "X",
             "Xvars",
             "feature_importance",
+            "perm",
             "summary_stats",
             "models",
             "weights",
@@ -530,9 +531,9 @@ class Forecaster:
             def scale(scaler,X):
                 return scaler.transform(X) if scaler is not None else X
 
-            self.X = X # for feature importance setting
             # apply the normalizer fit on training data only
             X = scale(scaler, X)
+            self.X = X # for feature importance setting
             regr.fit(X, y)
             # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
             if (len([x for x in Xvars if x.startswith("AR")]) == 0) | (not dynamic_testing):
@@ -542,7 +543,7 @@ class Forecaster:
             # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
             for i in range(fcst_horizon):
-                p = pd.DataFrame({k: [v[i]] for k, v in future_xreg.items() if k in Xvars}).values
+                p = pd.DataFrame({x: [future_xreg[x][i]] for x in Xvars}).values
                 p = scale(scaler, p)
                 fcst.append(regr.predict(p)[0])
                 if not i == (fcst_horizon - 1):
@@ -592,7 +593,7 @@ class Forecaster:
             y_train,
             Xvars,
             test_length - self.test_length if tune else test_length, # fcst_horizon
-            {x: v[-test_length:] for x, v in current_xreg.items() if x in Xvars}, # for AR processing
+            {x: current_xreg[x][-test_length:] for x in Xvars}, # for AR processing
             dynamic_testing,
             False
         )
@@ -614,7 +615,7 @@ class Forecaster:
             y,
             Xvars,
             len(self.future_dates),
-            {x: v[:] for x, v in self.future_xreg.items() if x in Xvars},
+            {x: self.future_xreg[x][:] for x in Xvars},
             True,
             True,
         )
@@ -748,7 +749,7 @@ class Forecaster:
             **kwargs,
         ).fit()
         p = (
-            pd.DataFrame({k: v for k, v in self.future_xreg.items() if k in Xvars})
+            pd.DataFrame({x: self.future_xreg[x] for x in Xvars})
             if Xvars is not None
             else None
         )
@@ -2906,6 +2907,8 @@ class Forecaster:
     def save_feature_importance(self):
         """ saves feature info for models that offer it and will not raise errors if not available.
         call after evaluating the model you want it for and before changing the estimator.
+        this is more reliable as a feature-importance scorer when models were run test_only = True
+        because then all feature scores will be out-of-sample.
 
         >>> f.set_estimator('mlr')
         >>> f.manual_forecast()
@@ -2916,7 +2919,7 @@ class Forecaster:
 
         try:
             perm = PermutationImportance(self.regr).fit(
-                self.X, self.y.values[-len(self.X) :]
+                self.X[-self.test_length:], self.y.values[-self.test_length:]
             )
         except (TypeError,AttributeError):
             logging.warning(
@@ -2926,6 +2929,7 @@ class Forecaster:
         self.feature_importance = eli5.explain_weights_df(
             perm, feature_names=self.history[self.call_me]["Xvars"]
         ).set_index("feature")
+        self.perm = perm
         self._bank_fi_to_history()
 
     def save_summary_stats(self):
