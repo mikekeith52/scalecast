@@ -495,13 +495,13 @@ mv_models = (
 ```
 
 #### Create Grids
-We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as theirown lags) in each model that is called. Again, for mv forecasting, we can save default grids:  
+We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as their own lags) in each model that is called. Again, for mv forecasting, we can save default grids:  
 
 ```python
 GridGenerator.get_mv_grids()
 ```
 
-This creates the MVGrids.py file in your working directory by default, which scalecast knows how to read.  
+This creates the MVGrids.py file in your working directory by default, which scalecast knows how to read. Again, this example uses its own grids.
 
 
 ```python
@@ -517,7 +517,7 @@ mv_grids = dict(zip(mv_models,mv_grid_list))
 ### Create multivariate forecasting object
 - Need to change test and validation length
 - Regressors are already carried forward from the underlying `Forecaster` objects
-- Integration level are also carried forward from the underlying `Forecaster` objects
+- Integrated levels are also carried forward from the underlying `Forecaster` objects
 
 
 ```python

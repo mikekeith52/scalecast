@@ -442,6 +442,13 @@ class MVForecaster:
                 metrics['optimized_metric'] = metrics.mean(axis=1)
             else:
                 metrics['optimized_metric'] = metrics.iloc[:,(int(self.optimize_on.split('series')[-1]) - 1)]
+
+            ## PROPOSED NEW
+            #if isinstance(self.optimize_on,str):
+            #    metrics['optimized_metric'] = metrics[self.optimize_on]
+            #else:
+            #    metrics['optimized_metric'] = metrics.apply(lambda x: self.optimize_on,axis=1)
+            
             self.grid_evaluated = pd.concat([self.grid_evaluated,metrics],axis=1)
             if self.validation_metric == "r2":
                 best_params_idx = self.grid.loc[
@@ -587,6 +594,13 @@ class MVForecaster:
             how = self.name_series_map[how][0]
         descriptive_assert(how.startswith('series') or how.startswith('y') or how == 'mean',ValueError,f'value passed to how not usable: {how}')
         self.optimize_on = how if how.startswith('series') else 'series{}'.format(how.split('y')[-1])
+
+        ## PROPOSED NEW
+        """if isintance(how,str):
+            how, _ = self._parse_series(how)
+            self.optimize_on = how[0]
+        else:
+            self.otpimize_on = how # func like np.mean, np.min, etc."""
 
     def _forecast(self, 
         fcster,
