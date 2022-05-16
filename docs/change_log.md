@@ -1,11 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.10.1] - 2022-05-16
+### Added
+- `MVForecaster.set_optimize_on()` now accepts user functions (like weighted averages) by leveraging new `MVForecaster.add_optimizer_func()` function
+### Changed
+- Suppressed future warnings on import because of a pandas warning caused from importing LightGBM. If LightGBM does not fix this issue with an update, we might need to pull it from the default list of sklearn estimators; users would still be able to use LightGBM by importing it manually.
+### Fixed
+
 ## [0.10.0] - 2022-05-13
 ### Added
 - added permutated feature dataset to history for sklearn models with feature importance
 ### Changed
 - changed some pandas syntax to avoid some warnings
+- permutation feature importance applied on test set only and works better on models run `test_only = True`
 ### Fixed
 - fixed the order in which Xvars are parsed, which was causing issues when Xvar names were added in a function in a different order than they appeared in the object 
 

@@ -27,6 +27,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 import copy
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # sklearn imports below
 from sklearn.linear_model import LinearRegression as mlr_
@@ -260,20 +261,22 @@ class Forecaster:
     CILevel={}
     BootstrapSamples={}
     CurrentEstimator={}
-)""".format(self.current_dates.values[0].astype(str),
-            self.current_dates.values[-1].astype(str),
-            self.freq,
-            len(self.y),
-            len(self.future_dates),
-            list(self.current_xreg.keys()),
-            self.integration,
-            self.test_length,
-            self.validation_length,
-            self.validation_metric,
-            list(self.history.keys()),
-            self.cilevel,
-            self.bootstrap_samples,
-            None if not hasattr(self,'estimator') else self.estimator)
+)""".format(
+    self.current_dates.values[0].astype(str),
+    self.current_dates.values[-1].astype(str),
+    self.freq,
+    len(self.y),
+    len(self.future_dates),
+    list(self.current_xreg.keys()),
+    self.integration,
+    self.test_length,
+    self.validation_length,
+    self.validation_metric,
+    list(self.history.keys()),
+    self.cilevel,
+    self.bootstrap_samples,
+    None if not hasattr(self,'estimator') else self.estimator,
+    )
 
     def _split_data(self, X, y, test_length, tune):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_length, shuffle=False)

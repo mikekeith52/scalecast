@@ -1,3 +1,6 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import os
 import random
 import pandas as pd
@@ -35,6 +38,12 @@ _series_colors_ = [
     '#191970', 
     '#9FE2BF'
 ]*100
+
+_optimizer_funcs_ = {
+    'mean':np.mean,
+    'min':np.min,
+    'max':np.max,
+}
 
 class MVForecaster:
     def __init__(self,
@@ -163,24 +172,26 @@ class MVForecaster:
     BootstrapSamples={}
     CurrentEstimator={}
     OptimizeOn={}
-)""".format(self.current_dates.values[0].astype(str),
-            self.current_dates.values[-1].astype(str),
-            self.freq,
-            len(self.current_dates),
-            self.n_series,
-            [f'series{i+1}' for i in range(self.n_series)] 
-            if not hasattr(self,'name_series_map') 
-            else list(self.name_series_map.keys()),
-            len(self.future_dates),
-            list(self.current_xreg.keys()),
-            self.test_length,
-            self.validation_length,
-            self.validation_metric,
-            list(self.history.keys()),
-            self.cilevel,
-            self.bootstrap_samples,
-            self.estimator,
-            self.optimize_on)
+)""".format(
+    self.current_dates.values[0].astype(str),
+    self.current_dates.values[-1].astype(str),
+    self.freq,
+    len(self.current_dates),
+    self.n_series,
+    [f'series{i+1}' for i in range(self.n_series)] 
+    if not hasattr(self,'name_series_map') 
+    else list(self.name_series_map.keys()),
+    len(self.future_dates),
+    list(self.current_xreg.keys()),
+    self.test_length,
+    self.validation_length,
+    self.validation_metric,
+    list(self.history.keys()),
+    self.cilevel,
+    self.bootstrap_samples,
+    self.estimator,
+    self.optimize_on,
+    )
 
     def __copy__(self):
         obj = type(self).__new__(self.__class__)
@@ -386,6 +397,25 @@ class MVForecaster:
         else:
             raise ValueError(f"argment passed to n not usable: {n}")
 
+    def add_optimizer_func(self,func,called):
+        """ add an optimizer function that can be used to determine the best-performing model.
+        this is loaded with 'mean', 'min', 'max' when the object is imported.
+
+        Args:
+            func (Function): the function to add (accepts lambda functions).
+            called (str): how to refer to the function when calling `optimize_on()`.
+
+        Returns:
+            None
+
+        >>> mvf = MVForecaster(...)
+        >>> mvf.add_optimizer_func(lambda x: x[0]*.25 + x[1]*.75,'weighted') # adds a weighted average of first two series in the object
+        >>> mvf.set_optimize_on('weighted')
+        >>> mvf.set_etimator('mlr')
+        >>> mvf.tune() # best model now chosen based on the weighted average function you added; series2 gets 3x the weight of series 1
+        """
+        _optimizer_funcs_[called] = func
+
     def tune(self, dynamic_tuning=False):
         """ tunes the specified estimator using an ingested grid (ingests a grid from MVGrids.py with same name as the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
@@ -411,7 +441,9 @@ class MVForecaster:
             except:
                 raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the MVGrids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
 
-        metrics = {f'y{i+1}_metric':[] for i in range(self.n_series)}
+        series, labels = self._parse_series('all')
+        labels = series.copy() if (self.optimize_on.startswith('y') and self.optimize_on.split('y')[-1].isnumeric()) or self.optimize_on.startswith('series') else labels
+        metrics = {f'{label}_metric':[] for label in labels}
         iters = self.grid.shape[0]
         for i in range(iters):
             try:
@@ -423,8 +455,8 @@ class MVForecaster:
                     dynamic_testing=dynamic_tuning,
                     **hp
                 )
-                for series, a in val_ac.items():
-                    metrics[series + '_metric'].append(globals()[self.validation_metric](a,val_preds[series]))
+                for s, l in zip(series,labels):
+                    metrics[l + '_metric'].append(globals()[self.validation_metric](val_ac[s],val_preds[s]))
             except TypeError:
                 raise
             except Exception as e:
@@ -437,18 +469,12 @@ class MVForecaster:
             self.grid.reset_index(drop=True,inplace=True)
             self.grid_evaluated = self.grid.copy()
             self.grid_evaluated["validation_length"] = self.validation_length
-            self.grid_evaluated["validation_metric"] = self.validation_metric            
-            if self.optimize_on == 'mean':
-                metrics['optimized_metric'] = metrics.mean(axis=1)
+            self.grid_evaluated["validation_metric"] = self.validation_metric 
+            if self.optimize_on in _optimizer_funcs_:
+                metrics['optimized_metric'] = metrics.apply(_optimizer_funcs_[self.optimize_on],axis=1)
             else:
-                metrics['optimized_metric'] = metrics.iloc[:,(int(self.optimize_on.split('series')[-1]) - 1)]
+                metrics['optimized_metric'] = metrics[self.optimize_on + '_metric']
 
-            ## PROPOSED NEW
-            #if isinstance(self.optimize_on,str):
-            #    metrics['optimized_metric'] = metrics[self.optimize_on]
-            #else:
-            #    metrics['optimized_metric'] = metrics.apply(lambda x: self.optimize_on,axis=1)
-            
             self.grid_evaluated = pd.concat([self.grid_evaluated,metrics],axis=1)
             if self.validation_metric == "r2":
                 best_params_idx = self.grid.loc[
@@ -582,25 +608,16 @@ class MVForecaster:
         this is the decision that will be used for tuning models as well.
 
         Args:
-            how (str): one of 'mean', 'series1', 'series2', ... , 'seriesn' or 'y1', 'y2', ... , 'yn' or the series name.
-                if 'mean', will optimize based on the mean metric evaluated on all series.
-                if 'series...', 'y...', or the series name, will choose the model that did the best on that series.
-                by default, this is set to 'mean' when the object is initiated.
+            how (str): one of _optimizer_funcs_, 'series{n}', 'y{n}', or the series name.
+                if in _optimizer_funcs_, will optimize based on that metric.
+                if 'series{n}', 'y{n}', or the series name, will choose the model that performs best on that series.
+                by default, opitmize_on is set to 'mean' when the object is initiated.
         """
-        if how == 'mean':
-            self.optimize_on = 'mean'
-            return
-        if hasattr(self,'name_series_map'):
-            how = self.name_series_map[how][0]
-        descriptive_assert(how.startswith('series') or how.startswith('y') or how == 'mean',ValueError,f'value passed to how not usable: {how}')
-        self.optimize_on = how if how.startswith('series') else 'series{}'.format(how.split('y')[-1])
-
-        ## PROPOSED NEW
-        """if isintance(how,str):
-            how, _ = self._parse_series(how)
-            self.optimize_on = how[0]
+        if how in _optimizer_funcs_:
+            self.optimize_on = how
         else:
-            self.otpimize_on = how # func like np.mean, np.min, etc."""
+            series, labels = self._parse_series(how)
+            self.optimize_on = labels[0]
 
     def _forecast(self, 
         fcster,

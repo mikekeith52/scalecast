@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.10.0
+Version: 0.10.1
 Summary: The practitioner's time series forecasting library
 Home-page: UNKNOWN
 Author: Michael Keith
@@ -86,8 +86,6 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
               _numeric_index_types = (pd.Int64Index, pd.Float64Index, pd.UInt64Index)
             C:\Users\michaelkeith\Anaconda3\lib\site-packages\dask\dataframe\utils.py:369: FutureWarning: pandas.UInt64Index is deprecated and will be removed from pandas in a future version. Use pandas.Index with the appropriate dtype instead.
               _numeric_index_types = (pd.Int64Index, pd.Float64Index, pd.UInt64Index)
-            C:\Users\michaelkeith\Anaconda3\lib\site-packages\scalecast\Forecaster.py:204: FutureWarning: The default dtype for empty Series will be 'object' instead of 'float64' in a future version. Specify a dtype explicitly to silence this warning.
-              self.future_dates = pd.Series([])
             
         
         ### Option 1 - Univariate
@@ -733,9 +731,9 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
               <th>0</th>
               <td>knn</td>
               <td>HQMCB1YR</td>
-              <td>1.983621</td>
-              <td>-0.040337</td>
-              <td>{'n_neighbors': 24}</td>
+              <td>2.418575</td>
+              <td>-0.347235</td>
+              <td>{'n_neighbors': 20}</td>
               <td>1</td>
             </tr>
             <tr>
@@ -753,25 +751,25 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
               <td>HQMCB1YR</td>
               <td>3.793793</td>
               <td>-2.039144</td>
-              <td>{'l1_ratio': 0.75, 'alpha': 0.0}</td>
+              <td>{'l1_ratio': 0.25, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>3</th>
               <td>xgboost</td>
               <td>HQMCB1YR</td>
-              <td>2.669461</td>
-              <td>-0.429998</td>
-              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
-              <td>4</td>
+              <td>5.604734</td>
+              <td>-5.708488</td>
+              <td>{'n_estimators': 250, 'scale_pos_weight': 5, '...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>4</th>
               <td>knn</td>
               <td>HQMCB5YR</td>
-              <td>0.410430</td>
-              <td>0.303932</td>
-              <td>{'n_neighbors': 24}</td>
+              <td>0.456775</td>
+              <td>0.252785</td>
+              <td>{'n_neighbors': 20}</td>
               <td>1</td>
             </tr>
             <tr>
@@ -789,25 +787,25 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
               <td>HQMCB5YR</td>
               <td>0.824665</td>
               <td>-0.856494</td>
-              <td>{'l1_ratio': 0.75, 'alpha': 0.0}</td>
+              <td>{'l1_ratio': 0.25, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>7</th>
               <td>xgboost</td>
               <td>HQMCB5YR</td>
-              <td>0.364969</td>
-              <td>0.447650</td>
-              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
-              <td>4</td>
+              <td>0.802305</td>
+              <td>-0.727316</td>
+              <td>{'n_estimators': 250, 'scale_pos_weight': 5, '...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>8</th>
               <td>knn</td>
               <td>HQMCB10YR</td>
-              <td>0.138463</td>
-              <td>0.378917</td>
-              <td>{'n_neighbors': 24}</td>
+              <td>0.137065</td>
+              <td>0.407163</td>
+              <td>{'n_neighbors': 20}</td>
               <td>1</td>
             </tr>
             <tr>
@@ -825,25 +823,25 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
               <td>HQMCB10YR</td>
               <td>0.243075</td>
               <td>-0.063448</td>
-              <td>{'l1_ratio': 0.75, 'alpha': 0.0}</td>
+              <td>{'l1_ratio': 0.25, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>11</th>
               <td>xgboost</td>
               <td>HQMCB10YR</td>
-              <td>0.322004</td>
-              <td>-1.299300</td>
-              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
-              <td>4</td>
+              <td>0.177777</td>
+              <td>0.092878</td>
+              <td>{'n_estimators': 250, 'scale_pos_weight': 5, '...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>12</th>
               <td>knn</td>
               <td>HQMCB20YR</td>
-              <td>0.089113</td>
-              <td>0.496357</td>
-              <td>{'n_neighbors': 24}</td>
+              <td>0.085212</td>
+              <td>0.498188</td>
+              <td>{'n_neighbors': 20}</td>
               <td>1</td>
             </tr>
             <tr>
@@ -861,25 +859,25 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
               <td>HQMCB20YR</td>
               <td>0.107812</td>
               <td>0.438077</td>
-              <td>{'l1_ratio': 0.75, 'alpha': 0.0}</td>
+              <td>{'l1_ratio': 0.25, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>15</th>
               <td>xgboost</td>
               <td>HQMCB20YR</td>
-              <td>0.162465</td>
-              <td>-0.416687</td>
-              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
-              <td>4</td>
+              <td>0.141410</td>
+              <td>-0.648046</td>
+              <td>{'n_estimators': 250, 'scale_pos_weight': 5, '...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>16</th>
               <td>knn</td>
               <td>HQMCB30YR</td>
-              <td>0.085505</td>
-              <td>0.562667</td>
-              <td>{'n_neighbors': 24}</td>
+              <td>0.078569</td>
+              <td>0.582552</td>
+              <td>{'n_neighbors': 20}</td>
               <td>1</td>
             </tr>
             <tr>
@@ -897,17 +895,17 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
               <td>HQMCB30YR</td>
               <td>0.084037</td>
               <td>0.558233</td>
-              <td>{'l1_ratio': 0.75, 'alpha': 0.0}</td>
+              <td>{'l1_ratio': 0.25, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>19</th>
               <td>xgboost</td>
               <td>HQMCB30YR</td>
-              <td>0.110330</td>
-              <td>0.221201</td>
-              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
-              <td>4</td>
+              <td>0.108905</td>
+              <td>0.246173</td>
+              <td>{'n_estimators': 250, 'scale_pos_weight': 5, '...</td>
+              <td>6</td>
             </tr>
           </tbody>
         </table>
