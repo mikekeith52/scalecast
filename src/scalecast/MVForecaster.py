@@ -10,6 +10,10 @@ import seaborn as sns
 from collections import Counter
 import logging
 from scipy import stats
+
+logging.basicConfig(filename="warnings.log", level=logging.WARNING)
+logging.captureWarnings(True)
+
 from scalecast.Forecaster import (
     mape,
     rmse,
@@ -150,9 +154,6 @@ class MVForecaster:
             self.name_series_map = {names[i]:[f'series{i+1}',f'y{i+1}'] for i in range(self.n_series)}
             self.y_name_map = {f'y{i+1}':names[i] for i in range(self.n_series)}
             self.series_name_map = {f'series{i+1}':names[i] for i in range(self.n_series)}
-
-        logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-        logging.captureWarnings(True)
 
     def __repr__(self):
         return """MVForecaster(

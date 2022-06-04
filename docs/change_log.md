@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.10.2] - 2022-05-17
+### Added
+### Changed
+- Changed where logs are called back to when importing library due to warnings that don't get logged when unpickling object
+### Fixed
+
 ## [0.10.1] - 2022-05-16
 ### Added
 - `MVForecaster.set_optimize_on()` now accepts user functions (like weighted averages) by leveraging new `MVForecaster.add_optimizer_func()` function

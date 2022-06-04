@@ -27,7 +27,8 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 import copy
-warnings.simplefilter(action='ignore', category=FutureWarning)
+logging.basicConfig(filename="warnings.log", level=logging.WARNING)
+logging.captureWarnings(True)
 
 # sklearn imports below
 from sklearn.linear_model import LinearRegression as mlr_
@@ -218,8 +219,6 @@ class Forecaster:
             setattr(self, key, value)
 
         self.typ_set()  # ensures that the passed values are the right types
-        logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-        logging.captureWarnings(True)
 
     def __copy__(self):
         obj = type(self).__new__(self.__class__)
