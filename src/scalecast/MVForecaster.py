@@ -400,10 +400,10 @@ class MVForecaster:
 
     def add_optimizer_func(self,func,called):
         """ add an optimizer function that can be used to determine the best-performing model.
-        this is loaded with 'mean', 'min', 'max' when the object is imported.
+        this is in addition to the 'mean', 'min', and 'max' functions that are available by default.
 
         Args:
-            func (Function): the function to add (accepts lambda functions).
+            func (Function): the function to add.
             called (str): how to refer to the function when calling `optimize_on()`.
 
         Returns:
@@ -412,7 +412,7 @@ class MVForecaster:
         >>> mvf = MVForecaster(...)
         >>> mvf.add_optimizer_func(lambda x: x[0]*.25 + x[1]*.75,'weighted') # adds a weighted average of first two series in the object
         >>> mvf.set_optimize_on('weighted')
-        >>> mvf.set_etimator('mlr')
+        >>> mvf.set_estimator('mlr')
         >>> mvf.tune() # best model now chosen based on the weighted average function you added; series2 gets 3x the weight of series 1
         """
         _optimizer_funcs_[called] = func
