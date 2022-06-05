@@ -11,6 +11,7 @@ plot_reduction_errors
     :show-inheritance:
 
 .. code:: python
+
     from scalecast.Forecaster import Forecaster
     from scalecast.util import plot_reduction_errors
     import matplotlib.pyplot as plt
