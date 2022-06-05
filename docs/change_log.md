@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. We keep tra
 - added `reduce_Xvars()` method to `Forecaster` object
 - added `util` module with one function (for now) to plot error changes from calling the `Forecaster.reduce_Xvars()` method
 ### Changed
+- Changed default hyperparameter grid values for knn, xgboost, and lightgbm estimators
 ### Fixed
 
 ## [0.10.2] - 2022-05-17
