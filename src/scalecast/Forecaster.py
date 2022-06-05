@@ -38,6 +38,8 @@ from xgboost import XGBRegressor as xgboost_
 from lightgbm import LGBMRegressor as lightgbm_
 from sklearn.ensemble import RandomForestRegressor as rf_
 from sklearn.linear_model import ElasticNet as elasticnet_
+from sklearn.linear_model import Lasso as lasso_
+from sklearn.linear_model import Ridge as ridge_
 from sklearn.svm import SVR as svr_
 from sklearn.neighbors import KNeighborsRegressor as knn_
 from sklearn.linear_model import SGDRegressor as sgd_
@@ -132,6 +134,8 @@ _sklearn_imports_ = {
     "mlp": mlp_,
     "gbt": gbt_,
     "xgboost": xgboost_,
+    "lasso": lasso_,
+    "ridge": ridge_,
     "lightgbm": lightgbm_,
     "rf": rf_,
     "elasticnet": elasticnet_,
@@ -1754,6 +1758,187 @@ class Forecaster:
                 logging.warning(
                     f"warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(self.future_dates)}"
                 )
+
+    def reduce_Xvars(
+        self,
+        method='l1',
+        estimator='lasso',
+        keep_at_least=1,
+        keep_this_many='auto',
+        grid_search=True,
+        use_loaded_grid=False,
+        dynamic_tuning=False,
+        monitor='ValidationMetricValue',
+        overwrite=True,
+        **kwargs,
+    ):
+        """ reduces the regressor variables stored in the object. two methods are available:
+        l1 which uses a simple l1 penalty and Lasso regressor; as well as pfi that stands for 
+        permutation feature importance and offers more flexibility to view how removing
+        variables one-at-a-time, according to which variable is evaluated as least helpful to the
+        model after each model evaluation, affects a given error metric for any scikit-learn model.
+        after each variable reduction, the model is re-run and pfi re-evaluated. by default,
+        the validation error is used to avoid leakage and the number of Xvars that most reduced
+        the error is selected.
+
+        Args:
+            method (str): one of {'l1','pfi'}, default 'l1'.
+                the reduction method. 
+                l1 uses a lasso regressor and grid searches for the optimal alpha on the validation set
+                unless an alpha value is passed to the hyperparams arg and grid_search arg is False.
+                pfi uses permutation feature importance and is more computationally expensive
+                but can use any sklearn estimator.
+                method "pfi" creates attributes in object called pfi_dropped_vars and pfi_error_values that are two lists
+                that represent the error change with the corresponding dropped var.
+                the pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
+                the first error is the intial error before any variables were dropped.
+            estimator (str): one of _sklearn_estimators_ or 'lasso'. default 'lasso'.
+                the estimator to use to determine the best set of vars.
+                if method == 'l1', estimator arg is ignored and is always lasso.
+            keep_at_least (str or int): default 1.
+                the fewest number of Xvars to keep if method == 'pfi'.
+                'sqrt' keeps at least the sqare root of the number of Xvars rounded up.
+                this exists so that the keep_this_many keyword can use 'auto' as an argument.
+            keep_this_many (str or int): default 'auto'.
+                the number of Xvars to keep if method == 'pfi'.
+                "auto" keeps the number of xvars that returned the best error using the 
+                metric passed to monitor, but it is the most computationally expensive.
+                "sqrt" keeps the square root of the total number of observations rounded up.
+            gird_search (bool): default True.
+                whether to run a grid search for optimal hyperparams on the validation set.
+                if use_loaded_grid is False, uses the Grids.py file currently available in the working directory 
+                or creates a new Grids.py file with default values if none available to determine the grid to use.
+                the grid search is only run once and then those hyperparameters are used for
+                all subsequent pfi runs when method == 'pfi'.
+                in any utilized grid, do not include 'Xvars' as a key.
+                if you want to access the chosen hyperparams after the fact, they are stored in the reduction_hyperparams
+                attribute.
+            use_loaded_grid (bool): default False.
+                whether to use the currently loaded grid in the object instead of using a grid in Grids.py.
+                in any utilized grid, do not include 'Xvars' as a key.
+            dynamic_tuning (bool): default False.
+                whether to dynamically tune the model.
+            monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
+                ignored when pfi == 'l1'.
+                the metric to be monitored when making reduction decisions. 
+            overwrite (bool): default True.
+                if False, the list of selected Xvars are stored in an attribute called reduced_Xvars.
+                if True, this list of regressors overwrites the current Xvars in the object.
+            **kwargs: passed to manual_forecast() method and can include arguments related to 
+                a given model's hyperparameters or dynamic_testing.
+                do not pass hyperparameters if grid_search is True.
+                do not pass Xvars.
+
+        Returns:
+            None
+
+        >>> f.add_ar_terms(24)
+        >>> f.add_seasonal_regressors('month',raw=False,sincos=True,dummy=True)
+        >>> f.add_seasonal_regressors('year')
+        >>> f.add_time_trend()
+        >>> f.set_validation_length(12)
+        >>> f.reduce_Xvars(overwrite=False) # reduce with lasso (but don't overwrite Xvars)
+        >>> print(f.reduced_Xvars) # view results
+        >>> f.reduce_Xvars(
+                method='pfi',
+                estimator='gbt',
+                keep_at_least=10,
+                keep_this_many='auto',
+                dynamic_testing=False,
+                dynamic_tuning=True,
+            ) # reduce with gradient boosted tree estimator
+        >>> print(f.reduced_Xvars) # view results
+        """
+        descriptive_assert(
+            method in ('l1','pfi'),
+            ValueError,f'method must be one of "pfi", "l1", got {method}'
+        )
+        f = self.__deepcopy__()
+        descriptive_assert(
+            estimator in _sklearn_estimators_,
+            ValueError,
+            f'estimator must be one of {_sklearn_estimators_}, got {estimator}'
+        )
+        f.set_estimator(estimator if method == 'pfi' else 'lasso')
+        if grid_search:
+            if not use_loaded_grid:
+                from scalecast import GridGenerator
+                GridGenerator.get_example_grids()
+                f.ingest_grid(estimator)
+            else:
+                descriptive_assert(
+                    hasattr(f,'grid'),
+                    ForecastError,
+                    'grid not loaded, try setting use_loaded_grid to False'
+                )
+        else:
+            f.ingest_grid({k:[v] for k,v in kwargs.items()})
+
+        f.tune(dynamic_tuning=dynamic_tuning)
+        f.ingest_grid({k:[v] for k,v in f.best_params.items()})
+        f.auto_forecast(test_only=True)
+
+        self.reduction_hyperparams = f.best_params.copy()
+
+        if method == 'l1':
+            coef_fi_lasso = pd.DataFrame(
+                {x: [np.abs(co)] for x, co in zip(f.history["lasso"]["Xvars"], f.regr.coef_)},
+                index=["feature"],
+            ).T
+            self.reduced_Xvars = coef_fi_lasso.loc[coef_fi_lasso["feature"] != 0].index.to_list()
+        else:
+            f.save_feature_importance()
+            pfi_df = f.export_feature_importance(estimator)
+            using_r2 = (
+                monitor.endswith('R2') or (f.validation_metric == 'r2' and monitor == 'ValidationMetricValue')
+            )
+            pfi_df["weight"] = np.abs(pfi_df["weight"])
+            pfi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
+            features = pfi_df.index.to_list()
+            init_error = f.history[estimator][monitor]
+            init_error = -init_error if using_r2 else init_error
+            hp = f.history[estimator]["HyperParams"]
+
+            dropped = []
+            errors = [init_error]
+
+            sqrt = int(len(f.y) ** 0.5)
+            keep_this_many_new = (
+                1 if keep_this_many == 'auto'
+                else sqrt if keep_this_many == 'sqrt'
+                else keep_this_many
+            )
+            keep_at_least_new = (
+                sqrt if keep_at_least == 'sqrt'
+                else keep_at_least
+            )
+
+            stop_at = max(keep_this_many_new,keep_at_least_new)
+            drop_this_many = len(f.current_xreg) - stop_at
+
+            for _ in range(drop_this_many):
+                dropped.append(features[-1])
+                features = features[:-1]
+                f.grid['Xvars'] = [features]
+                f.tune(dynamic_tuning=dynamic_tuning)
+                f.auto_forecast(test_only=True)
+                new_error = f.history[estimator][monitor]
+                new_error = -new_error if using_r2 else new_error
+                errors.append(new_error)
+
+                f.save_feature_importance()
+                pfi_df = f.export_feature_importance(estimator)
+                pfi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
+                features = pfi_df.index.to_list()
+
+            optimal_drop = errors.index(min(errors)) if keep_this_many == 'auto' else drop_this_many
+            self.reduced_Xvars = [x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]]
+            self.pfi_dropped_vars = dropped
+            self.pfi_error_values = [-e for e in errors] if using_r2 else errors
+
+        if overwrite:
+            self.current_xreg = {x:v for x,v in self.current_xreg.items() if x in self.reduced_Xvars}
+            self.future_xreg = {x:v for x,v in self.future_xreg.items() if x in self.reduced_Xvars}
 
     def set_test_length(self, n=1):
         """ sets the length of the test set.

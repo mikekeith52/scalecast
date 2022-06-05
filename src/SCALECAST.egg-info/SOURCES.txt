@@ -50,6 +50,7 @@ src/scalecast/MVForecaster.py
 src/scalecast/__init__.py
 src/scalecast/multiseries.py
 src/scalecast/notebook.py
+src/scalecast/util.py
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
 src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/Grids.cpython-38.pyc

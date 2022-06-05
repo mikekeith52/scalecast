@@ -59,6 +59,7 @@ Index
    Forecaster/GridGenerator
    Forecaster/Notebook
    Forecaster/Multiseries
+   Forecaster/Util
 
 .. toctree::
    :maxdepth: 4
