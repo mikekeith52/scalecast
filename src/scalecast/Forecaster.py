@@ -1897,7 +1897,6 @@ class Forecaster:
             features = pfi_df.index.to_list()
             init_error = f.history[estimator][monitor]
             init_error = -init_error if using_r2 else init_error
-            hp = f.history[estimator]["HyperParams"]
 
             dropped = []
             errors = [init_error]
@@ -1928,6 +1927,7 @@ class Forecaster:
 
                 f.save_feature_importance()
                 pfi_df = f.export_feature_importance(estimator)
+                pfi_df['weight'] = np.abs(pfi_df['weight'])
                 pfi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
                 features = pfi_df.index.to_list()
 

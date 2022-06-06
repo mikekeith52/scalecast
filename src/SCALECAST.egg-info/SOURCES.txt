@@ -36,6 +36,7 @@ docs/Forecaster/GridGenerator.rst
 docs/Forecaster/MVForecaster.rst
 docs/Forecaster/Multiseries.rst
 docs/Forecaster/Notebook.rst
+docs/Forecaster/Util.rst
 docs/Forecaster/_forecast.rst
 docs/Forecaster/warnings.log
 docs/Forecaster/.ipynb_checkpoints/ForecasterGlobals-checkpoint.ipynb

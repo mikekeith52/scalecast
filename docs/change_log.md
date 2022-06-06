@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.10.4] - 2022-06-05
+### Added
+### Changed
+### Fixed
+- sorting from pfi variable reduction method was incorrect after initial variable drop, causing the wrong sequence of variables to be dropped when method = 'pfi'
+
 ## [0.10.3] - 2022-06-05
 ### Added
 - added lasso and ridge as default estimators and gave them default grids for both `Forecaster` and `MVForecaster`
