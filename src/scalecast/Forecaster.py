@@ -3020,12 +3020,10 @@ class Forecaster:
         Returns:
             None
 
-        >>> from sklearn.linear_model import Lasso
-        >>> f.add_sklearn_estimator(Lasso,called='lasso')
-        >>> f.set_estimator('lasso')
-        >>> f.ingest_grid({'alpha':[.1,.5,1,1.5,2]})
-        >>> f.tune()
-        >>> f.auto_forecast()
+        >>> from sklearn.ensemble import StackingRegressor
+        >>> f.add_sklearn_estimator(StackingRegressor,called='stacking')
+        >>> f.set_estimator('stacking')
+        >>> f.manual_forecast(...)
         """
         globals()[called + '_'] = imported_module
         _sklearn_imports_[called] = globals()[called + '_']

@@ -229,12 +229,10 @@ class MVForecaster:
         Returns:
             None
 
-        >>> from sklearn.linear_model import Lasso
-        >>> mvf.add_sklearn_estimator(Lasso,called='lasso')
-        >>> mvf.set_estimator('lasso')
-        >>> mvf.ingest_grid({'alpha':[.1,.5,1,1.5,2],'lags':[1,2,3]})
-        >>> mvf.tune()
-        >>> mvf.auto_forecast()
+        >>> from sklearn.ensemble import StackingRegressor
+        >>> mvf.add_sklearn_estimator(StackingRegressor,called='stacking')
+        >>> mvf.set_estimator('stacking')
+        >>> mvf.manual_forecast(...)
         """
         globals()[called + '_'] = imported_module
         _sklearn_imports_[called] = globals()[called + '_']
@@ -948,10 +946,11 @@ class MVForecaster:
             )
             models_metrics = {m: v[determine_best_by] for m, v in self.history.items()}
 
-            if self.optimize_on == 'mean':
-                models_metrics = {m:np.mean(list(v.values())) for m, v in models_metrics.items()}
+            if self.optimize_on in _optimizer_funcs_:
+                models_metrics = {m:_optimizer_funcs_[self.optimize_on](list(v.values())) for m, v in models_metrics.items()}
             else:
-                models_metrics = {m:v['y{}'.format(self.optimize_on.split('series')[-1])] for m, v in models_metrics.items()}
+                series, label  = self._parse_series(self.optimize_on)
+                models_metrics = {m:v[series[0]] for m, v in models_metrics.items()}
 
             x = [h[0] for h in Counter(models_metrics).most_common()] 
             self.best_model = (
@@ -1266,12 +1265,11 @@ class MVForecaster:
                     elif c == "LastTestSetActual":
                         model_summary_sm[c] = [self.history[m]["TestSetActuals"][s][-1]]
                     elif c == "OptimizedOn" and hasattr(self,'best_model'): 
-                        if self.optimize_on == 'mean':
-                            model_summary_sm['OptimizedOn'] = ['mean']
-                        elif hasattr(self,'series_name_map'):
-                            model_summary_sm['OptimizedOn'] = [self.series_name_map[self.optimize_on]]
-                        else:
+                        if self.optimize_on in _optimizer_funcs_:
                             model_summary_sm['OptimizedOn'] = [self.optimize_on]
+                        else:
+                            series, label = self._parse_series(self.optimize_on)
+                            model_summary_sm['OptimizedOn'] = [label]
                         if hasattr(self,'optimize_metric'):
                             model_summary_sm['MetricOptimized'] = self.optimize_metric
                         model_summary_sm["best_model"] = m == self.best_model

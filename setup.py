@@ -26,6 +26,7 @@ setup(
     'Read the Docs': 'https://scalecast.readthedocs.io/en/latest/',
     'Examples': 'https://scalecast-examples.readthedocs.io/en/latest/',
   },
+  url = 'https://github.com/mikekeith52/scalecast',
   keywords = ['FORECAST', 'SCALE', 'DYNAMIC', 'MACHINE LEARNING', 'APPLIED'],
   install_requires = [
     'scikit-learn',

@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.10.5] - 2022-06-07
+### Added
+### Changed
+### Fixed
+- fixed the `set_best_model()` method in `MVForecaster`, which was broken due to not being able to parse new updates from 0.10.1
+
 ## [0.10.4] - 2022-06-05
 ### Added
 ### Changed

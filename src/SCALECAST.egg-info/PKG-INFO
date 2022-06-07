@@ -1,8 +1,8 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.10.4
+Version: 0.10.5
 Summary: The practitioner's time series forecasting library
-Home-page: UNKNOWN
+Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
 Author-email: mikekeith52@gmail.com
 License: MIT
