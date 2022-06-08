@@ -1777,9 +1777,11 @@ class Forecaster:
         permutation feature importance and offers more flexibility to view how removing
         variables one-at-a-time, according to which variable is evaluated as least helpful to the
         model after each model evaluation, affects a given error metric for any scikit-learn model.
-        after each variable reduction, the model is re-run and pfi re-evaluated. by default,
-        the validation error is used to avoid leakage and the number of Xvars that most reduced
-        the error is selected.
+        after each variable reduction, the model is re-run and pfi re-evaluated. feature scores
+        are adjusted to account for colinearity, a limitation of pfi, by sorting by each feature's score
+        and standard deviation, dropping variables that have both a low score and low standard deviation.
+        by default, the validation-set error is used to avoid leakage and the variable set that most 
+        reduced the error is selected.
 
         Args:
             method (str): one of {'l1','pfi'}, default 'l1'.
@@ -1797,13 +1799,13 @@ class Forecaster:
                 if method == 'l1', estimator arg is ignored and is always lasso.
             keep_at_least (str or int): default 1.
                 the fewest number of Xvars to keep if method == 'pfi'.
-                'sqrt' keeps at least the sqare root of the number of Xvars rounded up.
+                'sqrt' keeps at least the sqare root of the number of Xvars rounded down.
                 this exists so that the keep_this_many keyword can use 'auto' as an argument.
             keep_this_many (str or int): default 'auto'.
                 the number of Xvars to keep if method == 'pfi'.
                 "auto" keeps the number of xvars that returned the best error using the 
                 metric passed to monitor, but it is the most computationally expensive.
-                "sqrt" keeps the square root of the total number of observations rounded up.
+                "sqrt" keeps the square root of the total number of observations rounded down.
             gird_search (bool): default True.
                 whether to run a grid search for optimal hyperparams on the validation set.
                 if use_loaded_grid is False, uses the Grids.py file currently available in the working directory 
