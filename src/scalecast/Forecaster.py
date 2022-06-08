@@ -1779,7 +1779,7 @@ class Forecaster:
         model after each model evaluation, affects a given error metric for any scikit-learn model.
         after each variable reduction, the model is re-run and pfi re-evaluated. feature scores
         are adjusted to account for colinearity, a limitation of pfi, by sorting by each feature's score
-        and standard deviation, dropping variables that have both a low score and low standard deviation.
+        and standard deviation, dropping variables first that have both a low score and low standard deviation.
         by default, the validation-set error is used to avoid leakage and the variable set that most 
         reduced the error is selected.
 
