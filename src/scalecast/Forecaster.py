@@ -3663,7 +3663,8 @@ class Forecaster:
         will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
         Args:
-            dfs (list-like or str): default ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_fcsts'].
+            dfs (list-like or str): default 
+                ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_test_set_predictions','lvl_fcsts'].
                 a list or name of the specific dataframe(s) you want returned and/or written to excel.
                 must be one of or multiple of default.
             models (list-like or str): default 'all'.
