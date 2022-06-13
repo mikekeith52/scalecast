@@ -38,6 +38,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 |[📋 Examples](https://scalecast-examples.readthedocs.io/en/latest/)|Official scalecast notebooks|
 |[📓 TDS Article 1](https://towardsdatascience.com/expand-your-time-series-arsenal-with-these-models-10c807d37558)|Univariate Forecasting|
 |[📓 TDS Article 2](https://towardsdatascience.com/multiple-series-forecast-them-together-with-any-sklearn-model-96319d46269)|Multivariate Forecasting|
+[[📓 TDS Article 3](https://towardsdatascience.com/variable-reduction-techniques-for-time-series-646743f726d4)|Feature Reduction|
 |[🛠️ Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)|See what's changed|
 
 ## Example
@@ -90,7 +91,7 @@ These grids will be used to tune each model. To get example grids, you can use:
 GridGenerator.get_example_grids()
 ```
 
-This saves a Grids.py file to your working directory by default, which scalecast will know how to read. This example creates its own grids:  
+This saves a Grids.py file to your working directory by default, which scalecast knows how to read. In this example, we create our own grids:  
 
 
 ```python
@@ -239,7 +240,7 @@ plt.show()
     
 
 
-Using level test-set MAPE, the K-nearest Neighbor model performed the best, although, as we can see, predicting bond rates accurately is difficult if not impossible. To make the forecasts look better, we can set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. This will make test-set predictions an average on one-step forecasts. By default, everything is dynamic with scalecast to give a more realistic sense of how the models perform. To see our future predictions:
+Comparing level test-set MAPE values, the K-nearest Neighbor model performed best, although, as we can see, predicting bond rates accurately is difficult if not impossible. To make the forecasts look better, we can set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. This will make test-set predictions an average on one-step forecasts. By default, everything is dynamic with scalecast to give a more realistic sense of how the models perform. To see our future predictions:
 
 
 ```python
@@ -495,7 +496,7 @@ mv_models = (
 ```
 
 #### Create Grids
-We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as their own lags) in each model that is called. Again, for mv forecasting, we can save default grids:  
+We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as their own lags) in each model that is called, unless we tell the models to not use a certain series' lags for whatever reason. Again, for mv forecasting, we can save default grids:  
 
 ```python
 GridGenerator.get_mv_grids()
@@ -523,7 +524,7 @@ mv_grids = dict(zip(mv_models,mv_grid_list))
 ```python
 mvf = MVForecaster(
     *f_dict.values(),
-    names = f_dict.keys()
+    names = f_dict.keys(),
 )
 
 mvf.set_test_length(.2)
@@ -633,7 +634,7 @@ plt.show()
     
 
 
-Once again, in this object, we can also set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. Let's see model forecasts into the future using the elasticent model only:
+Once again, in this object, we can also set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. This would make our plots and metrics look better, but not be realistic in the sense it wouldn't show how well our forecasts could predict more than one period in the future. Let's see model forecasts into the future using the elasticent model only:
 
 
 ```python
@@ -712,9 +713,9 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>0</th>
       <td>elasticnet</td>
       <td>HQMCB1YR</td>
-      <td>0.945331</td>
-      <td>0.218458</td>
-      <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
+      <td>1.393131</td>
+      <td>0.207401</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
       <td>12</td>
     </tr>
     <tr>
@@ -739,18 +740,18 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>3</th>
       <td>xgboost</td>
       <td>HQMCB1YR</td>
-      <td>3.045742</td>
-      <td>-0.892055</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
+      <td>2.669461</td>
+      <td>-0.429998</td>
+      <td>{'n_estimators': 200, 'scale_pos_weight': 5, '...</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>elasticnet</td>
       <td>HQMCB5YR</td>
-      <td>0.367805</td>
-      <td>0.329170</td>
-      <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
+      <td>0.369400</td>
+      <td>0.342221</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
       <td>12</td>
     </tr>
     <tr>
@@ -775,18 +776,18 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>7</th>
       <td>xgboost</td>
       <td>HQMCB5YR</td>
-      <td>0.341928</td>
-      <td>0.491882</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
+      <td>0.364969</td>
+      <td>0.447650</td>
+      <td>{'n_estimators': 200, 'scale_pos_weight': 5, '...</td>
       <td>4</td>
     </tr>
     <tr>
       <th>8</th>
       <td>elasticnet</td>
       <td>HQMCB10YR</td>
-      <td>0.145418</td>
-      <td>0.375622</td>
-      <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
+      <td>0.145513</td>
+      <td>0.381733</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
       <td>12</td>
     </tr>
     <tr>
@@ -811,9 +812,9 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>11</th>
       <td>xgboost</td>
       <td>HQMCB10YR</td>
-      <td>0.314682</td>
-      <td>-1.480335</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
+      <td>0.322004</td>
+      <td>-1.299300</td>
+      <td>{'n_estimators': 200, 'scale_pos_weight': 5, '...</td>
       <td>4</td>
     </tr>
     <tr>
@@ -822,7 +823,7 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <td>HQMCB20YR</td>
       <td>0.096262</td>
       <td>0.475912</td>
-      <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
       <td>12</td>
     </tr>
     <tr>
@@ -847,18 +848,18 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>15</th>
       <td>xgboost</td>
       <td>HQMCB20YR</td>
-      <td>0.194508</td>
-      <td>-1.189377</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
+      <td>0.162465</td>
+      <td>-0.416687</td>
+      <td>{'n_estimators': 200, 'scale_pos_weight': 5, '...</td>
       <td>4</td>
     </tr>
     <tr>
       <th>16</th>
       <td>elasticnet</td>
       <td>HQMCB30YR</td>
-      <td>0.089038</td>
-      <td>0.538360</td>
-      <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
+      <td>0.088019</td>
+      <td>0.535077</td>
+      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
       <td>12</td>
     </tr>
     <tr>
@@ -883,9 +884,9 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
       <th>19</th>
       <td>xgboost</td>
       <td>HQMCB30YR</td>
-      <td>0.122523</td>
-      <td>-0.021191</td>
-      <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
+      <td>0.110330</td>
+      <td>0.221201</td>
+      <td>{'n_estimators': 200, 'scale_pos_weight': 5, '...</td>
       <td>4</td>
     </tr>
   </tbody>
@@ -957,287 +958,287 @@ mvf.export_backtest_metrics('elasticnet')
     <tr>
       <th rowspan="4" valign="top">HQMCB1YR</th>
       <th>RMSE</th>
-      <td>0.695918</td>
-      <td>0.497914</td>
-      <td>0.347547</td>
-      <td>0.262605</td>
-      <td>0.202716</td>
-      <td>0.158913</td>
-      <td>0.142525</td>
-      <td>0.123923</td>
-      <td>0.069821</td>
-      <td>0.091576</td>
-      <td>0.259346</td>
+      <td>0.680118</td>
+      <td>0.497683</td>
+      <td>0.359919</td>
+      <td>0.291307</td>
+      <td>0.219452</td>
+      <td>0.156473</td>
+      <td>0.119935</td>
+      <td>0.107297</td>
+      <td>0.066994</td>
+      <td>0.08627</td>
+      <td>0.258545</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.442004</td>
-      <td>0.345228</td>
-      <td>0.253083</td>
-      <td>0.189836</td>
-      <td>0.151863</td>
-      <td>0.125559</td>
-      <td>0.120367</td>
-      <td>0.102128</td>
-      <td>0.053825</td>
-      <td>0.079113</td>
-      <td>0.186301</td>
+      <td>0.435547</td>
+      <td>0.359032</td>
+      <td>0.279044</td>
+      <td>0.229573</td>
+      <td>0.166704</td>
+      <td>0.116711</td>
+      <td>0.08817</td>
+      <td>0.075095</td>
+      <td>0.052313</td>
+      <td>0.076749</td>
+      <td>0.187894</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-1.186279</td>
-      <td>-1.92443</td>
-      <td>-3.242853</td>
-      <td>-4.328906</td>
-      <td>-7.698407</td>
-      <td>-21.133118</td>
-      <td>-50.138597</td>
-      <td>-31.907457</td>
-      <td>-6.436495</td>
-      <td>-3.965478</td>
-      <td>-13.196202</td>
+      <td>-1.088134</td>
+      <td>-1.921717</td>
+      <td>-3.55032</td>
+      <td>-5.557438</td>
+      <td>-9.193894</td>
+      <td>-20.458702</td>
+      <td>-35.212641</td>
+      <td>-23.669924</td>
+      <td>-5.846449</td>
+      <td>-3.406797</td>
+      <td>-10.990602</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.573286</td>
-      <td>0.656146</td>
-      <td>0.615779</td>
-      <td>0.540222</td>
-      <td>0.506593</td>
-      <td>0.475989</td>
-      <td>0.489836</td>
-      <td>0.420338</td>
-      <td>0.220423</td>
-      <td>0.290318</td>
-      <td>0.478893</td>
+      <td>0.583172</td>
+      <td>0.721132</td>
+      <td>0.719911</td>
+      <td>0.693557</td>
+      <td>0.564109</td>
+      <td>0.438019</td>
+      <td>0.35599</td>
+      <td>0.308855</td>
+      <td>0.214962</td>
+      <td>0.288865</td>
+      <td>0.488857</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB5YR</th>
       <th>RMSE</th>
-      <td>0.726668</td>
-      <td>0.788958</td>
-      <td>0.721782</td>
-      <td>0.657441</td>
-      <td>0.585476</td>
-      <td>0.522427</td>
-      <td>0.522317</td>
-      <td>0.50351</td>
-      <td>0.403217</td>
-      <td>0.292447</td>
-      <td>0.572424</td>
+      <td>0.715536</td>
+      <td>0.794238</td>
+      <td>0.739536</td>
+      <td>0.691355</td>
+      <td>0.600469</td>
+      <td>0.512485</td>
+      <td>0.487165</td>
+      <td>0.477321</td>
+      <td>0.391538</td>
+      <td>0.286334</td>
+      <td>0.569598</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.467376</td>
-      <td>0.662728</td>
-      <td>0.638292</td>
-      <td>0.587521</td>
-      <td>0.508732</td>
-      <td>0.446055</td>
-      <td>0.455035</td>
-      <td>0.426819</td>
-      <td>0.311795</td>
-      <td>0.234031</td>
-      <td>0.473838</td>
+      <td>0.459639</td>
+      <td>0.677279</td>
+      <td>0.662442</td>
+      <td>0.624275</td>
+      <td>0.520474</td>
+      <td>0.427953</td>
+      <td>0.406752</td>
+      <td>0.394865</td>
+      <td>0.291331</td>
+      <td>0.228419</td>
+      <td>0.469343</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.953382</td>
-      <td>-3.756331</td>
-      <td>-6.253308</td>
-      <td>-7.589811</td>
-      <td>-6.147923</td>
-      <td>-5.727931</td>
-      <td>-6.902584</td>
-      <td>-5.703603</td>
-      <td>-2.920054</td>
-      <td>-1.062951</td>
-      <td>-4.701788</td>
+      <td>-0.893993</td>
+      <td>-3.820198</td>
+      <td>-6.614519</td>
+      <td>-8.498869</td>
+      <td>-6.5187</td>
+      <td>-5.474301</td>
+      <td>-5.874703</td>
+      <td>-5.024412</td>
+      <td>-2.69626</td>
+      <td>-0.977616</td>
+      <td>-4.639357</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.2237</td>
-      <td>0.408174</td>
-      <td>0.436632</td>
-      <td>0.431049</td>
-      <td>0.387795</td>
-      <td>0.355971</td>
-      <td>0.385392</td>
-      <td>0.36985</td>
-      <td>0.267759</td>
-      <td>0.213686</td>
-      <td>0.348001</td>
+      <td>0.219825</td>
+      <td>0.420562</td>
+      <td>0.455976</td>
+      <td>0.460298</td>
+      <td>0.396415</td>
+      <td>0.338478</td>
+      <td>0.338439</td>
+      <td>0.338735</td>
+      <td>0.246016</td>
+      <td>0.207306</td>
+      <td>0.342205</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB10YR</th>
       <th>RMSE</th>
-      <td>0.413162</td>
-      <td>0.53706</td>
-      <td>0.569658</td>
-      <td>0.62637</td>
-      <td>0.555175</td>
-      <td>0.492033</td>
-      <td>0.52184</td>
-      <td>0.570073</td>
-      <td>0.527967</td>
-      <td>0.342487</td>
-      <td>0.515583</td>
+      <td>0.413182</td>
+      <td>0.538917</td>
+      <td>0.57163</td>
+      <td>0.629244</td>
+      <td>0.553197</td>
+      <td>0.484331</td>
+      <td>0.508215</td>
+      <td>0.560488</td>
+      <td>0.524944</td>
+      <td>0.340182</td>
+      <td>0.512433</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.268802</td>
-      <td>0.462548</td>
-      <td>0.530208</td>
-      <td>0.591527</td>
-      <td>0.499755</td>
-      <td>0.42231</td>
-      <td>0.443545</td>
-      <td>0.486901</td>
-      <td>0.42114</td>
-      <td>0.292972</td>
-      <td>0.441971</td>
+      <td>0.271972</td>
+      <td>0.46542</td>
+      <td>0.532607</td>
+      <td>0.594465</td>
+      <td>0.497988</td>
+      <td>0.416072</td>
+      <td>0.428673</td>
+      <td>0.478803</td>
+      <td>0.420342</td>
+      <td>0.28927</td>
+      <td>0.439561</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.351327</td>
-      <td>-4.145307</td>
-      <td>-9.506926</td>
-      <td>-12.169451</td>
-      <td>-5.974719</td>
-      <td>-3.755598</td>
-      <td>-4.219371</td>
-      <td>-4.512336</td>
-      <td>-3.089403</td>
-      <td>-0.587915</td>
-      <td>-4.831235</td>
+      <td>-0.351461</td>
+      <td>-4.18095</td>
+      <td>-9.579792</td>
+      <td>-12.290552</td>
+      <td>-5.925107</td>
+      <td>-3.607884</td>
+      <td>-3.950379</td>
+      <td>-4.328529</td>
+      <td>-3.042696</td>
+      <td>-0.566612</td>
+      <td>-4.782396</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.090403</td>
-      <td>0.167273</td>
-      <td>0.20145</td>
-      <td>0.230762</td>
-      <td>0.195362</td>
-      <td>0.165859</td>
-      <td>0.176741</td>
-      <td>0.196157</td>
-      <td>0.168231</td>
-      <td>0.122209</td>
-      <td>0.171445</td>
+      <td>0.09151</td>
+      <td>0.168442</td>
+      <td>0.202444</td>
+      <td>0.231968</td>
+      <td>0.194725</td>
+      <td>0.163508</td>
+      <td>0.170551</td>
+      <td>0.192906</td>
+      <td>0.168057</td>
+      <td>0.120424</td>
+      <td>0.170454</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB20YR</th>
       <th>RMSE</th>
-      <td>0.34906</td>
-      <td>0.277221</td>
-      <td>0.36691</td>
-      <td>0.482713</td>
-      <td>0.408408</td>
-      <td>0.305705</td>
-      <td>0.372866</td>
-      <td>0.481968</td>
-      <td>0.493685</td>
+      <td>0.347758</td>
+      <td>0.276985</td>
+      <td>0.366632</td>
+      <td>0.482497</td>
+      <td>0.40778</td>
+      <td>0.304314</td>
+      <td>0.371543</td>
+      <td>0.479899</td>
+      <td>0.493834</td>
       <td>0.290549</td>
-      <td>0.382908</td>
+      <td>0.382179</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.301185</td>
-      <td>0.203105</td>
-      <td>0.333146</td>
-      <td>0.456921</td>
-      <td>0.366134</td>
-      <td>0.257816</td>
-      <td>0.306186</td>
-      <td>0.416652</td>
-      <td>0.414167</td>
+      <td>0.300209</td>
+      <td>0.202825</td>
+      <td>0.332991</td>
+      <td>0.456741</td>
+      <td>0.365605</td>
+      <td>0.256809</td>
+      <td>0.305151</td>
+      <td>0.415349</td>
+      <td>0.415741</td>
       <td>0.256084</td>
-      <td>0.331140</td>
+      <td>0.330750</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.382792</td>
-      <td>-0.575448</td>
-      <td>-3.578155</td>
-      <td>-6.821555</td>
-      <td>-3.447258</td>
-      <td>-1.271587</td>
-      <td>-2.336246</td>
-      <td>-4.447912</td>
-      <td>-4.089976</td>
+      <td>-0.372493</td>
+      <td>-0.572775</td>
+      <td>-3.571202</td>
+      <td>-6.814574</td>
+      <td>-3.433593</td>
+      <td>-1.250964</td>
+      <td>-2.31262</td>
+      <td>-4.401254</td>
+      <td>-4.093037</td>
       <td>-0.58659</td>
-      <td>-2.753752</td>
+      <td>-2.740910</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.091886</td>
-      <td>0.059608</td>
-      <td>0.102169</td>
-      <td>0.142359</td>
-      <td>0.113466</td>
-      <td>0.079593</td>
-      <td>0.094226</td>
-      <td>0.129146</td>
-      <td>0.12799</td>
+      <td>0.091544</td>
+      <td>0.059524</td>
+      <td>0.102128</td>
+      <td>0.142306</td>
+      <td>0.113305</td>
+      <td>0.079292</td>
+      <td>0.09391</td>
+      <td>0.12876</td>
+      <td>0.128541</td>
       <td>0.081375</td>
-      <td>0.102182</td>
+      <td>0.102069</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB30YR</th>
       <th>RMSE</th>
-      <td>0.368001</td>
-      <td>0.222563</td>
-      <td>0.316135</td>
-      <td>0.448717</td>
-      <td>0.381911</td>
-      <td>0.257456</td>
-      <td>0.346873</td>
-      <td>0.459515</td>
-      <td>0.482774</td>
-      <td>0.286702</td>
-      <td>0.357065</td>
+      <td>0.365137</td>
+      <td>0.222852</td>
+      <td>0.317983</td>
+      <td>0.447648</td>
+      <td>0.382598</td>
+      <td>0.258847</td>
+      <td>0.34714</td>
+      <td>0.457409</td>
+      <td>0.480515</td>
+      <td>0.286697</td>
+      <td>0.356683</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.338561</td>
-      <td>0.183603</td>
-      <td>0.274438</td>
-      <td>0.419334</td>
-      <td>0.336793</td>
-      <td>0.209304</td>
-      <td>0.284308</td>
-      <td>0.396082</td>
-      <td>0.408056</td>
-      <td>0.244059</td>
-      <td>0.309454</td>
+      <td>0.335445</td>
+      <td>0.182342</td>
+      <td>0.276586</td>
+      <td>0.418178</td>
+      <td>0.337432</td>
+      <td>0.210653</td>
+      <td>0.284562</td>
+      <td>0.393817</td>
+      <td>0.40596</td>
+      <td>0.244</td>
+      <td>0.308897</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.777435</td>
-      <td>0.024279</td>
-      <td>-1.706653</td>
-      <td>-4.370536</td>
-      <td>-2.46268</td>
-      <td>-0.531978</td>
-      <td>-1.808506</td>
-      <td>-4.089156</td>
-      <td>-4.162142</td>
-      <td>-0.677249</td>
-      <td>-2.056206</td>
+      <td>-0.749881</td>
+      <td>0.021739</td>
+      <td>-1.738388</td>
+      <td>-4.344987</td>
+      <td>-2.475148</td>
+      <td>-0.548571</td>
+      <td>-1.812833</td>
+      <td>-4.042613</td>
+      <td>-4.113949</td>
+      <td>-0.677194</td>
+      <td>-2.048182</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.104223</td>
-      <td>0.055007</td>
-      <td>0.081993</td>
-      <td>0.127449</td>
-      <td>0.101591</td>
-      <td>0.062785</td>
-      <td>0.084881</td>
-      <td>0.118896</td>
-      <td>0.122237</td>
-      <td>0.074425</td>
-      <td>0.093349</td>
+      <td>0.103197</td>
+      <td>0.054528</td>
+      <td>0.082659</td>
+      <td>0.12709</td>
+      <td>0.101786</td>
+      <td>0.063186</td>
+      <td>0.084958</td>
+      <td>0.118197</td>
+      <td>0.121598</td>
+      <td>0.0744</td>
+      <td>0.093160</td>
     </tr>
   </tbody>
 </table>
@@ -1282,6 +1283,8 @@ plt.show()
 ![png](README_files/README_52_0.png)
     
 
+
+There is much more than can be done with this package! Be sure to [read the docs](https://scalecast.readthedocs.io/en/latest/) and see the [examples](https://scalecast-examples.readthedocs.io/en/latest/)!
 
 
 ```python
