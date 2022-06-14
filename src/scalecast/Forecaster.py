@@ -340,6 +340,7 @@ class Forecaster:
             "LowerCI": [f - ci_range for f in self.forecast],
             "FittedVals": self.fitted_values[:],
             "Tuned": False if not kwargs["tuned"] else "Dynamically" if self.dynamic_tuning else True,
+            "CrossValidated": False if not kwargs["tuned"] else True if 'fold' in self.grid_evaluated.columns else False,
             "DynamicallyTested": self.dynamic_testing,
             "Integration": self.integration,
             "TestSetLength": self.test_length,
@@ -449,7 +450,7 @@ class Forecaster:
         self.mae = mae(y, pred)
         self.mape = mape(y, pred)
 
-    def _tune(self) -> float:
+    def _tune(self):
         """ reads which validation metric to use in _metrics_ and pulls that attribute value to return from function.
             deletes: 'r2','rmse','mape','mae','test_set_pred', and 'test_set_actuals' attributes if they exist.
         """
@@ -515,9 +516,13 @@ class Forecaster:
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
         """
         def fit_normalizer(X, normalizer):
+            try:
+                normalizer = None if np.isnan(normalizer) else normalizer
+            except TypeError:
+                pass
             descriptive_assert(
                 normalizer in _normalizer_,
-                ForecastError,
+                ValueError,
                 f"normalizer must be one of {_normalizer_}, got {normalizer}",
             )
             if normalizer == "minmax":
@@ -777,7 +782,7 @@ class Forecaster:
         floor=None,
         test_only=False,
         **kwargs,
-    ) -> Union[float, list]:
+    ):
         """ forecasts with the prophet model from facebook.
         see example: https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html
 
@@ -1402,7 +1407,7 @@ class Forecaster:
         self.models = models
         return (fcst, fv, None, None)
 
-    def _parse_models(self, models, determine_best_by) -> list:
+    def _parse_models(self, models, determine_best_by):
         """ takes a collection of models and orders them best-to-worst based on a given metric and returns the ordered list (of str type).
 
         Args:
@@ -1443,7 +1448,7 @@ class Forecaster:
                 models = [m for m in all_models if m in models]
         return models
 
-    def _diffy(self, n) -> pd.Series:
+    def _diffy(self, n):
         """ parses the argument fed to a diffy parameter
 
         Args:
@@ -1770,6 +1775,8 @@ class Forecaster:
         dynamic_tuning=False,
         monitor='ValidationMetricValue',
         overwrite=True,
+        cross_validate=False,
+        cvkwargs={},
         **kwargs,
     ):
         """ reduces the regressor variables stored in the object. two methods are available:
@@ -1826,6 +1833,11 @@ class Forecaster:
             overwrite (bool): default True.
                 if False, the list of selected Xvars are stored in an attribute called reduced_Xvars.
                 if True, this list of regressors overwrites the current Xvars in the object.
+            cross_validate (bool): default False
+                whether to tune the model with cross validation. 
+                if False, uses the validation slice of data to tune.
+                if not monitoring ValidationMetricValue, you will want to leave this False.
+            cvkwargs (dict): default {}. passed to the cross_validate() method.
             **kwargs: passed to manual_forecast() method and can include arguments related to 
                 a given model's hyperparameters or dynamic_testing.
                 do not pass hyperparameters if grid_search is True.
@@ -1876,7 +1888,10 @@ class Forecaster:
         else:
             f.ingest_grid({k:[v] for k,v in kwargs.items()})
 
-        f.tune(dynamic_tuning=dynamic_tuning)
+        if not cross_validate:
+            f.tune(dynamic_tuning=dynamic_tuning)
+        else:
+            f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
         f.ingest_grid({k:[v] for k,v in f.best_params.items()})
         f.auto_forecast(test_only=True)
 
@@ -1921,7 +1936,10 @@ class Forecaster:
                 dropped.append(features[-1])
                 features = features[:-1]
                 f.grid['Xvars'] = [features]
-                f.tune(dynamic_tuning=dynamic_tuning)
+                if not cross_validate:
+                    f.tune(dynamic_tuning=dynamic_tuning)
+                else:
+                    f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
                 f.auto_forecast(test_only=True)
                 new_error = f.history[estimator][monitor]
                 new_error = -new_error if using_r2 else new_error
@@ -2026,7 +2044,7 @@ class Forecaster:
 
     def adf_test(
         self, critical_pval=0.05, quiet=True, full_res=False, train_only=False, **kwargs
-    ) -> Union[tuple, bool]:
+    ):
         """ tests the stationarity of the y series using augmented dickey fuller.
 
         Args:
@@ -2876,24 +2894,101 @@ class Forecaster:
                 logging.warning(
                     f"could not evaluate the paramaters: {hp}. error: {e}"
                 )
-
+        
         if len(metrics) > 0:
             self.grid_evaluated = self.grid.copy()
             self.grid_evaluated["validation_length"] = self.validation_length
             self.grid_evaluated["validation_metric"] = self.validation_metric
             self.grid_evaluated["metric_value"] = metrics
+            self.dynamic_tuning = dynamic_tuning
+        else:
+            self.grid_evaluated = pd.DataFrame()
+        self._find_best_params(self.grid_evaluated)
+
+    def cross_validate(self,k=5,rolling=False,dynamic_tuning=False):
+        """ tunes a model's hyperparameters using time-series cross validation. 
+        monitors the metric specified in the valiation_metric attribute. 
+        set an estimator before calling. 
+        reads a grid for the estimator from Grids.py unless a grid is ingested manually. 
+        each fold size is equal to one another and is determined such that the last fold's 
+        training and validation sizes are the same (or close to the same). with rolling = True, 
+        all train sizes will be the same for each fold. 
+
+        Args:
+            k (int): default 5. the number of folds. must be at least 2.
+            rolling (bool): default False. whether to using a rolling method.
+            dynamic_tuning (bool): default False.
+
+        Returns:
+            None
+        """
+        rolling = bool(rolling)
+        k = int(k)
+        descriptive_assert(k>=2,ValueError,f'k must be at least 2, got {k}')
+        f = self.__deepcopy__()
+        usable_obs = len(f.y) - f.test_length
+        if f.estimator in _sklearn_estimators_:
+            ars = [int(x.split('AR')[-1]) for x in self.current_xreg.keys() if x.startswith('AR')]
+            if ars:
+                usable_obs -= max(ars)
+        val_size = usable_obs // (k+1)
+        f.set_validation_length(val_size)
+        grid_evaluated_cv = pd.DataFrame()
+        for i in range(k):
+            if i > 0:
+                f.current_xreg = {k:pd.Series(v.values[:-val_size]) for k, v in f.current_xreg.items()}
+                f.current_dates = pd.Series(f.current_dates.values[:-val_size])
+                f.y = pd.Series(f.y.values[:-val_size])
+                f.levely = f.levely[:-val_size]
+            
+            f2 = f.__deepcopy__()
+            if rolling:
+                f2.keep_smaller_history(val_size*2+f2.test_length)
+            
+            f2.tune(dynamic_tuning=dynamic_tuning)
+            if f2.grid_evaluated.shape[0] == 0:
+                self.grid = pd.DataFrame()
+                self._find_best_params(grid_evaluated_cv)
+                return
+        
+            f2.grid_evaluated['fold'] = i
+            f2.grid_evaluated['rolling'] = rolling
+            f2.grid_evaluated['train_length'] = len(f2.y) - val_size - f2.test_length
+            grid_evaluated_cv = pd.concat([grid_evaluated_cv,f2.grid_evaluated])
+        
+        # convert into tuple for the group or it fails
+        if 'Xvars' in grid_evaluated_cv:
+            grid_evaluated_cv['Xvars'] = grid_evaluated_cv['Xvars'].apply(lambda x: tuple(x))
+        
+        grid_evaluated = grid_evaluated_cv.groupby(
+            grid_evaluated_cv.columns.to_list()[:-4],
+            dropna=False,
+        )['metric_value'].mean().reset_index()
+        
+        # convert back to list or it fails when calling the hyperparam vals
+        # contributions welcome for a more elegant solution
+        if 'Xvars' in grid_evaluated:
+            grid_evaluated['Xvars'] = grid_evaluated['Xvars'].apply(lambda x: list(x))
+        
+        self.grid = grid_evaluated.iloc[:,:-3]
+        self.dynamic_tuning = f2.dynamic_tuning
+        self._find_best_params(grid_evaluated)
+        self.grid_evaluated = grid_evaluated_cv.reset_index(drop=True)
+        
+    def _find_best_params(self,grid_evaluated):
+        if grid_evaluated.shape[0] > 0:
             if self.validation_metric == "r2":
                 best_params_idx = self.grid.loc[
-                    self.grid_evaluated["metric_value"]
-                    == self.grid_evaluated["metric_value"].max()
+                    grid_evaluated["metric_value"]
+                    == grid_evaluated["metric_value"].max()
                 ].index.to_list()[0]
             else:
                 best_params_idx = self.grid.loc[
-                    self.grid_evaluated["metric_value"]
-                    == self.grid_evaluated["metric_value"].min()
+                    grid_evaluated["metric_value"]
+                    == grid_evaluated["metric_value"].min()
                 ].index.to_list()[0]
             self.best_params = {k: v[best_params_idx] for k, v in self.grid.to_dict(orient='series').items()}
-            self.validation_metric_value = self.grid_evaluated.loc[
+            self.validation_metric_value = grid_evaluated.loc[
                 best_params_idx, "metric_value"
             ]
         else:
@@ -2901,8 +2996,6 @@ class Forecaster:
                 f"none of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model"
             )
             self.best_params = {}
-
-        self.dynamic_tuning = dynamic_tuning
 
     def manual_forecast(self, call_me=None, dynamic_testing=True, test_only=False, **kwargs):
         """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
@@ -3039,16 +3132,21 @@ class Forecaster:
     def tune_test_forecast(
         self,
         models,
+        cross_validate=False,
         dynamic_tuning=False,
         dynamic_testing=True,
         summary_stats=False,
         feature_importance=False,
+        **cvkwargs,
     ):
         """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information.
 
         Args:
             models (list-like):
                 each element must be in _can_be_tuned_.
+            cross_validate (bool): default False
+                whether to tune the model with cross validation. 
+                if False, uses the validation slice of data to tune.
             dynamic_tuning (bool): default False.
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
@@ -3061,6 +3159,7 @@ class Forecaster:
                 whether to save summary stats for the models that offer those.
             feature_importance (bool): default False.
                 whether to save permutation feature importance information for the models that offer those.
+            **cvkwargs: passed to the cross_validate() method.
 
         Returns:
             None
@@ -3083,7 +3182,10 @@ class Forecaster:
         )
         for m in models:
             self.set_estimator(m)
-            self.tune(dynamic_tuning=dynamic_tuning)
+            if not cross_validate:
+                self.tune(dynamic_tuning=dynamic_tuning)
+            else:
+                self.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
             self.auto_forecast(dynamic_testing=dynamic_testing)
 
             if summary_stats:
@@ -3168,7 +3270,7 @@ class Forecaster:
         for k, v in self.current_xreg.items():
             self.current_xreg[k] = v[-n:]
 
-    def order_fcsts(self, models, determine_best_by="TestSetRMSE") -> list:
+    def order_fcsts(self, models, determine_best_by="TestSetRMSE"):
         """ gets estimated forecasts ordered from best-to-worst.
         
         Args:
@@ -3200,7 +3302,7 @@ class Forecaster:
             else x[::-1]
         )
 
-    def get_regressor_names(self) -> list:
+    def get_regressor_names(self):
         """ gets the regressor names stored in the object.
 
         Args:
@@ -3214,7 +3316,7 @@ class Forecaster:
         """
         return [k for k in self.current_xreg.keys()]
 
-    def get_freq(self) -> str:
+    def get_freq(self):
         """ gets the pandas inferred date frequency
         
         Returns:
@@ -3730,6 +3832,7 @@ class Forecaster:
                 "Scaler",
                 "Observations",
                 "Tuned",
+                "CrossValidated",
                 "DynamicallyTested",
                 "Integration",
                 "TestSetLength",
@@ -4140,3 +4243,5 @@ class Forecaster:
             (DataFrame): a copy of the backtest values.
         """
         return self.history[model]['BacktestValues'].copy()
+
+

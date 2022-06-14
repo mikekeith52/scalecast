@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.10.5
+Version: 0.11.0
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -49,6 +49,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         |[📋 Examples](https://scalecast-examples.readthedocs.io/en/latest/)|Official scalecast notebooks|
         |[📓 TDS Article 1](https://towardsdatascience.com/expand-your-time-series-arsenal-with-these-models-10c807d37558)|Univariate Forecasting|
         |[📓 TDS Article 2](https://towardsdatascience.com/multiple-series-forecast-them-together-with-any-sklearn-model-96319d46269)|Multivariate Forecasting|
+        |[📓 TDS Article 3](https://towardsdatascience.com/variable-reduction-techniques-for-time-series-646743f726d4)|Feature Reduction|
         |[🛠️ Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)|See what's changed|
         
         ## Example
@@ -101,7 +102,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         GridGenerator.get_example_grids()
         ```
         
-        This saves a Grids.py file to your working directory by default, which scalecast will know how to read. This example creates its own grids:  
+        This saves a Grids.py file to your working directory by default, which scalecast knows how to read. In this example, we create our own grids:  
         
         
         ```python
@@ -250,7 +251,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             
         
         
-        Using level test-set MAPE, the K-nearest Neighbor model performed the best, although, as we can see, predicting bond rates accurately is difficult if not impossible. To make the forecasts look better, we can set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. This will make test-set predictions an average on one-step forecasts. By default, everything is dynamic with scalecast to give a more realistic sense of how the models perform. To see our future predictions:
+        Comparing level test-set MAPE values, the K-nearest Neighbor model performed best, although, as we can see, predicting bond rates accurately is difficult if not impossible. To make the forecasts look better, we can set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. This will make test-set predictions an average on one-step forecasts. By default, everything is dynamic with scalecast to give a more realistic sense of how the models perform. To see our future predictions:
         
         
         ```python
@@ -506,7 +507,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         ```
         
         #### Create Grids
-        We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as their own lags) in each model that is called. Again, for mv forecasting, we can save default grids:  
+        We can use three of the same grids as we did in univariate forecasting and create a new MLR grid, with a modification to also search the optimal lag numbers. The `lags` argument can be an `int`, `list`, or `dict` type and all series will use the other series' lags (as well as their own lags) in each model that is called, unless we tell the models to not use a certain series' lags for whatever reason. Again, for mv forecasting, we can save default grids:  
         
         ```python
         GridGenerator.get_mv_grids()
@@ -534,7 +535,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         ```python
         mvf = MVForecaster(
             *f_dict.values(),
-            names = f_dict.keys()
+            names = f_dict.keys(),
         )
         
         mvf.set_test_length(.2)
@@ -605,7 +606,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         
         
         
-            'elasticnet'
+            'knn'
         
         
         
@@ -644,7 +645,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             
         
         
-        Once again, in this object, we can also set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. Let's see model forecasts into the future using the elasticent model only:
+        Once again, in this object, we can also set `dynamic_testing=False` in the `manual_forecast()` or `auto_forecast()` methods when calling forecasts. This would make our plots and metrics look better, but not be realistic in the sense it wouldn't show how well our forecasts could predict more than one period in the future. Let's see model forecasts into the future using the elasticent model only:
         
         
         ```python
@@ -721,12 +722,12 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           <tbody>
             <tr>
               <th>0</th>
-              <td>elasticnet</td>
+              <td>knn</td>
               <td>HQMCB1YR</td>
-              <td>0.945331</td>
-              <td>0.218458</td>
-              <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
-              <td>12</td>
+              <td>2.324660</td>
+              <td>-0.246684</td>
+              <td>{'n_neighbors': 38}</td>
+              <td>1</td>
             </tr>
             <tr>
               <th>1</th>
@@ -739,30 +740,30 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             </tr>
             <tr>
               <th>2</th>
-              <td>knn</td>
+              <td>elasticnet</td>
               <td>HQMCB1YR</td>
-              <td>2.094113</td>
-              <td>-0.109545</td>
-              <td>{'n_neighbors': 22}</td>
+              <td>3.793793</td>
+              <td>-2.039144</td>
+              <td>{'l1_ratio': 1.0, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>3</th>
               <td>xgboost</td>
               <td>HQMCB1YR</td>
-              <td>3.045742</td>
-              <td>-0.892055</td>
-              <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-              <td>4</td>
+              <td>5.647091</td>
+              <td>-6.032171</td>
+              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>4</th>
-              <td>elasticnet</td>
+              <td>knn</td>
               <td>HQMCB5YR</td>
-              <td>0.367805</td>
-              <td>0.329170</td>
-              <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
-              <td>12</td>
+              <td>0.576072</td>
+              <td>0.015072</td>
+              <td>{'n_neighbors': 38}</td>
+              <td>1</td>
             </tr>
             <tr>
               <th>5</th>
@@ -775,30 +776,30 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             </tr>
             <tr>
               <th>6</th>
-              <td>knn</td>
+              <td>elasticnet</td>
               <td>HQMCB5YR</td>
-              <td>0.387862</td>
-              <td>0.328670</td>
-              <td>{'n_neighbors': 22}</td>
+              <td>0.824665</td>
+              <td>-0.856494</td>
+              <td>{'l1_ratio': 1.0, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>7</th>
               <td>xgboost</td>
               <td>HQMCB5YR</td>
-              <td>0.341928</td>
-              <td>0.491882</td>
-              <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-              <td>4</td>
+              <td>0.940324</td>
+              <td>-1.357810</td>
+              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>8</th>
-              <td>elasticnet</td>
+              <td>knn</td>
               <td>HQMCB10YR</td>
-              <td>0.145418</td>
-              <td>0.375622</td>
-              <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
-              <td>12</td>
+              <td>0.210301</td>
+              <td>0.166048</td>
+              <td>{'n_neighbors': 38}</td>
+              <td>1</td>
             </tr>
             <tr>
               <th>9</th>
@@ -811,30 +812,30 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             </tr>
             <tr>
               <th>10</th>
-              <td>knn</td>
+              <td>elasticnet</td>
               <td>HQMCB10YR</td>
-              <td>0.140968</td>
-              <td>0.357318</td>
-              <td>{'n_neighbors': 22}</td>
+              <td>0.243075</td>
+              <td>-0.063448</td>
+              <td>{'l1_ratio': 1.0, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>11</th>
               <td>xgboost</td>
               <td>HQMCB10YR</td>
-              <td>0.314682</td>
-              <td>-1.480335</td>
-              <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-              <td>4</td>
+              <td>0.229634</td>
+              <td>-0.576659</td>
+              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>12</th>
-              <td>elasticnet</td>
+              <td>knn</td>
               <td>HQMCB20YR</td>
-              <td>0.096262</td>
-              <td>0.475912</td>
-              <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
-              <td>12</td>
+              <td>0.110740</td>
+              <td>0.436453</td>
+              <td>{'n_neighbors': 38}</td>
+              <td>1</td>
             </tr>
             <tr>
               <th>13</th>
@@ -847,30 +848,30 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             </tr>
             <tr>
               <th>14</th>
-              <td>knn</td>
+              <td>elasticnet</td>
               <td>HQMCB20YR</td>
-              <td>0.087442</td>
-              <td>0.505816</td>
-              <td>{'n_neighbors': 22}</td>
+              <td>0.107812</td>
+              <td>0.438077</td>
+              <td>{'l1_ratio': 1.0, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>15</th>
               <td>xgboost</td>
               <td>HQMCB20YR</td>
-              <td>0.194508</td>
-              <td>-1.189377</td>
-              <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-              <td>4</td>
+              <td>0.288137</td>
+              <td>-3.211295</td>
+              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
+              <td>6</td>
             </tr>
             <tr>
               <th>16</th>
-              <td>elasticnet</td>
+              <td>knn</td>
               <td>HQMCB30YR</td>
-              <td>0.089038</td>
-              <td>0.538360</td>
-              <td>{'l1_ratio': 1.0, 'alpha': 0.888888888888889}</td>
-              <td>12</td>
+              <td>0.087734</td>
+              <td>0.568717</td>
+              <td>{'n_neighbors': 38}</td>
+              <td>1</td>
             </tr>
             <tr>
               <th>17</th>
@@ -883,21 +884,21 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             </tr>
             <tr>
               <th>18</th>
-              <td>knn</td>
+              <td>elasticnet</td>
               <td>HQMCB30YR</td>
-              <td>0.086519</td>
-              <td>0.570336</td>
-              <td>{'n_neighbors': 22}</td>
+              <td>0.084037</td>
+              <td>0.558233</td>
+              <td>{'l1_ratio': 1.0, 'alpha': 0.0}</td>
               <td>1</td>
             </tr>
             <tr>
               <th>19</th>
               <td>xgboost</td>
               <td>HQMCB30YR</td>
-              <td>0.122523</td>
-              <td>-0.021191</td>
-              <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-              <td>4</td>
+              <td>0.300581</td>
+              <td>-4.218186</td>
+              <td>{'n_estimators': 200, 'scale_pos_weight': 10, ...</td>
+              <td>6</td>
             </tr>
           </tbody>
         </table>
@@ -968,287 +969,287 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
             <tr>
               <th rowspan="4" valign="top">HQMCB1YR</th>
               <th>RMSE</th>
-              <td>0.695918</td>
-              <td>0.497914</td>
-              <td>0.347547</td>
-              <td>0.262605</td>
-              <td>0.202716</td>
-              <td>0.158913</td>
-              <td>0.142525</td>
-              <td>0.123923</td>
-              <td>0.069821</td>
-              <td>0.091576</td>
-              <td>0.259346</td>
+              <td>0.487971</td>
+              <td>0.295814</td>
+              <td>0.147322</td>
+              <td>0.164049</td>
+              <td>0.091141</td>
+              <td>0.060353</td>
+              <td>0.119651</td>
+              <td>0.028003</td>
+              <td>0.046719</td>
+              <td>0.154311</td>
+              <td>0.159533</td>
             </tr>
             <tr>
               <th>MAE</th>
-              <td>0.442004</td>
-              <td>0.345228</td>
-              <td>0.253083</td>
-              <td>0.189836</td>
-              <td>0.151863</td>
-              <td>0.125559</td>
-              <td>0.120367</td>
-              <td>0.102128</td>
-              <td>0.053825</td>
-              <td>0.079113</td>
-              <td>0.186301</td>
+              <td>0.28571</td>
+              <td>0.171958</td>
+              <td>0.097406</td>
+              <td>0.136998</td>
+              <td>0.070702</td>
+              <td>0.056345</td>
+              <td>0.117123</td>
+              <td>0.02111</td>
+              <td>0.041883</td>
+              <td>0.149434</td>
+              <td>0.114867</td>
             </tr>
             <tr>
               <th>R2</th>
-              <td>-1.186279</td>
-              <td>-1.92443</td>
-              <td>-3.242853</td>
-              <td>-4.328906</td>
-              <td>-7.698407</td>
-              <td>-21.133118</td>
-              <td>-50.138597</td>
-              <td>-31.907457</td>
-              <td>-6.436495</td>
-              <td>-3.965478</td>
-              <td>-13.196202</td>
+              <td>-0.074922</td>
+              <td>-0.032213</td>
+              <td>0.237629</td>
+              <td>-1.07959</td>
+              <td>-0.758305</td>
+              <td>-2.192486</td>
+              <td>-35.041028</td>
+              <td>-0.680347</td>
+              <td>-2.329534</td>
+              <td>-13.099094</td>
+              <td>-5.504989</td>
             </tr>
             <tr>
               <th>MAPE</th>
-              <td>0.573286</td>
-              <td>0.656146</td>
-              <td>0.615779</td>
-              <td>0.540222</td>
-              <td>0.506593</td>
-              <td>0.475989</td>
-              <td>0.489836</td>
-              <td>0.420338</td>
-              <td>0.220423</td>
-              <td>0.290318</td>
-              <td>0.478893</td>
+              <td>0.408617</td>
+              <td>0.31018</td>
+              <td>0.237814</td>
+              <td>0.426764</td>
+              <td>0.239001</td>
+              <td>0.226237</td>
+              <td>0.475545</td>
+              <td>0.082124</td>
+              <td>0.166775</td>
+              <td>0.593249</td>
+              <td>0.316631</td>
             </tr>
             <tr>
               <th rowspan="4" valign="top">HQMCB5YR</th>
               <th>RMSE</th>
-              <td>0.726668</td>
-              <td>0.788958</td>
-              <td>0.721782</td>
-              <td>0.657441</td>
-              <td>0.585476</td>
-              <td>0.522427</td>
-              <td>0.522317</td>
-              <td>0.50351</td>
-              <td>0.403217</td>
-              <td>0.292447</td>
-              <td>0.572424</td>
+              <td>0.570817</td>
+              <td>0.65871</td>
+              <td>0.604627</td>
+              <td>0.644545</td>
+              <td>0.537364</td>
+              <td>0.410313</td>
+              <td>0.401821</td>
+              <td>0.458499</td>
+              <td>0.408862</td>
+              <td>0.273161</td>
+              <td>0.496872</td>
             </tr>
             <tr>
               <th>MAE</th>
-              <td>0.467376</td>
-              <td>0.662728</td>
-              <td>0.638292</td>
-              <td>0.587521</td>
-              <td>0.508732</td>
-              <td>0.446055</td>
-              <td>0.455035</td>
-              <td>0.426819</td>
-              <td>0.311795</td>
-              <td>0.234031</td>
-              <td>0.473838</td>
+              <td>0.402543</td>
+              <td>0.525583</td>
+              <td>0.522105</td>
+              <td>0.585369</td>
+              <td>0.466181</td>
+              <td>0.344805</td>
+              <td>0.326988</td>
+              <td>0.392991</td>
+              <td>0.327104</td>
+              <td>0.203996</td>
+              <td>0.409767</td>
             </tr>
             <tr>
               <th>R2</th>
-              <td>-0.953382</td>
-              <td>-3.756331</td>
-              <td>-6.253308</td>
-              <td>-7.589811</td>
-              <td>-6.147923</td>
-              <td>-5.727931</td>
-              <td>-6.902584</td>
-              <td>-5.703603</td>
-              <td>-2.920054</td>
-              <td>-1.062951</td>
-              <td>-4.701788</td>
+              <td>-0.205337</td>
+              <td>-2.315526</td>
+              <td>-4.08979</td>
+              <td>-7.256139</td>
+              <td>-5.021421</td>
+              <td>-3.150129</td>
+              <td>-3.676984</td>
+              <td>-4.558652</td>
+              <td>-3.030571</td>
+              <td>-0.79983</td>
+              <td>-3.410438</td>
             </tr>
             <tr>
               <th>MAPE</th>
-              <td>0.2237</td>
-              <td>0.408174</td>
-              <td>0.436632</td>
-              <td>0.431049</td>
-              <td>0.387795</td>
-              <td>0.355971</td>
-              <td>0.385392</td>
-              <td>0.36985</td>
-              <td>0.267759</td>
-              <td>0.213686</td>
-              <td>0.348001</td>
+              <td>0.213215</td>
+              <td>0.316168</td>
+              <td>0.353514</td>
+              <td>0.43293</td>
+              <td>0.355474</td>
+              <td>0.274756</td>
+              <td>0.269099</td>
+              <td>0.342425</td>
+              <td>0.28483</td>
+              <td>0.178973</td>
+              <td>0.302138</td>
             </tr>
             <tr>
               <th rowspan="4" valign="top">HQMCB10YR</th>
               <th>RMSE</th>
-              <td>0.413162</td>
-              <td>0.53706</td>
-              <td>0.569658</td>
-              <td>0.62637</td>
-              <td>0.555175</td>
-              <td>0.492033</td>
-              <td>0.52184</td>
-              <td>0.570073</td>
-              <td>0.527967</td>
-              <td>0.342487</td>
-              <td>0.515583</td>
+              <td>0.374449</td>
+              <td>0.474401</td>
+              <td>0.507182</td>
+              <td>0.635606</td>
+              <td>0.534922</td>
+              <td>0.4349</td>
+              <td>0.483086</td>
+              <td>0.586451</td>
+              <td>0.589008</td>
+              <td>0.352687</td>
+              <td>0.497269</td>
             </tr>
             <tr>
               <th>MAE</th>
-              <td>0.268802</td>
-              <td>0.462548</td>
-              <td>0.530208</td>
-              <td>0.591527</td>
-              <td>0.499755</td>
-              <td>0.42231</td>
-              <td>0.443545</td>
-              <td>0.486901</td>
-              <td>0.42114</td>
-              <td>0.292972</td>
-              <td>0.441971</td>
+              <td>0.310979</td>
+              <td>0.392149</td>
+              <td>0.464092</td>
+              <td>0.601646</td>
+              <td>0.481887</td>
+              <td>0.376152</td>
+              <td>0.403262</td>
+              <td>0.512031</td>
+              <td>0.498309</td>
+              <td>0.277614</td>
+              <td>0.431812</td>
             </tr>
             <tr>
               <th>R2</th>
-              <td>-0.351327</td>
-              <td>-4.145307</td>
-              <td>-9.506926</td>
-              <td>-12.169451</td>
-              <td>-5.974719</td>
-              <td>-3.755598</td>
-              <td>-4.219371</td>
-              <td>-4.512336</td>
-              <td>-3.089403</td>
-              <td>-0.587915</td>
-              <td>-4.831235</td>
+              <td>-0.109954</td>
+              <td>-3.014724</td>
+              <td>-7.328628</td>
+              <td>-12.560674</td>
+              <td>-5.475112</td>
+              <td>-2.715311</td>
+              <td>-3.472925</td>
+              <td>-4.833621</td>
+              <td>-4.089653</td>
+              <td>-0.683906</td>
+              <td>-4.428451</td>
             </tr>
             <tr>
               <th>MAPE</th>
-              <td>0.090403</td>
-              <td>0.167273</td>
-              <td>0.20145</td>
-              <td>0.230762</td>
-              <td>0.195362</td>
-              <td>0.165859</td>
-              <td>0.176741</td>
-              <td>0.196157</td>
-              <td>0.168231</td>
-              <td>0.122209</td>
-              <td>0.171445</td>
+              <td>0.111612</td>
+              <td>0.140797</td>
+              <td>0.175868</td>
+              <td>0.234974</td>
+              <td>0.18859</td>
+              <td>0.148315</td>
+              <td>0.160139</td>
+              <td>0.207382</td>
+              <td>0.201964</td>
+              <td>0.112856</td>
+              <td>0.168250</td>
             </tr>
             <tr>
               <th rowspan="4" valign="top">HQMCB20YR</th>
               <th>RMSE</th>
-              <td>0.34906</td>
-              <td>0.277221</td>
-              <td>0.36691</td>
-              <td>0.482713</td>
-              <td>0.408408</td>
-              <td>0.305705</td>
-              <td>0.372866</td>
-              <td>0.481968</td>
-              <td>0.493685</td>
-              <td>0.290549</td>
-              <td>0.382908</td>
+              <td>0.370336</td>
+              <td>0.255213</td>
+              <td>0.318524</td>
+              <td>0.493896</td>
+              <td>0.413632</td>
+              <td>0.283031</td>
+              <td>0.379169</td>
+              <td>0.523698</td>
+              <td>0.605537</td>
+              <td>0.303488</td>
+              <td>0.394652</td>
             </tr>
             <tr>
               <th>MAE</th>
-              <td>0.301185</td>
-              <td>0.203105</td>
-              <td>0.333146</td>
-              <td>0.456921</td>
-              <td>0.366134</td>
-              <td>0.257816</td>
-              <td>0.306186</td>
-              <td>0.416652</td>
-              <td>0.414167</td>
-              <td>0.256084</td>
-              <td>0.331140</td>
+              <td>0.33989</td>
+              <td>0.18065</td>
+              <td>0.280991</td>
+              <td>0.471872</td>
+              <td>0.375782</td>
+              <td>0.245164</td>
+              <td>0.316363</td>
+              <td>0.465334</td>
+              <td>0.539688</td>
+              <td>0.251894</td>
+              <td>0.346763</td>
             </tr>
             <tr>
               <th>R2</th>
-              <td>-0.382792</td>
-              <td>-0.575448</td>
-              <td>-3.578155</td>
-              <td>-6.821555</td>
-              <td>-3.447258</td>
-              <td>-1.271587</td>
-              <td>-2.336246</td>
-              <td>-4.447912</td>
-              <td>-4.089976</td>
-              <td>-0.58659</td>
-              <td>-2.753752</td>
+              <td>-0.556491</td>
+              <td>-0.335237</td>
+              <td>-2.450294</td>
+              <td>-7.18817</td>
+              <td>-3.561754</td>
+              <td>-0.947127</td>
+              <td>-2.450003</td>
+              <td>-5.43214</td>
+              <td>-6.657672</td>
+              <td>-0.731047</td>
+              <td>-3.030993</td>
             </tr>
             <tr>
               <th>MAPE</th>
-              <td>0.091886</td>
-              <td>0.059608</td>
-              <td>0.102169</td>
-              <td>0.142359</td>
-              <td>0.113466</td>
-              <td>0.079593</td>
-              <td>0.094226</td>
-              <td>0.129146</td>
-              <td>0.12799</td>
-              <td>0.081375</td>
-              <td>0.102182</td>
+              <td>0.105202</td>
+              <td>0.053226</td>
+              <td>0.086066</td>
+              <td>0.147459</td>
+              <td>0.116833</td>
+              <td>0.076122</td>
+              <td>0.097674</td>
+              <td>0.144917</td>
+              <td>0.16848</td>
+              <td>0.079162</td>
+              <td>0.107514</td>
             </tr>
             <tr>
               <th rowspan="4" valign="top">HQMCB30YR</th>
               <th>RMSE</th>
-              <td>0.368001</td>
-              <td>0.222563</td>
-              <td>0.316135</td>
-              <td>0.448717</td>
-              <td>0.381911</td>
-              <td>0.257456</td>
-              <td>0.346873</td>
-              <td>0.459515</td>
-              <td>0.482774</td>
-              <td>0.286702</td>
-              <td>0.357065</td>
+              <td>0.37143</td>
+              <td>0.217251</td>
+              <td>0.267355</td>
+              <td>0.453609</td>
+              <td>0.397683</td>
+              <td>0.244522</td>
+              <td>0.370656</td>
+              <td>0.506118</td>
+              <td>0.607924</td>
+              <td>0.297473</td>
+              <td>0.373402</td>
             </tr>
             <tr>
               <th>MAE</th>
-              <td>0.338561</td>
-              <td>0.183603</td>
-              <td>0.274438</td>
-              <td>0.419334</td>
-              <td>0.336793</td>
-              <td>0.209304</td>
-              <td>0.284308</td>
-              <td>0.396082</td>
-              <td>0.408056</td>
-              <td>0.244059</td>
-              <td>0.309454</td>
+              <td>0.34647</td>
+              <td>0.176251</td>
+              <td>0.223837</td>
+              <td>0.431921</td>
+              <td>0.360314</td>
+              <td>0.206274</td>
+              <td>0.31087</td>
+              <td>0.450336</td>
+              <td>0.546683</td>
+              <td>0.252607</td>
+              <td>0.330556</td>
             </tr>
             <tr>
               <th>R2</th>
-              <td>-0.777435</td>
-              <td>0.024279</td>
-              <td>-1.706653</td>
-              <td>-4.370536</td>
-              <td>-2.46268</td>
-              <td>-0.531978</td>
-              <td>-1.808506</td>
-              <td>-4.089156</td>
-              <td>-4.162142</td>
-              <td>-0.677249</td>
-              <td>-2.056206</td>
+              <td>-0.810715</td>
+              <td>0.070295</td>
+              <td>-0.935815</td>
+              <td>-4.488289</td>
+              <td>-2.754592</td>
+              <td>-0.381914</td>
+              <td>-2.206821</td>
+              <td>-5.173769</td>
+              <td>-7.18541</td>
+              <td>-0.80564</td>
+              <td>-2.467267</td>
             </tr>
             <tr>
               <th>MAPE</th>
-              <td>0.104223</td>
-              <td>0.055007</td>
-              <td>0.081993</td>
-              <td>0.127449</td>
-              <td>0.101591</td>
-              <td>0.062785</td>
-              <td>0.084881</td>
-              <td>0.118896</td>
-              <td>0.122237</td>
-              <td>0.074425</td>
-              <td>0.093349</td>
+              <td>0.106906</td>
+              <td>0.053282</td>
+              <td>0.066859</td>
+              <td>0.131948</td>
+              <td>0.109309</td>
+              <td>0.062304</td>
+              <td>0.093255</td>
+              <td>0.135931</td>
+              <td>0.165438</td>
+              <td>0.076923</td>
+              <td>0.100215</td>
             </tr>
           </tbody>
         </table>
@@ -1293,6 +1294,8 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         ![png](README_files/README_52_0.png)
             
         
+        
+        There is much more than can be done with this package! Be sure to [read the docs](https://scalecast.readthedocs.io/en/latest/) and see the [examples](https://scalecast-examples.readthedocs.io/en/latest/)!
         
         
         ```python

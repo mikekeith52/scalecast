@@ -452,10 +452,12 @@ class MVForecaster:
                     fcster=self.estimator,
                     tune=True,
                     dynamic_testing=dynamic_tuning,
-                    **hp
+                    **hp,
                 )
                 for s, l in zip(series,labels):
-                    metrics[l + '_metric'].append(globals()[self.validation_metric](val_ac[s],val_preds[s]))
+                    vp = val_preds[s]
+                    va = val_ac[s][-len(vp):]
+                    metrics[l + '_metric'].append(globals()[self.validation_metric](va,vp))
             except TypeError:
                 raise
             except Exception as e:
@@ -465,6 +467,7 @@ class MVForecaster:
                 )
         metrics = pd.DataFrame(metrics)
         if metrics.shape[0] > 0:
+            self.dynamic_tuning = dynamic_tuning
             self.grid.reset_index(drop=True,inplace=True)
             self.grid_evaluated = self.grid.copy()
             self.grid_evaluated["validation_length"] = self.validation_length
@@ -473,21 +476,114 @@ class MVForecaster:
                 metrics['optimized_metric'] = metrics.apply(_optimizer_funcs_[self.optimize_on],axis=1)
             else:
                 metrics['optimized_metric'] = metrics[self.optimize_on + '_metric']
-
             self.grid_evaluated = pd.concat([self.grid_evaluated,metrics],axis=1)
+        else:
+            self.grid_evaluated = pd.DataFrame()
+        self._find_best_params(self.grid_evaluated)
+
+    def cross_validate(self,k=5,rolling=False,dynamic_tuning=False):
+        """ tunes a model's hyperparameters using time-series cross validation. 
+        monitors the metric specified in the valiation_metric attribute. 
+        set an estimator before calling. this is an alternative method to tune().
+        reads a grid for the estimator from Grids.py unless a grid is ingested manually. 
+        each fold size is equal to one another and is determined such that the last fold's 
+        training and validation sizes are the same (or close to the same). with rolling = True, 
+        all train sizes will be the same for each fold. 
+
+        Args:
+            k (int): default 5. the number of folds. must be at least 2.
+            rolling (bool): default False. whether to using a rolling method.
+            dynamic_tuning (bool): default False.
+
+        Returns:
+            None
+        """
+        rolling = bool(rolling)
+        k = int(k)
+        descriptive_assert(k>=2,ValueError,f'k must be at least 2, got {k}')
+        mvf = self.__deepcopy__()
+        usable_obs = len(mvf.series1['y']) - mvf.test_length
+        val_size = usable_obs // (k+1)
+        mvf.set_validation_length(val_size)
+        grid_evaluated_cv = pd.DataFrame()
+        for i in range(k):
+            if i > 0:
+                mvf.current_xreg = {k:pd.Series(v.values[:-val_size]) for k, v in mvf.current_xreg.items()}
+                mvf.current_dates = pd.Series(mvf.current_dates.values[:-val_size])
+                for s in range(mvf.n_series):
+                    setattr(
+                        mvf,
+                        f'series{s+1}',
+                        {
+                            'y':pd.Series(getattr(mvf,f'series{s+1}')['y'].values[:-val_size]),
+                            'levely':getattr(mvf,f'series{s+1}')['levely'][:-val_size],
+                            'integration':getattr(mvf,f'series{s+1}')['integration'],
+                        }
+                    )
+            
+            mvf2 = mvf.__deepcopy__()
+            if rolling:
+                n = val_size*2+mvf2.test_length
+                mvf2.current_dates = pd.Series(mvf2.current_dates.values[-n:])
+                mvf2.current_xreg = {k:pd.Series(v.values[-n:]) for k,v in mvf2.current_xreg.items()}
+                for s in range(mvf2.n_series):
+                    setattr(
+                        mvf2,
+                        f'series{s+1}',
+                        {
+                            'y':pd.Series(getattr(mvf2,f'series{s+1}')['y'].values[-n:]),
+                            'levely':getattr(mvf2,f'series{s+1}')['levely'][-n:],
+                            'integration':getattr(mvf2,f'series{s+1}')['integration'],
+                        }
+                    )
+
+            mvf2.tune(dynamic_tuning=dynamic_tuning)
+            if mvf2.grid_evaluated.shape[0] == 0:
+                self.grid = pd.DataFrame()
+                self._find_best_params(grid_evaluated_cv)
+                return # writes a warning and moves on
+        
+            mvf2.grid_evaluated['fold'] = i
+            mvf2.grid_evaluated['rolling'] = rolling
+            mvf2.grid_evaluated['train_length'] = len(mvf2.series1['y']) - val_size - mvf2.test_length
+            grid_evaluated_cv = pd.concat([grid_evaluated_cv,mvf2.grid_evaluated])
+
+        # convert into str for the group or it fails
+        if 'lags' in grid_evaluated_cv:
+            grid_evaluated_cv['lags'] = grid_evaluated_cv['lags'].apply(lambda x: str(x))
+
+        grid_evaluated = grid_evaluated_cv.groupby(
+            grid_evaluated_cv.columns.to_list()[:-(4 + mvf2.n_series)],
+            dropna=False,
+        )['optimized_metric'].mean().reset_index()
+
+        # convert back to whatever it was before or it fails when calling the hyperparam vals
+        # contributions welcome for a more elegant solution
+        if 'lags' in grid_evaluated:
+            grid_evaluated['lags'] = grid_evaluated['lags'].apply(lambda x: eval(x))
+
+        self.grid = grid_evaluated.iloc[:,:-3]
+        self.dynamic_tuning = mvf2.dynamic_tuning
+        self._find_best_params(grid_evaluated)
+        self.grid_evaluated = grid_evaluated_cv.reset_index(drop=True)
+        self.cross_validated = True
+
+    def _find_best_params(self,grid_evaluated):
+        self.cross_validated = False # will be changed to True appropriately if cv was called
+        if grid_evaluated.shape[0] > 0:
             if self.validation_metric == "r2":
                 best_params_idx = self.grid.loc[
-                    self.grid_evaluated["optimized_metric"]
-                    == self.grid_evaluated["optimized_metric"].max()
+                    grid_evaluated["optimized_metric"]
+                    == grid_evaluated["optimized_metric"].max()
                 ].index.to_list()[0]
             else:
                 best_params_idx = self.grid.loc[
-                    self.grid_evaluated["optimized_metric"]
-                    == self.grid_evaluated["optimized_metric"].min()
+                    grid_evaluated["optimized_metric"]
+                    == grid_evaluated["optimized_metric"].min()
                 ].index.to_list()[0]
                 
             self.best_params = {k: v[best_params_idx] for k, v in self.grid.to_dict(orient='series').items()}
-            self.validation_metric_value = self.grid_evaluated.loc[
+            self.validation_metric_value = grid_evaluated.loc[
                 best_params_idx, "optimized_metric"
             ]
         else:
@@ -495,7 +591,6 @@ class MVForecaster:
                 f"none of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model"
             )
             self.best_params = {}
-        self.dynamic_tuning = dynamic_tuning
 
     def auto_forecast(self, call_me=None, dynamic_testing=True):
         """ auto forecasts with the best parameters indicated from the tuning process.
@@ -526,6 +621,7 @@ class MVForecaster:
         call_me = self.estimator if call_me is None else call_me
         if len(self.best_params) > 0:
             self.history[call_me]['Tuned'] = True if not self.dynamic_tuning else 'Dynamically'
+            self.history[call_me]['CrossValidated'] = self.cross_validated
             self.history[call_me]['ValidationSetLength'] = self.validation_length
             self.history[call_me]['ValidationMetric'] = self.validation_metric
             self.history[call_me]['ValidationMetricValue'] = self.validation_metric_value
@@ -569,14 +665,18 @@ class MVForecaster:
     def tune_test_forecast(
         self,
         models,
+        cross_validate=False,
         dynamic_tuning=False,
-        dynamic_testing=True
+        dynamic_testing=True,
+        **cvkwargs,
     ):
         """ iterates through a list of models, tunes them using grids in MVGrids.py, and forecasts them.
 
         Args:
-            models (list-like):
-                each element must be in _can_be_tuned_.
+            models (list-like): the models to iterate through.
+            cross_validate (bool): default False
+                whether to tune the model with cross validation. 
+                if False, uses the validation slice of data to tune.
             dynamic_tuning (bool): default False.
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
@@ -585,6 +685,7 @@ class MVForecaster:
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, test-set metrics effectively become an average of one-step forecasts.
+            **cvkwargs: passed to the cross_validate() method.
 
         Returns:
             None
@@ -599,7 +700,10 @@ class MVForecaster:
         )
         for m in models:
             self.set_estimator(m)
-            self.tune(dynamic_tuning=dynamic_tuning)
+            if cross_validate:
+                self.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
+            else:
+                self.tune(dynamic_tuning=dynamic_tuning)
             self.auto_forecast(dynamic_testing=dynamic_testing)
 
     def set_optimize_on(self, how):
@@ -801,6 +905,10 @@ class MVForecaster:
         Returns:
             (scikit-learn preprecessing scaler/normalizer): The normalizer fitted on training data only.
         """
+        try:
+            normalizer = None if np.isnan(normalizer) else normalizer
+        except TypeError:
+            pass
         descriptive_assert(
             normalizer in _normalizer_,
             ValueError,
@@ -892,6 +1000,7 @@ class MVForecaster:
             "FittedVals": fitted_vals,
             "Resids": resids,
             "Tuned": None,
+            "CrossValidated": False,
             "DynamicallyTested": self.dynamic_testing,
             "TestSetLength": self.test_length,
             "TestSetPredictions": test_set_preds,
@@ -1215,6 +1324,7 @@ class MVForecaster:
             "Scaler",
             "Observations",
             "Tuned",
+            "CrossValidated",
             "DynamicallyTested",
             "Integration",
             "TestSetLength",
@@ -1481,7 +1591,6 @@ class MVForecaster:
         metric_results['mean'] = metric_results.mean(axis=1)
         self.history[model]['BacktestMetrics'] = metric_results
         self.history[model]['BacktestValues'] = value_results
-        # TODO: value_results can be a dataframe subclass with a custom plot() method
     
     def export_backtest_metrics(self,model):
         """ extracts the backtest metrics for a given model.

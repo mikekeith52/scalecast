@@ -152,13 +152,25 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
 
     button.on_click(on_button_clicked)
 
-def tune_test_forecast(forecaster,models,dynamic_tuning=False,dynamic_testing=True,summary_stats=False,feature_importance=False):
+def tune_test_forecast(
+    f,
+    models,
+    cross_validate=False,
+    dynamic_tuning=False,
+    dynamic_testing=True,
+    summary_stats=False,
+    feature_importance=False,
+    **cvkwargs,
+):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm.
 
     Args:
-        forecaster (Forecaster): the object to visualize.
+        f (Forecaster): the object to visualize.
         models (list-like):
             each element must be in _can_be_tuned_.
+        cross_validate (bool): default False
+                whether to tune the model with cross validation. 
+                if False, uses the validation slice of data to tune.
         dynamic_tuning (bool): default False.
             whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
             setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
@@ -171,18 +183,26 @@ def tune_test_forecast(forecaster,models,dynamic_tuning=False,dynamic_testing=Tr
             whether to save summary stats for the models that offer those.
         feature_importance (bool): default False.
             whether to save permutation feature importance information for the models that offer those.
+        **cvkwargs: passed to the cross_validate() method.
 
     Returns:
         None
     """
     if len([m for m in models if m not in [m for m in _estimators_ if m != 'combo']]) > 0:
-        raise ValueError('values passed to models must be list-like and in {}'.format([m for m in _estimators_ if m != 'combo']))
+        raise ValueError(
+            'values passed to models must be list-like and in {}'.format([
+                m for m in _estimators_ if m != 'combo']
+            )
+        )
     for m in log_progress(models):
-        forecaster.set_estimator(m)
-        forecaster.tune(dynamic_tuning=dynamic_tuning)
-        forecaster.auto_forecast(dynamic_testing=dynamic_testing)
+        f.set_estimator(m)
+        if cross_validate:
+            f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
+        else:
+            f.tune(dynamic_tuning=dynamic_tuning)
+        f.auto_forecast(dynamic_testing=dynamic_testing)
 
         if summary_stats:
-            forecaster.save_summary_stats()
+            f.save_summary_stats()
         if feature_importance:
-            forecaster.save_feature_importance()
+            f.save_feature_importance()
