@@ -361,7 +361,11 @@ class Forecaster:
         }
 
         if kwargs["tuned"]:
-            self.history[call_me]["ValidationSetLength"] = self.validation_length
+            self.history[call_me]["ValidationSetLength"] = (
+                self.validation_length 
+                if 'fold' not in self.grid_evaluated.columns 
+                else None
+            )
             self.history[call_me]["ValidationMetric"] = self.validation_metric
             self.history[call_me]["ValidationMetricValue"] = self.validation_metric_value
 
@@ -516,10 +520,6 @@ class Forecaster:
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
         """
         def fit_normalizer(X, normalizer):
-            try:
-                normalizer = None if np.isnan(normalizer) else normalizer
-            except TypeError:
-                pass
             descriptive_assert(
                 normalizer in _normalizer_,
                 ValueError,
@@ -2946,6 +2946,7 @@ class Forecaster:
                 f2.keep_smaller_history(val_size*2+f2.test_length)
             
             f2.tune(dynamic_tuning=dynamic_tuning)
+            orig_grid = f2.grid.copy()
             if f2.grid_evaluated.shape[0] == 0:
                 self.grid = pd.DataFrame()
                 self._find_best_params(grid_evaluated_cv)
@@ -2974,6 +2975,7 @@ class Forecaster:
         self.dynamic_tuning = f2.dynamic_tuning
         self._find_best_params(grid_evaluated)
         self.grid_evaluated = grid_evaluated_cv.reset_index(drop=True)
+        self.grid = orig_grid
         
     def _find_best_params(self,grid_evaluated):
         if grid_evaluated.shape[0] > 0:
@@ -2988,6 +2990,15 @@ class Forecaster:
                     == grid_evaluated["metric_value"].min()
                 ].index.to_list()[0]
             self.best_params = {k: v[best_params_idx] for k, v in self.grid.to_dict(orient='series').items()}
+            self.best_params = {
+                k: (
+                    v 
+                    if not isinstance(v,float) 
+                    else int(v) if str(v).endswith('.0') else None if np.isnan(v) 
+                    else v
+                ) 
+                for k,v in self.best_params.items()
+            }
             self.validation_metric_value = grid_evaluated.loc[
                 best_params_idx, "metric_value"
             ]

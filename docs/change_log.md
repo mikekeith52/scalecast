@@ -1,7 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.11.0] - 2022-06-15
+## [0.11.1] - 2022-06-15
+### Added
+### Changed
+- changed how the validation set length is calculated in history attributed -- given na value if cross validation used to tune models
+### Fixed
+- fixed an issue caused by None values in hyperparam grids being changed to np.nan and therefore not accepted in some functions after cross validation has been called
+
+## [0.11.0] - 2022-06-14
 ### Added
 - added `cross_validate()` methods to `Forecaster` and `MVForecaster` objects, which can now be used for the same purposes as `tune()` but with cross validation
 - added `cross_validate` as a (bool) argument to the `Forecaster.tune_test_forecast()`, `Forecaster.reduce_Xvars()`, `MVForecaster.tune_test_forecast()`, and `notebook.tune_test_forecast()` functions

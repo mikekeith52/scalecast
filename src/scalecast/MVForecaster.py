@@ -538,6 +538,7 @@ class MVForecaster:
                     )
 
             mvf2.tune(dynamic_tuning=dynamic_tuning)
+            orig_grid = mvf2.grid.copy()
             if mvf2.grid_evaluated.shape[0] == 0:
                 self.grid = pd.DataFrame()
                 self._find_best_params(grid_evaluated_cv)
@@ -566,6 +567,7 @@ class MVForecaster:
         self.dynamic_tuning = mvf2.dynamic_tuning
         self._find_best_params(grid_evaluated)
         self.grid_evaluated = grid_evaluated_cv.reset_index(drop=True)
+        self.grid = orig_grid # because None changes to np.nan otherwise
         self.cross_validated = True
 
     def _find_best_params(self,grid_evaluated):
@@ -583,6 +585,15 @@ class MVForecaster:
                 ].index.to_list()[0]
                 
             self.best_params = {k: v[best_params_idx] for k, v in self.grid.to_dict(orient='series').items()}
+            self.best_params = {
+                k: (
+                    v 
+                    if not isinstance(v,float) 
+                    else int(v) if str(v).endswith('.0') else None if np.isnan(v) 
+                    else v
+                ) 
+                for k,v in self.best_params.items()
+            }
             self.validation_metric_value = grid_evaluated.loc[
                 best_params_idx, "optimized_metric"
             ]
@@ -622,7 +633,7 @@ class MVForecaster:
         if len(self.best_params) > 0:
             self.history[call_me]['Tuned'] = True if not self.dynamic_tuning else 'Dynamically'
             self.history[call_me]['CrossValidated'] = self.cross_validated
-            self.history[call_me]['ValidationSetLength'] = self.validation_length
+            self.history[call_me]['ValidationSetLength'] = self.validation_length if not self.cross_validated else np.nan
             self.history[call_me]['ValidationMetric'] = self.validation_metric
             self.history[call_me]['ValidationMetricValue'] = self.validation_metric_value
             self.history[call_me]['grid_evaluated'] = self.grid_evaluated
@@ -905,10 +916,6 @@ class MVForecaster:
         Returns:
             (scikit-learn preprecessing scaler/normalizer): The normalizer fitted on training data only.
         """
-        try:
-            normalizer = None if np.isnan(normalizer) else normalizer
-        except TypeError:
-            pass
         descriptive_assert(
             normalizer in _normalizer_,
             ValueError,
