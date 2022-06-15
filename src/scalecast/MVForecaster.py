@@ -485,7 +485,7 @@ class MVForecaster:
         """ tunes a model's hyperparameters using time-series cross validation. 
         monitors the metric specified in the valiation_metric attribute. 
         set an estimator before calling. this is an alternative method to tune().
-        reads a grid for the estimator from Grids.py unless a grid is ingested manually. 
+        reads a grid for the estimator from MVGrids.py unless a grid is ingested manually. 
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
