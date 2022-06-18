@@ -1854,13 +1854,15 @@ class Forecaster:
         >>> f.reduce_Xvars(overwrite=False) # reduce with lasso (but don't overwrite Xvars)
         >>> print(f.reduced_Xvars) # view results
         >>> f.reduce_Xvars(
-                method='pfi',
-                estimator='gbt',
-                keep_at_least=10,
-                keep_this_many='auto',
-                dynamic_testing=False,
-                dynamic_tuning=True,
-            ) # reduce with gradient boosted tree estimator
+        >>>     method='pfi',
+        >>>     estimator='gbt',
+        >>>     keep_at_least=10,
+        >>>     keep_this_many='auto',
+        >>>     dynamic_testing=False,
+        >>>     dynamic_tuning=True,
+        >>>     cross_validate=True,
+        >>>     cvkwargs={'rolling':True},
+        >>> ) # reduce with gradient boosted tree estimator and overwrite with result
         >>> print(f.reduced_Xvars) # view results
         """
         descriptive_assert(
