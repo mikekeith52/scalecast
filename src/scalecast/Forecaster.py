@@ -1801,7 +1801,7 @@ class Forecaster:
                 that represent the error change with the corresponding dropped var.
                 the pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
                 the first error is the intial error before any variables were dropped.
-            estimator (str): one of _sklearn_estimators_ or 'lasso'. default 'lasso'.
+            estimator (str): one of _sklearn_estimators_. default 'lasso'.
                 the estimator to use to determine the best set of vars.
                 if method == 'l1', estimator arg is ignored and is always lasso.
             keep_at_least (str or int): default 1.
