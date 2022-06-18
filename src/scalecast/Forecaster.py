@@ -1581,14 +1581,13 @@ class Forecaster:
 
         >>> f.diff(2) # differences y twice
         """
+        if i == 0:
+            return
         descriptive_assert(
             self.integration == 0,
             ForecastError.CannotDiff,
             "series has already been differenced, if you want to difference again, use undiff() first, then diff(2)",
         )
-        if i == 0:
-            return
-
         descriptive_assert(
             i in (1, 2),
             ValueError,
@@ -4163,10 +4162,13 @@ class Forecaster:
         Returns:
             (DataFrame): A dataframe with dates, fitted values, actuals, and residuals.
         """
-        df = pd.DataFrame({
+        df = pd.DataFrame(
+            {
                 "DATE": self.current_dates.to_list()[-len(self.history[model]["FittedVals"]):],
                 "Actuals": self.y.to_list()[-len(self.history[model]["FittedVals"]):],
-                "FittedVals": self.history[model]["FittedVals"]})
+                "FittedVals": self.history[model]["FittedVals"],
+            }
+        )
 
         df['Residuals'] = df['Actuals'] - df['FittedVals']
         return df
@@ -4254,5 +4256,3 @@ class Forecaster:
             (DataFrame): a copy of the backtest values.
         """
         return self.history[model]['BacktestValues'].copy()
-
-
