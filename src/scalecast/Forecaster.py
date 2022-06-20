@@ -1800,7 +1800,7 @@ class Forecaster:
                 that represent the error change with the corresponding dropped var.
                 the pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
                 the first error is the intial error before any variables were dropped.
-            estimator (str): one of _sklearn_estimators_ or 'lasso'. default 'lasso'.
+            estimator (str): one of _sklearn_estimators_. default 'lasso'.
                 the estimator to use to determine the best set of vars.
                 if method == 'l1', estimator arg is ignored and is always lasso.
             keep_at_least (str or int): default 1.
@@ -1853,13 +1853,15 @@ class Forecaster:
         >>> f.reduce_Xvars(overwrite=False) # reduce with lasso (but don't overwrite Xvars)
         >>> print(f.reduced_Xvars) # view results
         >>> f.reduce_Xvars(
-                method='pfi',
-                estimator='gbt',
-                keep_at_least=10,
-                keep_this_many='auto',
-                dynamic_testing=False,
-                dynamic_tuning=True,
-            ) # reduce with gradient boosted tree estimator
+        >>>     method='pfi',
+        >>>     estimator='gbt',
+        >>>     keep_at_least=10,
+        >>>     keep_this_many='auto',
+        >>>     dynamic_testing=False,
+        >>>     dynamic_tuning=True,
+        >>>     cross_validate=True,
+        >>>     cvkwargs={'rolling':True},
+        >>> ) # reduce with gradient boosted tree estimator and overwrite with result
         >>> print(f.reduced_Xvars) # view results
         """
         descriptive_assert(
