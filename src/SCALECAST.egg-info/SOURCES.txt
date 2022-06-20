@@ -1,12 +1,10 @@
 CODE_OF_CONDUCT.md
 Contributing.md
 MANIFEST
-README.ipynb
 README.md
 license.txt
 setup.cfg
 setup.py
-.ipynb_checkpoints/README-checkpoint.ipynb
 README_files/README_17_0.png
 README_files/README_19_0.png
 README_files/README_21_0.png

@@ -2960,7 +2960,9 @@ class Forecaster:
         
         # convert into tuple for the group or it fails
         if 'Xvars' in grid_evaluated_cv:
-            grid_evaluated_cv['Xvars'] = grid_evaluated_cv['Xvars'].apply(lambda x: tuple(x))
+            grid_evaluated_cv['Xvars'] = grid_evaluated_cv['Xvars'].apply(
+                lambda x: x if x is None else tuple(x)
+            )
         
         grid_evaluated = grid_evaluated_cv.groupby(
             grid_evaluated_cv.columns.to_list()[:-4],
@@ -2970,7 +2972,9 @@ class Forecaster:
         # convert back to list or it fails when calling the hyperparam vals
         # contributions welcome for a more elegant solution
         if 'Xvars' in grid_evaluated:
-            grid_evaluated['Xvars'] = grid_evaluated['Xvars'].apply(lambda x: list(x))
+            grid_evaluated['Xvars'] = grid_evaluated['Xvars'].apply(
+                lambda x: x if x is None else list(x)
+            )
         
         self.grid = grid_evaluated.iloc[:,:-3]
         self.dynamic_tuning = f2.dynamic_tuning

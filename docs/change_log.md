@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.11.2] - 2022-06-20
+### Added
+### Changed
+### Fixed
+- fixed an issue where `None` wasn't being accepted in grid with `'Xvars'` as the key and using `cross_validate()` (#2)
+
 ## [0.11.1] - 2022-06-15
 ### Added
 ### Changed

@@ -58,7 +58,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
   
 ### The importance of dynamic validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
-- [Model Validation Techniques for Time Series](https://mikekeith52.medium.com/model-validation-techniques-for-time-series-3518269bd5b3)
+- [Model Validation Techniques for Time Series](https://towardsdatascience.com/model-validation-techniques-for-time-series-3518269bd5b3)
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html)
 
 ### Model Input Selection
@@ -623,7 +623,7 @@ mvf.best_model
 
 
 
-    'elasticnet'
+    'knn'
 
 
 
@@ -739,12 +739,12 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
   <tbody>
     <tr>
       <th>0</th>
-      <td>elasticnet</td>
+      <td>knn</td>
       <td>HQMCB1YR</td>
-      <td>1.393131</td>
-      <td>0.207401</td>
-      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
-      <td>12</td>
+      <td>1.571109</td>
+      <td>0.144064</td>
+      <td>{'n_neighbors': 30}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>1</th>
@@ -757,30 +757,30 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
     </tr>
     <tr>
       <th>2</th>
-      <td>knn</td>
+      <td>elasticnet</td>
       <td>HQMCB1YR</td>
-      <td>3.893703</td>
-      <td>-2.149820</td>
-      <td>{'n_neighbors': 2}</td>
-      <td>11</td>
+      <td>1.846718</td>
+      <td>0.029598</td>
+      <td>{'l1_ratio': 0.5, 'alpha': 0.010101010101010102}</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>3</th>
       <td>xgboost</td>
       <td>HQMCB1YR</td>
-      <td>5.362065</td>
-      <td>-5.172575</td>
+      <td>3.045742</td>
+      <td>-0.892055</td>
       <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-      <td>7</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>elasticnet</td>
+      <td>knn</td>
       <td>HQMCB5YR</td>
-      <td>0.369400</td>
-      <td>0.342221</td>
-      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
-      <td>12</td>
+      <td>0.407562</td>
+      <td>0.299347</td>
+      <td>{'n_neighbors': 30}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>5</th>
@@ -793,30 +793,30 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
     </tr>
     <tr>
       <th>6</th>
-      <td>knn</td>
+      <td>elasticnet</td>
       <td>HQMCB5YR</td>
-      <td>0.873065</td>
-      <td>-1.059146</td>
-      <td>{'n_neighbors': 2}</td>
-      <td>11</td>
+      <td>0.339546</td>
+      <td>0.329795</td>
+      <td>{'l1_ratio': 0.5, 'alpha': 0.010101010101010102}</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>7</th>
       <td>xgboost</td>
       <td>HQMCB5YR</td>
-      <td>0.399122</td>
-      <td>0.332294</td>
+      <td>0.341928</td>
+      <td>0.491882</td>
       <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-      <td>7</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>8</th>
-      <td>elasticnet</td>
+      <td>knn</td>
       <td>HQMCB10YR</td>
-      <td>0.145513</td>
-      <td>0.381733</td>
-      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
-      <td>12</td>
+      <td>0.143230</td>
+      <td>0.392050</td>
+      <td>{'n_neighbors': 30}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>9</th>
@@ -829,30 +829,30 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
     </tr>
     <tr>
       <th>10</th>
-      <td>knn</td>
+      <td>elasticnet</td>
       <td>HQMCB10YR</td>
-      <td>0.277260</td>
-      <td>-0.361093</td>
-      <td>{'n_neighbors': 2}</td>
-      <td>11</td>
+      <td>0.141094</td>
+      <td>0.369078</td>
+      <td>{'l1_ratio': 0.5, 'alpha': 0.010101010101010102}</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>11</th>
       <td>xgboost</td>
       <td>HQMCB10YR</td>
-      <td>0.493730</td>
-      <td>-3.871523</td>
+      <td>0.314682</td>
+      <td>-1.480335</td>
       <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-      <td>7</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>12</th>
-      <td>elasticnet</td>
+      <td>knn</td>
       <td>HQMCB20YR</td>
-      <td>0.096262</td>
-      <td>0.475912</td>
-      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
-      <td>12</td>
+      <td>0.088009</td>
+      <td>0.508611</td>
+      <td>{'n_neighbors': 30}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>13</th>
@@ -865,30 +865,30 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
     </tr>
     <tr>
       <th>14</th>
-      <td>knn</td>
+      <td>elasticnet</td>
       <td>HQMCB20YR</td>
-      <td>0.141653</td>
-      <td>0.110180</td>
-      <td>{'n_neighbors': 2}</td>
-      <td>11</td>
+      <td>0.094137</td>
+      <td>0.478033</td>
+      <td>{'l1_ratio': 0.5, 'alpha': 0.010101010101010102}</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>15</th>
       <td>xgboost</td>
       <td>HQMCB20YR</td>
-      <td>0.114834</td>
-      <td>0.318094</td>
+      <td>0.194508</td>
+      <td>-1.189377</td>
       <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-      <td>7</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>16</th>
-      <td>elasticnet</td>
+      <td>knn</td>
       <td>HQMCB30YR</td>
-      <td>0.088019</td>
-      <td>0.535077</td>
-      <td>{'l1_ratio': 0.25, 'alpha': 0.020202020202020204}</td>
-      <td>12</td>
+      <td>0.077223</td>
+      <td>0.578823</td>
+      <td>{'n_neighbors': 30}</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>17</th>
@@ -901,21 +901,21 @@ mvresults[['ModelNickname','Series','LevelTestSetMAPE','LevelTestSetR2','HyperPa
     </tr>
     <tr>
       <th>18</th>
-      <td>knn</td>
+      <td>elasticnet</td>
       <td>HQMCB30YR</td>
-      <td>0.118524</td>
-      <td>0.295894</td>
-      <td>{'n_neighbors': 2}</td>
-      <td>11</td>
+      <td>0.088357</td>
+      <td>0.532725</td>
+      <td>{'l1_ratio': 0.5, 'alpha': 0.010101010101010102}</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>19</th>
       <td>xgboost</td>
       <td>HQMCB30YR</td>
-      <td>0.303039</td>
-      <td>-4.945733</td>
+      <td>0.122523</td>
+      <td>-0.021191</td>
       <td>{'n_estimators': 150, 'scale_pos_weight': 5, '...</td>
-      <td>7</td>
+      <td>4</td>
     </tr>
   </tbody>
 </table>
@@ -986,287 +986,287 @@ mvf.export_backtest_metrics('elasticnet')
     <tr>
       <th rowspan="4" valign="top">HQMCB1YR</th>
       <th>RMSE</th>
-      <td>0.680118</td>
-      <td>0.497683</td>
-      <td>0.359919</td>
-      <td>0.291307</td>
-      <td>0.219452</td>
-      <td>0.156473</td>
-      <td>0.119935</td>
-      <td>0.107297</td>
-      <td>0.066994</td>
-      <td>0.08627</td>
-      <td>0.258545</td>
+      <td>0.703448</td>
+      <td>0.529606</td>
+      <td>0.394162</td>
+      <td>0.326016</td>
+      <td>0.253461</td>
+      <td>0.189774</td>
+      <td>0.154667</td>
+      <td>0.145592</td>
+      <td>0.098435</td>
+      <td>0.065001</td>
+      <td>0.286016</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.435547</td>
-      <td>0.359032</td>
-      <td>0.279044</td>
-      <td>0.229573</td>
-      <td>0.166704</td>
-      <td>0.116711</td>
-      <td>0.08817</td>
-      <td>0.075095</td>
-      <td>0.052313</td>
-      <td>0.076749</td>
-      <td>0.187894</td>
+      <td>0.455746</td>
+      <td>0.387781</td>
+      <td>0.309262</td>
+      <td>0.260086</td>
+      <td>0.195941</td>
+      <td>0.14293</td>
+      <td>0.112216</td>
+      <td>0.109277</td>
+      <td>0.065746</td>
+      <td>0.06156</td>
+      <td>0.210055</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-1.088134</td>
-      <td>-1.921717</td>
-      <td>-3.55032</td>
-      <td>-5.557438</td>
-      <td>-9.193894</td>
-      <td>-20.458702</td>
-      <td>-35.212641</td>
-      <td>-23.669924</td>
-      <td>-5.846449</td>
-      <td>-3.406797</td>
-      <td>-10.990602</td>
+      <td>-1.23385</td>
+      <td>-2.30855</td>
+      <td>-4.457327</td>
+      <td>-7.213157</td>
+      <td>-12.598314</td>
+      <td>-30.564624</td>
+      <td>-59.223251</td>
+      <td>-44.422297</td>
+      <td>-13.780367</td>
+      <td>-1.501688</td>
+      <td>-17.730343</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.583172</td>
-      <td>0.721132</td>
-      <td>0.719911</td>
-      <td>0.693557</td>
-      <td>0.564109</td>
-      <td>0.438019</td>
-      <td>0.35599</td>
-      <td>0.308855</td>
-      <td>0.214962</td>
-      <td>0.288865</td>
-      <td>0.488857</td>
+      <td>0.619615</td>
+      <td>0.7905</td>
+      <td>0.806487</td>
+      <td>0.792692</td>
+      <td>0.669248</td>
+      <td>0.540401</td>
+      <td>0.456609</td>
+      <td>0.450764</td>
+      <td>0.277333</td>
+      <td>0.237213</td>
+      <td>0.564086</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB5YR</th>
       <th>RMSE</th>
-      <td>0.715536</td>
-      <td>0.794238</td>
-      <td>0.739536</td>
-      <td>0.691355</td>
-      <td>0.600469</td>
-      <td>0.512485</td>
-      <td>0.487165</td>
-      <td>0.477321</td>
-      <td>0.391538</td>
-      <td>0.286334</td>
-      <td>0.569598</td>
+      <td>0.734249</td>
+      <td>0.816982</td>
+      <td>0.761748</td>
+      <td>0.713451</td>
+      <td>0.624121</td>
+      <td>0.538565</td>
+      <td>0.517054</td>
+      <td>0.507586</td>
+      <td>0.420291</td>
+      <td>0.308957</td>
+      <td>0.594301</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.459639</td>
-      <td>0.677279</td>
-      <td>0.662442</td>
-      <td>0.624275</td>
-      <td>0.520474</td>
-      <td>0.427953</td>
-      <td>0.406752</td>
-      <td>0.394865</td>
-      <td>0.291331</td>
-      <td>0.228419</td>
-      <td>0.469343</td>
+      <td>0.472792</td>
+      <td>0.696664</td>
+      <td>0.681502</td>
+      <td>0.643641</td>
+      <td>0.541247</td>
+      <td>0.449949</td>
+      <td>0.435904</td>
+      <td>0.423632</td>
+      <td>0.317672</td>
+      <td>0.235491</td>
+      <td>0.489849</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.893993</td>
-      <td>-3.820198</td>
-      <td>-6.614519</td>
-      <td>-8.498869</td>
-      <td>-6.5187</td>
-      <td>-5.474301</td>
-      <td>-5.874703</td>
-      <td>-5.024412</td>
-      <td>-2.69626</td>
-      <td>-0.977616</td>
-      <td>-4.639357</td>
+      <td>-0.994349</td>
+      <td>-4.100226</td>
+      <td>-7.078805</td>
+      <td>-9.115769</td>
+      <td>-7.122668</td>
+      <td>-6.150019</td>
+      <td>-6.744144</td>
+      <td>-5.812594</td>
+      <td>-3.259064</td>
+      <td>-1.302456</td>
+      <td>-5.168009</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.219825</td>
-      <td>0.420562</td>
-      <td>0.455976</td>
-      <td>0.460298</td>
-      <td>0.396415</td>
-      <td>0.338478</td>
-      <td>0.338439</td>
-      <td>0.338735</td>
-      <td>0.246016</td>
-      <td>0.207306</td>
-      <td>0.342205</td>
+      <td>0.226192</td>
+      <td>0.432627</td>
+      <td>0.468919</td>
+      <td>0.474502</td>
+      <td>0.412414</td>
+      <td>0.355956</td>
+      <td>0.364298</td>
+      <td>0.364892</td>
+      <td>0.269983</td>
+      <td>0.20938</td>
+      <td>0.357916</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB10YR</th>
       <th>RMSE</th>
-      <td>0.413182</td>
-      <td>0.538917</td>
-      <td>0.57163</td>
-      <td>0.629244</td>
-      <td>0.553197</td>
-      <td>0.484331</td>
-      <td>0.508215</td>
-      <td>0.560488</td>
-      <td>0.524944</td>
-      <td>0.340182</td>
-      <td>0.512433</td>
+      <td>0.421758</td>
+      <td>0.551241</td>
+      <td>0.58273</td>
+      <td>0.638543</td>
+      <td>0.566173</td>
+      <td>0.50082</td>
+      <td>0.529147</td>
+      <td>0.579911</td>
+      <td>0.542271</td>
+      <td>0.351532</td>
+      <td>0.526413</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.271972</td>
-      <td>0.46542</td>
-      <td>0.532607</td>
-      <td>0.594465</td>
-      <td>0.497988</td>
-      <td>0.416072</td>
-      <td>0.428673</td>
-      <td>0.478803</td>
-      <td>0.420342</td>
-      <td>0.28927</td>
-      <td>0.439561</td>
+      <td>0.277111</td>
+      <td>0.476382</td>
+      <td>0.54243</td>
+      <td>0.602894</td>
+      <td>0.509764</td>
+      <td>0.430215</td>
+      <td>0.450412</td>
+      <td>0.497538</td>
+      <td>0.436258</td>
+      <td>0.295126</td>
+      <td>0.451813</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.351461</td>
-      <td>-4.18095</td>
-      <td>-9.579792</td>
-      <td>-12.290552</td>
-      <td>-5.925107</td>
-      <td>-3.607884</td>
-      <td>-3.950379</td>
-      <td>-4.328529</td>
-      <td>-3.042696</td>
-      <td>-0.566612</td>
-      <td>-4.782396</td>
+      <td>-0.408145</td>
+      <td>-4.420615</td>
+      <td>-9.994648</td>
+      <td>-12.686294</td>
+      <td>-6.253784</td>
+      <td>-3.926973</td>
+      <td>-4.366555</td>
+      <td>-4.704238</td>
+      <td>-3.31398</td>
+      <td>-0.672898</td>
+      <td>-5.074813</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.09151</td>
-      <td>0.168442</td>
-      <td>0.202444</td>
-      <td>0.231968</td>
-      <td>0.194725</td>
-      <td>0.163508</td>
-      <td>0.170551</td>
-      <td>0.192906</td>
-      <td>0.168057</td>
-      <td>0.120424</td>
-      <td>0.170454</td>
+      <td>0.093003</td>
+      <td>0.172464</td>
+      <td>0.206174</td>
+      <td>0.235258</td>
+      <td>0.199348</td>
+      <td>0.169049</td>
+      <td>0.179578</td>
+      <td>0.200682</td>
+      <td>0.174637</td>
+      <td>0.12241</td>
+      <td>0.175260</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB20YR</th>
       <th>RMSE</th>
-      <td>0.347758</td>
-      <td>0.276985</td>
-      <td>0.366632</td>
-      <td>0.482497</td>
-      <td>0.40778</td>
-      <td>0.304314</td>
-      <td>0.371543</td>
-      <td>0.479899</td>
-      <td>0.493834</td>
-      <td>0.290549</td>
-      <td>0.382179</td>
+      <td>0.348891</td>
+      <td>0.279699</td>
+      <td>0.370068</td>
+      <td>0.485955</td>
+      <td>0.411693</td>
+      <td>0.308747</td>
+      <td>0.37619</td>
+      <td>0.48552</td>
+      <td>0.497345</td>
+      <td>0.292792</td>
+      <td>0.385690</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.300209</td>
-      <td>0.202825</td>
-      <td>0.332991</td>
-      <td>0.456741</td>
-      <td>0.365605</td>
-      <td>0.256809</td>
-      <td>0.305151</td>
-      <td>0.415349</td>
-      <td>0.415741</td>
-      <td>0.256084</td>
-      <td>0.330750</td>
+      <td>0.300601</td>
+      <td>0.205061</td>
+      <td>0.336667</td>
+      <td>0.460362</td>
+      <td>0.369534</td>
+      <td>0.260833</td>
+      <td>0.309405</td>
+      <td>0.420104</td>
+      <td>0.417615</td>
+      <td>0.257115</td>
+      <td>0.333730</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.372493</td>
-      <td>-0.572775</td>
-      <td>-3.571202</td>
-      <td>-6.814574</td>
-      <td>-3.433593</td>
-      <td>-1.250964</td>
-      <td>-2.31262</td>
-      <td>-4.401254</td>
-      <td>-4.093037</td>
-      <td>-0.58659</td>
-      <td>-2.740910</td>
+      <td>-0.381451</td>
+      <td>-0.603745</td>
+      <td>-3.657283</td>
+      <td>-6.926987</td>
+      <td>-3.519094</td>
+      <td>-1.317033</td>
+      <td>-2.396007</td>
+      <td>-4.52852</td>
+      <td>-4.165721</td>
+      <td>-0.611186</td>
+      <td>-2.810703</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.091544</td>
-      <td>0.059524</td>
-      <td>0.102128</td>
-      <td>0.142306</td>
-      <td>0.113305</td>
-      <td>0.079292</td>
-      <td>0.09391</td>
-      <td>0.12876</td>
-      <td>0.128541</td>
-      <td>0.081375</td>
-      <td>0.102069</td>
+      <td>0.091612</td>
+      <td>0.060179</td>
+      <td>0.103287</td>
+      <td>0.143462</td>
+      <td>0.114549</td>
+      <td>0.080542</td>
+      <td>0.095243</td>
+      <td>0.130241</td>
+      <td>0.129078</td>
+      <td>0.08163</td>
+      <td>0.102982</td>
     </tr>
     <tr>
       <th rowspan="4" valign="top">HQMCB30YR</th>
       <th>RMSE</th>
-      <td>0.365137</td>
-      <td>0.222852</td>
-      <td>0.317983</td>
-      <td>0.447648</td>
-      <td>0.382598</td>
-      <td>0.258847</td>
-      <td>0.34714</td>
-      <td>0.457409</td>
-      <td>0.480515</td>
-      <td>0.286697</td>
-      <td>0.356683</td>
+      <td>0.364866</td>
+      <td>0.222895</td>
+      <td>0.318102</td>
+      <td>0.446323</td>
+      <td>0.382051</td>
+      <td>0.25885</td>
+      <td>0.346402</td>
+      <td>0.45607</td>
+      <td>0.478374</td>
+      <td>0.286101</td>
+      <td>0.356003</td>
     </tr>
     <tr>
       <th>MAE</th>
-      <td>0.335445</td>
-      <td>0.182342</td>
-      <td>0.276586</td>
-      <td>0.418178</td>
-      <td>0.337432</td>
-      <td>0.210653</td>
-      <td>0.284562</td>
-      <td>0.393817</td>
-      <td>0.40596</td>
-      <td>0.244</td>
-      <td>0.308897</td>
+      <td>0.334947</td>
+      <td>0.181975</td>
+      <td>0.276637</td>
+      <td>0.416693</td>
+      <td>0.336769</td>
+      <td>0.210484</td>
+      <td>0.283833</td>
+      <td>0.392222</td>
+      <td>0.403274</td>
+      <td>0.243648</td>
+      <td>0.308048</td>
     </tr>
     <tr>
       <th>R2</th>
-      <td>-0.749881</td>
-      <td>0.021739</td>
-      <td>-1.738388</td>
-      <td>-4.344987</td>
-      <td>-2.475148</td>
-      <td>-0.548571</td>
-      <td>-1.812833</td>
-      <td>-4.042613</td>
-      <td>-4.113949</td>
-      <td>-0.677194</td>
-      <td>-2.048182</td>
+      <td>-0.747284</td>
+      <td>0.021359</td>
+      <td>-1.740434</td>
+      <td>-4.31338</td>
+      <td>-2.465227</td>
+      <td>-0.548616</td>
+      <td>-1.800884</td>
+      <td>-4.013138</td>
+      <td>-4.068474</td>
+      <td>-0.670227</td>
+      <td>-2.034631</td>
     </tr>
     <tr>
       <th>MAPE</th>
-      <td>0.103197</td>
-      <td>0.054528</td>
-      <td>0.082659</td>
-      <td>0.12709</td>
-      <td>0.101786</td>
-      <td>0.063186</td>
-      <td>0.084958</td>
-      <td>0.118197</td>
-      <td>0.121598</td>
-      <td>0.0744</td>
-      <td>0.093160</td>
+      <td>0.103043</td>
+      <td>0.054387</td>
+      <td>0.082671</td>
+      <td>0.126624</td>
+      <td>0.101576</td>
+      <td>0.063127</td>
+      <td>0.084734</td>
+      <td>0.117698</td>
+      <td>0.120757</td>
+      <td>0.074304</td>
+      <td>0.092892</td>
     </tr>
   </tbody>
 </table>
