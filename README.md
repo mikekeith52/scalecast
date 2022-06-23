@@ -31,7 +31,10 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 `jupyter nbextension enable --py widgetsnbextension` (widgets with notebook)  
 `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets with Lab)  
 
-![](https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g)
+
+<p align="center">
+  <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" />
+</p>
 
 ## Links
 ### Official Docs
