@@ -19,6 +19,10 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 - [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
 - Average, weighted average, and spliced models
 
+<p align="center">
+  <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="600" height="400"/>
+</p>
+
 ## Installation
 - Only the base package is needed to get started:  
 `pip install scalecast`  
@@ -30,11 +34,6 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 `pip install ipywidgets` (widgets with notebook)  
 `jupyter nbextension enable --py widgetsnbextension` (widgets with notebook)  
 `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets with Lab)  
-
-
-<p align="center">
-  <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="800" height="600"/>
-</p>
 
 ## Links
 ### Official Docs
