@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.12.1
+Version: 0.12.3
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -87,8 +87,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/multi-series/multi-series.html)
         
         ### Anomaly Detection
-        - New in 0.12.0
-        - Example coming soon!
+        - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
         
         ## See Contributing
         - [Contributing.md](./Contributing.md)

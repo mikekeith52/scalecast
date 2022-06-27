@@ -40,5 +40,6 @@ setup(
     'openpyxl',
     'pandas-datareader',
     'shap',
+    'numba>='
   ],
 )

@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.12.1] - 2022-06-27
+## [0.12.3] - 2022-06-27
 ### Added
 - added shap feature importances in addition to pfi by allowing user to select method = 'shap' when calling `Forecaster.save_feature_importance()`
 - added shap library to dependencies list
@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file. We keep tra
 - in `Forecaster.save_feature_importance()`, added the `on_error` arg to raise errors if the user prefers. The default is still to log errors as warnings so as not to break loops.
 ### Fixed
 - `test_only` was not working with the lstm estimator, so fixed that
+- fixed an issue where the function didn't ignore the argument passed to `estimator` with `reduce_Xvars(method='l1')`
 
 ## [0.11.2] - 2022-06-20
 ### Added

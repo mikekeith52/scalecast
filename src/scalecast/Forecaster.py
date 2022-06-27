@@ -1922,7 +1922,7 @@ class Forecaster:
             if not use_loaded_grid:
                 from scalecast import GridGenerator
                 GridGenerator.get_example_grids()
-                f.ingest_grid(estimator)
+                f.ingest_grid(f.estimator)
             else:
                 descriptive_assert(
                     hasattr(f,'grid'),
@@ -3303,8 +3303,9 @@ class Forecaster:
             if method == 'pfi':
                 import eli5
                 from eli5.sklearn import PermutationImportance
+
                 perm = PermutationImportance(self.regr).fit(
-                    self.X, self.y.values,
+                    self.X, self.y.values[:len(self.X)],
                 )
                 self.feature_importance = eli5.explain_weights_df(
                     perm, feature_names=self.history[self.call_me]["Xvars"]
