@@ -1,7 +1,7 @@
 AnomalyDetector
 =================================================
 
-This object can be used to detect anomalies in the dataset using any of three methods. This object is new as of dist 0.12.0 and is currently considered experimental.
+This object can be used to detect anomalies in the dataset using any of three methods. This object is new as of dist 0.12.3.
 
 .. code:: python
 
