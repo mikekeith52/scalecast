@@ -76,8 +76,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/multi-series/multi-series.html)
 
 ### Anomaly Detection
-- New in 0.12.0
-- Example coming soon!
+- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
 
 ## See Contributing
 - [Contributing.md](./Contributing.md)
