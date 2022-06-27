@@ -49,13 +49,27 @@ Index
 
 .. toctree::
    :maxdepth: 4
-   :caption: Scalecast:
+   :caption: High Level:
    :hidden:
 
    Forecaster/ForecasterGlobals
+   Forecaster/_forecast
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Classes:
+   :hidden:
+
    Forecaster/Forecaster
    Forecaster/MVForecaster
-   Forecaster/_forecast
+   Forecaster/SeriesTransformer
+   Forecaster/AnomalyDetector
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Modules:
+   :hidden:
+
    Forecaster/GridGenerator
    Forecaster/Notebook
    Forecaster/Multiseries

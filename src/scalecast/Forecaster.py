@@ -73,52 +73,6 @@ def prepare_data(Xvars, y, current_xreg):
     X = X[Xvars].values
     return Xvars, y, X
 
-def prepare_rnn(yvals, lags, forecast_length):
-    """ prepares and scales the data for rnn models.
-
-    Args:
-        yvals (ndarray): dependent variable values to prepare
-        lags (int): the number of lags to use as predictors and to make the X matrix with
-        forecast_length (int): the amount of time to forecast out
-
-    Returns:
-        (ndarray,ndarray): The new X matrix and y array.
-    """
-    ylist = [(y - yvals.min()) / (yvals.max() - yvals.min()) for y in yvals]
-
-    n_future = forecast_length
-    n_past = lags
-    total_period = n_future + n_past
-    
-    idx_end = len(ylist)
-    idx_start = idx_end - total_period
-    
-    X_new = []
-    y_new = []
-
-    while idx_start > 0:
-        x_line = ylist[idx_start:idx_start+n_past]
-        y_line = ylist[idx_start+n_past:idx_start+total_period]
-
-        X_new.append(x_line)
-        y_new.append(y_line)
-        
-        idx_start = idx_start - 1
-        
-    X_new = np.array(X_new)
-    y_new = np.array(y_new)
-
-    return X_new, y_new
-
-def plot_loss_rnn(history,title):
-    plt.plot(history.history['loss'],label='train_loss')
-    if 'val_loss' in history.history.keys():
-        plt.plot(history.history['val_loss'],label='val_loss')
-    plt.title(title)
-    plt.xlabel('epoch')
-    plt.legend(loc='upper right')
-    plt.show()
-
 # descriptive assert statement for error catching
 def descriptive_assert(statement, ErrorType, error_message):
     try:
@@ -204,9 +158,29 @@ class ForecastError(Exception):
 
 # MAIN OBJECT
 class Forecaster:
-    def __init__(self, y, current_dates, **kwargs):
+    def __init__(self, y, current_dates, require_future_dates=True, **kwargs):
+        """ initiates object.
+
+        Args:
+            y (list-like): an array of all known observed values.
+            current_dates (list-like): an array of all known observed dates.
+                must be same length as y and in the same sequence 
+                (index 0 in y corresponds to index 0 in current_dates, etc.).
+            require_future_dates (bool): default True.
+                if False, none of your models will forecast into future periods by default.
+                if True, all models will forecast into future periods, 
+                unless run with test_only = True, and when adding regressors, they will automatically
+                be added into future periods.
+                this was added in v 0.12.0 and is considered experimental as of then. it was added
+                to make anomaly detection more convenient. before, the object acted as if
+                require_future_dates were always True.
+
+        Returns:
+            (Forecaster): the object.
+        """
         self.y = y
         self.current_dates = current_dates
+        self.require_future_dates = require_future_dates
         self.future_dates = pd.Series([],dtype='datetime64[ns]')
         self.current_xreg = {}  # values should be pandas series (to make differencing work more easily)
         self.future_xreg = {}  # values should be lists (to make iterative forecasting work more easily)
@@ -223,6 +197,11 @@ class Forecaster:
             setattr(self, key, value)
 
         self.typ_set()  # ensures that the passed values are the right types
+        
+        if not require_future_dates:
+            self.generate_future_dates(1) # placeholder -- never used
+
+        globals()['f_init_'] = self.__deepcopy__()
 
     def __copy__(self):
         obj = type(self).__new__(self.__class__)
@@ -269,7 +248,7 @@ class Forecaster:
     self.current_dates.values[-1].astype(str),
     self.freq,
     len(self.y),
-    len(self.future_dates),
+    len(self.future_dates) if self.require_future_dates else 'NA',
     list(self.current_xreg.keys()),
     self.integration,
     self.test_length,
@@ -290,7 +269,7 @@ class Forecaster:
         descriptive_assert(
             max([int(self.history[m]['TestOnly']) for m in models]) == 0,
             ForecastError,
-            'this method does not accept any models run test_only = True',
+            'this method does not accept any models run test_only = True or when require_future_dates attr is False',
         )
 
     def _validate_future_dates_exist(self):
@@ -427,7 +406,6 @@ class Forecaster:
         """
         call_me = self.call_me
         self.history[call_me]["feature_importance"] = self.feature_importance
-        self.history[call_me]["per"] = self.perm
 
     def _bank_summary_stats_to_history(self):
         """ saves summary stats (where available) to history
@@ -517,6 +495,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
         """
         def fit_normalizer(X, normalizer):
@@ -647,6 +626,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to the HWES() function from statsmodels 
         """
         if not dynamic_testing: logging.warning("dynamic_testing is True always for hwes model")
@@ -705,6 +685,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to the ARIMA() function from statsmodels.
         """
         if not dynamic_testing:
@@ -805,6 +786,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+
             **kwargs: passed to the Prophet() function from fbprophet.
         """
         if not dynamic_testing:
@@ -881,6 +863,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
         """
         if not dynamic_testing:
@@ -1030,6 +1013,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
         """
         def convert_lstm_args_to_rnn(**kwargs):
@@ -1053,6 +1037,7 @@ class Forecaster:
             learning_rate=learning_rate,
             random_seed=random_seed,
             plot_loss=plot_loss,
+            test_only=test_only,
             **kwargs,
         )
         return self._forecast_rnn(**new_kwargs)
@@ -1124,6 +1109,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
         """
         def get_compiled_model(y):
@@ -1161,6 +1147,52 @@ class Forecaster:
             # compile model
             model.compile(optimizer=local_optimizer, loss=loss)
             return model
+
+        def prepare_rnn(yvals, lags, forecast_length):
+            """ prepares and scales the data for rnn models.
+
+            Args:
+                yvals (ndarray): dependent variable values to prepare
+                lags (int): the number of lags to use as predictors and to make the X matrix with
+                forecast_length (int): the amount of time to forecast out
+
+            Returns:
+                (ndarray,ndarray): The new X matrix and y array.
+            """
+            ylist = [(y - yvals.min()) / (yvals.max() - yvals.min()) for y in yvals]
+
+            n_future = forecast_length
+            n_past = lags
+            total_period = n_future + n_past
+            
+            idx_end = len(ylist)
+            idx_start = idx_end - total_period
+            
+            X_new = []
+            y_new = []
+
+            while idx_start > 0:
+                x_line = ylist[idx_start:idx_start+n_past]
+                y_line = ylist[idx_start+n_past:idx_start+total_period]
+
+                X_new.append(x_line)
+                y_new.append(y_line)
+                
+                idx_start = idx_start - 1
+                
+            X_new = np.array(X_new)
+            y_new = np.array(y_new)
+
+            return X_new, y_new
+
+        def plot_loss_rnn(history,title):
+            plt.plot(history.history['loss'],label='train_loss')
+            if 'val_loss' in history.history.keys():
+                plt.plot(history.history['val_loss'],label='val_loss')
+            plt.title(title)
+            plt.xlabel('epoch')
+            plt.legend(loc='upper right')
+            plt.show()
         
         descriptive_assert(
             len(layers_struct) >= 1,
@@ -1737,12 +1769,22 @@ class Forecaster:
         df = df.loc[df[date_col] >= self.current_dates.values[0]]
         df = pd.get_dummies(df, drop_first=drop_first)
         current_df = df.loc[df[date_col].isin(self.current_dates)]
-        future_df = df.loc[df[date_col] > self.current_dates.values[-1]]
+        if self.require_future_dates:
+            future_df = df.loc[df[date_col] > self.current_dates.values[-1]]
+        else:
+            future_df = pd.DataFrame(
+                {date_col:self.future_dates.to_list()}
+            )
+            for c in current_df:
+                if c != date_col:
+                    future_df[c] = 0
+        
         descriptive_assert(
             current_df.shape[0] == len(self.y),
             ForecastError,
             "something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future and specify a date column in date_col parameter",
         )
+        
         if not use_future_dates:
             descriptive_assert(
                 future_df.shape[0] >= len(self.future_dates),
@@ -1751,7 +1793,7 @@ class Forecaster:
             )
         else:
             self.future_dates = future_df[date_col]
-
+        
         for c in [c for c in future_df if c != date_col]:
             self.future_xreg[c] = future_df[c].to_list()[: len(self.future_dates)]
             self.current_xreg[c] = current_df[c]
@@ -1790,13 +1832,14 @@ class Forecaster:
         reduced the error is selected.
 
         Args:
-            method (str): one of {'l1','pfi'}, default 'l1'.
+            method (str): one of {'l1','pfi','shap'}, default 'l1'.
                 the reduction method. 
-                l1 uses a lasso regressor and grid searches for the optimal alpha on the validation set
+                'l1' uses a lasso regressor and grid searches for the optimal alpha on the validation set
                 unless an alpha value is passed to the hyperparams arg and grid_search arg is False.
-                pfi uses permutation feature importance and is more computationally expensive
+                'pfi' uses permutation feature importance and is more computationally expensive
                 but can use any sklearn estimator.
-                method "pfi" creates attributes in object called pfi_dropped_vars and pfi_error_values that are two lists
+                'shap' uses shap feature importance, but it is not available for all sklearn models.
+                method "pfi" or "shap" creates attributes in object called pfi_dropped_vars and pfi_error_values that are two lists
                 that represent the error change with the corresponding dropped var.
                 the pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
                 the first error is the intial error before any variables were dropped.
@@ -1865,8 +1908,8 @@ class Forecaster:
         >>> print(f.reduced_Xvars) # view results
         """
         descriptive_assert(
-            method in ('l1','pfi'),
-            ValueError,f'method must be one of "pfi", "l1", got {method}'
+            method in ('l1','pfi','shap'),
+            ValueError,f'method must be one of "pfi", "l1", "shap", got {method}'
         )
         f = self.__deepcopy__()
         descriptive_assert(
@@ -1874,7 +1917,7 @@ class Forecaster:
             ValueError,
             f'estimator must be one of {_sklearn_estimators_}, got {estimator}'
         )
-        f.set_estimator(estimator if method == 'pfi' else 'lasso')
+        f.set_estimator(estimator if method in ('pfi','shap') else 'lasso')
         if grid_search:
             if not use_loaded_grid:
                 from scalecast import GridGenerator
@@ -1900,12 +1943,17 @@ class Forecaster:
 
         if method == 'l1':
             coef_fi_lasso = pd.DataFrame(
-                {x: [np.abs(co)] for x, co in zip(f.history["lasso"]["Xvars"], f.regr.coef_)},
+                {
+                    x: [np.abs(co)] for x, co in zip(
+                        f.history["lasso"]["Xvars"], 
+                        f.regr.coef_,
+                    )
+                },
                 index=["feature"],
             ).T
             self.reduced_Xvars = coef_fi_lasso.loc[coef_fi_lasso["feature"] != 0].index.to_list()
         else:
-            f.save_feature_importance()
+            f.save_feature_importance(method)
             pfi_df = f.export_feature_importance(estimator)
             using_r2 = (
                 monitor.endswith('R2') or (f.validation_metric == 'r2' and monitor == 'ValidationMetricValue')
@@ -1946,7 +1994,7 @@ class Forecaster:
                 new_error = -new_error if using_r2 else new_error
                 errors.append(new_error)
 
-                f.save_feature_importance()
+                f.save_feature_importance(method)
                 pfi_df = f.export_feature_importance(estimator)
                 pfi_df['weight'] = np.abs(pfi_df['weight'])
                 pfi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
@@ -2184,6 +2232,7 @@ class Forecaster:
             train_only (bool): default False.
                 If True, will exclude the test set from the test (a measure added to avoid leakage).
             **kwargs: passed to seasonal_decompose() function from statsmodels.
+                see https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.seasonal_decompose.html
 
         Returns:
             (DecomposeResult): An object with seasonal, trend, and resid attributes.
@@ -2961,7 +3010,7 @@ class Forecaster:
         # convert into tuple for the group or it fails
         if 'Xvars' in grid_evaluated_cv:
             grid_evaluated_cv['Xvars'] = grid_evaluated_cv['Xvars'].apply(
-                lambda x: x if x is None else tuple(x)
+                lambda x: str(x)
             )
         
         grid_evaluated = grid_evaluated_cv.groupby(
@@ -2973,7 +3022,7 @@ class Forecaster:
         # contributions welcome for a more elegant solution
         if 'Xvars' in grid_evaluated:
             grid_evaluated['Xvars'] = grid_evaluated['Xvars'].apply(
-                lambda x: x if x is None else list(x)
+                lambda x: eval(x)
             )
         
         self.grid = grid_evaluated.iloc[:,:-3]
@@ -3031,6 +3080,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
                 for sklearn models, can inlcude normalizer and Xvars.
                 for ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer.
@@ -3060,6 +3110,7 @@ class Forecaster:
             logging.warning('tune argument will be ignored')
 
         self._clear_the_deck()
+        test_only = True if not self.require_future_dates else test_only
         self.test_only = test_only
         self.dynamic_testing = dynamic_testing
         self.call_me = self.estimator if call_me is None else call_me
@@ -3100,6 +3151,7 @@ class Forecaster:
                 when forecasting to future periods, there is no way to skip the training process.
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
 
         Returns:
             None
@@ -3153,6 +3205,7 @@ class Forecaster:
         dynamic_testing=True,
         summary_stats=False,
         feature_importance=False,
+        fi_method='pfi',
         **cvkwargs,
     ):
         """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information.
@@ -3175,6 +3228,9 @@ class Forecaster:
                 whether to save summary stats for the models that offer those.
             feature_importance (bool): default False.
                 whether to save permutation feature importance information for the models that offer those.
+            fi_method (str): one of {'pfi','shap'}, default 'pfi'.
+                the type of feature importance to save for the models that support it.
+                ignored if feature_importance is False.
             **cvkwargs: passed to the cross_validate() method.
 
         Returns:
@@ -3207,34 +3263,80 @@ class Forecaster:
             if summary_stats:
                 self.save_summary_stats()
             if feature_importance:
-                self.save_feature_importance()
+                self.save_feature_importance(fi_method)
 
-    def save_feature_importance(self):
-        """ saves feature info for models that offer it and will not raise errors if not available.
+    def save_feature_importance(self,method='pfi',on_error='warn'):
+        """ saves feature info for models that offer it (sklearn models).
         call after evaluating the model you want it for and before changing the estimator.
-        this is more reliable as a feature-importance scorer when models were run test_only = True
-        because then all feature scores will be out-of-sample.
+        this method saves a dataframe listing the feature as the index its score (labeled "weight" in
+        the dataframe) and its score's standard deviation ("std"). this dataframe can be recalled using
+        the `export_feature_importance()` method. scores for the pfi method are the average decrease in accuracy
+        over 10 permutations for each feature. for shap, it is determined as the average score applied to each
+        feature in each observation.
+
+        Args:
+            method (str): one of {'pfi','shap'}.
+                the type of feature importance to set.
+                pfi supported for all sklearn model types. 
+                shap for xgboost, lightgbm and some others.
+            on_error (str): one of {'warn','raise'}. default 'warn'.
+                if the last model called doesn't support feature importance,
+                'warn' will log a warning. 'raise' will raise an error.
 
         >>> f.set_estimator('mlr')
         >>> f.manual_forecast()
-        >>> f.save_feature_importance()
+        >>> f.save_feature_importance() # pfi
+        >>> f.export_feature_importance('mlr')
+        >>>
+        >>> f.set_estimator('xgboost')
+        >>> f.manual_forecast()
+        >>> f.save_feature_importance('shap') # shap
+        >>> f.export_feature_importance('xgboost')
         """
-        import eli5
-        from eli5.sklearn import PermutationImportance
-
+        descriptive_assert(
+            method in ('pfi','shap'),
+            ValueError,
+            f'kind must be one of "pfi","shap", got {method}'
+        )
+        fail = False
         try:
-            perm = PermutationImportance(self.regr).fit(
-                self.X[-self.test_length:], self.y.values[-self.test_length:]
-            )
-        except (TypeError,AttributeError):
-            logging.warning(
-                f"cannot set feature importance on the {self.estimator} model"
-            )
+            if method == 'pfi':
+                import eli5
+                from eli5.sklearn import PermutationImportance
+                perm = PermutationImportance(self.regr).fit(
+                    self.X, self.y.values,
+                )
+                self.feature_importance = eli5.explain_weights_df(
+                    perm, feature_names=self.history[self.call_me]["Xvars"]
+                ).set_index("feature")
+            else:
+                import shap
+                explainer = shap.TreeExplainer(self.regr)
+                shap_values = explainer.shap_values(self.X)
+                shap_df = pd.DataFrame(shap_values,columns=self.Xvars)
+                shap_fi = pd.DataFrame(
+                    {
+                        'feature':shap_df.columns.to_list(),
+                        'weight':np.abs(shap_df).mean(),
+                        'std':np.abs(shap_df).std(),
+                    }
+                ).set_index('feature').sort_values('weight',ascending=False)
+                self.feature_importance = shap_fi
+        except Exception as e:
+            fail = True
+            error = e
+
+        if fail:
+            if on_error == 'warn':
+                logging.warning(
+                    f"cannot set {method} feature importance on the {self.estimator} model"
+                )
+            elif on_error == 'raise':
+                raise TypeError(str(error))
+            else:
+                raise ValueError(f'on_error arg not recognized: {on_error}')
             return
-        self.feature_importance = eli5.explain_weights_df(
-            perm, feature_names=self.history[self.call_me]["Xvars"]
-        ).set_index("feature")
-        self.perm = perm
+
         self._bank_fi_to_history()
 
     def save_summary_stats(self):
@@ -3247,7 +3349,7 @@ class Forecaster:
         """
         if not hasattr(self, "summary_stats"):
             logging.warning(
-                f"last model run ({self.estimator}) does not have summary stats"
+                f"{self.estimator} does not have summary stats"
             )
             return
         self._bank_summary_stats_to_history()
@@ -3389,7 +3491,7 @@ class Forecaster:
                 ignored when level = True.
 
         Returns:
-            (Figure): the created figure
+            (Axis): the figure's axis.
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
@@ -3506,7 +3608,7 @@ class Forecaster:
                 ignored when level = False.
 
         Returns:
-            (Figure): the created figure
+            (Axis): the figure's axis.
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
@@ -3607,7 +3709,7 @@ class Forecaster:
             order_by (str): one of _determine_best_by_, default None.
 
         Returns:
-            (Figure): the created figure
+            (Axis): the figure's axis.
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
@@ -4071,11 +4173,16 @@ class Forecaster:
             raise ForecastError("no validation grids could be found")
 
     def reset(self):
-        """ drops all regressors and reverts object to original (level) state when initiated.
+        """ returns an object equivalent to the original state when initiated.
+
+        Returns:
+            (Forecaster): the original object.
+
+        >>> f = Forecaster()
+        >>> f.add_time_trend()
+        >>> f1 = f.reset()
         """
-        self.undiff(suppress_error=True)
-        self.current_xreg = {}
-        self.future_xreg = {}
+        return f_init_
 
     def export_Xvars_df(self, dropna=False):
         """ gets all utilized regressors and values.
@@ -4100,7 +4207,7 @@ class Forecaster:
                 pd.concat(
                     [
                         pd.DataFrame({"DATE": self.current_dates.to_list()}),
-                        pd.DataFrame(self.current_xreg),
+                        pd.DataFrame(self.current_xreg).reset_index(drop=True),
                     ],
                     axis=1,
                 ),
@@ -4111,6 +4218,9 @@ class Forecaster:
             ],
             ignore_index=True,
         )
+        
+        if not self.require_future_dates:
+            df = df.loc[df['DATE'].isin(self.current_dates.values)]
 
         return df.dropna() if dropna else df
 

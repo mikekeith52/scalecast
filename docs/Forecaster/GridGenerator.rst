@@ -1,4 +1,4 @@
-GridGenerator Functions
+GridGenerator
 ============================================
 
 If you want to automatically generate grids to tune models with, here's how.

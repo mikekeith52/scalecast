@@ -1148,7 +1148,7 @@ class MVForecaster:
                 ignored when level = True.
 
         Returns:
-            (Figure): the created figure
+            (Axis): the figure's axis.
 
         >>> mvf.plot() # plots all forecasts and all series
         >>> plt.show()
@@ -1223,7 +1223,7 @@ class MVForecaster:
                 ignored when level = True.
 
         Returns:
-            (Figure): the created figure
+            (Axis): the figure's axis.
 
         >>> mvf.plot_test_set() # plots all test set predictions on all series
         >>> plt.show()
@@ -1281,7 +1281,7 @@ class MVForecaster:
                name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
 
         Returns:
-            (Figure): the created figure
+            (Axis): the figure's axis.
 
         >>> mvf.plot_fitted() # plots all fitted values on all series
         >>> plt.show()

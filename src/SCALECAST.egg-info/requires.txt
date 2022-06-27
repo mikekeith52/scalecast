@@ -12,3 +12,4 @@ xgboost
 lightgbm
 openpyxl
 pandas-datareader
+shap

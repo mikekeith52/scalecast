@@ -204,8 +204,8 @@ def get_example_grids(overwrite=False):
         if not overwrite:
             return
     
-    with open('Grids.py','w') as f:
-        f.write(example_grids)
+    with open('Grids.py','w') as fl:
+        fl.write(example_grids)
 
 def get_mv_grids(overwrite=False):
     """ saves example grids to working directory as MVGrids.py (does not overwrite by default).
@@ -220,8 +220,8 @@ def get_mv_grids(overwrite=False):
         if not overwrite:
             return
     
-    with open('MVGrids.py','w') as f:
-        f.write(mv_grids)
+    with open('MVGrids.py','w') as fl:
+        fl.write(mv_grids)
 
 def get_empty_grids(overwrite=False):
     """ saves empty grids to working directory as Grids.py (does not overwrite by default).
@@ -236,5 +236,5 @@ def get_empty_grids(overwrite=False):
         if not overwrite:
             return
     
-    with open('Grids.py','w') as f:
-        f.write(empty_grids)
+    with open('Grids.py','w') as fl:
+        fl.write(empty_grids)

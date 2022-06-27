@@ -1,4 +1,4 @@
-Multiseries Functions
+multiseries
 ============================================
 
 If you are forecasting with many series in a loop, these functions and code examples may facilitate setting up the process and getting key information for each model and series.

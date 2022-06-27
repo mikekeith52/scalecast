@@ -1,4 +1,4 @@
-Util Functions
+util
 ============================================
 
 Miscellaneous util functions native to scalecast.
@@ -35,3 +35,9 @@ plot_reduction_errors
     
     plot_reduction_errors(f)
 
+break_mv_forecaster
+-----------------------------
+.. automodule:: src.scalecast.util.break_mv_forecaster
+    :members:
+    :undoc-members:
+    :show-inheritance:

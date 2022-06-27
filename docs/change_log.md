@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.12.1] - 2022-06-27
+### Added
+- added shap feature importances in addition to pfi by allowing user to select method = 'shap' when calling `Forecaster.save_feature_importance()`
+- added shap library to dependencies list
+- added `SeriesTransformer` class
+- added `AnomalyDetector` class
+- added function to util that breaks an `MVForecaster` class into several objects of `Forecaster` class
+- can now init `Forecaster` object with `require_future_dates = False`. when using False, the object will not forecast into future dates and will not make you know values into the future for regressors passed through `Forecast.ingest_Xvars_df()`.
+### Changed
+- took the 'per' key out of the history attribute
+- changed the order of some of the source code to be more efficient (very small gains)
+- changed the size of the dataset that pfi feature importance is called on to make it include all values previously seen by any given model passed to it. before, it sliced off the last couple observations only -- this was more or less a mistake but I don't expect results will be affected significantly for anyone using `reduce_Xvars()` due to how features are sorted in that function.
+- changed the `Forecaster.reset()` function so that it **returns** a true copy of the initiated object.
+- in `Forecaster.save_feature_importance()`, added the `on_error` arg to raise errors if the user prefers. The default is still to log errors as warnings so as not to break loops.
+### Fixed
+- `test_only` was not working with the lstm estimator, so fixed that
+
 ## [0.11.2] - 2022-06-20
 ### Added
 ### Changed

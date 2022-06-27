@@ -39,6 +39,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 ### Official Docs
   - [Read the Docs](https://scalecast.readthedocs.io/en/latest/)
   - [Introductory Example](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/introduction.html)
+  - [Examples Repository](https://github.com/mikekeith52/scalecast-examples)
   - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)
 
 ### Forecasting with Different Model Types
@@ -73,6 +74,10 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 ### Scaled Forecasting on Many Series
 - [May the Forecasts Be with You](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/multi-series/multi-series.html)
+
+### Anomaly Detection
+- New in 0.12.0
+- Example coming soon!
 
 ## See Contributing
 - [Contributing.md](./Contributing.md)

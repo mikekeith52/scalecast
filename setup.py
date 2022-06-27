@@ -4,10 +4,6 @@ import shutil
 from src.scalecast.__init__ import __version__ as version
 import os
 
-if os.path.exists('warnings.log'):
-  os.system('jupyter nbconvert --execute --to markdown README.ipynb')
-  os.remove('warnings.log')
-
 long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
@@ -43,5 +39,6 @@ setup(
     'lightgbm',
     'openpyxl',
     'pandas-datareader',
+    'shap',
   ],
 )

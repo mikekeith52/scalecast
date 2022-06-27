@@ -1,4 +1,4 @@
-Notebook Functions
+notebook
 ============================================
 
 If you are using a Jupyter notebook, the notebook functions may come in handy to evaluate models and view results more easily.

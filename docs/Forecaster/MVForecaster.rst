@@ -1,4 +1,4 @@
-MVForecaster Class
+MVForecaster
 =================================================
 
 This object can be used to extend the univariate/exogenous regressor approach from the Forecaster class to make forecasts with multiple series that are all predicted forward dynamically using each other's lags, seasonality, and any other exogenous regressors. This object is initiated by combining several Forecaster objects together. This approach can utilize any sklearn regressor model to make forecasts. All models can be dynamically tuned and tested and level and differenced results are available.
