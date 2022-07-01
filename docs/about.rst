@@ -12,7 +12,7 @@ The library provides the Forecaster (for one series) and MVForecaster (for multi
 
 * Classic econometric models from `statsmodels <https://www.statsmodels.org/stable/>`_: Holt-Winters Exponential Smoothing and ARIMA
 
-* - The `Four Theta model <https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html>`_ from `darts <https://unit8co.github.io/darts/>`_
+* The `Four Theta model <https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html>`_ from `darts <https://unit8co.github.io/darts/>`_
 
 * `Facebook Prophet <https://facebook.github.io/prophet/>`_
 
