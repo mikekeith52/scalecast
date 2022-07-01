@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.12.5] - 2022-07-01
+### Added
+- added `jump_back` parameter in `Forecaster.backtest()` and `MVForecaster.backtest()` methods
+- added the theta model from darts
+### Changed
+- changed how dataframes are grouped in the `cross_validate()` method. turned sorting off to prevent some failures, specifically in the theta model
+### Fixed
+
+## [0.12.4] - 2022-06-28
+### Added
+### Changed
+- changed how shap feature scores are sorted in reduce Xvars, no adjustment needed like with PFI
+### Fixed
+
 ## [0.12.3] - 2022-06-27
 ### Added
 - added shap feature importances in addition to pfi by allowing user to select method = 'shap' when calling `Forecaster.save_feature_importance()`

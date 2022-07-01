@@ -50,14 +50,11 @@ from sklearn.linear_model import SGDRegressor as sgd_
 def mape(y, pred):
     return (np.nan if 0 in y else mean_absolute_percentage_error(y, pred))  # average o(1) worst-case o(n)
 
-
 def rmse(y, pred):
     return mean_squared_error(y, pred) ** 0.5
 
-
 def mae(y, pred):
     return mean_absolute_error(y, pred)
-
 
 def r2(y, pred):
     return r2_score(y, pred)
@@ -100,7 +97,7 @@ _sklearn_imports_ = {
 _sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 
 # to add non-sklearn models, add to the list below
-_non_sklearn_estimators_ = ["arima", "hwes", "prophet", "silverkite", "rnn", "lstm", "combo"]
+_non_sklearn_estimators_ = ["arima", "hwes", "prophet", "silverkite", "rnn", "lstm", "theta", "combo"]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
 _cannot_be_tuned_ = ['combo','rnn','lstm']
 _can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
@@ -154,7 +151,6 @@ class ForecastError(Exception):
 
     class PlottingError(Exception):
         pass
-
 
 # MAIN OBJECT
 class Forecaster:
@@ -496,7 +492,7 @@ class Forecaster:
                 any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
                 changed to True always if object initiated with require_future_dates = False.
-            **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
+            **kwargs: treated as model hyperparameters and passed to the applicable sklearn estimator.
         """
         def fit_normalizer(X, normalizer):
             descriptive_assert(
@@ -585,7 +581,7 @@ class Forecaster:
             test_length - self.test_length if tune else test_length, # fcst_horizon
             {x: current_xreg[x][-test_length:] for x in Xvars}, # for AR processing
             dynamic_testing,
-            False
+            False,
         )
         pred = [i for i in result[0]]
         # set the test-set metrics
@@ -594,7 +590,12 @@ class Forecaster:
             return self._tune()
         if test_only:
             # last fitted val has to match last date in current_dates or a bunch of stuff breaks
-            result = (result[0],[i for i in result[1]] + [np.nan]*self.test_length,result[2],result[3])
+            result = (
+                result[0],
+                [i for i in result[1]] + [np.nan]*self.test_length,
+                result[2],
+                result[3]
+            )
             return result
 
         # run full model
@@ -609,6 +610,84 @@ class Forecaster:
             True,
             True,
         )
+
+    def _forecast_theta(self, tune=False, dynamic_testing=True, test_only=False, **kwargs):
+        """ forecasts with Four Theta from darts. see the documentation: 
+        https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html
+        scalecast example coming soon.
+
+        Args:
+            tune (bool): default False.
+                whether the model is being tuned.
+                does not need to be specified by user.
+            dynamic_testing (bool): default True.
+                always ignored in theta - it is always dynamic since it doesn't require AR terms.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
+            **kwargs: passed to the theta() function from darts 
+        """
+        from darts import TimeSeries
+        from darts.models.forecasting.theta import FourTheta
+
+        if not dynamic_testing: logging.warning("dynamic_testing is True always for the theta model")
+        self.dynamic_testing = True
+
+        sns.set_palette("tab10") # darts changes this
+
+        test_length = self.test_length if not tune else self.validation_length + self.test_length
+
+        y = self.y.to_list()
+        d = self.current_dates.to_list()
+
+        y_train = pd.Series(y[: -test_length],index=d[: -test_length])
+        y_test = pd.Series(y[-test_length:],index=d[-test_length:])
+        y = pd.Series(y,index=d)
+
+        ts_train = TimeSeries.from_series(y_train)
+        ts = TimeSeries.from_series(y)
+
+        regr = FourTheta(**kwargs)
+        regr.fit(ts_train)
+        pred = regr.predict(len(y_test))
+        pred = [p[0] for p in pred.values()]
+
+        self._metrics(
+            y_test if not tune else y_test[:-self.test_length], 
+            pred if not tune else pred[:-self.test_length]
+        )
+
+        # tune
+        if tune:
+            return self._tune()
+
+        # test only
+        if test_only:
+            resid = [r[0] for r in regr.residuals(ts_train).values()]
+            actuals = y_train[-len(resid):]
+            fvs = [r + a for r, a in zip(resid,actuals)]
+            return (
+                pred,
+                fvs + [np.nan]*self.test_length,
+                None,
+                None,
+                #regr, # I would like to include this in the future but it breaks things for now
+            )
+
+        # full
+        regr = FourTheta(**kwargs)
+        regr.fit(ts)
+        pred = regr.predict(len(self.future_dates))
+        pred = [p[0] for p in pred.values()]
+        resid = [r[0] for r in regr.residuals(ts).values()]
+        actuals = y[-len(resid):]
+        fvs = [r + a for r, a in zip(resid,actuals)]
+        return (pred,fvs,None,None)
+
 
     def _forecast_hwes(self, tune=False, dynamic_testing=True, test_only=False, **kwargs):
         """ forecasts with holt-winters exponential smoothing.
@@ -627,34 +706,46 @@ class Forecaster:
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
                 changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to the HWES() function from statsmodels 
+            **kwargs: passed to the HWES() function from statsmodels. endog passed automatically.
+                https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html
         """
+        from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
+        
         if not dynamic_testing: logging.warning("dynamic_testing is True always for hwes model")
         self.dynamic_testing = True
-        from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
-
+        
         y = self.y.to_list()
         test_length = self.test_length if not tune else self.validation_length + self.test_length
+        
         y_train = y[: -test_length]
         y_test = y[-test_length :]
+        
         regr = HWES(
             y_train,
             dates=self.current_dates.values[: -self.test_length],
             freq=self.freq,
             **kwargs,
         ).fit(optimized=True, use_brute=True)
+        
         pred = regr.predict(
             start=len(y_train), 
             end=len(y_train) + (len(y_test) if not tune else len(y_test) - self.test_length) - 1
         )
+        
         self._metrics(y_test if not tune else y_test[:-self.test_length], pred)
+        
         # tune
         if tune:
             return self._tune()
         
         # test only
         if test_only:
-            return (pred,list(regr.fittedvalues) + [np.nan]*self.test_length,None,regr)
+            return (
+                pred,
+                list(regr.fittedvalues) + [np.nan]*self.test_length,
+                None,
+                regr,
+            )
 
         # full
         regr = HWES(
@@ -686,7 +777,8 @@ class Forecaster:
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
                 changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to the ARIMA() function from statsmodels.
+            **kwargs: passed to the ARIMA() function from statsmodels. endog and exog passed automatically. 
+                https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html
         """
         if not dynamic_testing:
             logging.warning(
@@ -1635,8 +1727,6 @@ class Forecaster:
                     self.current_xreg[k] = v.diff()
                 self.future_xreg[k] = [self.y.values[-ar]]
 
-        delattr(self, "adf_stationary") if hasattr(self, "adf_stationary") else None
-
     def integrate(
         self, critical_pval=0.05, train_only=False, max_integration=2
     ):
@@ -1683,7 +1773,6 @@ class Forecaster:
             return
 
         self.diff(2)
-        self.adf_stationary = True
 
     def add_ar_terms(self, n):
         """ adds auto-regressive terms.
@@ -1842,7 +1931,7 @@ class Forecaster:
                 method "pfi" or "shap" creates attributes in object called pfi_dropped_vars and pfi_error_values that are two lists
                 that represent the error change with the corresponding dropped var.
                 the pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
-                the first error is the intial error before any variables were dropped.
+                the first error is the initial error before any variables were dropped.
             estimator (str): one of _sklearn_estimators_. default 'lasso'.
                 the estimator to use to determine the best set of vars.
                 if method == 'l1', estimator arg is ignored and is always lasso.
@@ -1954,13 +2043,16 @@ class Forecaster:
             self.reduced_Xvars = coef_fi_lasso.loc[coef_fi_lasso["feature"] != 0].index.to_list()
         else:
             f.save_feature_importance(method)
-            pfi_df = f.export_feature_importance(estimator)
+            fi_df = f.export_feature_importance(estimator)
             using_r2 = (
                 monitor.endswith('R2') or (f.validation_metric == 'r2' and monitor == 'ValidationMetricValue')
             )
-            pfi_df["weight"] = np.abs(pfi_df["weight"])
-            pfi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
-            features = pfi_df.index.to_list()
+
+            if method == 'pfi':
+                fi_df["weight"] = np.abs(fi_df["weight"])
+                fi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
+            
+            features = fi_df.index.to_list()
             init_error = f.history[estimator][monitor]
             init_error = -init_error if using_r2 else init_error
 
@@ -1995,10 +2087,13 @@ class Forecaster:
                 errors.append(new_error)
 
                 f.save_feature_importance(method)
-                pfi_df = f.export_feature_importance(estimator)
-                pfi_df['weight'] = np.abs(pfi_df['weight'])
-                pfi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
-                features = pfi_df.index.to_list()
+                fi_df = f.export_feature_importance(estimator)
+
+                if method == 'pfi':
+                    fi_df['weight'] = np.abs(fi_df['weight'])
+                    fi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
+                
+                features = fi_df.index.to_list()
 
             optimal_drop = errors.index(min(errors)) if keep_this_many == 'auto' else drop_this_many
             self.reduced_Xvars = [x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]]
@@ -2127,12 +2222,10 @@ class Forecaster:
             if res[1] <= critical_pval:
                 if not quiet:
                     print("series appears to be stationary")
-                self.adf_stationary = True
                 return True
             else:
                 if not quiet:
                     print("series might not be stationary")
-                self.adf_stationary = False
                 return False
         else:
             return res
@@ -2773,8 +2866,6 @@ class Forecaster:
         self.y = pd.Series(self.levely)
 
         self.integration = 0
-        if hasattr(self, "adf_stationary"):
-            delattr(self, "adf_stationary")
 
     def set_estimator(self, estimator):
         """ sets the estimator to forecast with.
@@ -2890,8 +2981,10 @@ class Forecaster:
         self.validation_metric = metric
 
     def tune(self, dynamic_tuning=False):
-        """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as the estimator by default).
+        """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
+        the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
+        results are stored in the best_params attribute.
 
         Args:
             dynamic_tuning (bool): default False.
@@ -2963,6 +3056,7 @@ class Forecaster:
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
+        results are stored in best_params attribute.
 
         Args:
             k (int): default 5. the number of folds. must be at least 2.
@@ -2971,6 +3065,10 @@ class Forecaster:
 
         Returns:
             None
+
+        >>> f.set_estimator('xgboost')
+        >>> f.cross_validate() # tunes hyperparam values
+        >>> f.auto_forecast() # forecasts with the best params
         """
         rolling = bool(rolling)
         k = int(k)
@@ -3016,7 +3114,9 @@ class Forecaster:
         grid_evaluated = grid_evaluated_cv.groupby(
             grid_evaluated_cv.columns.to_list()[:-4],
             dropna=False,
-        )['metric_value'].mean().reset_index()
+            as_index=False,
+            sort=False,
+        )['metric_value'].mean()
         
         # convert back to list or it fails when calling the hyperparam vals
         # contributions welcome for a more elegant solution
@@ -4290,7 +4390,7 @@ class Forecaster:
         df['Residuals'] = df['Actuals'] - df['FittedVals']
         return df
 
-    def backtest(self,model,fcst_length='auto',n_iter=10):
+    def backtest(self,model,fcst_length='auto',n_iter=10,jump_back=1):
         """ runs a backtest of a selected evaluated model over a certain 
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
@@ -4310,6 +4410,8 @@ class Forecaster:
             n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
                 each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
+            jump_back (int): default 1. 
+                the number of time steps between two consecutive training sets.
 
         Returns:
             None
@@ -4322,10 +4424,10 @@ class Forecaster:
         for i in range(n_iter):
             f = self.__deepcopy__()
             if i > 0:
-                f.current_xreg = {k:pd.Series(v.values[:-i]) for k, v in f.current_xreg.items()}
-                f.current_dates = pd.Series(f.current_dates.values[:-i])
-                f.y = pd.Series(f.y.values[:-i])
-                f.levely = f.levely[:-i]
+                f.current_xreg = {k:pd.Series(v.values[:-i*jump_back]) for k, v in f.current_xreg.items()}
+                f.current_dates = pd.Series(f.current_dates.values[:-i*jump_back])
+                f.y = pd.Series(f.y.values[:-i*jump_back])
+                f.levely = f.levely[:-i*jump_back]
             
             f.set_test_length(fcst_length)
             f.set_estimator(f.history[model]['Estimator'])

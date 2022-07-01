@@ -12,6 +12,8 @@ This is the main object that is utilized for making predictions on the test set,
 
 A description of the options available when initializing the object:
 
+Forecaster
+---------------
 .. automodule:: src.scalecast.MVForecaster.MVForecaster.__init__
     :members:
     :undoc-members:

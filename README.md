@@ -15,6 +15,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 - Any regression model from [Sklearn](https://scikit-learn.org/stable/), including Sklearn APIs (like [Xgboost](https://xgboost.readthedocs.io/en/stable/) and [LightGBM](https://lightgbm.readthedocs.io/en/latest/))
 - Recurrent neural nets from [Keras TensorFlow](https://keras.io/)
 - Classic econometric models from [statsmodels](https://www.statsmodels.org/stable/): Holt-Winters Exponential Smoothing and ARIMA
+- The [Four Theta model](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html) from [darts](https://unit8co.github.io/darts/)
 - [Facebook Prophet](https://facebook.github.io/prophet)
 - [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
 - Average, weighted average, and spliced models
@@ -27,6 +28,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 - Only the base package is needed to get started:  
 `pip install scalecast`  
 - Optional add-ons:  
+`pip install darts` (theta model)
 `pip install fbprophet` (prophet model--see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
 `pip install greykite` (silverkite model)  
 `pip install tqdm` (progress bar with notebook)  

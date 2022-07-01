@@ -12,6 +12,8 @@ The library provides the Forecaster (for one series) and MVForecaster (for multi
 
 * Classic econometric models from `statsmodels <https://www.statsmodels.org/stable/>`_: Holt-Winters Exponential Smoothing and ARIMA
 
+* - The `Four Theta model <https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html>`_ from `darts <https://unit8co.github.io/darts/>`_
+
 * `Facebook Prophet <https://facebook.github.io/prophet/>`_
 
 * `LinkedIn Silverkite <https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library>`_
@@ -36,6 +38,8 @@ The library provides the Forecaster (for one series) and MVForecaster (for multi
 | Prophet          | N            | Y               | Y               | Y      | Y           | N          | Y      | N         |
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
 | Silverkite       | Y            | Y               | Y               | Y      | Y           | N          | Y      | N         |
++------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
+| Fourt Theta      | N            | N               | Y               | Y      | N           | N          | Y      | Y         |
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+
 | Combo            | This model is a simple average, weighted average, or splice of 2+ already evaluated models.               |
 +------------------+--------------+-----------------+-----------------+--------+-------------+------------+--------+-----------+

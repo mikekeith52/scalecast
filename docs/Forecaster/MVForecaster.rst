@@ -26,6 +26,8 @@ This object can be used to extend the univariate/exogenous regressor approach fr
 
 A description of the options available when initializing the object:
 
+MVForecaster
+--------------------
 .. automodule:: src.scalecast.MVForecaster.MVForecaster.__init__
     :members:
     :undoc-members:

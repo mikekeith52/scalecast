@@ -556,7 +556,9 @@ class MVForecaster:
         grid_evaluated = grid_evaluated_cv.groupby(
             grid_evaluated_cv.columns.to_list()[:-(4 + mvf2.n_series)],
             dropna=False,
-        )['optimized_metric'].mean().reset_index()
+            as_index=False,
+            sort=False,
+        )['optimized_metric'].mean()
 
         # convert back to whatever it was before or it fails when calling the hyperparam vals
         # contributions welcome for a more elegant solution
@@ -760,7 +762,7 @@ class MVForecaster:
                 if int, that many lags will be added for all series
                 if list, each element must be ints, and only those lags will be added for each series.
                 if dict, the key must be the user-selected series name, 'series{n}' or 'y{n}' and key is list or int.
-            **kwargs: treated as model hyperparameters and passed to _sklearn_imports_[model]()
+            **kwargs: treated as model hyperparameters and passed to the applicable sklearn estimator.
 
         >>> mvf.set_estimator('gbt')
         >>> mvf.manual_forecast(lags=3) # adds three lags for each series
@@ -1534,7 +1536,7 @@ class MVForecaster:
         """
         return self.history[model]['grid_evaluated'].copy()
 
-    def backtest(self,model,fcst_length='auto',n_iter=10):
+    def backtest(self,model,fcst_length='auto',n_iter=10,jump_back=1):
         """ runs a backtest of a selected evaluated model over a certain 
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
@@ -1553,6 +1555,8 @@ class MVForecaster:
             n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
                 each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
+            jump_back (int): default 1. 
+                the number of time steps between two consecutive training sets.
 
         Returns:
             None
@@ -1573,13 +1577,13 @@ class MVForecaster:
         for i in range(n_iter):
             f = self.__deepcopy__()
             if i > 0:
-                f.current_xreg = {k:pd.Series(v.values[:-i]) for k, v in f.current_xreg.items()}
-                f.current_dates = pd.Series(f.current_dates.values[:-i])
+                f.current_xreg = {k:pd.Series(v.values[:-i*jump_back]) for k, v in f.current_xreg.items()}
+                f.current_dates = pd.Series(f.current_dates.values[:-i*jump_back])
                 for k in range(f.n_series):
-                    getattr(f,f'series{k+1}')['y'] = pd.Series(getattr(f,f'series{k+1}')['y'].values[:-i])
-                    getattr(f,f'series{k+1}')['levely'] = getattr(f,f'series{k+1}')['levely'][:-i]
-                f.future_dates = pd.Series(f.future_dates.values[:-i])
-                f.future_xreg = {k:v[:-i] for k, v in f.future_xreg.items()}
+                    getattr(f,f'series{k+1}')['y'] = pd.Series(getattr(f,f'series{k+1}')['y'].values[:-i*jump_back])
+                    getattr(f,f'series{k+1}')['levely'] = getattr(f,f'series{k+1}')['levely'][:-i*jump_back]
+                f.future_dates = pd.Series(f.future_dates.values[:-i*jump_back])
+                f.future_xreg = {k:v[:-i*jump_back] for k, v in f.future_xreg.items()}
 
             f.set_test_length(fcst_length)
             f.set_estimator(f.history[model]['Estimator'])

@@ -81,6 +81,10 @@ svr={
     'epsilon':[0.01,0.1,0.5],
 }
 
+theta = {
+    'theta':[0.5,1,1.5,2],
+}
+
 xgboost = {
      'n_estimators':[150,200,250],
      'scale_pos_weight':[5,10],
@@ -186,6 +190,7 @@ prophet = {}
 rf = {}
 silverkite = {}
 svr={}
+theta = {}
 xgboost = {}
 """
 

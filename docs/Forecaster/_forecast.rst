@@ -89,3 +89,13 @@ sklearn
 
 >>> f.set_estimator('mlr')
 >>> f.manual_forecast() # above args are now available in this function
+
+theta
+-------------------------------------------------
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_theta
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+>>> f.set_estimator('theta')
+>>> f.manual_forecast() # above args are now available in this function

@@ -7,14 +7,15 @@ Install the package:
 
    $ pip install scalecast
 
-If you want to apply prophet (from Facebook) and silverkite (from LinkedIn) models:
+If you want to apply the theta (from darts), prophet (from Facebook), and/or silverkite (from LinkedIn) models:
 
 .. code:: console
 
+   $ pip install darts
    $ pip install prophet
    $ pip install greykite
 
-The two packages above can cause issues when installing so they are not included by default in the scalecast dependencies list.
+These packages can cause issues when installing so they are not included by default in the scalecast dependencies list.
 
 If you are using Jupyter, there are notebook functions available that require the following installation:
 
