@@ -10,7 +10,7 @@ Scalecast is a light-weight modeling procedure, wrapper, and results container m
 
 The scalecast package was designed to address this situation and offer advanced machine learning models that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
 
-The library provides the `Forecaster` (for one series) and `MVForecaster` (for multiple series) wrappers around the following estimators: 
+The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html) (for one series) and [`MVForecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html) (for multiple series) wrappers around the following estimators: 
 
 - [Scikit-Learn](https://scikit-learn.org/stable/)
   - [ElasticNet](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html)
@@ -50,6 +50,7 @@ The library interfaces nicely with interactive notebook applications.
 </p>
 
 In addition, scalecast offers:
+- [Hyperparameter Tuning with Grid Serach and Cross Validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
 - Model input analysis
   - [Feature scoring with SHAP](https://shap.readthedocs.io/en/latest/index.html)
   - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
@@ -115,3 +116,13 @@ In addition, scalecast offers:
 
 ## See Contributing
 - [Contributing.md](./Contributing.md)
+
+## Thank you
+Thank you for 1 year of scalecast! It has seen a better response than I could have ever hoped for and I hope to continue developing it for the foreseeable future!!
+
+||1-year stats|
+|-----|----|----|
+|Downloads|55,000|
+|Stars|61|
+|Forks|7|
+|Issues Resolved|2|
