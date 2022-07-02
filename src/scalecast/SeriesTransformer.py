@@ -264,13 +264,11 @@ class SeriesTransformer:
 
     def DiffTransform(self,m):
         """ takes differences or seasonal differences in the Forecaster object's y attribute.
-        it is discouraged to use this transformation and the native Forecaster.diff() function
-        in the same procedure. if both are used, reversion can and probably will go wrong.
-        if using this transformation, call Forecaster.add_diffed_terms() and 
-        Forecaster.add_lagged_terms() if you want to use those before calling this function.
+        if using this transformation, call `Forecaster.add_diffed_terms()` and 
+        `Forecaster.add_lagged_terms()` if you want to use those before calling this function.
+        call `Forecaster.add_ar_terms()` and `Forecaster.add_AR_terms()` after calling this function.
         call twice with the same value of m to take second differences.
-        please make sure you understand this function before using it as it is easy to use
-        incorrectly and difficult to catch errors.
+        if using this to take series differences, do not also use the native `Forecaster.diff()` function.
 
         Args:
             m (int): the seasonal difference to take.
@@ -313,12 +311,10 @@ class SeriesTransformer:
 
     def DiffRevert(self,m):
         """ reverts the y attribute in the Forecaster object, along with all model results.
-        unlike other Revert function, calling this strips out all confidence intervals and
-        regressor values become unusable and have to be re-added to the object.
+        calling this strips out all confidence intervals and
+        AR values become unusable and have to be re-added to the object.
         unlike other revert functions, there is no option for full = False. 
-        if using this to revert, you cannot use the native Forecaster.diff() function.
-        please make sure you understand this function before using it 
-        as it is easy to use incorrectly and difficult to catch errors.
+        if using this to revert differences, you cannot also use the native Forecaster.diff() function.
 
         Args:
             m (int): the seasonal difference to take.
