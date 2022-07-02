@@ -28,7 +28,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 - Only the base package is needed to get started:  
 `pip install scalecast`  
 - Optional add-ons:  
-`pip install darts` (theta model)
+`pip install darts` (theta model)  
 `pip install fbprophet` (prophet model--see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
 `pip install greykite` (silverkite model)  
 `pip install tqdm` (progress bar with notebook)  
