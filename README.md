@@ -1,7 +1,7 @@
 # 🌄 Scalecast: The practitioner's time series forecasting library
 
 <p align="center">
-  <img src="assets/logo2.png" />
+  <img src="https://github.com/mikekeith52/scalecast-examples/blob/main/logo2.png" />
 </p>
 
 ## About
@@ -12,13 +12,33 @@ The scalecast package was designed to address this situation and offer advanced 
 
 The library provides the `Forecaster` (for one series) and `MVForecaster` (for multiple series) wrappers around the following estimators: 
 
-- Any regression model from [Sklearn](https://scikit-learn.org/stable/), including Sklearn APIs (like [Xgboost](https://xgboost.readthedocs.io/en/stable/) and [LightGBM](https://lightgbm.readthedocs.io/en/latest/))
-- Recurrent neural nets from [Keras TensorFlow](https://keras.io/)
-- Classic econometric models from [statsmodels](https://www.statsmodels.org/stable/): Holt-Winters Exponential Smoothing and ARIMA
-- The [Four Theta model](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html) from [darts](https://unit8co.github.io/darts/)
+- [Scikit-Learn](https://scikit-learn.org/stable/)
+  - [ElasticNet](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html)
+  - [Gradient Boosted Trees](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html)
+  - [k-Nearest Neighbors](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html)
+  - [Lasso](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso.html)
+  - [Multi-level Perceptron](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
+  - [Multiple Linear Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html)
+  - [Random Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
+  - [Ridge](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html)
+  - [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html)
+  - [Support Vector Machine](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
+  - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator), including stacking and bagging
+- [StatsModels](https://www.statsmodels.org/stable/)
+  - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
+  - [Holt-Winters Exponential Smoothing](https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html)
+- [Darts](https://unit8co.github.io/darts/)
+  - [Four Theta](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html)
+- [XGBoost](https://xgboost.readthedocs.io/en/stable/)
+- [LightGBM](https://lightgbm.readthedocs.io/en/latest/)
+- [Keras TensorFlow](https://keras.io/)
+  - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM), [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN), and [Dense](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense) cells
 - [Facebook Prophet](https://facebook.github.io/prophet)
-- [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
-- Average, weighted average, and spliced models
+- [LinkedIn Greykite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
+  - [silverkite](https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html)
+- [Native Combo model](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_combo)
+
+The library also interfaces nicely with interactive notebook applications.
 
 <p align="center">
   <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="600" height="400"/>
@@ -45,6 +65,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
   - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)
 
 ### Forecasting with Different Model Types
+- [Docs](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
 - Sklearn Univariate
   - [Expand your Time Series Arsenal with These Models](https://towardsdatascience.com/expand-your-time-series-arsenal-with-these-models-10c807d37558)
   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html)
