@@ -116,13 +116,3 @@ In addition, scalecast offers:
 
 ## See Contributing
 - [Contributing.md](./Contributing.md)
-
-## Thank you
-Thank you for 1 year of scalecast! It has seen a better response than I could have ever hoped for and I hope to continue developing it for the foreseeable future!!
-
-||1-year stats|
-|-----|----|----|
-|Downloads|55,000|
-|Stars|61|
-|Forks|7|
-|Issues Resolved|2|
