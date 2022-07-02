@@ -24,38 +24,46 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
   - [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html)
   - [Support Vector Machine](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
   - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported, including stacking and bagging](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator)
+- [XGBoost](https://xgboost.readthedocs.io/en/stable/)
+- [LightGBM](https://lightgbm.readthedocs.io/en/latest/)
 
-The `Forecaster` object only also ports the following:
+The `Forecaster` object only can also use:
 
 - [StatsModels](https://www.statsmodels.org/stable/)
   - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
   - [Holt-Winters Exponential Smoothing](https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html)
 - [Darts](https://unit8co.github.io/darts/)
   - [Four Theta](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html)
-- [XGBoost](https://xgboost.readthedocs.io/en/stable/)
-- [LightGBM](https://lightgbm.readthedocs.io/en/latest/)
 - [Keras TensorFlow Cells](https://keras.io/)
   - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
   - [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN)
-  - [Dense](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense) cells
+  - [Dense](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense)
 - [Facebook Prophet](https://facebook.github.io/prophet)
 - [LinkedIn Greykite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
   - [silverkite](https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html)
 - [Native Combo model](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_combo)
 
-The library also interfaces nicely with interactive notebook applications.
+The library interfaces nicely with interactive notebook applications.
 
 <p align="center">
   <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="700" height="300"/>
 </p>
 
+In addition, scalecast offers:
+- Model input analysis
+  - [Feature scoring with SHAP](https://shap.readthedocs.io/en/latest/index.html)
+  - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
+  - [Summary stats from statsmodels](https://www.statsmodels.org/dev/generated/statsmodels.tsa.arima.model.ARIMAResults.summary.html)
+- [Anomaly detection](https://scalecast.readthedocs.io/en/latest/Forecaster/AnomalyDetector.html)
+- [Series transformations](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
+
 ## Installation
 - Only the base package is needed to get started:  
 `pip install scalecast`  
 - Optional add-ons:  
-`pip install darts` (theta model)  
-`pip install fbprophet` (prophet model--see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
-`pip install greykite` (silverkite model)  
+`pip install darts`  
+`pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
+`pip install greykite`   
 `pip install tqdm` (progress bar with notebook)  
 `pip install ipython` (widgets with notebook)  
 `pip install ipywidgets` (widgets with notebook)  
@@ -69,8 +77,7 @@ The library also interfaces nicely with interactive notebook applications.
   - [Examples Repository](https://github.com/mikekeith52/scalecast-examples)
   - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)
 
-### Forecasting with Different Model Types
-- [Docs](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
+### [Forecasting with Different Model Types](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
 - Sklearn Univariate
   - [Expand your Time Series Arsenal with These Models](https://towardsdatascience.com/expand-your-time-series-arsenal-with-these-models-10c807d37558)
   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html)
