@@ -23,7 +23,10 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
   - [Ridge](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html)
   - [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html)
   - [Support Vector Machine](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
-  - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator), including stacking and bagging
+  - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported, including stacking and bagging](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator)
+
+The `Forecaster` object only also ports the following:
+
 - [StatsModels](https://www.statsmodels.org/stable/)
   - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
   - [Holt-Winters Exponential Smoothing](https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html)
@@ -31,8 +34,10 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
   - [Four Theta](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html)
 - [XGBoost](https://xgboost.readthedocs.io/en/stable/)
 - [LightGBM](https://lightgbm.readthedocs.io/en/latest/)
-- [Keras TensorFlow](https://keras.io/)
-  - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM), [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN), and [Dense](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense) cells
+- [Keras TensorFlow Cells](https://keras.io/)
+  - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
+  - [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN)
+  - [Dense](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense) cells
 - [Facebook Prophet](https://facebook.github.io/prophet)
 - [LinkedIn Greykite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
   - [silverkite](https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html)
@@ -41,7 +46,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
 The library also interfaces nicely with interactive notebook applications.
 
 <p align="center">
-  <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="600" height="400"/>
+  <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="700" height="300"/>
 </p>
 
 ## Installation
