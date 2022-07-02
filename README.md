@@ -23,7 +23,7 @@ The library provides the `Forecaster` (for one series) and `MVForecaster` (for m
   - [Ridge](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html)
   - [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html)
   - [Support Vector Machine](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
-  - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported, including stacking and bagging](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator)
+  - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator)
 - [XGBoost](https://xgboost.readthedocs.io/en/stable/)
 - [LightGBM](https://lightgbm.readthedocs.io/en/latest/)
 
