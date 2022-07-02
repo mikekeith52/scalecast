@@ -50,7 +50,7 @@ The library interfaces nicely with interactive notebook applications.
 </p>
 
 In addition, scalecast offers:
-- [Hyperparameter Tuning with Grid Serach and Cross Validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
+- [Hyperparameter Tuning with Grid Search and Cross Validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
 - Model input analysis
   - [Feature scoring with SHAP](https://shap.readthedocs.io/en/latest/index.html)
   - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
