@@ -47,8 +47,6 @@ When using `DiffRevert()`, fitted values and confidence intervals go away inside
 
 All other transformation and reversion functions work well and there is not any danger in using them. Contributions welcome to make `DiffTransform()` more user-friendly.
 
-This object is new as of dist 0.12.0 and is currently considered experimental.
-
 .. autoclass:: src.scalecast.SeriesTransformer.SeriesTransformer
    :members:
    :undoc-members:

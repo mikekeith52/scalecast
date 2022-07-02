@@ -55,7 +55,7 @@ In addition, scalecast offers:
   - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
   - [Summary stats from statsmodels](https://www.statsmodels.org/dev/generated/statsmodels.tsa.arima.model.ARIMAResults.summary.html)
 - [Anomaly detection](https://scalecast.readthedocs.io/en/latest/Forecaster/AnomalyDetector.html)
-- [Series transformations](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
+- [Series transformation/revert functions](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 
 ## Installation
 - Only the base package is needed to get started:  
