@@ -57,7 +57,7 @@ class MVForecaster:
         merge_future_dates='longest',
         names=None,
         **kwargs):
-        """ __init__()
+        """ MVForecaster()
 
         Args:
             *fs (Forecaster): Forecaster objects
