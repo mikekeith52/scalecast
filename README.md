@@ -50,11 +50,16 @@ The library interfaces nicely with interactive notebook applications.
 </p>
 
 In addition, scalecast offers:
-- [Hyperparameter Tuning with Grid Search and Cross Validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
+- Model Validation
+  - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
+  - [Grid search using cross_validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
+  - [Backtest](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest)
 - Model input analysis
-  - [Feature scoring with SHAP](https://shap.readthedocs.io/en/latest/index.html)
-  - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
-  - [Summary stats from statsmodels](https://www.statsmodels.org/dev/generated/statsmodels.tsa.arima.model.ARIMAResults.summary.html)
+  - [Feature importance scoring](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance)
+    - [SHAP](https://shap.readthedocs.io/en/latest/index.html)
+    - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
+  - [Summary stats for descriptive models](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_summary_stats)
+  - [Feature reduction](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.reduce_Xvars)
 - [Anomaly detection](https://scalecast.readthedocs.io/en/latest/Forecaster/AnomalyDetector.html)
 - [Series transformation/revert functions](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 
@@ -97,6 +102,7 @@ In addition, scalecast offers:
   - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
   - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
   - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
+  - [Theta](https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html)
   
 ### The importance of dynamic validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)

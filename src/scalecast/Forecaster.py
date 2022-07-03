@@ -612,9 +612,8 @@ class Forecaster:
         )
 
     def _forecast_theta(self, tune=False, dynamic_testing=True, test_only=False, **kwargs):
-        """ forecasts with Four Theta from darts. see the documentation: 
-        https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html
-        scalecast example coming soon.
+        """ forecasts with Four Theta from darts.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html
 
         Args:
             tune (bool): default False.
@@ -629,7 +628,8 @@ class Forecaster:
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
                 changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to the theta() function from darts 
+            **kwargs: passed to the FourTheta() function from darts.
+                https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html
         """
         from darts import TimeSeries
         from darts.models.forecasting.theta import FourTheta

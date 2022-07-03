@@ -14,7 +14,7 @@ A description of the options available when initializing the object:
 
 Forecaster
 ---------------
-.. automodule:: src.scalecast.MVForecaster.MVForecaster.__init__
+.. automodule:: src.scalecast.Forecaster.Forecaster.__init__
     :members:
     :undoc-members:
     :show-inheritance:
