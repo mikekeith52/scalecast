@@ -155,8 +155,7 @@ class ForecastError(Exception):
 # MAIN OBJECT
 class Forecaster:
     def __init__(self, y, current_dates, require_future_dates=True, **kwargs):
-        """ Forecaster()
-
+        """ 
         Args:
             y (list-like): an array of all known observed values.
             current_dates (list-like): an array of all known observed dates.

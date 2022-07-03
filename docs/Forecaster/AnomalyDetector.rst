@@ -35,5 +35,3 @@ This object can be used to detect anomalies in the dataset using any of three me
 
 .. autoclass:: src.scalecast.AnomalyDetector.AnomalyDetector
    :members:
-   :undoc-members:
-   :show-inheritance:

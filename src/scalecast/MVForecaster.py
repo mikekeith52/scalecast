@@ -57,8 +57,7 @@ class MVForecaster:
         merge_future_dates='longest',
         names=None,
         **kwargs):
-        """ MVForecaster()
-
+        """ 
         Args:
             *fs (Forecaster): Forecaster objects
             not_same_len_action (str): one of 'trim', 'fail'. default 'trim'.

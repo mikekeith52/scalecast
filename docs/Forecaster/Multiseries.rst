@@ -1,15 +1,12 @@
 multiseries
 ============================================
 
-If you are forecasting with many series in a loop, these functions and code examples may facilitate setting up the process and getting key information for each model and series.
+If forecasting with many series in a loop, these functions and code examples may facilitate setting up the process and getting key information for each model and series.
 
-
-export_model_summaries
+export_model_summaries()
 --------------------------
 .. automodule:: src.scalecast.multiseries.export_model_summaries
     :members:
-    :undoc-members:
-    :show-inheritance:
 
 .. code:: python
 
@@ -40,9 +37,7 @@ export_model_summaries
 
     model_summaries = export_model_summaries(f_dict,determine_best_by='LevelTestSetMAPE')
 
-keep_smallest_first_date
+keep_smallest_first_date()
 ------------------------------
 .. automodule:: src.scalecast.multiseries.keep_smallest_first_date
     :members:
-    :undoc-members:
-    :show-inheritance:

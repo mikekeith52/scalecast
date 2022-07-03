@@ -10,18 +10,7 @@ This is the main object that is utilized for making predictions on the test set,
     array_of_values = [1,2,3]
     f = Forecaster(y=array_of_values, current_dates=array_of_dates)
 
-A description of the options available when initializing the object:
-
-Forecaster
----------------
-.. automodule:: src.scalecast.Forecaster.Forecaster.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-A description of the class and associated methods:
-
 .. autoclass:: src.scalecast.Forecaster.Forecaster
    :members:
-   :undoc-members:
-   :show-inheritance:
+
+   .. automethod:: __init__

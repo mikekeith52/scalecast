@@ -24,18 +24,7 @@ This object can be used to extend the univariate/exogenous regressor approach fr
       merge_future_dates='longest',
       names=f_dict.keys()) 
 
-A description of the options available when initializing the object:
-
-MVForecaster
---------------------
-.. automodule:: src.scalecast.MVForecaster.MVForecaster.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-A description of the class and associated methods:
-
 .. autoclass:: src.scalecast.MVForecaster.MVForecaster
    :members:
-   :undoc-members:
-   :show-inheritance:
+   
+   .. automethod:: __init__
