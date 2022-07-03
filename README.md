@@ -52,7 +52,7 @@ The library interfaces nicely with interactive notebook applications.
 In addition, scalecast offers:
 - Model Validation
   - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
-  - [Grid search using cross_validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
+  - [Grid search using time series cross validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
   - [Backtest](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest)
 - Model input analysis
   - [Feature importance scoring](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance)
