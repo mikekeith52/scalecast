@@ -491,7 +491,7 @@ class MVForecaster:
 
         Args:
             k (int): default 5. the number of folds. must be at least 2.
-            rolling (bool): default False. whether to using a rolling method.
+            rolling (bool): default False. whether to use a rolling method.
             dynamic_tuning (bool): default False.
 
         Returns:
