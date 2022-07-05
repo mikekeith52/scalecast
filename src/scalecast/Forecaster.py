@@ -97,7 +97,16 @@ _sklearn_imports_ = {
 _sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 
 # to add non-sklearn models, add to the list below
-_non_sklearn_estimators_ = ["arima", "hwes", "prophet", "silverkite", "rnn", "lstm", "theta", "combo"]
+_non_sklearn_estimators_ = [
+    "arima",
+    "hwes", 
+    "prophet", 
+    "silverkite", 
+    "rnn", 
+    "lstm", 
+    "theta", 
+    "combo"
+]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
 _cannot_be_tuned_ = ['combo','rnn','lstm']
 _can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
@@ -2357,11 +2366,12 @@ class Forecaster:
                 values that return a series of int type from pandas.dt and pandas.dt.isocalendar().
                 see https://pandas.pydata.org/docs/reference/api/pandas.Series.dt.year.html.
             raw (bool): default True.
-                whether to use the raw integer values
+                whether to use the raw integer values.
             sincos (bool): default False.
-                whether to use a sin/cos transformation of the raw integer values (estimates the cycle based on the max observed value)
+                whether to use a Fourier transformation of the raw integer values.
+                    the length of the cycle is derived from the max observed value.
             dummy (bool): default False.
-                whether to use dummy variables from the raw int values
+                whether to use dummy variables from the raw int values.
             drop_first (bool): default False.
                 whether to drop the first observed dummy level.
                 not relevant when dummy = False

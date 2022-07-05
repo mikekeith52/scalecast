@@ -25,11 +25,11 @@ class SeriesTransformer:
 
         >>> import math
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> def log10(x):
         >>>     return [math.log(i,base=10) for i in x]
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.Transform(log10)
         """
         self.f.y = pd.Series(transform_func(self.f.y,**kwargs))
@@ -51,13 +51,13 @@ class SeriesTransformer:
 
         >>> import math
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> def log10(x):
         >>>     return [math.log(i,base=10) for i in x]
         >>> def log10_revert(x):
         >>>     return [10**i for i in x]
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.Transform(log10)
         >>> f = transformer.Revert(log10_revert)
         """
@@ -111,9 +111,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the transformed attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.LogTransform()
         """
         return self.Transform(np.log)
@@ -130,9 +130,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the reverted attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.LogTransform()
         >>> f = transformer.LogRevert()
         """
@@ -146,9 +146,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the transformed attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.ScaleTransform()
         """
         if hasattr(self,'orig_mean'):
@@ -179,9 +179,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the reverted attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.ScaleTransform()
         >>> f = transformer.ScaleRevert()
         """
@@ -208,9 +208,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the transformed attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.MinMaxTransform()
         """
         if hasattr(self,'orig_min'):
@@ -241,9 +241,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the reverted attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.MinMaxTransform()
         >>> f = transformer.MinMaxRevert()
         """
@@ -280,9 +280,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the transformed attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.DiffTransform(1)  # first difference
         >>> f = transformer.DiffTransform(1)  # second difference
         >>> f = transformer.DiffTransform(12) # first 12-period difference
@@ -327,9 +327,9 @@ class SeriesTransformer:
             (Forecaster): a Forecaster object with the reverted attributes.
 
         >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.ForecasterTransform import ForecasterTransform
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
-        >>> transformer = ForecasterTransform(f)
+        >>> transformer = SeriesTransformer(f)
         >>> f = transformer.DiffTransform(1)  # first difference
         >>> f = transformer.DiffTransform(1)  # second difference
         >>> f = transformer.DiffTransform(12) # first 12-period difference
