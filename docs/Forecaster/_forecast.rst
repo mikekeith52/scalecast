@@ -49,17 +49,6 @@ multivariate
     :undoc-members:
     :show-inheritance:
 
-
-nbeats
---------------------------------------------------
-.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_nbeats
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
->>> f.set_estimator('nbeats')
->>> f.manual_forecast() # above args are now available in this function
-
 prophet
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_prophet
