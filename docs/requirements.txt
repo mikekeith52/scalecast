@@ -10,6 +10,5 @@ numpydoc
 pdflatex
 pyyaml
 ipywidgets
-kats
 scalecast
 tqdm

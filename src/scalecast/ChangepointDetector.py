@@ -4,12 +4,9 @@ from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from kats.detectors.cusum_detection import CUSUMDetector
-from kats.detectors.bocpd import BOCPDetector
-from kats.consts import TimeSeriesData
-
 class ChangepointDetector:
     def __init__(self,f):
+        from kats.consts import TimeSeriesData
         self.f = f.__deepcopy__()
         df = pd.DataFrame(
             {
@@ -40,6 +37,8 @@ class ChangepointDetector:
         >>> detector = ChangepointDetector(f)
         >>> detector.DetectCPCUSUM()
         """
+        # importing here to stop read the docs from failing
+        from kats.detectors.cusum_detection import CUSUMDetector
         self.detector = CUSUMDetector(self.ts)
         self.changepoints = self.detector.detector(**kwargs)
         return self.changepoints
@@ -74,6 +73,8 @@ class ChangepointDetector:
         >>> detector = ChangepointDetector(f)
         >>> detector.DetectCPCUSUM_sliding(20,10,5)
         """
+        from kats.detectors.cusum_detection import CUSUMDetector
+        from kats.consts import TimeSeriesData
         self.detector = CUSUMDetector(self.ts)
         self.changepoints = []
         n = self.df.shape[0]
@@ -109,6 +110,7 @@ class ChangepointDetector:
         >>> detector = ChangepointDetector(f)
         >>> detector.DetectCPBOCPD()
         """
+        from kats.detectors.bocpd_model import BOCPDetector
         self.detector = BOCPDetector(self.ts)
         self.changepoints = self.detector.detector(**kwargs)
         return self.changepoints
