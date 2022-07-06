@@ -227,7 +227,7 @@ class AnomalyDetector:
         Args:
             f (Forecaster): optional. if you pass an object here,
                 that object will receive the Xvars. otherwise,
-                it will pass to a copy of the object passed to
+                it will apply to the copy of the object stored in the
                 the AnomalyDetector object when it was initialized.
                 this Forecaster object is stored in the f attribute.
             future_dates (int): optional. if you pass a future dates
@@ -282,8 +282,8 @@ class AnomalyDetector:
 
         Args: 
             f (Forecaster): optional. if you pass an object here,
-                that object will receive the Xvars. otherwise,
-                it will pass to a copy of the object passed to
+                that object will have its y values altered. otherwise,
+                it will apply to the copy of the object stored in the
                 the AnomalyDetector object when it was initialized.
                 this Forecaster object is stored in the f attribute.
             method (str): the following methods are supported: "q" and "interpolate".

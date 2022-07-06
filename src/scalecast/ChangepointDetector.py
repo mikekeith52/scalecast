@@ -20,7 +20,7 @@ class ChangepointDetector:
     def DetectCPCUSUM(self,**kwargs):
         """ detects changepoints using the `CUSUMDetector.detector()` function from kats.
         this function assumes there is at most one increase change point and at most one decrease change point in the series.
-        use `DetectCPCUSUM_sliding` or `DetectCPBOCPD` to find multiple of each kind of changepoint.
+        use `DetectCPCUSUM_sliding()` or `DetectCPBOCPD()` to find multiple of each kind of changepoint.
         saves output in the changepoints attribute.
         https://facebookresearch.github.io/Kats/api/kats.detectors.cusum_detection.html
 
@@ -137,7 +137,7 @@ class ChangepointDetector:
         Args:
             f (Forecaster): optional. if you pass an object here,
                 that object will receive the Xvars. otherwise,
-                it will pass to a copy of the object passed to
+                it will pass to the copy of the object stored in
                 the AnomalyDetector object when it was initialized.
                 this Forecaster object is stored in the f attribute.
             future_dates (int): optional. if you pass a future dates
