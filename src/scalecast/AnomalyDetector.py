@@ -182,6 +182,7 @@ class AnomalyDetector:
             start_at = f1.current_dates.to_list().index(pd.Timestamp(start_at))
         if not isinstance(stop_at,int):
             stop_at = f1.current_dates.to_list().index(pd.Timestamp(stop_at))
+        stop_at = stop_at + 1
         results = pd.DataFrame(
             {
                 'Date':f1.current_dates.to_list()[start_at:stop_at],
@@ -229,7 +230,7 @@ class AnomalyDetector:
                 it will pass to a copy of the object passed to
                 the AnomalyDetector object when it was initialized.
                 this Forecaster object is stored in the f attribute.
-            future_dates (int): optionaly. if you pass a future dates
+            future_dates (int): optional. if you pass a future dates
                 length here, it will write that many dates to the
                 Forecaster object and future anomaly variables will be
                 passed as arrays of 0s so that any algorithm you train
@@ -276,8 +277,41 @@ class AnomalyDetector:
         f.ingest_Xvars_df(df,date_col='Date',**kwargs)
         return f
 
-    def _clip_anom(self,f=None,q=10):
-        """ i'm not sure I want to implement this but keeping the code for now
+    def adjust_anom(self,f=None,method='q',q=10):
+        """ changes the values of identified anomalies and returns a Forecaster object.
+
+        Args: 
+            f (Forecaster): optional. if you pass an object here,
+                that object will receive the Xvars. otherwise,
+                it will pass to a copy of the object passed to
+                the AnomalyDetector object when it was initialized.
+                this Forecaster object is stored in the f attribute.
+            method (str): the following methods are supported: "q" and "interpolate".
+                "q" uses q-cutting from pandas and fills values with second-to-last
+                q value in either direction. for example, if q == 10, then high anomaly
+                values will be replaced with the 90th percentile of the rest of the series
+                data. low anomaly values will be replaced with the 10th percentile of the 
+                rest of the series. this is a good method for when your data is stationary.
+                for data with a trend, 'interpolate' is better as it fills in values linearly
+                based on the values before and after consecutive anomaly values. be careful
+                when using "q" with differenced data. when undifferencing,
+                original values will be reverted back to.
+            q (int): default 10. 
+                the q-value to use when method == 'q'.
+                ignored when method != 'q'.
+
+        >>> from scalecast.AnomalyDetector import AnomalyDetector
+        >>> from scalecast.Forecaster import Forecaster
+        >>> import pandas_datareader as pdr
+        >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
+        >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+        >>> detector = AnomalyDetector(f)
+        >>> detector.EstimatorDetect(
+        >>>    estimator='arima',
+        >>>    order=(1,1,1),
+        >>>    seasonal_order=(1,1,1),
+        >>> )
+        >>> f = detector.adjust_anom(method='interpolate')
         """
         f = self.f if f is None else f.deepcopy()
         df = pd.DataFrame(
@@ -285,13 +319,50 @@ class AnomalyDetector:
             index = f.current_dates.to_list(),
         )
         df['a'] = self.labeled_anom
-        df['r'] = pd.qcut(df['y'],q=q)
+        
+        if method == 'q':
+            df['r'] = pd.qcut(df['y'],q=q,labels=list(range(q)))
 
-        top = df.loc[df['r'] == (q-1),'y'].min()
-        bottom = df.loc[df['r'] == 0,'y'].max()
-        for i, v in df.reset_index().iterrows():
-            if v['a'] == 1:
-                f.y.values[i] = top if v['y'] > df['y'].mean() else bottom
+            top = df.loc[df['r'] == (q-1),'y'].min()
+            bottom = df.loc[df['r'] == 0,'y'].max()
+
+            for i, v in df.reset_index().iterrows():
+                if v['a'] == 1:
+                    f.y.values[i] = top if v['y'] > df['y'].mean() else bottom
+        elif method == 'interpolate':
+            df['anom_num'] = 0
+            df['a_1'] = df['a'].shift()
+            df['a_-1'] = df['a'].shift(-1)
+            df = df.fillna(0)
+            df.loc[(df['a_-1'] == 1) & (df['a'] == 0),'anom_num'] = 1
+            df['anom_num'] = df['anom_num'].cumsum()
+            df.loc[
+                ~(
+                    (
+                        (df['a_-1'] == 1) & (df['a'] == 0)
+                    ) | (
+                        df['a'] == 1
+                    ) | (
+                        (df['a_1'] == 1) & (df['a'] == 0)
+                    )
+                ),'anom_num'
+            ] = 0
+
+            for anom in df['anom_num'].unique():
+                if anom == 0:
+                    continue
+                
+                df_tmp = df.loc[df['anom_num'] == anom]
+                idx = df_tmp.iloc[1:-1,:].index.to_list()
+                slope = (df_tmp.iloc[-1,0] - df_tmp.iloc[0,0]) / (df_tmp.shape[0] - 1)
+
+                for i, d in enumerate(idx):
+                    df.loc[d,'y'] = df_tmp.iloc[0,0] + slope*(i+1)
+
+            f.y = df['y'].reset_index(drop=True)
+        else:
+            raise ValueError(f'method arg expected "q" or "interpolate", got {method}')
+
         return f
 
     def plot_anom(self,label=True,strftime_fmt='%Y-%m-%d'):

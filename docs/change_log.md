@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.12.6] - 2022-07-06
+- added the `ChangepointDetector` object
+- added the `AnomalyDetector.adjust_anom()` method
+### Changed
+### Fixed
+- fixed last index span from `AnomalyDetector.MonteCarloDetect()`
+
 ## [0.12.5] - 2022-07-01
 ### Added
 - added `jump_back` parameter in `Forecaster.backtest()` and `MVForecaster.backtest()` methods

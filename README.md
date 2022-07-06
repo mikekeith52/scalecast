@@ -61,6 +61,7 @@ In addition, scalecast offers:
   - [Summary stats for descriptive models](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_summary_stats)
   - [Feature reduction](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.reduce_Xvars)
 - [Anomaly detection](https://scalecast.readthedocs.io/en/latest/Forecaster/AnomalyDetector.html)
+- [Changepoint detection](https://scalecast.readthedocs.io/en/latest/Forecaster/ChangepointDetector.html)
 - [Series transformation/revert functions](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 
 ## Installation
@@ -70,6 +71,7 @@ In addition, scalecast offers:
 `pip install darts`  
 `pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
 `pip install greykite`   
+`pip install kats` (for changepoint detection)  
 `pip install tqdm` (progress bar with notebook)  
 `pip install ipython` (widgets with notebook)  
 `pip install ipywidgets` (widgets with notebook)  

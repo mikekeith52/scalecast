@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.12.5
+Version: 0.12.6
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -12,7 +12,7 @@ Project-URL: Examples, https://scalecast-examples.readthedocs.io/en/latest/
 Description: # 🌄 Scalecast: The practitioner's time series forecasting library
         
         <p align="center">
-          <img src="assets/logo2.png" />
+          <img src="https://github.com/mikekeith52/scalecast-examples/blob/main/logo2.png" />
         </p>
         
         ## About
@@ -21,27 +21,68 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         
         The scalecast package was designed to address this situation and offer advanced machine learning models that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
         
-        The library provides the `Forecaster` (for one series) and `MVForecaster` (for multiple series) wrappers around the following estimators: 
+        The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html) (for one series) and [`MVForecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html) (for multiple series) wrappers around the following estimators: 
         
-        - Any regression model from [Sklearn](https://scikit-learn.org/stable/), including Sklearn APIs (like [Xgboost](https://xgboost.readthedocs.io/en/stable/) and [LightGBM](https://lightgbm.readthedocs.io/en/latest/))
-        - Recurrent neural nets from [Keras TensorFlow](https://keras.io/)
-        - Classic econometric models from [statsmodels](https://www.statsmodels.org/stable/): Holt-Winters Exponential Smoothing and ARIMA
-        - The [Four Theta model](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html) from [darts](https://unit8co.github.io/darts/)
+        - [Scikit-Learn](https://scikit-learn.org/stable/)
+          - [ElasticNet](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html)
+          - [Gradient Boosted Trees](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html)
+          - [k-Nearest Neighbors](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html)
+          - [Lasso](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso.html)
+          - [Multi-level Perceptron](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
+          - [Multiple Linear Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html)
+          - [Random Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
+          - [Ridge](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html)
+          - [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html)
+          - [Support Vector Machine](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
+          - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator)
+        - [XGBoost](https://xgboost.readthedocs.io/en/stable/)
+        - [LightGBM](https://lightgbm.readthedocs.io/en/latest/)
+        
+        The `Forecaster` object only can also use:
+        
+        - [StatsModels](https://www.statsmodels.org/stable/)
+          - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
+          - [Holt-Winters Exponential Smoothing](https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html)
+        - [Darts](https://unit8co.github.io/darts/)
+          - [Four Theta](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html)
+        - [Keras TensorFlow Cells](https://keras.io/)
+          - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
+          - [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN)
+          - [Dense](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense)
         - [Facebook Prophet](https://facebook.github.io/prophet)
-        - [LinkedIn Silverkite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
-        - Average, weighted average, and spliced models
+        - [LinkedIn Greykite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
+          - [silverkite](https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html)
+        - [Native Combo model](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_combo)
+        
+        The library interfaces nicely with interactive notebook applications.
         
         <p align="center">
-          <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="600" height="400"/>
+          <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="700" height="300"/>
         </p>
+        
+        In addition, scalecast offers:
+        - Model Validation
+          - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
+          - [Grid search using time series cross validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
+          - [Backtest](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest)
+        - Model input analysis
+          - [Feature importance scoring](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance)
+            - [SHAP](https://shap.readthedocs.io/en/latest/index.html)
+            - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
+          - [Summary stats for descriptive models](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_summary_stats)
+          - [Feature reduction](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.reduce_Xvars)
+        - [Anomaly detection](https://scalecast.readthedocs.io/en/latest/Forecaster/AnomalyDetector.html)
+        - [Changepoint detection](https://scalecast.readthedocs.io/en/latest/Forecaster/ChangepointDetector.html)
+        - [Series transformation/revert functions](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
         
         ## Installation
         - Only the base package is needed to get started:  
         `pip install scalecast`  
         - Optional add-ons:  
-        `pip install darts` (theta model)
-        `pip install fbprophet` (prophet model--see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
-        `pip install greykite` (silverkite model)  
+        `pip install darts`  
+        `pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
+        `pip install greykite`   
+        `pip install kats` (for changepoint detection)  
         `pip install tqdm` (progress bar with notebook)  
         `pip install ipython` (widgets with notebook)  
         `pip install ipywidgets` (widgets with notebook)  
@@ -55,7 +96,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           - [Examples Repository](https://github.com/mikekeith52/scalecast-examples)
           - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)
         
-        ### Forecasting with Different Model Types
+        ### [Forecasting with Different Model Types](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
         - Sklearn Univariate
           - [Expand your Time Series Arsenal with These Models](https://towardsdatascience.com/expand-your-time-series-arsenal-with-these-models-10c807d37558)
           - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html)
@@ -74,6 +115,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
           - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
           - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
+          - [Theta](https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html)
           
         ### The importance of dynamic validation
         - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
@@ -93,6 +135,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         
         ## See Contributing
         - [Contributing.md](./Contributing.md)
+        
 Keywords: FORECAST,SCALE,DYNAMIC,MACHINE LEARNING,APPLIED
 Platform: UNKNOWN
 Description-Content-Type: text/markdown

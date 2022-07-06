@@ -27,13 +27,13 @@ docs/Forecaster/Notebook.rst
 docs/Forecaster/SeriesTransformer.rst
 docs/Forecaster/Util.rst
 docs/Forecaster/_forecast.rst
-docs/Forecaster/warnings.log
 src/SCALECAST.egg-info/PKG-INFO
 src/SCALECAST.egg-info/SOURCES.txt
 src/SCALECAST.egg-info/dependency_links.txt
 src/SCALECAST.egg-info/requires.txt
 src/SCALECAST.egg-info/top_level.txt
 src/scalecast/AnomalyDetector.py
+src/scalecast/ChangepointDetector.py
 src/scalecast/Forecaster.py
 src/scalecast/GridGenerator.py
 src/scalecast/MVForecaster.py
@@ -42,4 +42,12 @@ src/scalecast/__init__.py
 src/scalecast/multiseries.py
 src/scalecast/notebook.py
 src/scalecast/util.py
+src/scalecast/__pycache__/AnomalyDetector.cpython-38.pyc
+src/scalecast/__pycache__/Forecaster.cpython-38.pyc
+src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
+src/scalecast/__pycache__/MVForecaster.cpython-38.pyc
+src/scalecast/__pycache__/SeriesTransformer.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
+src/scalecast/__pycache__/multiseries.cpython-38.pyc
+src/scalecast/__pycache__/notebook.cpython-38.pyc
+src/scalecast/__pycache__/util.cpython-38.pyc

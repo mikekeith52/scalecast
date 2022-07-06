@@ -105,7 +105,7 @@ _non_sklearn_estimators_ = [
     "rnn", 
     "lstm", 
     "theta", 
-    "combo"
+    "combo",
 ]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
 _cannot_be_tuned_ = ['combo','rnn','lstm']
@@ -653,7 +653,8 @@ class Forecaster:
         d = self.current_dates.to_list()
 
         y_train = pd.Series(y[: -test_length],index=d[: -test_length])
-        y_test = pd.Series(y[-test_length:],index=d[-test_length:])
+        y_test = y[-test_length:]
+        y_test = y_test[: -self.test_length] if tune else y_test
         y = pd.Series(y,index=d)
 
         ts_train = TimeSeries.from_series(y_train)
@@ -665,8 +666,8 @@ class Forecaster:
         pred = [p[0] for p in pred.values()]
 
         self._metrics(
-            y_test if not tune else y_test[:-self.test_length], 
-            pred if not tune else pred[:-self.test_length]
+            y_test, 
+            pred,
         )
 
         # tune
