@@ -3118,7 +3118,11 @@ class Forecaster:
         # convert into tuple for the group or it fails
         if 'Xvars' in grid_evaluated_cv:
             grid_evaluated_cv['Xvars'] = grid_evaluated_cv['Xvars'].apply(
-                lambda x: str(x)
+                lambda x: (
+                    'None' if x is None 
+                    else x if isinstance(x,str) 
+                    else tuple(x)
+                )
             )
         
         grid_evaluated = grid_evaluated_cv.groupby(
@@ -3132,7 +3136,11 @@ class Forecaster:
         # contributions welcome for a more elegant solution
         if 'Xvars' in grid_evaluated:
             grid_evaluated['Xvars'] = grid_evaluated['Xvars'].apply(
-                lambda x: eval(x)
+                lambda x: (
+                    None if x == 'None'
+                    else x if isinstance(x,str)
+                    else list(x) 
+                )
             )
         
         self.grid = grid_evaluated.iloc[:,:-3]

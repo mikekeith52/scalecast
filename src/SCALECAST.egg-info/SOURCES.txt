@@ -18,6 +18,7 @@ docs/make.bat
 docs/requirements.txt
 docs/warnings.log
 docs/Forecaster/AnomalyDetector.rst
+docs/Forecaster/ChangepointDetector.rst
 docs/Forecaster/Forecaster.rst
 docs/Forecaster/ForecasterGlobals.ipynb
 docs/Forecaster/GridGenerator.rst
@@ -43,6 +44,7 @@ src/scalecast/multiseries.py
 src/scalecast/notebook.py
 src/scalecast/util.py
 src/scalecast/__pycache__/AnomalyDetector.cpython-38.pyc
+src/scalecast/__pycache__/ChangepointDetector.cpython-38.pyc
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
 src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/MVForecaster.cpython-38.pyc

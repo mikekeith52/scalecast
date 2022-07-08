@@ -166,7 +166,6 @@ class ChangepointDetector:
         if future_dates is not None:
             f.generate_future_dates(future_dates)
         for i,cp in enumerate(self.changepoints):
-            print(cp)
             if end is None:
                 f.add_other_regressor(start=cp.start_time,end='2999-12-31',called=f'cp{i+1}')
             elif end == 'auto':

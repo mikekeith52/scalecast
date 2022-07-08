@@ -1,7 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.12.7] - 2022-07-08
+### Added
+### Changed
+- got rid of printing when calling `ChangepointDetector.WriteCPtoXvars()`
+### Fixed
+- fixed cross validation when `Xvars = 'all'` is passed as an argument
+
 ## [0.12.6] - 2022-07-06
+### Added
 - added the `ChangepointDetector` object
 - added the `AnomalyDetector.adjust_anom()` method
 ### Changed
