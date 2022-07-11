@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.12.8] - 2022-07-11
+### Added
+- added `AnomalyDetector.MonteCarloDetect_sliding()` method
+### Changed
+- changed the `dynamic_testing` and `dynamic_tuning` arguments in `Forecaster` and `MVForecaster` so that window forecast evaluation is now supported. now, instead of having the choice between 1-step and arbitrary multi-step forecasting, any integer value is accepted as arguments in those parameters but `True` and `False` are still supported and do the same thing as always.
+### Fixed
+
 ## [0.12.7] - 2022-07-08
 ### Added
 ### Changed

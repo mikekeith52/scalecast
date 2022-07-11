@@ -612,10 +612,12 @@ class MVForecaster:
                 what to call the model when storing it in the object's history dictionary.
                 if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool): default True.
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+            dynamic_testing (bool or int):
+                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
 
         Returns:
             None
@@ -647,10 +649,12 @@ class MVForecaster:
                 what to call the model when storing it in the object's history dictionary.
                 if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool): default True.
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+            dynamic_testing (bool or int):
+                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
             **kwargs: passed to the _forecast_{estimator}() method.
                 can include lags and normalizer in addition to any given model's specific hyperparameters.
 
@@ -693,10 +697,12 @@ class MVForecaster:
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, metrics effectively become an average of one-step forecasts.
-            dynamic_testing (bool): default True.
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+            dynamic_testing (bool or int):
+                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
             **cvkwargs: passed to the cross_validate() method.
 
         Returns:
@@ -746,10 +752,12 @@ class MVForecaster:
 
         Args:
             fcster (str): one of _sklearn_estimators_. reads the estimator set to `set_estimator()` method.
-            dynamic_testing (bool):
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+            dynamic_testing (bool or int):
+                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
             tune (bool): default False.
                 whether the model is being tuned.
                 does not need to be specified by user.
@@ -842,7 +850,7 @@ class MVForecaster:
 
         def evaluate(trained_models,future,dynamic_testing):
             future = future.reset_index(drop=True)
-            if not dynamic_testing:
+            if dynamic_testing is False:
                 preds = {}
                 future = scale(self.scaler,future)
                 for series, regr in trained_models.items():
@@ -859,12 +867,23 @@ class MVForecaster:
                             series = c.split('_lag')[0]
                             s_num = int(series[1:])
                             idx = i + 1 - ar
-                            if idx > -1:
-                                future.loc[i+1,c] = preds[series][idx]
-                            else:
+                            if idx <= -1:
                                 future.loc[i+1,c] = getattr(self, f'series{s_num}')['y'].to_list()[idx]
+                            elif dynamic_testing is not True and (i+1) % dynamic_testing == 0:
+                                pass
+                            else:
+                                future.loc[i+1,c] = preds[series][idx]
             return preds
 
+        descriptive_assert(
+            isinstance(dynamic_testing,bool) | isinstance(dynamic_testing,int) & (dynamic_testing > -1),
+            ValueError,
+            f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}",
+        )
+        dynamic_testing = (
+            False if type(dynamic_testing) == int and dynamic_testing == 1 
+            else dynamic_testing
+        ) # 1-step dynamic testing is same as no dynamic testing
         test_length = (self.test_length + (self.validation_length if tune else 0))
         validation_length = self.validation_length
         observed, future = prepare_data(lags)

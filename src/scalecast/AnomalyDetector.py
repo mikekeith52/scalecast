@@ -219,6 +219,66 @@ class AnomalyDetector:
         self.upper = None
         self.mc_results = results.reset_index()
 
+    def MonteCarloDetect_sliding(
+            self,
+            historical_window,
+            step,
+            **kwargs,
+    ):
+        """ detects anomalies by running a series of monte carlo simulations
+        rolling over a span of the series. it is a good idea to 
+        transform the series before running so that it is stationary and not seasonal.
+        in other words, the series distribution should be as close to normal as possible.
+
+        Args:
+            historical_window (int): the number of periods to begin the initial search.
+            step (int): how far to step forward after a scan.
+            **kwargs: passed to the `MonteCarloDetect()` method. `start_at` and `stop_at` passed
+                automatically based on the values passed to the other arguments in this function.
+
+        Returns:
+            None
+
+        >>> from scalecast.AnomalyDetector import AnomalyDetector
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> from scalecast.Forecaster import Forecaster
+        >>> import pandas_datareader as pdr
+        >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
+        >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.LogTransform()
+        >>> f = transformer.DiffTransform(1)
+        >>> f = transformer.DiffTransform(12)
+        >>> detector = AnomalyDetector(f)
+        >>> detector.MonteCarloDetect_sliding(60,30)
+        """
+        raw_anom = pd.Series()
+        labeled_anom = pd.Series()
+        y = []
+        n = len(self.f.y)
+        y = self.f.y.to_list()[historical_window:]
+        for end_idx in range(historical_window*2, n+historical_window, step):
+            print(f'scanning from obs {end_idx - historical_window} to obs {end_idx}')
+            self.MonteCarloDetect(end_idx - historical_window, min(end_idx,n-1), **kwargs)
+            raw_anom = (
+                pd.concat([raw_anom,self.raw_anom])
+                .reset_index()
+                .sort_values(['index',0])
+                .drop_duplicates(subset=['index'],keep='last')
+                .set_index('index')[0]
+            )
+            labeled_anom = (
+                pd.concat([labeled_anom,self.labeled_anom])
+                .reset_index()
+                .sort_values(['index',0])
+                .drop_duplicates(subset=['index'],keep='last')
+                .set_index('index')[0]
+            )
+
+        self.raw_anom = raw_anom
+        self.labeled_anom = labeled_anom
+        self.y = y
+
     def WriteAnomtoXvars(self,f=None,future_dates=None,**kwargs):
         """ writes the Xvars from the previously called anomaly detector to Xvars in
         a Forecaster object. each anomaly is its own dummy variable on the date it is 

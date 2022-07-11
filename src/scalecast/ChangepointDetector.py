@@ -56,7 +56,6 @@ class ChangepointDetector:
 
         Args:
             historical_window (int): the number of periods to begin the initial search.
-                also, the backwards search length.
             scan_window (int): how far into the future to scan for changepoints after each step.
             step (int): how far to step forward after a scan.
             **kwargs: passed to the `CUSUMDetector.detector()` function. `interest_window` passed

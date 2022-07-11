@@ -481,10 +481,12 @@ class Forecaster:
 
         Args:
             fcster (str): one of _sklearn_estimators_. reads the estimator set to `set_estimator()` method.
-            dynamic_testing (bool):
+            dynamic_testing (bool or int):
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
             tune (bool): default False.
                 whether the model is being tuned.
                 does not need to be specified by user.
@@ -530,12 +532,19 @@ class Forecaster:
             self.X = X # for feature importance setting
             regr.fit(X, y)
             # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
-            if (len([x for x in Xvars if x.startswith("AR")]) == 0) | (not dynamic_testing):
+            if (
+                (
+                    not [x for x in Xvars if x.startswith("AR")]
+                ) | (
+                    dynamic_testing is False
+                )
+            ):
                 p = pd.DataFrame(future_xreg).values[:fcst_horizon]
                 p = scale(scaler, p)
                 return (regr.predict(p),regr.predict(X),Xvars,regr)
             # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
+            actuals = {k:list(v)[:] for k, v in future_xreg.items() if k.startswith('AR')}
             for i in range(fcst_horizon):
                 p = pd.DataFrame({x: [future_xreg[x][i]] for x in Xvars}).values
                 p = scale(scaler, p)
@@ -545,17 +554,27 @@ class Forecaster:
                         if k.startswith("AR"):
                             ar = int(k[2:])
                             idx = i + 1 - ar
-                            if idx > -1:
-                                try:
-                                    future_xreg[k][i + 1] = fcst[idx]
-                                except IndexError:
-                                    future_xreg[k].append(fcst[idx])
+                            # full dynamic horizon
+                            if dynamic_testing is True:
+                                if idx > -1:
+                                    try:
+                                        future_xreg[k][i + 1] = fcst[idx]
+                                    except IndexError:
+                                        future_xreg[k].append(fcst[idx])
+                                else:
+                                    try:
+                                        future_xreg[k][i + 1] = y[idx]
+                                    except IndexError:
+                                        future_xreg[k].append(y[idx])
+                            # window forecasting
                             else:
-                                try:
+                                if (i+1) % dynamic_testing  == 0:
+                                    future_xreg[k][:(i + 1)] = actuals[k][:(i + 1)]
+                                elif idx > -1:
+                                    future_xreg[k][i + 1] = fcst[idx]
+                                else:
                                     future_xreg[k][i + 1] = y[idx]
-                                except IndexError:
-                                    future_xreg[k].append(y[idx])
-            
+
             return (fcst,regr.predict(X),Xvars,regr)
 
         descriptive_assert(
@@ -563,7 +582,15 @@ class Forecaster:
             ForecastError,
             f"need at least 1 Xvar to forecast with the {self.estimator} model",
         )
-
+        descriptive_assert(
+            isinstance(dynamic_testing,bool) | isinstance(dynamic_testing,int) & (dynamic_testing > -1),
+            ValueError,
+            f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}",
+        )
+        dynamic_testing = (
+            False if type(dynamic_testing) == int and dynamic_testing == 1 
+            else dynamic_testing
+        ) # 1-step dynamic testing is same as no dynamic testing
         # list of integers, each one representing the n/a values in each AR term
         ars = [v.isnull().sum() for x, v in self.current_xreg.items() if x.startswith("AR")]
         # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
@@ -1965,8 +1992,8 @@ class Forecaster:
             use_loaded_grid (bool): default False.
                 whether to use the currently loaded grid in the object instead of using a grid in Grids.py.
                 in any utilized grid, do not include 'Xvars' as a key.
-            dynamic_tuning (bool): default False.
-                whether to dynamically tune the model.
+            dynamic_tuning (bool or int): default False.
+                whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
             monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
                 ignored when pfi == 'l1'.
                 the metric to be monitored when making reduction decisions. 
@@ -3188,10 +3215,12 @@ class Forecaster:
                 what to call the model when storing it in the object's history dictionary.
                 if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool): default True.
+            dynamic_testing (bool or int):
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
             test_only (bool): default False:
                 whether to stop your model after the testing process.
                 all forecasts in history will be equivalent to test-set predictions.
@@ -3259,10 +3288,12 @@ class Forecaster:
                 what to call the model when storing it in the object's history dictionary.
                 if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool): default True.
+            dynamic_testing (bool or int):
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
             test_only (bool): default False:
                 whether to stop your model after the testing process.
                 all forecasts in history will be equivalent to test-set predictions.
@@ -3334,14 +3365,18 @@ class Forecaster:
             cross_validate (bool): default False
                 whether to tune the model with cross validation. 
                 if False, uses the validation slice of data to tune.
-            dynamic_tuning (bool): default False.
+            dynamic_tuning (bool or int): default False.
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, metrics effectively become an average of one-step forecasts.
-            dynamic_testing (bool): default True.
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
+            dynamic_testing (bool or int):
                 whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, test-set metrics effectively become an average of one-step forecasts.
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
             summary_stats (bool): default False.
                 whether to save summary stats for the models that offer those.
             feature_importance (bool): default False.

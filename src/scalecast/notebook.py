@@ -171,14 +171,18 @@ def tune_test_forecast(
         cross_validate (bool): default False
                 whether to tune the model with cross validation. 
                 if False, uses the validation slice of data to tune.
-        dynamic_tuning (bool): default False.
+        dynamic_tuning (bool or int): default False.
             whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
-            setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            when False, metrics effectively become an average of one-step forecasts.
-        dynamic_testing (bool): default True.
+            if True, evaluates dynamically over the entire out-of-sample slice of data.
+            if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+            setting this to False or 1 means faster performance, 
+            but gives a less-good indication of how well the forecast will perform out x amount of periods.
+        dynamic_testing (bool or int):
             whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-            setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            when False, test-set metrics effectively become an average of one-step forecasts.
+            if True, evaluates dynamically over the entire out-of-sample slice of data.
+            if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+            setting this to False or 1 means faster performance, 
+            but gives a less-good indication of how well the forecast will perform out x amount of periods.
         summary_stats (bool): default False.
             whether to save summary stats for the models that offer those.
         feature_importance (bool): default False.
