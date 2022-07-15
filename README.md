@@ -99,12 +99,14 @@ In addition, scalecast offers:
 - ARIMA
   - [Forecast with ARIMA in Python More Easily with Scalecast](https://towardsdatascience.com/forecast-with-arima-in-python-more-easily-with-scalecast-35125fc7dc2e)
   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/arima/arima.html)
+- Theta
+  - [Easily Employ A Theta Model For Time Series](https://medium.com/towards-data-science/easily-employ-a-theta-model-for-time-series-b94465099a00)
+  - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html)
 - Other Notebooks
   - [Prophet](https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html)
   - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
   - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
   - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
-  - [Theta](https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html)
   
 ### The importance of dynamic validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)

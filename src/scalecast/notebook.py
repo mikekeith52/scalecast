@@ -160,6 +160,8 @@ def tune_test_forecast(
     dynamic_testing=True,
     summary_stats=False,
     feature_importance=False,
+    fi_method='pfi',
+    suffix=None,
     **cvkwargs,
 ):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm.
@@ -187,6 +189,11 @@ def tune_test_forecast(
             whether to save summary stats for the models that offer those.
         feature_importance (bool): default False.
             whether to save permutation feature importance information for the models that offer those.
+        fi_method (str): one of {'pfi','shap'}, default 'pfi'.
+            the type of feature importance to save for the models that support it.
+            ignored if feature_importance is False.
+        suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
+            later. if unspecified, each model can be called by its estimator name.
         **cvkwargs: passed to the cross_validate() method.
 
     Returns:
@@ -199,14 +206,15 @@ def tune_test_forecast(
             )
         )
     for m in log_progress(models):
+        call_me = m if suffix is None else m+suffix
         f.set_estimator(m)
         if cross_validate:
             f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
         else:
             f.tune(dynamic_tuning=dynamic_tuning)
-        f.auto_forecast(dynamic_testing=dynamic_testing)
+        f.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
 
         if summary_stats:
             f.save_summary_stats()
         if feature_importance:
-            f.save_feature_importance()
+            f.save_feature_importance(fi_method)

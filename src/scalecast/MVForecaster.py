@@ -684,6 +684,7 @@ class MVForecaster:
         cross_validate=False,
         dynamic_tuning=False,
         dynamic_testing=True,
+        suffix=None,
         **cvkwargs,
     ):
         """ iterates through a list of models, tunes them using grids in MVGrids.py, and forecasts them.
@@ -703,6 +704,8 @@ class MVForecaster:
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
+            suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
+                later. if unspecified, each model can be called by its estimator name.
             **cvkwargs: passed to the cross_validate() method.
 
         Returns:
@@ -717,12 +720,13 @@ class MVForecaster:
             "MVGrids.py not found in working directory",
         )
         for m in models:
+            call_me = m if suffix is None else m+suffix
             self.set_estimator(m)
             if cross_validate:
                 self.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
             else:
                 self.tune(dynamic_tuning=dynamic_tuning)
-            self.auto_forecast(dynamic_testing=dynamic_testing)
+            self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
 
     def set_optimize_on(self, how):
         """ choose how to determine best models by choosing which series should be optimized.

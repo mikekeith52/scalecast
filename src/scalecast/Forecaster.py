@@ -1947,14 +1947,14 @@ class Forecaster:
     ):
         """ reduces the regressor variables stored in the object. two methods are available:
         l1 which uses a simple l1 penalty and Lasso regressor; as well as pfi that stands for 
-        permutation feature importance and offers more flexibility to view how removing
+        permutation feature importance and shap, both of which offers more flexibility to view how removing
         variables one-at-a-time, according to which variable is evaluated as least helpful to the
         model after each model evaluation, affects a given error metric for any scikit-learn model.
-        after each variable reduction, the model is re-run and pfi re-evaluated. feature scores
-        are adjusted to account for colinearity, a limitation of pfi, by sorting by each feature's score
-        and standard deviation, dropping variables first that have both a low score and low standard deviation.
-        by default, the validation-set error is used to avoid leakage and the variable set that most 
-        reduced the error is selected.
+        after each variable reduction, the model is re-run and pfi re-evaluated. when using pfi, feature scores
+        are adjusted to account for colinearity, which is a known issue with this method, 
+        by sorting by each feature's score and standard deviation, dropping variables first that have both a 
+        low score and low standard deviation. by default, the validation-set error is used to avoid leakage 
+        and the variable set that most reduced the error is selected.
 
         Args:
             method (str): one of {'l1','pfi','shap'}, default 'l1'.
@@ -2000,7 +2000,7 @@ class Forecaster:
             overwrite (bool): default True.
                 if False, the list of selected Xvars are stored in an attribute called reduced_Xvars.
                 if True, this list of regressors overwrites the current Xvars in the object.
-            cross_validate (bool): default False
+            cross_validate (bool): default False.
                 whether to tune the model with cross validation. 
                 if False, uses the validation slice of data to tune.
                 if not monitoring ValidationMetricValue, you will want to leave this False.
@@ -3355,6 +3355,7 @@ class Forecaster:
         summary_stats=False,
         feature_importance=False,
         fi_method='pfi',
+        suffix=None,
         **cvkwargs,
     ):
         """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information.
@@ -3384,6 +3385,8 @@ class Forecaster:
             fi_method (str): one of {'pfi','shap'}, default 'pfi'.
                 the type of feature importance to save for the models that support it.
                 ignored if feature_importance is False.
+            suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
+                later. if unspecified, each model can be called by its estimator name.
             **cvkwargs: passed to the cross_validate() method.
 
         Returns:
@@ -3406,12 +3409,13 @@ class Forecaster:
             "comob" not in models, ValueError, "combo models cannot be tuned"
         )
         for m in models:
+            call_me = m if suffix is None else m+suffix
             self.set_estimator(m)
             if not cross_validate:
                 self.tune(dynamic_tuning=dynamic_tuning)
             else:
                 self.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
-            self.auto_forecast(dynamic_testing=dynamic_testing)
+            self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
 
             if summary_stats:
                 self.save_summary_stats()

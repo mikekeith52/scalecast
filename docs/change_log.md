@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.12.9] - 2022-07-15
+### Added
+- added `suffix` argument to `Forecaster.tune_test_forecast()`, `MVForecaster.tune_test_forecast()`, and `notebook.tune_test_forecast()` functions (#5)
+- added `fi_method` argument to `notebook.tune_test_forecast()` function
+### Changed
+### Fixed
+
 ## [0.12.8] - 2022-07-11
 ### Added
 - added `AnomalyDetector.MonteCarloDetect_sliding()` method
