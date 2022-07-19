@@ -43,7 +43,6 @@ mlp = {
     'hidden_layer_sizes':[(25,),(25,25,)],
     'solver':['lbfgs','adam'],
     'normalizer':['minmax','scale'],
-    'random_state':[20],
 }
 
 mlr = {
@@ -131,7 +130,6 @@ mlp = {
     'hidden_layer_sizes':[(25,),(25,25,)],
     'solver':['lbfgs','adam'],
     'normalizer':['minmax','scale'],
-    'random_state':[20],
     'lags':[1,3,6],
 }
 

@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.0] - 2022-07-19
+### Added
+- added probabilistic forecasting through `Forecaster.proba_forecast()` and `MVForecaster.proba_forecast()` methods
+- added level confidence intervals always for models run at level (so it won't fail to generate cis anymore when passing `Forecaster.plot(ci=True,level=True)`)
+- probabilistic forecasting also makes it possible to derive level confidence intervals even when model was run at difference
+- added probabilistic as a `bool` argument to `Forecaster.tune_test_forecast()`, `MVForecaster.tune_test_forecast()`, and `notebook.tune_test_forecast()` functions
+### Changed
+- changed how it was determined that a model was tuned for efficiency gains
+- changed so that "Dynamically" does not appear in the history['tuned'] attribute
+- changed the error that is raised when reduce_Xvars() doesn't work due to feature importance not being supported by a given model so that it is more explicit
+- changed the default mlp grid so that random_state is no longer a value. this makes that model more ammenable to probabilistic forecasting
+### Fixed
+
 ## [0.12.9] - 2022-07-15
 ### Added
 - added `suffix` argument to `Forecaster.tune_test_forecast()`, `MVForecaster.tune_test_forecast()`, and `notebook.tune_test_forecast()` functions (#5)

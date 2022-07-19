@@ -63,7 +63,7 @@ class MVForecaster:
             not_same_len_action (str): one of 'trim', 'fail'. default 'trim'.
                 what to do with series that are different lengths.
                 'trim' will trim based on the most recent first date in each series.
-                if the various series have different end dates, this option will still fail the initilization.
+                if the various series have different end dates, this option will still fail the initialization.
             merge_Xvars (str): one of 'union', 'u', 'intersection', 'i'. default 'union'.
                 how to combine Xvars in each object.
                 'union' or 'u' combines all regressors from each object.
@@ -632,14 +632,6 @@ class MVForecaster:
             )
             self.best_params = {}
         self.manual_forecast(call_me=call_me, dynamic_testing=dynamic_testing, **self.best_params)
-        call_me = self.estimator if call_me is None else call_me
-        if len(self.best_params) > 0:
-            self.history[call_me]['Tuned'] = True if not self.dynamic_tuning else 'Dynamically'
-            self.history[call_me]['CrossValidated'] = self.cross_validated
-            self.history[call_me]['ValidationSetLength'] = self.validation_length if not self.cross_validated else np.nan
-            self.history[call_me]['ValidationMetric'] = self.validation_metric
-            self.history[call_me]['ValidationMetricValue'] = self.validation_metric_value
-            self.history[call_me]['grid_evaluated'] = self.grid_evaluated
 
     def manual_forecast(self, call_me=None, dynamic_testing=True, **kwargs):
         """ manually forecasts with the hyperparameters, normalizer, and lag selections passed as keywords.
@@ -678,12 +670,124 @@ class MVForecaster:
         self.forecast = self._forecast(fcster=self.estimator, dynamic_testing=dynamic_testing, **kwargs)
         self._bank_history(**kwargs)
 
+    def proba_forecast(self, call_me=None, dynamic_testing=True, n_iter=20, **kwargs):
+        """ forecast with a probabilistic process where the final point estimate is an average of
+        several forecast calls. confidence intervals are overwritten through this process with a probabilistic technique.
+        level and difference confidence intervals are then possible to display. if the model in question is fundamentally
+        deterministic, this approach will just waste resources.
+
+        Args:
+            call_me (str): optional.
+                what to call the model when storing it in the object's history dictionary.
+                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                duplicated names will be overwritten with the most recently called model.
+            dynamic_testing (bool or int):
+                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
+            n_iter (int): default 20.
+                the number of forecast calls to use when creating the final point estimate and confidence intervals.
+                increasing this gives more sound results but costs resources.
+            **kwargs: passed to the _forecast_{estimator}() method.
+                can include lags and normalizer in addition to any given model's specific hyperparameters.
+
+        Returns:
+            None
+
+        >>> mvf.set_estimator('mlp')
+        >>> mvf.proba_forecast(hidden_layer_sizes=(25,25,25))
+        """
+        def set_ci_step(s):
+            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
+
+        estimator = self.estimator
+        call_me = self.estimator if call_me is None else call_me
+        mvf = self.__deepcopy__()
+        for i in range(n_iter):
+            mvf.manual_forecast(
+                call_me = f'{estimator}{i}',
+                dynamic_testing = dynamic_testing,
+                **kwargs,
+            )
+
+        self.history[call_me] = mvf.history[f'{estimator}{i}']
+
+        fcst_attr = (
+            'Forecast',
+            'TestSetPredictions',
+            'LevelForecast',
+            'LevelTestSetPreds',
+        )
+        fcst_attr_map = {
+            attr: {
+                s : np.array(
+                    [mvf.history[f'{estimator}{i}'][attr][s] for i in range(n_iter)]
+                ) for s in mvf.history[f'{estimator}0'][attr].keys()
+            } for attr in fcst_attr
+        }
+
+        for attr, p in fcst_attr_map.items():
+            self.history[call_me][attr] = {s:list(v.mean(axis=0)) for s,v in p.items()}
+
+        metrics_attr_func_map = {
+            "TestSetRMSE":['TestSetActuals','TestSetPredictions',rmse],
+            "TestSetMAPE":['TestSetActuals','TestSetPredictions',mape],
+            "TestSetMAE":['TestSetActuals','TestSetPredictions',mae],
+            "TestSetR2":['TestSetActuals','TestSetPredictions',r2],
+            "LevelTestSetRMSE":['LevelTestSetActuals','LevelTestSetPreds',rmse],
+            "LevelTestSetMAPE":['LevelTestSetActuals','LevelTestSetPreds',mape],
+            "LevelTestSetMAE":['LevelTestSetActuals','LevelTestSetPreds',mae],
+            "LevelTestSetR2":['LevelTestSetActuals','LevelTestSetPreds',r2],
+        }
+
+        for met, apf in metrics_attr_func_map.items():
+            self.history[call_me][met] = {
+                s:apf[2](
+                    self.history[call_me][apf[0]][s],
+                    self.history[call_me][apf[1]][s],
+                ) for s in mvf.history[f'{estimator}0'][attr].keys()
+            }
+
+        ci_attr_map = {
+            "UpperCI":"Forecast",
+            "LowerCI":"Forecast",
+            "TestSetUpperCI":"TestSetPredictions",
+            "TestSetLowerCI":"TestSetPredictions",
+            "LevelUpperCI":"LevelForecast",
+            "LevelLowerCI":"LevelForecast",
+            "LevelTSUpperCI":"LevelTestSetPreds",
+            "LevelTSLowerCI":"LevelTestSetPreds",
+        }
+
+        for i, kv in enumerate(ci_attr_map.items()):
+            if i % 2 == 0:
+                fcsts = fcst_attr_map[kv[1]]
+                self.history[call_me][kv[0]] = {
+                    s:[
+                        fcst_step + set_ci_step(
+                            fcsts[s].std(axis=0)[idx],
+                        ) for idx,fcst_step in enumerate(self.history[call_me][kv[1]][s])
+                    ] for s in fcsts.keys()
+                }
+            else:
+                self.history[call_me][kv[0]] = {
+                    s:[
+                        fcst_step - set_ci_step(
+                            fcsts[s].std(axis=0)[idx],
+                        ) for idx,fcst_step in enumerate(self.history[call_me][kv[1]][s])
+                    ] for s in fcsts.keys()
+                }
+
     def tune_test_forecast(
         self,
         models,
         cross_validate=False,
         dynamic_tuning=False,
         dynamic_testing=True,
+        probabilistic=False,
+        n_iter=20,
         suffix=None,
         **cvkwargs,
     ):
@@ -704,6 +808,10 @@ class MVForecaster:
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
+            probabilistic (bool): default False.
+                whether to use a probabilistic forecasting process to set confidence intervals.
+            n_iter (int): default 20.
+                how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
             suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
                 later. if unspecified, each model can be called by its estimator name.
             **cvkwargs: passed to the cross_validate() method.
@@ -726,7 +834,15 @@ class MVForecaster:
                 self.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
             else:
                 self.tune(dynamic_tuning=dynamic_tuning)
-            self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
+            if not probabilistic:
+                self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
+            else:
+                self.proba_forecast(
+                    **self.best_params,
+                    dynamic_testing=dynamic_testing,
+                    call_me=call_me,
+                    n_iter=n_iter,
+                )
 
     def set_optimize_on(self, how):
         """ choose how to determine best models by choosing which series should be optimized.
@@ -900,11 +1016,13 @@ class MVForecaster:
                 normalizer=normalizer,
                 **kwargs)
 
-        preds = evaluate(trained,
-                         observed.iloc[-(test_length + validation_length):-validation_length,:] 
-                         if tune else 
-                         observed.iloc[-test_length:],
-                         dynamic_testing)
+        preds = evaluate(
+            trained,
+            observed.iloc[-(test_length + validation_length):-validation_length,:] 
+            if tune else 
+            observed.iloc[-test_length:],
+            dynamic_testing
+        )
 
         if tune:
             return (
@@ -1054,11 +1172,19 @@ class MVForecaster:
             "grid_evaluated": None,
             "LevelForecast": lvl_fcst,
             "LevelTestSetPreds": lvl_tsp,
+            "LevelTestSetActuals":lvl_tsa,
             "LevelTestSetRMSE": {series:rmse(a,lvl_tsp[series]) for series, a in lvl_tsa.items()},
             "LevelTestSetMAPE": {series:mape(a,lvl_tsp[series]) for series, a in lvl_tsa.items()},
             "LevelTestSetMAE": {series:mae(a,lvl_tsp[series]) for series, a in lvl_tsa.items()},
             "LevelTestSetR2": {series:r2(a,lvl_tsp[series]) for series, a in lvl_tsa.items()},
         }
+        if hasattr(self,'best_params'):
+            self.history[self.call_me]['Tuned'] = True
+            self.history[self.call_me]['CrossValidated'] = self.cross_validated
+            self.history[self.call_me]['ValidationSetLength'] = self.validation_length if not self.cross_validated else np.nan
+            self.history[self.call_me]['ValidationMetric'] = self.validation_metric
+            self.history[self.call_me]['ValidationMetricValue'] = self.validation_metric_value
+            self.history[self.call_me]['grid_evaluated'] = self.grid_evaluated
 
     def set_best_model(self, model=None, determine_best_by=None):
         """ sets the best model to be referenced as "best".
@@ -1197,11 +1323,11 @@ class MVForecaster:
                     color=_colors_[k],
                     ax=ax)
 
-                if ci and not level:
+                if ci and (not level or 'LevelUpperCI' in self.history[m].keys()):
                     plt.fill_between(
                         x=self.future_dates.to_list(),
-                        y1=self.history[m]["UpperCI"][s],
-                        y2=self.history[m]["LowerCI"][s],
+                        y1=self.history[m]["UpperCI"][s] if not level else self.history[m]["LevelUpperCI"][s],
+                        y2=self.history[m]["LowerCI"][s] if not level else self.history[m]["LevelLowerCI"][s],
                         alpha=0.2,
                         color=_colors_[k],
                         label="{} {} {:.0%} CI".format(labels[i], m, self.history[m]["CILevel"]),
@@ -1213,13 +1339,15 @@ class MVForecaster:
         plt.ylabel("Values")
         return ax
 
-    def plot_test_set(self,
+    def plot_test_set(
+        self,
         models="all",
         series='all',
         put_best_on_top=False,
         include_train=True,
         level=False,
-        ci=False):
+        ci=False
+    ):
         """  plots all test-set predictions with the actuals.
 
         Args:
@@ -1262,25 +1390,29 @@ class MVForecaster:
         k = 0
         for i, s in enumerate(series):
             y = list(getattr(self,'series{}'.format(s.split('y')[-1]))['y' if not level else 'levely'])[-len(self.current_dates):]
-            sns.lineplot(x=self.current_dates.to_list()[-include_train:],
+            sns.lineplot(
+                x=self.current_dates.to_list()[-include_train:],
                 y=y[-include_train:],
                 label = f'{labels[i]} actual',
                 ax=ax,
-                color = _series_colors_[i])
+                color = _series_colors_[i]
+            )
             for m in models:
-                sns.lineplot(x=self.current_dates.to_list()[-self.test_length:],
+                sns.lineplot(
+                    x=self.current_dates.to_list()[-self.test_length:],
                     y = self.history[m]['TestSetPredictions'][s] if not level else self.history[m]['LevelTestSetPreds'][s],
                     label = f'{labels[i]} {m}',
                     color=_colors_[k],
                     linestyle="--",
                     alpha=0.7,
-                    ax=ax)
+                    ax=ax
+                )
 
-                if ci and not level:
+                if ci and (not level or 'LevelTSUpperCI' in self.history[m].keys()):
                     plt.fill_between(
                         x=self.current_dates.to_list()[-self.test_length:],
-                        y1=self.history[m]["TestSetUpperCI"][s],
-                        y2=self.history[m]["TestSetLowerCI"][s],
+                        y1=self.history[m]["TestSetUpperCI"][s] if not level else self.history[m]['LevelTSUpperCI'][s],
+                        y2=self.history[m]["TestSetLowerCI"][s] if not level else self.history[m]['LevelTSLowerCI'][s],
                         alpha=0.2,
                         color=_colors_[k],
                         label="{} {} {:.0%} CI".format(labels[i], m, self.history[m]["CILevel"]),

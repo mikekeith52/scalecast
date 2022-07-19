@@ -313,17 +313,23 @@ class Forecaster:
             "TestOnly": self.test_only,
             "Xvars": self.Xvars,
             "HyperParams": {k: v for k, v in kwargs.items() if k not in _not_hyperparams_},
-            "Scaler": None
-                      if self.estimator not in ['rnn','lstm'] + _sklearn_estimators_ 
-                      else 'minmax' if 'normalizer' not in kwargs
-                      else kwargs['normalizer'],
+            "Scaler": ( 
+                None if self.estimator not in ['rnn','lstm'] + _sklearn_estimators_ 
+                else 'minmax' if 'normalizer' not in kwargs
+                else kwargs['normalizer']
+            ),
             "Observations": len(y_use),
             "Forecast": self.forecast[:],
             "UpperCI": [f + ci_range for f in self.forecast],
             "LowerCI": [f - ci_range for f in self.forecast],
             "FittedVals": self.fitted_values[:],
-            "Tuned": False if not kwargs["tuned"] else "Dynamically" if self.dynamic_tuning else True,
-            "CrossValidated": False if not kwargs["tuned"] else True if 'fold' in self.grid_evaluated.columns else False,
+            "Tuned": hasattr(self,'best_params'),
+            "CrossValidated": (
+                False if not hasattr(self,'best_params') 
+                else False if not hasattr(self,'grid_evaluated')
+                else True if 'fold' in self.grid_evaluated.columns 
+                else False
+            ),
             "DynamicallyTested": self.dynamic_testing,
             "Integration": self.integration,
             "TestSetLength": self.test_length,
@@ -343,7 +349,7 @@ class Forecaster:
             "CIPlusMinus":ci_range,
         }
 
-        if kwargs["tuned"]:
+        if hasattr(self,'best_params'):
             self.history[call_me]["ValidationSetLength"] = (
                 self.validation_length 
                 if 'fold' not in self.grid_evaluated.columns 
@@ -397,6 +403,10 @@ class Forecaster:
             self.history[call_me]["LevelTestSetMAPE"] = self.mape
             self.history[call_me]["LevelTestSetMAE"] = self.mae
             self.history[call_me]["LevelTestSetR2"] = self.r2
+            self.history[call_me]["LevelUpperCI"] = self.history[call_me]['UpperCI']
+            self.history[call_me]["LevelLowerCI"] = self.history[call_me]['LowerCI']
+            self.history[call_me]["LevelTSUpperCI"] = self.history[call_me]['TestSetUpperCI']
+            self.history[call_me]["LevelTSLowerCI"] = self.history[call_me]['TestSetLowerCI']
 
     def _set_summary_stats(self):
         """ for every model where summary stats are available, saves them to a pandas dataframe where index is the regressor name
@@ -2078,7 +2088,7 @@ class Forecaster:
             ).T
             self.reduced_Xvars = coef_fi_lasso.loc[coef_fi_lasso["feature"] != 0].index.to_list()
         else:
-            f.save_feature_importance(method)
+            f.save_feature_importance(method,on_error='raise')
             fi_df = f.export_feature_importance(estimator)
             using_r2 = (
                 monitor.endswith('R2') or (f.validation_metric == 'r2' and monitor == 'ValidationMetricValue')
@@ -2122,7 +2132,7 @@ class Forecaster:
                 new_error = -new_error if using_r2 else new_error
                 errors.append(new_error)
 
-                f.save_feature_importance(method)
+                f.save_feature_importance(method,on_error='raise')
                 fi_df = f.export_feature_importance(estimator)
 
                 if method == 'pfi':
@@ -3273,12 +3283,7 @@ class Forecaster:
         if self.estimator in ('arima','hwes'):
             self._set_summary_stats()
 
-        self._bank_history(
-            tuned=False
-            if not hasattr(self, "best_params")
-            else len(self.best_params.keys()) > 0,
-            **kwargs,
-        )
+        self._bank_history(**kwargs)
 
     def auto_forecast(self, call_me=None, dynamic_testing=True, test_only=False):
         """ auto forecasts with the best parameters indicated from the tuning process.
@@ -3318,6 +3323,102 @@ class Forecaster:
             call_me=call_me, dynamic_testing=dynamic_testing, test_only=test_only, **self.best_params
         )
 
+    def proba_forecast(self, call_me=None, dynamic_testing=True, test_only=False, n_iter=20, **kwargs):
+        """ forecast with a probabilistic process where the final point estimate is an average of
+        several forecast calls. confidence intervals are overwritten through this process with a probabilistic technique.
+        level and difference confidence intervals are then possible to display. if the model in question is fundamentally
+        deterministic, this approach will just waste resources.
+
+        Args:
+            call_me (str): optional.
+                what to call the model when storing it in the object's history dictionary.
+                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                duplicated names will be overwritten with the most recently called model.
+            dynamic_testing (bool or int):
+                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
+                if True, evaluates dynamically over the entire out-of-sample slice of data.
+                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform out x amount of periods.
+            n_iter (int): default 20.
+                the number of forecast calls to use when creating the final point estimate and confidence intervals.
+                increasing this gives more sound results but costs resources.
+            **kwargs: passed to the _forecast_{estimator}() method.
+                can include lags and normalizer in addition to any given model's specific hyperparameters.
+
+        Returns:
+            None
+
+        >>> f.set_estimator('mlp')
+        >>> f.proba_forecast(hidden_layer_sizes=(25,25,25))
+        """
+        def set_ci_step(s):
+            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
+
+        estimator = self.estimator
+        call_me = self.estimator if call_me is None else call_me
+        f = self.__deepcopy__()
+        for i in range(n_iter):
+            f.manual_forecast(
+                call_me = f'{estimator}{i}',
+                dynamic_testing = dynamic_testing,
+                test_only = test_only,
+                **kwargs,
+            )
+        f.set_estimator('combo')
+        f.manual_forecast(
+            how='simple',
+            models=[f'{estimator}{i}' for i in range(n_iter)],
+            call_me='final',
+        )
+
+        self.history[call_me] = f.history[f'{estimator}{i}']
+
+        for attr in (
+            "Forecast",
+            "TestSetPredictions",
+            "TestSetRMSE",
+            "TestSetMAPE",
+            "TestSetMAE",
+            "TestSetR2",
+            "LevelForecast",
+            "LevelTestSetPreds",
+            "LevelTestSetRMSE",
+            "LevelTestSetMAPE",
+            "LevelTestSetMAE",
+            "LevelTestSetR2",
+        ):
+            self.history[call_me][attr] = f.history['final'][attr]
+
+        attr_set_map = {
+            "UpperCI":"Forecast",
+            "LowerCI":"Forecast",
+            "TestSetUpperCI":"TestSetPredictions",
+            "TestSetLowerCI":"TestSetPredictions",
+            "LevelUpperCI":"LevelForecast",
+            "LevelLowerCI":"LevelForecast",
+            "LevelTSUpperCI":"LevelTestSetPreds",
+            "LevelTSLowerCI":"LevelTestSetPreds",
+        }
+
+
+        for i, kv in enumerate(attr_set_map.items()):
+            if i % 2 == 0:
+                fcsts = np.array(
+                    [f.history[f'{estimator}{i}'][kv[1]] for i in range(n_iter)]
+                )
+                self.history[call_me][kv[0]] = [
+                    fcst_step + set_ci_step(
+                        fcsts.std(axis=0)[idx],
+                    ) for idx,fcst_step in enumerate(fcsts.mean(axis=0))
+                ]
+            else:
+                self.history[call_me][kv[0]] = [
+                    fcst_step - set_ci_step(
+                        fcsts.std(axis=0)[idx],
+                    ) for idx,fcst_step in enumerate(fcsts.mean(axis=0))
+                ]
+
     def add_sklearn_estimator(self,imported_module,called):
         """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
         be careful to choose regression models only.
@@ -3352,6 +3453,8 @@ class Forecaster:
         cross_validate=False,
         dynamic_tuning=False,
         dynamic_testing=True,
+        probabilistic=False,
+        n_iter=20,
         summary_stats=False,
         feature_importance=False,
         fi_method='pfi',
@@ -3378,6 +3481,10 @@ class Forecaster:
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
+            probabilistic (bool): default False.
+                whether to use a probabilistic forecasting process to set confidence intervals.
+            n_iter (int): default 20.
+                how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
             summary_stats (bool): default False.
                 whether to save summary stats for the models that offer those.
             feature_importance (bool): default False.
@@ -3415,7 +3522,15 @@ class Forecaster:
                 self.tune(dynamic_tuning=dynamic_tuning)
             else:
                 self.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
-            self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
+            if not probabilistic:
+                self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
+            else:
+                self.proba_forecast(
+                    **self.best_params,
+                    dynamic_testing=dynamic_testing,
+                    call_me=call_me,
+                    n_iter=n_iter,
+                )
 
             if summary_stats:
                 self.save_summary_stats()
@@ -3713,11 +3828,11 @@ class Forecaster:
                 label=m, 
                 ax = ax
             )
-            if ci and not level:
+            if ci and (not level or 'LevelUpperCI' in self.history[m].keys()):
                 plt.fill_between(
                     x=self.future_dates.to_list(),
-                    y1=self.history[m]["UpperCI"],
-                    y2=self.history[m]["LowerCI"],
+                    y1=self.history[m]["UpperCI"] if not level else self.history[m]['LevelUpperCI'],
+                    y2=self.history[m]["LowerCI"] if not level else self.history[m]['LevelLowerCI'],
                     alpha=0.2,
                     color=_colors_[i],
                     label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
@@ -3838,11 +3953,11 @@ class Forecaster:
                 label=m,
                 ax=ax
             )
-            if ci and not level:
+            if ci and (not level or 'LevelTSUpperCI' in self.history[m].keys()):
                 plt.fill_between(
                     x=test_dates,
-                    y1=self.history[m]["TestSetUpperCI"],
-                    y2=self.history[m]["TestSetLowerCI"],
+                    y1=self.history[m]["TestSetUpperCI"] if not level else self.history[m]['LevelTSUpperCI'],
+                    y2=self.history[m]["TestSetLowerCI"] if not level else self.history[m]['LevelTSLowerCI'],
                     alpha=0.2,
                     color=_colors_[i],
                     label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),

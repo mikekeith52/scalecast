@@ -49,6 +49,9 @@ multivariate
     :undoc-members:
     :show-inheritance:
 
+>>> mvf.set_estimator('xgboost')
+>>> mvf.proba_forecast() # probabilistic forecasting
+
 prophet
 --------------------------------------------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_prophet
@@ -87,8 +90,8 @@ sklearn
     :undoc-members:
     :show-inheritance:
 
->>> f.set_estimator('mlr')
->>> f.manual_forecast() # above args are now available in this function
+>>> f.set_estimator('mlp')
+>>> f.proba_forecast() # probabilistic forecasting
 
 theta
 -------------------------------------------------

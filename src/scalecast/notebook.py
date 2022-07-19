@@ -185,6 +185,10 @@ def tune_test_forecast(
             if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
             setting this to False or 1 means faster performance, 
             but gives a less-good indication of how well the forecast will perform out x amount of periods.
+        probabilistic (bool): default False.
+            whether to use a probabilistic forecasting process to set confidence intervals.
+        n_iter (int): default 20.
+            how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
         summary_stats (bool): default False.
             whether to save summary stats for the models that offer those.
         feature_importance (bool): default False.
@@ -212,7 +216,15 @@ def tune_test_forecast(
             f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
         else:
             f.tune(dynamic_tuning=dynamic_tuning)
-        f.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
+        if not probabilistic:
+            self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
+        else:
+            self.proba_forecast(
+                **self.best_params,
+                dynamic_testing=dynamic_testing,
+                call_me=call_me,
+                n_iter=n_iter,
+            )
 
         if summary_stats:
             f.save_summary_stats()
