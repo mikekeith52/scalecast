@@ -71,6 +71,7 @@ In addition, scalecast offers:
 `pip install darts`  
 `pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
 `pip install greykite`   
+`pip install shap` (SHAP feature importance)  
 `pip install kats` (for changepoint detection)  
 `pip install tqdm` (progress bar with notebook)  
 `pip install ipython` (widgets with notebook)  
@@ -122,7 +123,9 @@ In addition, scalecast offers:
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/multi-series/multi-series.html)
 
 ### Anomaly Detection
-- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
+- [Anomaly Detection for Time Series with Monte Carlo Simulations](https://towardsdatascience.com/anomaly-detection-for-time-series-with-monte-carlo-simulations-e43c77ba53c?source=email-85177a9cbd35-1658325190052-activity.collection_post_approved)
+- [Notebook1](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
+- [Notebook2](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/anomalies/monte%20carlo/monte%20carlo.ipynb)
 
 ## See Contributing
 - [Contributing.md](./Contributing.md)
