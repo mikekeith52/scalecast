@@ -11,7 +11,13 @@ import seaborn as sns
 
 from tqdm.notebook import tqdm as log_progress
 
-def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_attr: list = [], include_train: Union[bool,int] = True) -> None:
+
+def results_vis(
+    f_dict: Dict[str, Forecaster],
+    plot_type: str = "forecast",
+    print_attr: list = [],
+    include_train: Union[bool, int] = True,
+) -> None:
     """ visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.
 
     Args:
@@ -31,20 +37,32 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
     Returns:
         None 
     """
-    if plot_type not in {'forecast','test'}:
+    if plot_type not in {"forecast", "test"}:
         raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
 
-    def display_user_selections(ts_selection,mo_selection,lv_selection,ci_selection,me_selection):
+    def display_user_selections(
+        ts_selection, mo_selection, lv_selection, ci_selection, me_selection
+    ):
         selected_data = f_dict[ts_selection]
-        if plot_type == 'forecast':
-            selected_data.plot(models=f'top_{mo_selection}',order_by=me_selection,level=lv_selection,
-                               print_attr=print_attr,ci=ci_selection)
+        if plot_type == "forecast":
+            selected_data.plot(
+                models=f"top_{mo_selection}",
+                order_by=me_selection,
+                level=lv_selection,
+                print_attr=print_attr,
+                ci=ci_selection,
+            )
         else:
-            selected_data.plot_test_set(models=f'top_{mo_selection}',order_by=me_selection,include_train=include_train,level=lv_selection,
-                                        ci=ci_selection)
-        plt.title(ts_selection + ' Forecast Results', size = 16)
+            selected_data.plot_test_set(
+                models=f"top_{mo_selection}",
+                order_by=me_selection,
+                include_train=include_train,
+                level=lv_selection,
+                ci=ci_selection,
+            )
+        plt.title(ts_selection + " Forecast Results", size=16)
         plt.show()
-            
+
     def on_button_clicked(b):
         mo_selection = mo_dd.value
         ts_selection = ts_dd.value
@@ -53,26 +71,34 @@ def results_vis(f_dict: Dict[str,Forecaster],plot_type: str='forecast', print_at
         me_selection = me_dd.value
         with output:
             clear_output()
-            display_user_selections(ts_selection,mo_selection,lv_selection,ci_selection,me_selection)
-    
+            display_user_selections(
+                ts_selection, mo_selection, lv_selection, ci_selection, me_selection
+            )
+
     all_models = []
-    for k,f in f_dict.items():
+    for k, f in f_dict.items():
         all_models += [fcst for fcst in f.history.keys() if fcst not in all_models]
-    ts_dd = widgets.Dropdown(options=f_dict.keys(), description = 'Time Series:')
-    mo_dd = widgets.Dropdown(options=range(1,len(all_models)+1), description = 'No. Models')
-    lv_dd = widgets.Dropdown(options=[True,False],description='View Level')
-    ci_dd = widgets.Dropdown(options=[True,False],description='View Confidence Intervals')
-    me_dd = widgets.Dropdown(options=sorted(_determine_best_by_)
-        ,description='Order By')
+    ts_dd = widgets.Dropdown(options=f_dict.keys(), description="Time Series:")
+    mo_dd = widgets.Dropdown(
+        options=range(1, len(all_models) + 1), description="No. Models"
+    )
+    lv_dd = widgets.Dropdown(options=[True, False], description="View Level")
+    ci_dd = widgets.Dropdown(
+        options=[True, False], description="View Confidence Intervals"
+    )
+    me_dd = widgets.Dropdown(
+        options=sorted(_determine_best_by_), description="Order By"
+    )
 
     # never changes
     button = widgets.Button(description="Select Time Series")
     output = widgets.Output()
 
-    display(ts_dd,mo_dd,lv_dd,ci_dd,me_dd)
+    display(ts_dd, mo_dd, lv_dd, ci_dd, me_dd)
     display(button, output)
-    
+
     button.on_click(on_button_clicked)
+
 
 def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
     """ visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
@@ -137,7 +163,9 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
     mo_se = widgets.SelectMultiple(
         options=all_models, description="Models", selected=all_models
     )
-    se_se = widgets.SelectMultiple(options=series, description="Series", selected=series)
+    se_se = widgets.SelectMultiple(
+        options=series, description="Series", selected=series
+    )
     lv_dd = widgets.Dropdown(options=[True, False], description="View Level")
     ci_dd = widgets.Dropdown(
         options=[True, False], description="View Confidence Intervals"
@@ -152,15 +180,18 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
 
     button.on_click(on_button_clicked)
 
+
 def tune_test_forecast(
     f,
     models,
     cross_validate=False,
     dynamic_tuning=False,
     dynamic_testing=True,
+    probabilistic=False,
+    n_iter=20,
     summary_stats=False,
     feature_importance=False,
-    fi_method='pfi',
+    fi_method="pfi",
     suffix=None,
     **cvkwargs,
 ):
@@ -203,28 +234,28 @@ def tune_test_forecast(
     Returns:
         None
     """
-    if len([m for m in models if m not in [m for m in _estimators_ if m != 'combo']]) > 0:
+    if (
+        len([m for m in models if m not in [m for m in _estimators_ if m != "combo"]])
+        > 0
+    ):
         raise ValueError(
-            'values passed to models must be list-like and in {}'.format([
-                m for m in _estimators_ if m != 'combo']
+            "values passed to models must be list-like and in {}".format(
+                [m for m in _estimators_ if m != "combo"]
             )
         )
     for m in log_progress(models):
-        call_me = m if suffix is None else m+suffix
+        call_me = m if suffix is None else m + suffix
         f.set_estimator(m)
         if cross_validate:
-            f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
+            f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
         else:
             f.tune(dynamic_tuning=dynamic_tuning)
-        if not probabilistic:
-            self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
-        else:
-            self.proba_forecast(
-                **self.best_params,
-                dynamic_testing=dynamic_testing,
-                call_me=call_me,
-                n_iter=n_iter,
-            )
+        self.auto_forecast(
+            dynamic_testing=dynamic_testing,
+            call_me=call_me,
+            probabilistic=probabilistic,
+            n_iter=n_iter,
+        )
 
         if summary_stats:
             f.save_summary_stats()

@@ -4,20 +4,17 @@ from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 class ChangepointDetector:
-    def __init__(self,f):
+    def __init__(self, f):
         from kats.consts import TimeSeriesData
+
         self.f = f.__deepcopy__()
-        df = pd.DataFrame(
-            {
-                'time':f.current_dates.to_list(),
-                'value':f.y.to_list()
-            }
-        )
+        df = pd.DataFrame({"time": f.current_dates.to_list(), "value": f.y.to_list()})
         self.df = df
         self.ts = TimeSeriesData(df)
 
-    def DetectCPCUSUM(self,**kwargs):
+    def DetectCPCUSUM(self, **kwargs):
         """ detects changepoints using the `CUSUMDetector.detector()` function from kats.
         this function assumes there is at most one increase change point and at most one decrease change point in the series.
         use `DetectCPCUSUM_sliding()` or `DetectCPBOCPD()` to find multiple of each kind of changepoint.
@@ -39,17 +36,14 @@ class ChangepointDetector:
         """
         # importing here to stop read the docs from failing
         from kats.detectors.cusum_detection import CUSUMDetector
+
         self.detector = CUSUMDetector(self.ts)
         self.changepoints = self.detector.detector(**kwargs)
         return self.changepoints
 
     def DetectCPCUSUM_sliding(
-            self,
-            historical_window,
-            scan_window,
-            step,
-            **kwargs,
-        ):
+        self, historical_window, scan_window, step, **kwargs,
+    ):
         """ detects multiple changepoints using the `CUSUMDetector.detector()` function from kats over a sliding window.
         this idea is taken from the kats example:
         https://github.com/facebookresearch/Kats/blob/main/tutorials/kats_202_detection.ipynb
@@ -74,23 +68,19 @@ class ChangepointDetector:
         """
         from kats.detectors.cusum_detection import CUSUMDetector
         from kats.consts import TimeSeriesData
+
         self.detector = CUSUMDetector(self.ts)
         self.changepoints = []
         n = self.df.shape[0]
         for end_idx in range(historical_window + scan_window, n, step):
-            ts = self.df[end_idx - (historical_window + scan_window): end_idx]
-            self.changepoints += CUSUMDetector(
-                TimeSeriesData(ts),
-            ).detector(
-                interest_window=[
-                    historical_window, 
-                    historical_window + scan_window
-                ],
+            ts = self.df[end_idx - (historical_window + scan_window) : end_idx]
+            self.changepoints += CUSUMDetector(TimeSeriesData(ts),).detector(
+                interest_window=[historical_window, historical_window + scan_window],
                 **kwargs,
             )
         return self.changepoints
 
-    def DetectCPBOCPD(self,**kwargs):
+    def DetectCPBOCPD(self, **kwargs):
         """ detects changepoints using the `BOCDPDetector.detector()` function from kats.
         docs: https://facebookresearch.github.io/Kats/api/kats.detectors.bocpd_model.html
         tutorial: https://github.com/facebookresearch/Kats/blob/main/tutorials/kats_202_detection.ipynb
@@ -110,6 +100,7 @@ class ChangepointDetector:
         >>> detector.DetectCPBOCPD()
         """
         from kats.detectors.bocpd_model import BOCPDetector
+
         self.detector = BOCPDetector(self.ts)
         self.changepoints = self.detector.detector(**kwargs)
         return self.changepoints
@@ -130,7 +121,7 @@ class ChangepointDetector:
         """
         self.detector.plot(self.changepoints)
 
-    def WriteCPtoXvars(self,f=None,future_dates=None,end=None):
+    def WriteCPtoXvars(self, f=None, future_dates=None, end=None):
         """ writes identified changepoints as variables to a Forecaster object.
 
         Args:
@@ -164,11 +155,15 @@ class ChangepointDetector:
         f = self.f if f is None else f.deepcopy()
         if future_dates is not None:
             f.generate_future_dates(future_dates)
-        for i,cp in enumerate(self.changepoints):
+        for i, cp in enumerate(self.changepoints):
             if end is None:
-                f.add_other_regressor(start=cp.start_time,end='2999-12-31',called=f'cp{i+1}')
-            elif end == 'auto':
-                f.add_other_regressor(start=cp.start_time,end=cp.end_time,called=f'cp{i+1}')
+                f.add_other_regressor(
+                    start=cp.start_time, end="2999-12-31", called=f"cp{i+1}"
+                )
+            elif end == "auto":
+                f.add_other_regressor(
+                    start=cp.start_time, end=cp.end_time, called=f"cp{i+1}"
+                )
             else:
                 raise ValueError(f'end arg expected None or "auto", got {end}')
         return f

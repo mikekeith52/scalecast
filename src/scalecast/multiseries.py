@@ -1,6 +1,7 @@
 import pandas as pd
 
-def export_model_summaries(f_dict,**kwargs):
+
+def export_model_summaries(f_dict, **kwargs):
     """ exports a pandas dataframe with information about each model run on each 
     series when doing forecasting using many different series.
 
@@ -13,10 +14,11 @@ def export_model_summaries(f_dict,**kwargs):
     """
     forecast_info = pd.DataFrame()
     for k, f in f_dict.items():
-        df = f.export(dfs='model_summaries',**kwargs)
-        df['Series'] = k
-        forecast_info = pd.concat([forecast_info,df],ignore_index=True)
+        df = f.export(dfs="model_summaries", **kwargs)
+        df["Series"] = k
+        forecast_info = pd.concat([forecast_info, df], ignore_index=True)
     return forecast_info
+
 
 def keep_smallest_first_date(*fs):
     """ trims all passed Forecaster objects so they all have the same first date.

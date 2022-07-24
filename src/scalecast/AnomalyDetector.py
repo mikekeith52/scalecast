@@ -4,11 +4,12 @@ from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 class AnomalyDetector:
-    def __init__(self,f):
+    def __init__(self, f):
         self.f = f.__deepcopy__()
 
-    def NaiveDetect(self,cilevel=.99,**kwargs):
+    def NaiveDetect(self, cilevel=0.99, **kwargs):
         """ detects anomalies by breaking a series into its fundamental components:
         trend, seasonality, and residual. anomalies are defined as standard normal residuals
         further than a number of standard deviations away from the mean, determined by the value
@@ -38,7 +39,11 @@ class AnomalyDetector:
         resid = self.f.seasonal_decompose(**kwargs).resid
         snr = (resid - resid.mean()) / resid.std()
         anom = snr.apply(lambda x: stats.norm.cdf(x))
-        labeled_anom = anom.apply(lambda x: 1 if x > cilevel + (1-cilevel)/2 or x < (1-cilevel)/2 else 0)
+        labeled_anom = anom.apply(
+            lambda x: 1
+            if x > cilevel + (1 - cilevel) / 2 or x < (1 - cilevel) / 2
+            else 0
+        )
 
         self.y = self.f.y.to_list()
         self.fvs = None
@@ -48,13 +53,13 @@ class AnomalyDetector:
         self.labeled_anom = labeled_anom
 
     def EstimatorDetect(
-            self,
-            estimator,
-            future_dates=None,
-            cilevel=.99,
-            return_fitted_vals=False,
-            **kwargs,
-        ):
+        self,
+        estimator,
+        future_dates=None,
+        cilevel=0.99,
+        return_fitted_vals=False,
+        **kwargs,
+    ):
         """ detects anomalies with one of a Forecaster object's estimators.
         an anomaly in this instance is defined as any value that falls
         out of the fitted values' bootstrapped confidence intervals
@@ -105,37 +110,34 @@ class AnomalyDetector:
         >>>    lstm_layer_sizes=(16,16,16),
         >>>    dropout=(0,0,0),
         >>> )
-        """ 
+        """
         f1 = self.f.__deepcopy__()
-        call_me = estimator if 'call_me' not in kwargs.keys() else kwargs['call_me']
+        call_me = estimator if "call_me" not in kwargs.keys() else kwargs["call_me"]
 
         if future_dates is None and not f1.future_dates.to_list():
-            f1.generate_future_dates(1) # because we have to have at least 1
+            f1.generate_future_dates(1)  # because we have to have at least 1
         else:
             f1.generate_future_dates(future_dates)
         f1.set_estimator(estimator)
         f1.set_cilevel(cilevel)
         f1.manual_forecast(**kwargs)
-        fvs = f1.export_fitted_vals(call_me).set_index('DATE')
-        fvs['range'] = f1.history[call_me]['CIPlusMinus']
-        fvs['labeled_anom'] = fvs[
-            ['Actuals','FittedVals','range']
-        ].apply(
-            lambda x: 1 if (x[1] > (x[0] + x[2])) | (x[1] < (x[0] - x[2])) else 0, 
+        fvs = f1.export_fitted_vals(call_me).set_index("DATE")
+        fvs["range"] = f1.history[call_me]["CIPlusMinus"]
+        fvs["labeled_anom"] = fvs[["Actuals", "FittedVals", "range"]].apply(
+            lambda x: 1 if (x[1] > (x[0] + x[2])) | (x[1] < (x[0] - x[2])) else 0,
             axis=1,
         )
-        self.y = fvs['Actuals'].to_list()
-        self.fvs = fvs['FittedVals']
-        self.lower = fvs[['FittedVals','range']].apply(lambda x: x[0] - x[1],axis=1)
-        self.upper = fvs[['FittedVals','range']].apply(lambda x: x[0] + x[1],axis=1)
+        self.y = fvs["Actuals"].to_list()
+        self.fvs = fvs["FittedVals"]
+        self.lower = fvs[["FittedVals", "range"]].apply(lambda x: x[0] - x[1], axis=1)
+        self.upper = fvs[["FittedVals", "range"]].apply(lambda x: x[0] + x[1], axis=1)
         self.raw_anom = None
-        self.labeled_anom = fvs['labeled_anom']
-
+        self.labeled_anom = fvs["labeled_anom"]
 
         if return_fitted_vals:
             return fvs
 
-    def MonteCarloDetect(self,start_at,stop_at,sims=100,cilevel=.99):
+    def MonteCarloDetect(self, start_at, stop_at, sims=100, cilevel=0.99):
         """ detects anomalies by running a series of monte carlo simulations
         over a span of the series, using the observations before the span start 
         to determine the initial assumed distribution. results are saved to the 
@@ -178,52 +180,48 @@ class AnomalyDetector:
         >>> detector.MonteCarloDetect('2010-01-01','2020-12-01',cilevel=.99)
         """
         f1 = self.f.__deepcopy__()
-        if not isinstance(start_at,int):
+        if not isinstance(start_at, int):
             start_at = f1.current_dates.to_list().index(pd.Timestamp(start_at))
-        if not isinstance(stop_at,int):
+        if not isinstance(stop_at, int):
             stop_at = f1.current_dates.to_list().index(pd.Timestamp(stop_at))
         stop_at = stop_at + 1
         results = pd.DataFrame(
             {
-                'Date':f1.current_dates.to_list()[start_at:stop_at],
-                'Actuals':f1.y.to_list()[start_at:stop_at],
+                "Date": f1.current_dates.to_list()[start_at:stop_at],
+                "Actuals": f1.y.to_list()[start_at:stop_at],
             },
-        ).set_index('Date')
+        ).set_index("Date")
         for s in range(sims):
             obs = [i for i in f1.y.to_list()[:start_at]]
             simmed_line = []
-            for i in range(stop_at-start_at):
-                simmed_line.append(np.random.normal(loc=np.mean(obs),scale=np.std(obs)))
+            for i in range(stop_at - start_at):
+                simmed_line.append(
+                    np.random.normal(loc=np.mean(obs), scale=np.std(obs))
+                )
                 obs.append(simmed_line[-1])
-            results[f'Iter{s}'] = simmed_line
+            results[f"Iter{s}"] = simmed_line
         results2 = results.copy()
-        results2['sims_mean'] = results.drop('Actuals',axis=1).mean(axis=1)
-        results2['sims_std'] = results.drop('Actuals',axis=1).std(axis=1)
-        anom = results2[
-            [
-                'Actuals',
-                'sims_mean',
-                'sims_std'
-            ]
-        ].apply(
-            lambda x: stats.norm.cdf(x[0],loc=x[1],scale=x[2]),
-            axis=1,
+        results2["sims_mean"] = results.drop("Actuals", axis=1).mean(axis=1)
+        results2["sims_std"] = results.drop("Actuals", axis=1).std(axis=1)
+        anom = results2[["Actuals", "sims_mean", "sims_std"]].apply(
+            lambda x: stats.norm.cdf(x[0], loc=x[1], scale=x[2]), axis=1,
         )
-        labeled_anom = anom.apply(lambda x: 1 if x > cilevel + (1-cilevel)/2 or x < (1-cilevel)/2 else 0)
+        labeled_anom = anom.apply(
+            lambda x: 1
+            if x > cilevel + (1 - cilevel) / 2 or x < (1 - cilevel) / 2
+            else 0
+        )
 
         self.raw_anom = anom
         self.labeled_anom = labeled_anom
-        self.y = results['Actuals'].to_list()
+        self.y = results["Actuals"].to_list()
         self.fvs = None
         self.lower = None
         self.upper = None
         self.mc_results = results.reset_index()
 
     def MonteCarloDetect_sliding(
-            self,
-            historical_window,
-            step,
-            **kwargs,
+        self, historical_window, step, **kwargs,
     ):
         """ detects anomalies by running a series of monte carlo simulations
         rolling over a span of the series. it is a good idea to 
@@ -257,29 +255,31 @@ class AnomalyDetector:
         y = []
         n = len(self.f.y)
         y = self.f.y.to_list()[historical_window:]
-        for end_idx in range(historical_window*2, n+historical_window, step):
-            print(f'scanning from obs {end_idx - historical_window} to obs {end_idx}')
-            self.MonteCarloDetect(end_idx - historical_window, min(end_idx,n-1), **kwargs)
+        for end_idx in range(historical_window * 2, n + historical_window, step):
+            print(f"scanning from obs {end_idx - historical_window} to obs {end_idx}")
+            self.MonteCarloDetect(
+                end_idx - historical_window, min(end_idx, n - 1), **kwargs
+            )
             raw_anom = (
-                pd.concat([raw_anom,self.raw_anom])
+                pd.concat([raw_anom, self.raw_anom])
                 .reset_index()
-                .sort_values(['index',0])
-                .drop_duplicates(subset=['index'],keep='last')
-                .set_index('index')[0]
+                .sort_values(["index", 0])
+                .drop_duplicates(subset=["index"], keep="last")
+                .set_index("index")[0]
             )
             labeled_anom = (
-                pd.concat([labeled_anom,self.labeled_anom])
+                pd.concat([labeled_anom, self.labeled_anom])
                 .reset_index()
-                .sort_values(['index',0])
-                .drop_duplicates(subset=['index'],keep='last')
-                .set_index('index')[0]
+                .sort_values(["index", 0])
+                .drop_duplicates(subset=["index"], keep="last")
+                .set_index("index")[0]
             )
 
         self.raw_anom = raw_anom
         self.labeled_anom = labeled_anom
         self.y = y
 
-    def WriteAnomtoXvars(self,f=None,future_dates=None,**kwargs):
+    def WriteAnomtoXvars(self, f=None, future_dates=None, **kwargs):
         """ writes the Xvars from the previously called anomaly detector to Xvars in
         a Forecaster object. each anomaly is its own dummy variable on the date it is 
         found. a future distriution could detect level shifts.
@@ -317,27 +317,22 @@ class AnomalyDetector:
         f = self.f if f is None else f.deepcopy()
         if future_dates is not None:
             f.generate_future_dates(future_dates)
-        df = pd.DataFrame(
-            index = f.current_dates.to_list() + f.future_dates.to_list()
-        )
-        df['Anomaly'] = self.labeled_anom
+        df = pd.DataFrame(index=f.current_dates.to_list() + f.future_dates.to_list())
+        df["Anomaly"] = self.labeled_anom
         df = df.reset_index()
-        df.columns = ['Date','Anomaly']
-        df['Anomaly'] = df[
-            ['Date','Anomaly']
-        ].apply(
-            lambda x: x[0].strftime('%Y-%m-%d') if x[1] == 1 else 'No', 
-            axis=1
+        df.columns = ["Date", "Anomaly"]
+        df["Anomaly"] = df[["Date", "Anomaly"]].apply(
+            lambda x: x[0].strftime("%Y-%m-%d") if x[1] == 1 else "No", axis=1
         )
-        df['Anomaly'] = pd.Categorical(
-            df['Anomaly'].to_list(),
-            categories=["No"] + [c for c in df['Anomaly'].unique() if c != 'No'],
+        df["Anomaly"] = pd.Categorical(
+            df["Anomaly"].to_list(),
+            categories=["No"] + [c for c in df["Anomaly"].unique() if c != "No"],
             ordered=True,
-        ) # all this to make "No" the first cat
-        f.ingest_Xvars_df(df,date_col='Date',**kwargs)
+        )  # all this to make "No" the first cat
+        f.ingest_Xvars_df(df, date_col="Date", **kwargs)
         return f
 
-    def adjust_anom(self,f=None,method='q',q=10):
+    def adjust_anom(self, f=None, method="q", q=10):
         """ changes the values of identified anomalies and returns a Forecaster object.
 
         Args: 
@@ -374,58 +369,52 @@ class AnomalyDetector:
         >>> f = detector.adjust_anom(method='interpolate')
         """
         f = self.f if f is None else f.deepcopy()
-        df = pd.DataFrame(
-            {'y':f.y.to_list()},
-            index = f.current_dates.to_list(),
-        )
-        df['a'] = self.labeled_anom
-        
-        if method == 'q':
-            df['r'] = pd.qcut(df['y'],q=q,labels=list(range(q)))
+        df = pd.DataFrame({"y": f.y.to_list()}, index=f.current_dates.to_list(),)
+        df["a"] = self.labeled_anom
 
-            top = df.loc[df['r'] == (q-1),'y'].min()
-            bottom = df.loc[df['r'] == 0,'y'].max()
+        if method == "q":
+            df["r"] = pd.qcut(df["y"], q=q, labels=list(range(q)))
+
+            top = df.loc[df["r"] == (q - 1), "y"].min()
+            bottom = df.loc[df["r"] == 0, "y"].max()
 
             for i, v in df.reset_index().iterrows():
-                if v['a'] == 1:
-                    f.y.values[i] = top if v['y'] > df['y'].mean() else bottom
-        elif method == 'interpolate':
-            df['anom_num'] = 0
-            df['a_1'] = df['a'].shift()
-            df['a_-1'] = df['a'].shift(-1)
+                if v["a"] == 1:
+                    f.y.values[i] = top if v["y"] > df["y"].mean() else bottom
+        elif method == "interpolate":
+            df["anom_num"] = 0
+            df["a_1"] = df["a"].shift()
+            df["a_-1"] = df["a"].shift(-1)
             df = df.fillna(0)
-            df.loc[(df['a_-1'] == 1) & (df['a'] == 0),'anom_num'] = 1
-            df['anom_num'] = df['anom_num'].cumsum()
+            df.loc[(df["a_-1"] == 1) & (df["a"] == 0), "anom_num"] = 1
+            df["anom_num"] = df["anom_num"].cumsum()
             df.loc[
                 ~(
-                    (
-                        (df['a_-1'] == 1) & (df['a'] == 0)
-                    ) | (
-                        df['a'] == 1
-                    ) | (
-                        (df['a_1'] == 1) & (df['a'] == 0)
-                    )
-                ),'anom_num'
+                    ((df["a_-1"] == 1) & (df["a"] == 0))
+                    | (df["a"] == 1)
+                    | ((df["a_1"] == 1) & (df["a"] == 0))
+                ),
+                "anom_num",
             ] = 0
 
-            for anom in df['anom_num'].unique():
+            for anom in df["anom_num"].unique():
                 if anom == 0:
                     continue
-                
-                df_tmp = df.loc[df['anom_num'] == anom]
-                idx = df_tmp.iloc[1:-1,:].index.to_list()
-                slope = (df_tmp.iloc[-1,0] - df_tmp.iloc[0,0]) / (df_tmp.shape[0] - 1)
+
+                df_tmp = df.loc[df["anom_num"] == anom]
+                idx = df_tmp.iloc[1:-1, :].index.to_list()
+                slope = (df_tmp.iloc[-1, 0] - df_tmp.iloc[0, 0]) / (df_tmp.shape[0] - 1)
 
                 for i, d in enumerate(idx):
-                    df.loc[d,'y'] = df_tmp.iloc[0,0] + slope*(i+1)
+                    df.loc[d, "y"] = df_tmp.iloc[0, 0] + slope * (i + 1)
 
-            f.y = df['y'].reset_index(drop=True)
+            f.y = df["y"].reset_index(drop=True)
         else:
             raise ValueError(f'method arg expected "q" or "interpolate", got {method}')
 
         return f
 
-    def plot_anom(self,label=True,strftime_fmt='%Y-%m-%d'):
+    def plot_anom(self, label=True, strftime_fmt="%Y-%m-%d"):
         """ plots the series used to detect anomalies and red dashes around points that
         were identified as anomalies from the last algorithm run.
 
@@ -456,16 +445,16 @@ class AnomalyDetector:
         >>> plt.show()
         """
         ax = self.f.plot(models=None)
-        
-        for y, a, d in zip(self.y,self.labeled_anom,self.labeled_anom.index):
+
+        for y, a, d in zip(self.y, self.labeled_anom, self.labeled_anom.index):
             if a == 1:
-                ax.scatter(d,y,marker='_',color='red',linewidths=2,label=None)
+                ax.scatter(d, y, marker="_", color="red", linewidths=2, label=None)
                 if label:
                     ax.text(
                         d,
-                        y*1.05,
+                        y * 1.05,
                         d.strftime(strftime_fmt),
-                        color='red',
+                        color="red",
                         size=11,
                         label=None,
                     )
@@ -475,7 +464,7 @@ class AnomalyDetector:
                 self.fvs,
                 color="#FFA500",
                 alpha=0.5,
-                label='Fitted Vals',
+                label="Fitted Vals",
             )
             ax.fill_between(
                 x=self.labeled_anom.index,
@@ -483,7 +472,7 @@ class AnomalyDetector:
                 y2=self.lower,
                 alpha=0.2,
                 color="#FFA500",
-                label='Conf. Interval'
+                label="Conf. Interval",
             )
 
         ax.legend()
@@ -514,7 +503,7 @@ class AnomalyDetector:
         """
         _, ax = plt.subplots()
         results = self.mc_results
-        sns.lineplot(x='Date',y='Actuals',data=results,label='actuals',ax=ax)
-        for c in results.iloc[:,2:]:
-            ax.plot(results['Date'],results[c],alpha=.2)
+        sns.lineplot(x="Date", y="Actuals", data=results, label="actuals", ax=ax)
+        for c in results.iloc[:, 2:]:
+            ax.plot(results["Date"], results[c], alpha=0.2)
         return ax

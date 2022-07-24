@@ -27,6 +27,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 import copy
+
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
 logging.captureWarnings(True)
 
@@ -48,21 +49,27 @@ from sklearn.linear_model import SGDRegressor as sgd_
 
 # custom metrics - are what you expect except MAPE, which can return None
 def mape(y, pred):
-    return (np.nan if 0 in y else mean_absolute_percentage_error(y, pred))  # average o(1) worst-case o(n)
+    return (
+        np.nan if 0 in y else mean_absolute_percentage_error(y, pred)
+    )  # average o(1) worst-case o(n)
+
 
 def rmse(y, pred):
     return mean_squared_error(y, pred) ** 0.5
 
+
 def mae(y, pred):
     return mean_absolute_error(y, pred)
+
 
 def r2(y, pred):
     return r2_score(y, pred)
 
+
 def prepare_data(Xvars, y, current_xreg):
     if Xvars is None or Xvars == "all":
         Xvars = [x for x in current_xreg.keys()]
-    elif isinstance(Xvars,str):
+    elif isinstance(Xvars, str):
         Xvars = [Xvars]
 
     y = [i for i in y]
@@ -70,12 +77,14 @@ def prepare_data(Xvars, y, current_xreg):
     X = X[Xvars].values
     return Xvars, y, X
 
+
 # descriptive assert statement for error catching
 def descriptive_assert(statement, ErrorType, error_message):
     try:
         assert statement
     except AssertionError:
         raise ErrorType(error_message)
+
 
 # KEY GLOBALS
 
@@ -99,16 +108,16 @@ _sklearn_estimators_ = sorted(_sklearn_imports_.keys())
 # to add non-sklearn models, add to the list below
 _non_sklearn_estimators_ = [
     "arima",
-    "hwes", 
-    "prophet", 
-    "silverkite", 
-    "rnn", 
-    "lstm", 
-    "theta", 
+    "hwes",
+    "prophet",
+    "silverkite",
+    "rnn",
+    "lstm",
+    "theta",
     "combo",
 ]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
-_cannot_be_tuned_ = ['combo','rnn','lstm']
+_cannot_be_tuned_ = ["combo", "rnn", "lstm"]
 _can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
 _metrics_ = ["r2", "rmse", "mape", "mae"]
 _determine_best_by_ = [
@@ -145,7 +154,7 @@ _colors_ = [
     "#BDB76B",
     "#DEB887",
 ] * 10
-_not_hyperparams_ = ["Xvars", "normalizer", "tuned", "plot_loss","plot_loss_test"]
+_not_hyperparams_ = ["Xvars", "normalizer", "tuned", "plot_loss", "plot_loss_test"]
 
 # DESCRIPTIVE ERRORS
 class ForecastError(Exception):
@@ -160,6 +169,7 @@ class ForecastError(Exception):
 
     class PlottingError(Exception):
         pass
+
 
 # MAIN OBJECT
 class Forecaster:
@@ -185,9 +195,13 @@ class Forecaster:
         self.y = y
         self.current_dates = current_dates
         self.require_future_dates = require_future_dates
-        self.future_dates = pd.Series([],dtype='datetime64[ns]')
-        self.current_xreg = {}  # values should be pandas series (to make differencing work more easily)
-        self.future_xreg = {}  # values should be lists (to make iterative forecasting work more easily)
+        self.future_dates = pd.Series([], dtype="datetime64[ns]")
+        self.current_xreg = (
+            {}
+        )  # values should be pandas series (to make differencing work more easily)
+        self.future_xreg = (
+            {}
+        )  # values should be lists (to make iterative forecasting work more easily)
         self.history = {}
         self.test_length = 1
         self.validation_length = 1
@@ -201,11 +215,11 @@ class Forecaster:
             setattr(self, key, value)
 
         self.typ_set()  # ensures that the passed values are the right types
-        
-        if not require_future_dates:
-            self.generate_future_dates(1) # placeholder -- never used
 
-        globals()['f_init_'] = self.__deepcopy__()
+        if not require_future_dates:
+            self.generate_future_dates(1)  # placeholder -- never used
+
+        globals()["f_init_"] = self.__deepcopy__()
 
     def __copy__(self):
         obj = type(self).__new__(self.__class__)
@@ -221,7 +235,7 @@ class Forecaster:
     def copy(self):
         """ creates an object copy.
         """
-        return self.__copy__() 
+        return self.__copy__()
 
     def deepcopy(self):
         """ creates an object deepcopy.
@@ -248,32 +262,38 @@ class Forecaster:
     BootstrapSamples={}
     CurrentEstimator={}
 )""".format(
-    self.current_dates.values[0].astype(str),
-    self.current_dates.values[-1].astype(str),
-    self.freq,
-    len(self.y),
-    len(self.future_dates) if self.require_future_dates else 'NA',
-    list(self.current_xreg.keys()),
-    self.integration,
-    self.test_length,
-    self.validation_length,
-    self.validation_metric,
-    list(self.history.keys()),
-    self.cilevel,
-    self.bootstrap_samples,
-    None if not hasattr(self,'estimator') else self.estimator,
-    )
+            self.current_dates.values[0].astype(str),
+            self.current_dates.values[-1].astype(str),
+            self.freq,
+            len(self.y),
+            len(self.future_dates) if self.require_future_dates else "NA",
+            list(self.current_xreg.keys()),
+            self.integration,
+            self.test_length,
+            self.validation_length,
+            self.validation_metric,
+            list(self.history.keys()),
+            self.cilevel,
+            self.bootstrap_samples,
+            None if not hasattr(self, "estimator") else self.estimator,
+        )
 
     def _split_data(self, X, y, test_length, tune):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_length, shuffle=False)
-        X_test, y_test = (X_test, y_test) if not tune else (X_test[:-self.test_length], y_test[:-self.test_length])
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_length, shuffle=False
+        )
+        X_test, y_test = (
+            (X_test, y_test)
+            if not tune
+            else (X_test[: -self.test_length], y_test[: -self.test_length])
+        )
         return X_train, X_test, y_train, y_test
 
-    def _validate_no_test_only(self,models):
+    def _validate_no_test_only(self, models):
         descriptive_assert(
-            max([int(self.history[m]['TestOnly']) for m in models]) == 0,
+            max([int(self.history[m]["TestOnly"]) for m in models]) == 0,
             ForecastError,
-            'this method does not accept any models run test_only = True or when require_future_dates attr is False',
+            "this method does not accept any models run test_only = True or when require_future_dates attr is False",
         )
 
     def _validate_future_dates_exist(self):
@@ -285,49 +305,63 @@ class Forecaster:
             "before adding regressors, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)",
         )
 
-    def _find_cis(self,y,fvs):
+    def _find_cis(self, y, fvs):
         """ bootstraps the upper and lower forecast estimates using the info stored in cilevel and bootstrap_samples
         """
         random.seed(20)
-        resids = [
-            fv - ac
-            for fv, ac in zip(fvs, y[-len(fvs):])
-        ]
+        resids = [fv - ac for fv, ac in zip(fvs, y[-len(fvs) :])]
         bootstrapped_resids = np.random.choice(resids, size=self.bootstrap_samples)
         bootstrap_mean = np.mean(bootstrapped_resids)
         bootstrap_std = np.std(bootstrapped_resids)
-        return (stats.norm.ppf(1 - (1 - self.cilevel) / 2) * bootstrap_std + bootstrap_mean)
+        return (
+            stats.norm.ppf(1 - (1 - self.cilevel) / 2) * bootstrap_std + bootstrap_mean
+        )
 
     def _bank_history(self, **kwargs):
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
             **kwargs: passed from each model, depending on how that model uses Xvars, normalizer, and other args
         """
         # since test only, what gets saved to history is relevant to the train set only, the genesis of the next line
-        y_use = self.y.values.copy() if not self.test_only else self.y.values[:-self.test_length].copy()
-        fvs_use = self.fitted_values[:] if not self.test_only else self.fitted_values[:-self.test_length]
+        y_use = (
+            self.y.values.copy()
+            if not self.test_only
+            else self.y.values[: -self.test_length].copy()
+        )
+        fvs_use = (
+            self.fitted_values[:]
+            if not self.test_only
+            else self.fitted_values[: -self.test_length]
+        )
         call_me = self.call_me
         # originally, the ci_range used object attributes only, but test_only makes using args necessary
-        ci_range = self._find_cis(y_use,fvs_use)
+        ci_range = self._find_cis(y_use, fvs_use)
         self.history[call_me] = {
             "Estimator": self.estimator,
             "TestOnly": self.test_only,
             "Xvars": self.Xvars,
-            "HyperParams": {k: v for k, v in kwargs.items() if k not in _not_hyperparams_},
-            "Scaler": ( 
-                None if self.estimator not in ['rnn','lstm'] + _sklearn_estimators_ 
-                else 'minmax' if 'normalizer' not in kwargs
-                else kwargs['normalizer']
+            "HyperParams": {
+                k: v for k, v in kwargs.items() if k not in _not_hyperparams_
+            },
+            "Scaler": (
+                None
+                if self.estimator not in ["rnn", "lstm"] + _sklearn_estimators_
+                else "minmax"
+                if "normalizer" not in kwargs
+                else kwargs["normalizer"]
             ),
             "Observations": len(y_use),
             "Forecast": self.forecast[:],
             "UpperCI": [f + ci_range for f in self.forecast],
             "LowerCI": [f - ci_range for f in self.forecast],
             "FittedVals": self.fitted_values[:],
-            "Tuned": hasattr(self,'best_params'),
+            "Tuned": hasattr(self, "best_params"),
             "CrossValidated": (
-                False if not hasattr(self,'best_params') 
-                else False if not hasattr(self,'grid_evaluated')
-                else True if 'fold' in self.grid_evaluated.columns 
+                False
+                if not hasattr(self, "best_params")
+                else False
+                if not hasattr(self, "grid_evaluated")
+                else True
+                if "fold" in self.grid_evaluated.columns
                 else False
             ),
             "DynamicallyTested": self.dynamic_testing,
@@ -338,25 +372,31 @@ class Forecaster:
             "TestSetMAE": self.mae,
             "TestSetR2": self.r2,
             "TestSetPredictions": self.test_set_pred[:],
-            "TestSetUpperCI": [f + ci_range for f in self.test_set_pred],  # not exactly right, but close enough with caveat
-            "TestSetLowerCI": [f - ci_range for f in self.test_set_pred],  # not exactly right, but close enough with caveat
+            "TestSetUpperCI": [
+                f + ci_range for f in self.test_set_pred
+            ],  # not exactly right, but close enough with caveat
+            "TestSetLowerCI": [
+                f - ci_range for f in self.test_set_pred
+            ],  # not exactly right, but close enough with caveat
             "TestSetActuals": self.test_set_actuals[:],
             "InSampleRMSE": rmse(y_use[-len(fvs_use) :], fvs_use),
             "InSampleMAPE": mape(y_use[-len(fvs_use) :], fvs_use),
             "InSampleMAE": mae(y_use[-len(fvs_use) :], fvs_use),
             "InSampleR2": r2(y_use[-len(fvs_use) :], fvs_use),
-            "CILevel":self.cilevel,
-            "CIPlusMinus":ci_range,
+            "CILevel": self.cilevel,
+            "CIPlusMinus": ci_range,
         }
 
-        if hasattr(self,'best_params'):
+        if hasattr(self, "best_params"):
             self.history[call_me]["ValidationSetLength"] = (
-                self.validation_length 
-                if 'fold' not in self.grid_evaluated.columns 
+                self.validation_length
+                if "fold" not in self.grid_evaluated.columns
                 else None
             )
             self.history[call_me]["ValidationMetric"] = self.validation_metric
-            self.history[call_me]["ValidationMetricValue"] = self.validation_metric_value
+            self.history[call_me][
+                "ValidationMetricValue"
+            ] = self.validation_metric_value
 
         for attr in ("grid_evaluated", "models", "weights"):
             if hasattr(self, attr):
@@ -368,18 +408,20 @@ class Forecaster:
 
             fcst = self.forecast[::-1]
             pred = self.history[call_me]["TestSetPredictions"][::-1]
+            fvs = self.history[call_me]["FittedVals"][:]
 
             if integration == 2:
                 fcst.append(y_use[-2] + y_use[-1])
-                pred.append(
-                    y_use[-(len(pred) + 2)] + y_use[-(len(pred) + 1)]
-                )
+                pred.append(y_use[-(len(pred) + 2)] + y_use[-(len(pred) + 1)])
+                fvs.insert(0, y_use[-len(fvs) - 1] + y_use[-len(fvs) - 2])
             else:
                 fcst.append(self.levely[-1])
                 pred.append(self.levely[-(len(pred) + 1)])
+                fvs.insert(0, self.levely[-len(fvs) - 1])
 
             fcst = list(np.cumsum(fcst[::-1]))[1:]
             pred = list(np.cumsum(pred[::-1]))[1:]
+            fvs = list(np.cumsum(fvs))[1:]
 
             if integration == 2:
                 fcst.reverse()
@@ -390,12 +432,39 @@ class Forecaster:
                 pred.append(self.levely[-(len(pred) + 1)])
                 pred = list(np.cumsum(pred[::-1]))[1:]
 
+                fvs.insert(0, self.levely[-len(fvs) - 1])
+                fvs = list(np.cumsum(fvs))[1:]
+
+            ci_range = self._find_cis(self.levely[-len(fvs) :], fvs)
             self.history[call_me]["LevelForecast"] = fcst[:]
             self.history[call_me]["LevelTestSetPreds"] = pred[:]
-            self.history[call_me]["LevelTestSetRMSE"] = rmse(self.levely[-len(pred) :], pred)
-            self.history[call_me]["LevelTestSetMAPE"] = mape(self.levely[-len(pred) :], pred)
-            self.history[call_me]["LevelTestSetMAE"] = mae(self.levely[-len(pred) :], pred)
-            self.history[call_me]["LevelTestSetR2"] = r2(self.levely[-len(pred) :], pred)
+            self.history[call_me]["LevelTestSetRMSE"] = rmse(
+                self.levely[-len(pred) :], pred
+            )
+            self.history[call_me]["LevelTestSetMAPE"] = mape(
+                self.levely[-len(pred) :], pred
+            )
+            self.history[call_me]["LevelTestSetMAE"] = mae(
+                self.levely[-len(pred) :], pred
+            )
+            self.history[call_me]["LevelTestSetR2"] = r2(
+                self.levely[-len(pred) :], pred
+            )
+            self.history[call_me]["LevelFittedVals"] = fvs[:]
+            self.history[call_me]["LevelInSampleRMSE"] = rmse(
+                self.levely[-len(fvs) :], fvs
+            )
+            self.history[call_me]["LevelInSampleMAPE"] = mape(
+                self.levely[-len(fvs) :], fvs
+            )
+            self.history[call_me]["LevelInSampleMAE"] = mae(
+                self.levely[-len(fvs) :], fvs
+            )
+            self.history[call_me]["LevelInSampleR2"] = r2(self.levely[-len(fvs) :], fvs)
+            self.history[call_me]["LevelUpperCI"] = [f + ci_range for f in fcst]
+            self.history[call_me]["LevelLowerCI"] = [f - ci_range for f in fcst]
+            self.history[call_me]["LevelTSUpperCI"] = [f + ci_range for f in pred]
+            self.history[call_me]["LevelTSLowerCI"] = [f - ci_range for f in pred]
         else:  # better to have these attributes populated for all series
             self.history[call_me]["LevelForecast"] = self.forecast[:]
             self.history[call_me]["LevelTestSetPreds"] = self.test_set_pred[:]
@@ -403,10 +472,29 @@ class Forecaster:
             self.history[call_me]["LevelTestSetMAPE"] = self.mape
             self.history[call_me]["LevelTestSetMAE"] = self.mae
             self.history[call_me]["LevelTestSetR2"] = self.r2
-            self.history[call_me]["LevelUpperCI"] = self.history[call_me]['UpperCI']
-            self.history[call_me]["LevelLowerCI"] = self.history[call_me]['LowerCI']
-            self.history[call_me]["LevelTSUpperCI"] = self.history[call_me]['TestSetUpperCI']
-            self.history[call_me]["LevelTSLowerCI"] = self.history[call_me]['TestSetLowerCI']
+            self.history[call_me]["LevelFittedVals"] = self.history[call_me][
+                "FittedVals"
+            ][:]
+            self.history[call_me]["LevelInSampleRMSE"] = self.history[call_me][
+                "InSampleRMSE"
+            ]
+            self.history[call_me]["LevelInSampleMAPE"] = self.history[call_me][
+                "InSampleMAPE"
+            ]
+            self.history[call_me]["LevelInSampleMAE"] = self.history[call_me][
+                "InSampleMAE"
+            ]
+            self.history[call_me]["LevelInSampleR2"] = self.history[call_me][
+                "InSampleR2"
+            ]
+            self.history[call_me]["LevelUpperCI"] = self.history[call_me]["UpperCI"][:]
+            self.history[call_me]["LevelLowerCI"] = self.history[call_me]["LowerCI"][:]
+            self.history[call_me]["LevelTSUpperCI"] = self.history[call_me][
+                "TestSetUpperCI"
+            ][:]
+            self.history[call_me]["LevelTSLowerCI"] = self.history[call_me][
+                "TestSetLowerCI"
+            ][:]
 
     def _set_summary_stats(self):
         """ for every model where summary stats are available, saves them to a pandas dataframe where index is the regressor name
@@ -475,7 +563,6 @@ class Forecaster:
             except AttributeError:
                 pass
 
-
     def _forecast_sklearn(
         self,
         fcster,
@@ -514,6 +601,7 @@ class Forecaster:
                 changed to True always if object initiated with require_future_dates = False.
             **kwargs: treated as model hyperparameters and passed to the applicable sklearn estimator.
         """
+
         def fit_normalizer(X, normalizer):
             descriptive_assert(
                 normalizer in _normalizer_,
@@ -528,33 +616,41 @@ class Forecaster:
                 from sklearn.preprocessing import StandardScaler as Scaler
             else:
                 return None
-            
+
             scaler = Scaler()
             scaler.fit(X)
             return scaler
 
-        def evaluate_model(scaler,regr,X,y,Xvars,fcst_horizon,future_xreg,dynamic_testing,true_forecast):
-            def scale(scaler,X):
+        def evaluate_model(
+            scaler,
+            regr,
+            X,
+            y,
+            Xvars,
+            fcst_horizon,
+            future_xreg,
+            dynamic_testing,
+            true_forecast,
+        ):
+            def scale(scaler, X):
                 return scaler.transform(X) if scaler is not None else X
 
             # apply the normalizer fit on training data only
             X = scale(scaler, X)
-            self.X = X # for feature importance setting
+            self.X = X  # for feature importance setting
             regr.fit(X, y)
             # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
-            if (
-                (
-                    not [x for x in Xvars if x.startswith("AR")]
-                ) | (
-                    dynamic_testing is False
-                )
+            if (not [x for x in Xvars if x.startswith("AR")]) | (
+                dynamic_testing is False
             ):
                 p = pd.DataFrame(future_xreg).values[:fcst_horizon]
                 p = scale(scaler, p)
-                return (regr.predict(p),regr.predict(X),Xvars,regr)
+                return (regr.predict(p), regr.predict(X), Xvars, regr)
             # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
-            actuals = {k:list(v)[:] for k, v in future_xreg.items() if k.startswith('AR')}
+            actuals = {
+                k: list(v)[:] for k, v in future_xreg.items() if k.startswith("AR")
+            }
             for i in range(fcst_horizon):
                 p = pd.DataFrame({x: [future_xreg[x][i]] for x in Xvars}).values
                 p = scale(scaler, p)
@@ -578,14 +674,14 @@ class Forecaster:
                                         future_xreg[k].append(y[idx])
                             # window forecasting
                             else:
-                                if (i+1) % dynamic_testing  == 0:
-                                    future_xreg[k][:(i + 1)] = actuals[k][:(i + 1)]
+                                if (i + 1) % dynamic_testing == 0:
+                                    future_xreg[k][: (i + 1)] = actuals[k][: (i + 1)]
                                 elif idx > -1:
                                     future_xreg[k][i + 1] = fcst[idx]
                                 else:
                                     future_xreg[k][i + 1] = y[idx]
 
-            return (fcst,regr.predict(X),Xvars,regr)
+            return (fcst, regr.predict(X), Xvars, regr)
 
         descriptive_assert(
             len(self.current_xreg.keys()) > 0,
@@ -593,21 +689,29 @@ class Forecaster:
             f"need at least 1 Xvar to forecast with the {self.estimator} model",
         )
         descriptive_assert(
-            isinstance(dynamic_testing,bool) | isinstance(dynamic_testing,int) & (dynamic_testing > -1),
+            isinstance(dynamic_testing, bool)
+            | isinstance(dynamic_testing, int) & (dynamic_testing > -1),
             ValueError,
             f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}",
         )
         dynamic_testing = (
-            False if type(dynamic_testing) == int and dynamic_testing == 1 
+            False
+            if type(dynamic_testing) == int and dynamic_testing == 1
             else dynamic_testing
-        ) # 1-step dynamic testing is same as no dynamic testing
+        )  # 1-step dynamic testing is same as no dynamic testing
         # list of integers, each one representing the n/a values in each AR term
-        ars = [v.isnull().sum() for x, v in self.current_xreg.items() if x.startswith("AR")]
+        ars = [
+            v.isnull().sum() for x, v in self.current_xreg.items() if x.startswith("AR")
+        ]
         # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
         obs_to_drop = max(ars) if len(ars) > 0 else 0
         y = self.y.values[obs_to_drop:].copy()
-        current_xreg = {xvar: x.values[obs_to_drop:].copy() for xvar, x in self.current_xreg.items()}
-        test_length = self.test_length if not tune else self.validation_length + self.test_length
+        current_xreg = {
+            xvar: x.values[obs_to_drop:].copy() for xvar, x in self.current_xreg.items()
+        }
+        test_length = (
+            self.test_length if not tune else self.validation_length + self.test_length
+        )
         # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
         Xvars, y, X = prepare_data(Xvars, y, current_xreg)
         # split the data
@@ -623,23 +727,23 @@ class Forecaster:
             X_train,
             y_train,
             Xvars,
-            test_length - self.test_length if tune else test_length, # fcst_horizon
-            {x: current_xreg[x][-test_length:] for x in Xvars}, # for AR processing
+            test_length - self.test_length if tune else test_length,  # fcst_horizon
+            {x: current_xreg[x][-test_length:] for x in Xvars},  # for AR processing
             dynamic_testing,
             False,
         )
         pred = [i for i in result[0]]
         # set the test-set metrics
         self._metrics(y_test, pred)
-        if tune: 
+        if tune:
             return self._tune()
         if test_only:
             # last fitted val has to match last date in current_dates or a bunch of stuff breaks
             result = (
                 result[0],
-                [i for i in result[1]] + [np.nan]*self.test_length,
+                [i for i in result[1]] + [np.nan] * self.test_length,
                 result[2],
-                result[3]
+                result[3],
             )
             return result
 
@@ -656,7 +760,9 @@ class Forecaster:
             True,
         )
 
-    def _forecast_theta(self, tune=False, dynamic_testing=True, test_only=False, **kwargs):
+    def _forecast_theta(
+        self, tune=False, dynamic_testing=True, test_only=False, **kwargs
+    ):
         """ forecasts with Four Theta from darts.
         see example: https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html
 
@@ -679,20 +785,23 @@ class Forecaster:
         from darts import TimeSeries
         from darts.models.forecasting.theta import FourTheta
 
-        if not dynamic_testing: logging.warning("dynamic_testing is True always for the theta model")
+        if not dynamic_testing:
+            logging.warning("dynamic_testing is True always for the theta model")
         self.dynamic_testing = True
 
-        sns.set_palette("tab10") # darts changes this
+        sns.set_palette("tab10")  # darts changes this
 
-        test_length = self.test_length if not tune else self.validation_length + self.test_length
+        test_length = (
+            self.test_length if not tune else self.validation_length + self.test_length
+        )
 
         y = self.y.to_list()
         d = self.current_dates.to_list()
 
-        y_train = pd.Series(y[: -test_length],index=d[: -test_length])
+        y_train = pd.Series(y[:-test_length], index=d[:-test_length])
         y_test = y[-test_length:]
         y_test = y_test[: -self.test_length] if tune else y_test
-        y = pd.Series(y,index=d)
+        y = pd.Series(y, index=d)
 
         ts_train = TimeSeries.from_series(y_train)
         ts = TimeSeries.from_series(y)
@@ -703,8 +812,7 @@ class Forecaster:
         pred = [p[0] for p in pred.values()]
 
         self._metrics(
-            y_test, 
-            pred,
+            y_test, pred,
         )
 
         # tune
@@ -714,14 +822,14 @@ class Forecaster:
         # test only
         if test_only:
             resid = [r[0] for r in regr.residuals(ts_train).values()]
-            actuals = y_train[-len(resid):]
-            fvs = [r + a for r, a in zip(resid,actuals)]
+            actuals = y_train[-len(resid) :]
+            fvs = [r + a for r, a in zip(resid, actuals)]
             return (
                 pred,
-                fvs + [np.nan]*self.test_length,
+                fvs + [np.nan] * self.test_length,
                 None,
                 None,
-                #regr, # I would like to include this in the future but it breaks things for now
+                # regr, # I would like to include this in the future but it breaks things for now
             )
 
         # full
@@ -730,12 +838,13 @@ class Forecaster:
         pred = regr.predict(len(self.future_dates))
         pred = [p[0] for p in pred.values()]
         resid = [r[0] for r in regr.residuals(ts).values()]
-        actuals = y[-len(resid):]
-        fvs = [r + a for r, a in zip(resid,actuals)]
-        return (pred,fvs,None,None)
+        actuals = y[-len(resid) :]
+        fvs = [r + a for r, a in zip(resid, actuals)]
+        return (pred, fvs, None, None)
 
-
-    def _forecast_hwes(self, tune=False, dynamic_testing=True, test_only=False, **kwargs):
+    def _forecast_hwes(
+        self, tune=False, dynamic_testing=True, test_only=False, **kwargs
+    ):
         """ forecasts with holt-winters exponential smoothing.
         see example: https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html
 
@@ -756,54 +865,58 @@ class Forecaster:
                 https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html
         """
         from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
-        
-        if not dynamic_testing: logging.warning("dynamic_testing is True always for hwes model")
+
+        if not dynamic_testing:
+            logging.warning("dynamic_testing is True always for hwes model")
         self.dynamic_testing = True
-        
+
         y = self.y.to_list()
-        test_length = self.test_length if not tune else self.validation_length + self.test_length
-        
-        y_train = y[: -test_length]
-        y_test = y[-test_length :]
-        
+        test_length = (
+            self.test_length if not tune else self.validation_length + self.test_length
+        )
+
+        y_train = y[:-test_length]
+        y_test = y[-test_length:]
+
         regr = HWES(
             y_train,
             dates=self.current_dates.values[: -self.test_length],
             freq=self.freq,
             **kwargs,
         ).fit(optimized=True, use_brute=True)
-        
+
         pred = regr.predict(
-            start=len(y_train), 
-            end=len(y_train) + (len(y_test) if not tune else len(y_test) - self.test_length) - 1
+            start=len(y_train),
+            end=len(y_train)
+            + (len(y_test) if not tune else len(y_test) - self.test_length)
+            - 1,
         )
-        
-        self._metrics(y_test if not tune else y_test[:-self.test_length], pred)
-        
+
+        self._metrics(y_test if not tune else y_test[: -self.test_length], pred)
+
         # tune
         if tune:
             return self._tune()
-        
+
         # test only
         if test_only:
             return (
                 pred,
-                list(regr.fittedvalues) + [np.nan]*self.test_length,
+                list(regr.fittedvalues) + [np.nan] * self.test_length,
                 None,
                 regr,
             )
 
         # full
-        regr = HWES(
-            self.y, 
-            dates=self.current_dates, 
-            freq=self.freq, 
-            **kwargs
-        ).fit(optimized=True, use_brute=True)
+        regr = HWES(self.y, dates=self.current_dates, freq=self.freq, **kwargs).fit(
+            optimized=True, use_brute=True
+        )
         pred = regr.predict(start=len(y), end=len(y) + len(self.future_dates) - 1)
-        return (pred,regr.fittedvalues,None,regr)
+        return (pred, regr.fittedvalues, None, regr)
 
-    def _forecast_arima(self, tune=False, Xvars=None, dynamic_testing=True, test_only=False, **kwargs):
+    def _forecast_arima(
+        self, tune=False, Xvars=None, dynamic_testing=True, test_only=False, **kwargs
+    ):
         """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).
         see example: https://scalecast-examples.readthedocs.io/en/latest/arima/arima.html
 
@@ -841,7 +954,9 @@ class Forecaster:
             else Xvars
         )
         Xvars_orig = None if Xvars is None else None if len(Xvars) == 0 else Xvars
-        test_length = self.test_length if not tune else self.validation_length + self.test_length
+        test_length = (
+            self.test_length if not tune else self.validation_length + self.test_length
+        )
         Xvars, y, X = prepare_data(Xvars, self.y, self.current_xreg)
         if Xvars_orig is None:
             X, X_train, X_test, Xvars = None, None, None, None
@@ -852,7 +967,7 @@ class Forecaster:
         regr = ARIMA(
             y_train,
             exog=X_train,
-            dates=self.current_dates.values[: -test_length],
+            dates=self.current_dates.values[:-test_length],
             freq=self.freq,
             **kwargs,
         ).fit()
@@ -869,7 +984,12 @@ class Forecaster:
             return self._tune()
         # test only
         if test_only:
-            return (pred,list(regr.fittedvalues) + [np.nan]*self.test_length,Xvars,regr)
+            return (
+                pred,
+                list(regr.fittedvalues) + [np.nan] * self.test_length,
+                Xvars,
+                regr,
+            )
         # full
         regr = ARIMA(
             self.y.to_list(),
@@ -890,7 +1010,7 @@ class Forecaster:
             typ="levels",
             dynamic=True,
         )
-        return (fcst,list(regr.fittedvalues),Xvars,regr)
+        return (fcst, list(regr.fittedvalues), Xvars, regr)
 
     def _forecast_prophet(
         self,
@@ -934,8 +1054,16 @@ class Forecaster:
         self.dynamic_testing = True
         from fbprophet import Prophet
 
-        X = pd.DataFrame({k: v for k, v in self.current_xreg.items() if not k.startswith("AR")})
-        p = pd.DataFrame({k: v[-len(self.future_dates):] for k, v in self.future_xreg.items() if not k.startswith("AR")})
+        X = pd.DataFrame(
+            {k: v for k, v in self.current_xreg.items() if not k.startswith("AR")}
+        )
+        p = pd.DataFrame(
+            {
+                k: v[-len(self.future_dates) :]
+                for k, v in self.future_xreg.items()
+                if not k.startswith("AR")
+            }
+        )
         Xvars = (
             [x for x in self.current_xreg.keys() if not x.startswith("AR")]
             if Xvars == "all"
@@ -956,8 +1084,12 @@ class Forecaster:
         # tune
         if tune:
             X_train = X.iloc[: -(self.test_length + self.validation_length)]
-            X_test = X.iloc[-(self.test_length + self.validation_length) : -self.test_length]
-            y_test = X["y"].values[-(self.test_length + self.validation_length) : -self.test_length]
+            X_test = X.iloc[
+                -(self.test_length + self.validation_length) : -self.test_length
+            ]
+            y_test = X["y"].values[
+                -(self.test_length + self.validation_length) : -self.test_length
+            ]
             model.fit(X_train)
             pred = model.predict(X_test)
             self._metrics(y_test, pred["yhat"].to_list())
@@ -966,23 +1098,26 @@ class Forecaster:
         model.fit(X.iloc[: -self.test_length])
         pred = model.predict(X.iloc[-self.test_length :])
         self._metrics(X["y"].values[-self.test_length :], pred["yhat"].values)
-        
+
         # test only
         if test_only:
             return (
-                pred['yhat'], 
-                model.predict(X.iloc[: -self.test_length])["yhat"].to_list() + [np.nan]*self.test_length, 
-                model, 
-                Xvars
+                pred["yhat"],
+                model.predict(X.iloc[: -self.test_length])["yhat"].to_list()
+                + [np.nan] * self.test_length,
+                model,
+                Xvars,
             )
 
         # full
         regr = Prophet(**kwargs)
         regr.fit(X)
         fcst = regr.predict(p)
-        return (fcst["yhat"],regr.predict(X)["yhat"],Xvars,regr)
+        return (fcst["yhat"], regr.predict(X)["yhat"], Xvars, regr)
 
-    def _forecast_silverkite(self, tune=False, dynamic_testing=True, Xvars=None, test_only=False, **kwargs):
+    def _forecast_silverkite(
+        self, tune=False, dynamic_testing=True, Xvars=None, test_only=False, **kwargs
+    ):
         """ forecasts with the silverkite model from LinkedIn greykite library.
         see example: https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html
 
@@ -1027,7 +1162,9 @@ class Forecaster:
 
         def _forecast_sk(df, Xvars, validation_length, test_length, forecast_length):
             test_length = test_length if test_length > 0 else -(df.shape[0] + 1)
-            validation_length = (validation_length if validation_length > 0 else -(df.shape[0] + 1))
+            validation_length = (
+                validation_length if validation_length > 0 else -(df.shape[0] + 1)
+            )
             pred_df = df.iloc[:-test_length, :].dropna()
             if validation_length > 0:
                 pred_df.loc[:-validation_length, "y"] = None
@@ -1059,11 +1196,15 @@ class Forecaster:
                 "y": self.y.to_list() + [None] * fcst_length,
             }
         )
-        reg_df = pd.DataFrame({x: self.current_xreg[x].to_list() + self.future_xreg[x] for x in Xvars})
+        reg_df = pd.DataFrame(
+            {x: self.current_xreg[x].to_list() + self.future_xreg[x] for x in Xvars}
+        )
         df = pd.concat([ts_df, reg_df], axis=1)
 
         if tune:
-            y_test = self.y.values[-(self.test_length + self.validation_length) : -self.test_length]
+            y_test = self.y.values[
+                -(self.test_length + self.validation_length) : -self.test_length
+            ]
             result = _forecast_sk(
                 df,
                 Xvars,
@@ -1072,20 +1213,20 @@ class Forecaster:
                 self.validation_length,
             )
             pred = result[0]
-            self._metrics(y_test, pred[-self.validation_length:])
+            self._metrics(y_test, pred[-self.validation_length :])
             return self._tune()
 
         result = _forecast_sk(df, Xvars, self.test_length, 0, self.test_length)
         Xvars = Xvars if Xvars != [] else None
         pred = result[0]
-        self._metrics(self.y.values[-self.test_length :], pred[-self.test_length :])        
+        self._metrics(self.y.values[-self.test_length :], pred[-self.test_length :])
         if test_only:
             self.summary_stats = result[1].set_index("Pred_col")
-            return (pred,pred[:-self.test_length],Xvars,None)
-        
+            return (pred, pred[: -self.test_length], Xvars, None)
+
         result = _forecast_sk(df, Xvars, 0, 0, fcst_length)
         self.summary_stats = result[1].set_index("Pred_col")
-        return (result[0][-fcst_length:],result[0][:-fcst_length],Xvars,None)
+        return (result[0][-fcst_length:], result[0][:-fcst_length], Xvars, None)
 
     def _forecast_lstm(
         self,
@@ -1101,7 +1242,7 @@ class Forecaster:
         plot_loss=False,
         test_only=False,
         **kwargs,
-    ): 
+    ):
         """ forecasts with a long-short term memory neural network from TensorFlow.
         cannot be tuned.
         only xvar options are the series' own history (specify in lags argument).
@@ -1154,17 +1295,27 @@ class Forecaster:
                 changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
         """
+
         def convert_lstm_args_to_rnn(**kwargs):
-            new_kwargs = {k:v for k,v in kwargs.items() if k not in ('lstm_layer_sizes','dropout','activation')}
-            new_kwargs['layers_struct'] = [('LSTM',
-                {
-                    'units':v,
-                    'activation':kwargs['activation'],
-                    'dropout':kwargs['dropout'][i]
-                }) for i,v in enumerate(kwargs['lstm_layer_sizes'])]
+            new_kwargs = {
+                k: v
+                for k, v in kwargs.items()
+                if k not in ("lstm_layer_sizes", "dropout", "activation")
+            }
+            new_kwargs["layers_struct"] = [
+                (
+                    "LSTM",
+                    {
+                        "units": v,
+                        "activation": kwargs["activation"],
+                        "dropout": kwargs["dropout"][i],
+                    },
+                )
+                for i, v in enumerate(kwargs["lstm_layer_sizes"])
+            ]
             return new_kwargs
 
-        new_kwargs = convert_lstm_args_to_rnn(        
+        new_kwargs = convert_lstm_args_to_rnn(
             dynamic_testing=dynamic_testing,
             lags=lags,
             lstm_layer_sizes=lstm_layer_sizes,
@@ -1184,7 +1335,7 @@ class Forecaster:
         self,
         dynamic_testing=True,
         lags=1,
-        layers_struct=[('SimpleRNN',{'units':8,'activation':'tanh'})],
+        layers_struct=[("SimpleRNN", {"units": 8, "activation": "tanh"})],
         loss="mean_absolute_error",
         optimizer="Adam",
         learning_rate=0.001,
@@ -1250,34 +1401,35 @@ class Forecaster:
                 changed to True always if object initiated with require_future_dates = False.
             **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
         """
+
         def get_compiled_model(y):
             # build model
             from tensorflow.keras.models import Sequential
             from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
             import tensorflow.keras.optimizers
-            if isinstance(optimizer,str):
-                local_optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")(learning_rate=learning_rate)
+
+            if isinstance(optimizer, str):
+                local_optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")(
+                    learning_rate=learning_rate
+                )
             else:
                 local_optimizer = optimizer
-            for i, kv in enumerate(layers_struct):                
+            for i, kv in enumerate(layers_struct):
                 layer = locals()[kv[0]]
 
                 if i == 0:
-                    if kv[0] in ('LSTM','SimpleRNN'):
-                        kv[1]['return_sequences'] = len(layers_struct) > 1
+                    if kv[0] in ("LSTM", "SimpleRNN"):
+                        kv[1]["return_sequences"] = len(layers_struct) > 1
                     model = Sequential(
-                        [
-                            layer(
-                                **kv[1],
-                                input_shape=(n_timesteps, n_features),
-                            )
-                        ]
+                        [layer(**kv[1], input_shape=(n_timesteps, n_features),)]
                     )
                 else:
-                    if kv[0] in ('LSTM','SimpleRNN'):
-                        kv[1]['return_sequences'] = (not i == (len(layers_struct) - 1))
-                        if kv[1]['return_sequences']:
-                            kv[1]['return_sequences'] = layers_struct[i+1][0] != 'Dense'
+                    if kv[0] in ("LSTM", "SimpleRNN"):
+                        kv[1]["return_sequences"] = not i == (len(layers_struct) - 1)
+                        if kv[1]["return_sequences"]:
+                            kv[1]["return_sequences"] = (
+                                layers_struct[i + 1][0] != "Dense"
+                            )
 
                     model.add(layer(**kv[1]))
             model.add(Dense(y.shape[1]))  # output layer
@@ -1302,36 +1454,36 @@ class Forecaster:
             n_future = forecast_length
             n_past = lags
             total_period = n_future + n_past
-            
+
             idx_end = len(ylist)
             idx_start = idx_end - total_period
-            
+
             X_new = []
             y_new = []
 
             while idx_start > 0:
-                x_line = ylist[idx_start:idx_start+n_past]
-                y_line = ylist[idx_start+n_past:idx_start+total_period]
+                x_line = ylist[idx_start : idx_start + n_past]
+                y_line = ylist[idx_start + n_past : idx_start + total_period]
 
                 X_new.append(x_line)
                 y_new.append(y_line)
-                
+
                 idx_start = idx_start - 1
-                
+
             X_new = np.array(X_new)
             y_new = np.array(y_new)
 
             return X_new, y_new
 
-        def plot_loss_rnn(history,title):
-            plt.plot(history.history['loss'],label='train_loss')
-            if 'val_loss' in history.history.keys():
-                plt.plot(history.history['val_loss'],label='val_loss')
+        def plot_loss_rnn(history, title):
+            plt.plot(history.history["loss"], label="train_loss")
+            if "val_loss" in history.history.keys():
+                plt.plot(history.history["val_loss"], label="val_loss")
             plt.title(title)
-            plt.xlabel('epoch')
-            plt.legend(loc='upper right')
+            plt.xlabel("epoch")
+            plt.legend(loc="upper right")
             plt.show()
-        
+
         descriptive_assert(
             len(layers_struct) >= 1,
             ValueError,
@@ -1346,52 +1498,77 @@ class Forecaster:
         if random_seed is not None:
             random.seed(random_seed)
 
-        y_train = self.y.values[:-self.test_length].copy()
-        y_test = self.y.values[-self.test_length:].copy()
+        y_train = self.y.values[: -self.test_length].copy()
+        y_test = self.y.values[-self.test_length :].copy()
 
         ymin = y_train.min()
         ymax = y_train.max()
 
-        X_train, y_train_new = prepare_rnn(y_train,lags,self.test_length)
-        X, y_new = prepare_rnn(self.y.values.copy(),lags,len(self.future_dates))
+        X_train, y_train_new = prepare_rnn(y_train, lags, self.test_length)
+        X, y_new = prepare_rnn(self.y.values.copy(), lags, len(self.future_dates))
 
-        X_test = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-(lags + self.test_length):-self.test_length].copy()]])
-        y_test_new = np.array([[(i - ymin) / (ymax - ymin) for i in self.y.values[-self.test_length:].copy()]])
-        fut = np.array([[(i - self.y.min()) / (self.y.max() - self.y.min()) for i in self.y.values[-lags:].copy()]])
+        X_test = np.array(
+            [
+                [
+                    (i - ymin) / (ymax - ymin)
+                    for i in self.y.values[
+                        -(lags + self.test_length) : -self.test_length
+                    ].copy()
+                ]
+            ]
+        )
+        y_test_new = np.array(
+            [
+                [
+                    (i - ymin) / (ymax - ymin)
+                    for i in self.y.values[-self.test_length :].copy()
+                ]
+            ]
+        )
+        fut = np.array(
+            [
+                [
+                    (i - self.y.min()) / (self.y.max() - self.y.min())
+                    for i in self.y.values[-lags:].copy()
+                ]
+            ]
+        )
 
         n_timesteps = X_train.shape[1]
         n_features = 1
 
-        X_train = X_train.reshape(X_train.shape[0],X_train.shape[1],1)
-        X_test = X_test.reshape(X_test.shape[0],X_test.shape[1],1)
-        X = X.reshape(X.shape[0],X.shape[1],1)
-        fut = fut.reshape(fut.shape[0],fut.shape[1],1)
+        X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+        X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+        X = X.reshape(X.shape[0], X.shape[1], 1)
+        fut = fut.reshape(fut.shape[0], fut.shape[1], 1)
 
         test_model = get_compiled_model(y_train_new)
-        hist = test_model.fit(X_train,y_train_new,**kwargs)
+        hist = test_model.fit(X_train, y_train_new, **kwargs)
         pred = test_model.predict(X_test)
 
-        pred = [p * (ymax-ymin) + ymin for p in pred[0]] # un-minmax
+        pred = [p * (ymax - ymin) + ymin for p in pred[0]]  # un-minmax
 
         # set the test-set metrics
         self._metrics(y_test, pred)
         if plot_loss_test:
-            plot_loss_rnn(hist,'model loss - test')
+            plot_loss_rnn(hist, "model loss - test")
         if test_only:
             fvs = test_model.predict(X_train)
-            fvs = [p[0] * (ymax-ymin) + ymin for p in fvs[1:][::-1]] + [
-                                  p * (ymax-ymin) + ymin for p in fvs[0]]
-            return (pred, fvs + [np.nan]*self.test_length, None, None)
+            fvs = [p[0] * (ymax - ymin) + ymin for p in fvs[1:][::-1]] + [
+                p * (ymax - ymin) + ymin for p in fvs[0]
+            ]
+            return (pred, fvs + [np.nan] * self.test_length, None, None)
 
         model = get_compiled_model(y_new)
-        hist = model.fit(X,y_new,**kwargs)
+        hist = model.fit(X, y_new, **kwargs)
         if plot_loss:
-            plot_loss_rnn(hist,'model loss - full')
+            plot_loss_rnn(hist, "model loss - full")
         fcst = model.predict(fut)
         fvs = model.predict(X)
-        fvs = [p[0] * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[1:][::-1]] + [
-                              p * (self.y.max()-self.y.min()) + self.y.min() for p in fvs[0]]
-        fcst = [p * (self.y.max()-self.y.min()) + self.y.min() for p in fcst[0]] 
+        fvs = [
+            p[0] * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[1:][::-1]
+        ] + [p * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[0]]
+        fcst = [p * (self.y.max() - self.y.min()) + self.y.min() for p in fcst[0]]
 
         return (fcst, fvs, None, None)
 
@@ -1459,13 +1636,9 @@ class Forecaster:
                 always ignored in combo model.
         """
         if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument ignored for the combo model"
-            )
+            logging.warning("dynamic_testing argument ignored for the combo model")
         if test_only:
-            logging.warning(
-                "test_only argument ignored for the combo model"
-            )
+            logging.warning("test_only argument ignored for the combo model")
         self.dynamic_testing = None
         self.test_only = False
         determine_best_by = (
@@ -1773,9 +1946,7 @@ class Forecaster:
                     self.current_xreg[k] = v.diff()
                 self.future_xreg[k] = [self.y.values[-ar]]
 
-    def integrate(
-        self, critical_pval=0.05, train_only=False, max_integration=2
-    ):
+    def integrate(self, critical_pval=0.05, train_only=False, max_integration=2):
         """ differences the series 0, 1, or 2 times based on ADF test results.
 
         Args:
@@ -1832,12 +2003,14 @@ class Forecaster:
         >>> f.add_ar_terms(4) # adds four lags of y to predict with
         """
         self._validate_future_dates_exist()
-        
+
         if n == 0:
             return
 
         descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
-        descriptive_assert(n >= 0, ValueError, f"n must be greater than or equal to 0, got {n}")
+        descriptive_assert(
+            n >= 0, ValueError, f"n must be greater than or equal to 0, got {n}"
+        )
         descriptive_assert(
             self.integration == 0,
             ForecastError,
@@ -1907,19 +2080,17 @@ class Forecaster:
         if self.require_future_dates:
             future_df = df.loc[df[date_col] > self.current_dates.values[-1]]
         else:
-            future_df = pd.DataFrame(
-                {date_col:self.future_dates.to_list()}
-            )
+            future_df = pd.DataFrame({date_col: self.future_dates.to_list()})
             for c in current_df:
                 if c != date_col:
                     future_df[c] = 0
-        
+
         descriptive_assert(
             current_df.shape[0] == len(self.y),
             ForecastError,
             "something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future and specify a date column in date_col parameter",
         )
-        
+
         if not use_future_dates:
             descriptive_assert(
                 future_df.shape[0] >= len(self.future_dates),
@@ -1928,7 +2099,7 @@ class Forecaster:
             )
         else:
             self.future_dates = future_df[date_col]
-        
+
         for c in [c for c in future_df if c != date_col]:
             self.future_xreg[c] = future_df[c].to_list()[: len(self.future_dates)]
             self.current_xreg[c] = current_df[c]
@@ -1942,14 +2113,14 @@ class Forecaster:
 
     def reduce_Xvars(
         self,
-        method='l1',
-        estimator='lasso',
+        method="l1",
+        estimator="lasso",
         keep_at_least=1,
-        keep_this_many='auto',
+        keep_this_many="auto",
         grid_search=True,
         use_loaded_grid=False,
         dynamic_tuning=False,
-        monitor='ValidationMetricValue',
+        monitor="ValidationMetricValue",
         overwrite=True,
         cross_validate=False,
         cvkwargs={},
@@ -2043,61 +2214,63 @@ class Forecaster:
         >>> print(f.reduced_Xvars) # view results
         """
         descriptive_assert(
-            method in ('l1','pfi','shap'),
-            ValueError,f'method must be one of "pfi", "l1", "shap", got {method}'
+            method in ("l1", "pfi", "shap"),
+            ValueError,
+            f'method must be one of "pfi", "l1", "shap", got {method}',
         )
         f = self.__deepcopy__()
         descriptive_assert(
             estimator in _sklearn_estimators_,
             ValueError,
-            f'estimator must be one of {_sklearn_estimators_}, got {estimator}'
+            f"estimator must be one of {_sklearn_estimators_}, got {estimator}",
         )
-        f.set_estimator(estimator if method in ('pfi','shap') else 'lasso')
+        f.set_estimator(estimator if method in ("pfi", "shap") else "lasso")
         if grid_search:
             if not use_loaded_grid:
                 from scalecast import GridGenerator
+
                 GridGenerator.get_example_grids()
                 f.ingest_grid(f.estimator)
             else:
                 descriptive_assert(
-                    hasattr(f,'grid'),
+                    hasattr(f, "grid"),
                     ForecastError,
-                    'grid not loaded, try setting use_loaded_grid to False'
+                    "grid not loaded, try setting use_loaded_grid to False",
                 )
         else:
-            f.ingest_grid({k:[v] for k,v in kwargs.items()})
+            f.ingest_grid({k: [v] for k, v in kwargs.items()})
 
         if not cross_validate:
             f.tune(dynamic_tuning=dynamic_tuning)
         else:
-            f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
-        f.ingest_grid({k:[v] for k,v in f.best_params.items()})
+            f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
+        f.ingest_grid({k: [v] for k, v in f.best_params.items()})
         f.auto_forecast(test_only=True)
 
         self.reduction_hyperparams = f.best_params.copy()
 
-        if method == 'l1':
+        if method == "l1":
             coef_fi_lasso = pd.DataFrame(
                 {
-                    x: [np.abs(co)] for x, co in zip(
-                        f.history["lasso"]["Xvars"], 
-                        f.regr.coef_,
-                    )
+                    x: [np.abs(co)]
+                    for x, co in zip(f.history["lasso"]["Xvars"], f.regr.coef_,)
                 },
                 index=["feature"],
             ).T
-            self.reduced_Xvars = coef_fi_lasso.loc[coef_fi_lasso["feature"] != 0].index.to_list()
+            self.reduced_Xvars = coef_fi_lasso.loc[
+                coef_fi_lasso["feature"] != 0
+            ].index.to_list()
         else:
-            f.save_feature_importance(method,on_error='raise')
+            f.save_feature_importance(method, on_error="raise")
             fi_df = f.export_feature_importance(estimator)
-            using_r2 = (
-                monitor.endswith('R2') or (f.validation_metric == 'r2' and monitor == 'ValidationMetricValue')
+            using_r2 = monitor.endswith("R2") or (
+                f.validation_metric == "r2" and monitor == "ValidationMetricValue"
             )
 
-            if method == 'pfi':
+            if method == "pfi":
                 fi_df["weight"] = np.abs(fi_df["weight"])
                 fi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
-            
+
             features = fi_df.index.to_list()
             init_error = f.history[estimator][monitor]
             init_error = -init_error if using_r2 else init_error
@@ -2107,48 +2280,57 @@ class Forecaster:
 
             sqrt = int(len(f.y) ** 0.5)
             keep_this_many_new = (
-                1 if keep_this_many == 'auto'
-                else sqrt if keep_this_many == 'sqrt'
+                1
+                if keep_this_many == "auto"
+                else sqrt
+                if keep_this_many == "sqrt"
                 else keep_this_many
             )
-            keep_at_least_new = (
-                sqrt if keep_at_least == 'sqrt'
-                else keep_at_least
-            )
+            keep_at_least_new = sqrt if keep_at_least == "sqrt" else keep_at_least
 
-            stop_at = max(keep_this_many_new,keep_at_least_new)
+            stop_at = max(keep_this_many_new, keep_at_least_new)
             drop_this_many = len(f.current_xreg) - stop_at
 
             for _ in range(drop_this_many):
                 dropped.append(features[-1])
                 features = features[:-1]
-                f.grid['Xvars'] = [features]
+                f.grid["Xvars"] = [features]
                 if not cross_validate:
                     f.tune(dynamic_tuning=dynamic_tuning)
                 else:
-                    f.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
+                    f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
                 f.auto_forecast(test_only=True)
                 new_error = f.history[estimator][monitor]
                 new_error = -new_error if using_r2 else new_error
                 errors.append(new_error)
 
-                f.save_feature_importance(method,on_error='raise')
+                f.save_feature_importance(method, on_error="raise")
                 fi_df = f.export_feature_importance(estimator)
 
-                if method == 'pfi':
-                    fi_df['weight'] = np.abs(fi_df['weight'])
+                if method == "pfi":
+                    fi_df["weight"] = np.abs(fi_df["weight"])
                     fi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
-                
+
                 features = fi_df.index.to_list()
 
-            optimal_drop = errors.index(min(errors)) if keep_this_many == 'auto' else drop_this_many
-            self.reduced_Xvars = [x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]]
+            optimal_drop = (
+                errors.index(min(errors))
+                if keep_this_many == "auto"
+                else drop_this_many
+            )
+            self.reduced_Xvars = [
+                x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]
+            ]
             self.pfi_dropped_vars = dropped
             self.pfi_error_values = [-e for e in errors] if using_r2 else errors
 
         if overwrite:
-            self.current_xreg = {x:v for x,v in self.current_xreg.items() if x in self.reduced_Xvars}
-            self.future_xreg = {x:v for x,v in self.future_xreg.items() if x in self.reduced_Xvars}
+            self.current_xreg = {
+                x: v for x, v in self.current_xreg.items() if x in self.reduced_Xvars
+            }
+            self.future_xreg = {
+                x: v for x, v in self.future_xreg.items() if x in self.reduced_Xvars
+            }
 
     def set_test_length(self, n=1):
         """ sets the length of the test set.
@@ -2166,20 +2348,21 @@ class Forecaster:
         """
         float(n)
         if n >= 1:
+            n = int(n)
             descriptive_assert(
-                isinstance(n, int), 
-                ValueError, 
-                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n}"
+                isinstance(n, int),
+                ValueError,
+                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n} of type {type(n)}",
             )
             self.test_length = n
         else:
             descriptive_assert(
-                n > 0, 
+                n > 0,
                 ValueError,
-                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n}"
+                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n} of type {type(n)}",
             )
             self.test_length = int(len(self.y) * n)
-        
+
     def set_validation_length(self, n=1):
         """ sets the length of the validation set.
 
@@ -2500,7 +2683,7 @@ class Forecaster:
             range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
         )
 
-    def add_cycle(self,cycle_length,called=None):
+    def add_cycle(self, cycle_length, called=None):
         """ adds a regressor that acts as a seasonal cycle.
         use this function to capture non-normal seasonality.
 
@@ -2519,13 +2702,17 @@ class Forecaster:
         """
         self._validate_future_dates_exist()
         if called is None:
-            called = f'cycle{cycle_length}'
-        full_sin = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(lambda x: np.sin(np.pi * x / (cycle_length / 2)))
-        full_cos = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(lambda x: np.cos(np.pi * x / (cycle_length / 2)))
-        self.current_xreg[called + 'sin'] = pd.Series(full_sin.values[:len(self.y)])
-        self.current_xreg[called + 'cos'] = pd.Series(full_cos.values[:len(self.y)])
-        self.future_xreg[called + 'sin'] = list(full_sin.values[len(self.y):])
-        self.future_xreg[called + 'cos'] = list(full_cos.values[len(self.y):])
+            called = f"cycle{cycle_length}"
+        full_sin = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
+            lambda x: np.sin(np.pi * x / (cycle_length / 2))
+        )
+        full_cos = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
+            lambda x: np.cos(np.pi * x / (cycle_length / 2))
+        )
+        self.current_xreg[called + "sin"] = pd.Series(full_sin.values[: len(self.y)])
+        self.current_xreg[called + "cos"] = pd.Series(full_cos.values[: len(self.y)])
+        self.future_xreg[called + "sin"] = list(full_sin.values[len(self.y) :])
+        self.future_xreg[called + "cos"] = list(full_cos.values[len(self.y) :])
 
     def add_other_regressor(self, called, start, end):
         """ adds dummy variable that is 1 during the specified time period, 0 otherwise.
@@ -2941,6 +3128,7 @@ class Forecaster:
                 ):
                     if hasattr(self, attr):
                         delattr(self, attr)
+                self._clear_the_deck()
                 self.estimator = estimator
         else:
             self.estimator = estimator
@@ -3052,7 +3240,9 @@ class Forecaster:
             except SyntaxError:
                 raise
             except:
-                raise ForecastError.NoGrid(f'to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually.')
+                raise ForecastError.NoGrid(
+                    f"to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually."
+                )
 
         if self.estimator in _cannot_be_tuned_:
             raise ForecastError(f"{self.estimator} models cannot be tuned")
@@ -3063,7 +3253,7 @@ class Forecaster:
         iters = self.grid.shape[0]
         for i in range(iters):
             try:
-                hp = {k:v[i] for k,v in self.grid.to_dict(orient='list').items()}
+                hp = {k: v[i] for k, v in self.grid.to_dict(orient="list").items()}
                 if self.estimator in _sklearn_estimators_:
                     metrics.append(
                         self._forecast_sklearn(
@@ -3075,16 +3265,14 @@ class Forecaster:
                     )
                 else:
                     metrics.append(
-                        getattr(self, f"_forecast_{self.estimator}")(tune=True,**hp)
+                        getattr(self, f"_forecast_{self.estimator}")(tune=True, **hp)
                     )
             except TypeError:
                 raise
             except Exception as e:
                 self.grid.drop(i, axis=0, inplace=True)
-                logging.warning(
-                    f"could not evaluate the paramaters: {hp}. error: {e}"
-                )
-        
+                logging.warning(f"could not evaluate the paramaters: {hp}. error: {e}")
+
         if len(metrics) > 0:
             self.grid_evaluated = self.grid.copy()
             self.grid_evaluated["validation_length"] = self.validation_length
@@ -3095,7 +3283,7 @@ class Forecaster:
             self.grid_evaluated = pd.DataFrame()
         self._find_best_params(self.grid_evaluated)
 
-    def cross_validate(self,k=5,rolling=False,dynamic_tuning=False):
+    def cross_validate(self, k=5, rolling=False, dynamic_tuning=False):
         """ tunes a model's hyperparameters using time-series cross validation. 
         monitors the metric specified in the valiation_metric attribute. 
         set an estimator before calling. 
@@ -3119,74 +3307,77 @@ class Forecaster:
         """
         rolling = bool(rolling)
         k = int(k)
-        descriptive_assert(k>=2,ValueError,f'k must be at least 2, got {k}')
+        descriptive_assert(k >= 2, ValueError, f"k must be at least 2, got {k}")
         f = self.__deepcopy__()
         usable_obs = len(f.y) - f.test_length
         if f.estimator in _sklearn_estimators_:
-            ars = [int(x.split('AR')[-1]) for x in self.current_xreg.keys() if x.startswith('AR')]
+            ars = [
+                int(x.split("AR")[-1])
+                for x in self.current_xreg.keys()
+                if x.startswith("AR")
+            ]
             if ars:
                 usable_obs -= max(ars)
-        val_size = usable_obs // (k+1)
+        val_size = usable_obs // (k + 1)
         f.set_validation_length(val_size)
         grid_evaluated_cv = pd.DataFrame()
         for i in range(k):
             if i > 0:
-                f.current_xreg = {k:pd.Series(v.values[:-val_size]) for k, v in f.current_xreg.items()}
+                f.current_xreg = {
+                    k: pd.Series(v.values[:-val_size])
+                    for k, v in f.current_xreg.items()
+                }
                 f.current_dates = pd.Series(f.current_dates.values[:-val_size])
                 f.y = pd.Series(f.y.values[:-val_size])
                 f.levely = f.levely[:-val_size]
-            
+
             f2 = f.__deepcopy__()
             if rolling:
-                f2.keep_smaller_history(val_size*2+f2.test_length)
-            
+                f2.keep_smaller_history(val_size * 2 + f2.test_length)
+
             f2.tune(dynamic_tuning=dynamic_tuning)
             orig_grid = f2.grid.copy()
             if f2.grid_evaluated.shape[0] == 0:
                 self.grid = pd.DataFrame()
                 self._find_best_params(grid_evaluated_cv)
                 return
-        
-            f2.grid_evaluated['fold'] = i
-            f2.grid_evaluated['rolling'] = rolling
-            f2.grid_evaluated['train_length'] = len(f2.y) - val_size - f2.test_length
-            grid_evaluated_cv = pd.concat([grid_evaluated_cv,f2.grid_evaluated])
-        
+
+            f2.grid_evaluated["fold"] = i
+            f2.grid_evaluated["rolling"] = rolling
+            f2.grid_evaluated["train_length"] = len(f2.y) - val_size - f2.test_length
+            grid_evaluated_cv = pd.concat([grid_evaluated_cv, f2.grid_evaluated])
+
         # convert into tuple for the group or it fails
-        if 'Xvars' in grid_evaluated_cv:
-            grid_evaluated_cv['Xvars'] = grid_evaluated_cv['Xvars'].apply(
+        if "Xvars" in grid_evaluated_cv:
+            grid_evaluated_cv["Xvars"] = grid_evaluated_cv["Xvars"].apply(
                 lambda x: (
-                    'None' if x is None 
-                    else x if isinstance(x,str) 
-                    else tuple(x)
+                    "None" if x is None else x if isinstance(x, str) else tuple(x)
                 )
             )
-        
+
         grid_evaluated = grid_evaluated_cv.groupby(
             grid_evaluated_cv.columns.to_list()[:-4],
             dropna=False,
             as_index=False,
             sort=False,
-        )['metric_value'].mean()
-        
+        )["metric_value"].mean()
+
         # convert back to list or it fails when calling the hyperparam vals
         # contributions welcome for a more elegant solution
-        if 'Xvars' in grid_evaluated:
-            grid_evaluated['Xvars'] = grid_evaluated['Xvars'].apply(
+        if "Xvars" in grid_evaluated:
+            grid_evaluated["Xvars"] = grid_evaluated["Xvars"].apply(
                 lambda x: (
-                    None if x == 'None'
-                    else x if isinstance(x,str)
-                    else list(x) 
+                    None if x == "None" else x if isinstance(x, str) else list(x)
                 )
             )
-        
-        self.grid = grid_evaluated.iloc[:,:-3]
+
+        self.grid = grid_evaluated.iloc[:, :-3]
         self.dynamic_tuning = f2.dynamic_tuning
         self._find_best_params(grid_evaluated)
         self.grid_evaluated = grid_evaluated_cv.reset_index(drop=True)
         self.grid = orig_grid
-        
-    def _find_best_params(self,grid_evaluated):
+
+    def _find_best_params(self, grid_evaluated):
         if grid_evaluated.shape[0] > 0:
             if self.validation_metric == "r2":
                 best_params_idx = self.grid.loc[
@@ -3198,15 +3389,21 @@ class Forecaster:
                     grid_evaluated["metric_value"]
                     == grid_evaluated["metric_value"].min()
                 ].index.to_list()[0]
-            self.best_params = {k: v[best_params_idx] for k, v in self.grid.to_dict(orient='series').items()}
+            self.best_params = {
+                k: v[best_params_idx]
+                for k, v in self.grid.to_dict(orient="series").items()
+            }
             self.best_params = {
                 k: (
-                    v 
-                    if not isinstance(v,float) 
-                    else int(v) if str(v).endswith('.0') else None if np.isnan(v) 
+                    v
+                    if not isinstance(v, float)
+                    else int(v)
+                    if str(v).endswith(".0")
+                    else None
+                    if np.isnan(v)
                     else v
-                ) 
-                for k,v in self.best_params.items()
+                )
+                for k, v in self.best_params.items()
             }
             self.validation_metric_value = grid_evaluated.loc[
                 best_params_idx, "metric_value"
@@ -3217,7 +3414,9 @@ class Forecaster:
             )
             self.best_params = {}
 
-    def manual_forecast(self, call_me=None, dynamic_testing=True, test_only=False, **kwargs):
+    def manual_forecast(
+        self, call_me=None, dynamic_testing=True, test_only=False, **kwargs
+    ):
         """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
 
         Args:
@@ -3262,9 +3461,9 @@ class Forecaster:
             "before calling a model, please make sure you have generated future dates by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True)",
         )
 
-        if 'tune' in kwargs.keys():
-            kwargs.pop('tune')
-            logging.warning('tune argument will be ignored')
+        if "tune" in kwargs.keys():
+            kwargs.pop("tune")
+            logging.warning("tune argument will be ignored")
 
         self._clear_the_deck()
         test_only = True if not self.require_future_dates else test_only
@@ -3272,20 +3471,34 @@ class Forecaster:
         self.dynamic_testing = dynamic_testing
         self.call_me = self.estimator if call_me is None else call_me
         result = (
-            self._forecast_sklearn(fcster=self.estimator, dynamic_testing=dynamic_testing, test_only=test_only, **kwargs)
+            self._forecast_sklearn(
+                fcster=self.estimator,
+                dynamic_testing=dynamic_testing,
+                test_only=test_only,
+                **kwargs,
+            )
             if self.estimator in _sklearn_estimators_
-            else getattr(self, f"_forecast_{self.estimator}")(dynamic_testing=dynamic_testing, test_only=test_only, **kwargs)
-        ) # 0 - forecast, 1 - fitted vals, 2 - Xvars, 3 - regr
+            else getattr(self, f"_forecast_{self.estimator}")(
+                dynamic_testing=dynamic_testing, test_only=test_only, **kwargs
+            )
+        )  # 0 - forecast, 1 - fitted vals, 2 - Xvars, 3 - regr
         self.forecast = [i for i in result[0]]
         self.fitted_values = [i for i in result[1]]
         self.Xvars = result[2]
         self.regr = result[3]
-        if self.estimator in ('arima','hwes'):
+        if self.estimator in ("arima", "hwes"):
             self._set_summary_stats()
 
         self._bank_history(**kwargs)
 
-    def auto_forecast(self, call_me=None, dynamic_testing=True, test_only=False):
+    def auto_forecast(
+        self,
+        call_me=None,
+        dynamic_testing=True,
+        test_only=False,
+        probabilistic=False,
+        n_iter=20,
+    ):
         """ auto forecasts with the best parameters indicated from the tuning process.
 
         Args:
@@ -3306,6 +3519,10 @@ class Forecaster:
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
                 changed to True always if object initiated with require_future_dates = False.
+            probabilistic (bool): default False.
+                whether to use a probabilistic forecasting process to set confidence intervals.
+            n_iter (int): default 20.
+                how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
 
         Returns:
             None
@@ -3319,11 +3536,25 @@ class Forecaster:
                 f"since tune() has not been called, {self.estimator} model will be run with default hyperparameters"
             )
             self.best_params = {}
-        self.manual_forecast(
-            call_me=call_me, dynamic_testing=dynamic_testing, test_only=test_only, **self.best_params
-        )
+        if not probabilistic:
+            self.manual_forecast(
+                call_me=call_me,
+                dynamic_testing=dynamic_testing,
+                test_only=test_only,
+                **self.best_params,
+            )
+        else:
+            self.proba_forecast(
+                call_me=call_me,
+                dynamic_testing=dynamic_testing,
+                test_only=test_only,
+                n_iter=n_iter,
+                **self.best_params,
+            )
 
-    def proba_forecast(self, call_me=None, dynamic_testing=True, test_only=False, n_iter=20, **kwargs):
+    def proba_forecast(
+        self, call_me=None, dynamic_testing=True, test_only=False, n_iter=20, **kwargs
+    ):
         """ forecast with a probabilistic process where the final point estimate is an average of
         several forecast calls. confidence intervals are overwritten through this process with a probabilistic technique.
         level and difference confidence intervals are then possible to display. if the model in question is fundamentally
@@ -3340,6 +3571,13 @@ class Forecaster:
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
+            test_only (bool): default False:
+                whether to stop your model after the testing process.
+                all forecasts in history will be equivalent to test-set predictions.
+                when forecasting to future periods, there is no way to skip the training process.
+                any plot or export of forecasts into a future horizon will fail for this model
+                and not all methods will raise descriptive errors.
+                changed to True always if object initiated with require_future_dates = False.
             n_iter (int): default 20.
                 the number of forecast calls to use when creating the final point estimate and confidence intervals.
                 increasing this gives more sound results but costs resources.
@@ -3352,6 +3590,7 @@ class Forecaster:
         >>> f.set_estimator('mlp')
         >>> f.proba_forecast(hidden_layer_sizes=(25,25,25))
         """
+
         def set_ci_step(s):
             return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
 
@@ -3360,20 +3599,23 @@ class Forecaster:
         f = self.__deepcopy__()
         for i in range(n_iter):
             f.manual_forecast(
-                call_me = f'{estimator}{i}',
-                dynamic_testing = dynamic_testing,
-                test_only = test_only,
+                call_me=f"{estimator}{i}",
+                dynamic_testing=dynamic_testing,
+                test_only=test_only,
                 **kwargs,
             )
-        f.set_estimator('combo')
+        f.set_estimator("combo")
         f.manual_forecast(
-            how='simple',
-            models=[f'{estimator}{i}' for i in range(n_iter)],
-            call_me='final',
+            how="simple",
+            models=[f"{estimator}{i}" for i in range(n_iter)],
+            call_me="final",
         )
 
-        self.history[call_me] = f.history[f'{estimator}{i}']
+        # set history attr
+        # most everything we need is going to be equal to the last estimator called
+        self.history[call_me] = f.history[f"{estimator}{i}"]
 
+        # these ones will come from the combo model
         for attr in (
             "Forecast",
             "TestSetPredictions",
@@ -3388,38 +3630,36 @@ class Forecaster:
             "LevelTestSetMAE",
             "LevelTestSetR2",
         ):
-            self.history[call_me][attr] = f.history['final'][attr]
+            self.history[call_me][attr] = f.history["final"][attr]
 
+        # this is how we make the confidence intervals
         attr_set_map = {
-            "UpperCI":"Forecast",
-            "LowerCI":"Forecast",
-            "TestSetUpperCI":"TestSetPredictions",
-            "TestSetLowerCI":"TestSetPredictions",
-            "LevelUpperCI":"LevelForecast",
-            "LevelLowerCI":"LevelForecast",
-            "LevelTSUpperCI":"LevelTestSetPreds",
-            "LevelTSLowerCI":"LevelTestSetPreds",
+            "UpperCI": "Forecast",
+            "LowerCI": "Forecast",
+            "TestSetUpperCI": "TestSetPredictions",
+            "TestSetLowerCI": "TestSetPredictions",
+            "LevelUpperCI": "LevelForecast",
+            "LevelLowerCI": "LevelForecast",
+            "LevelTSUpperCI": "LevelTestSetPreds",
+            "LevelTSLowerCI": "LevelTestSetPreds",
         }
-
 
         for i, kv in enumerate(attr_set_map.items()):
             if i % 2 == 0:
                 fcsts = np.array(
-                    [f.history[f'{estimator}{i}'][kv[1]] for i in range(n_iter)]
+                    [f.history[f"{estimator}{i}"][kv[1]] for i in range(n_iter)]
                 )
                 self.history[call_me][kv[0]] = [
-                    fcst_step + set_ci_step(
-                        fcsts.std(axis=0)[idx],
-                    ) for idx,fcst_step in enumerate(fcsts.mean(axis=0))
+                    fcst_step + set_ci_step(fcsts.std(axis=0)[idx],)
+                    for idx, fcst_step in enumerate(fcsts.mean(axis=0))
                 ]
             else:
                 self.history[call_me][kv[0]] = [
-                    fcst_step - set_ci_step(
-                        fcsts.std(axis=0)[idx],
-                    ) for idx,fcst_step in enumerate(fcsts.mean(axis=0))
+                    fcst_step - set_ci_step(fcsts.std(axis=0)[idx],)
+                    for idx, fcst_step in enumerate(fcsts.mean(axis=0))
                 ]
 
-    def add_sklearn_estimator(self,imported_module,called):
+    def add_sklearn_estimator(self, imported_module, called):
         """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
         be careful to choose regression models only.
         
@@ -3438,8 +3678,8 @@ class Forecaster:
         >>> f.set_estimator('stacking')
         >>> f.manual_forecast(...)
         """
-        globals()[called + '_'] = imported_module
-        _sklearn_imports_[called] = globals()[called + '_']
+        globals()[called + "_"] = imported_module
+        _sklearn_imports_[called] = globals()[called + "_"]
         _sklearn_estimators_.append(called)
         _sklearn_estimators_.sort()
         _estimators_.append(called)
@@ -3457,7 +3697,7 @@ class Forecaster:
         n_iter=20,
         summary_stats=False,
         feature_importance=False,
-        fi_method='pfi',
+        fi_method="pfi",
         suffix=None,
         **cvkwargs,
     ):
@@ -3516,28 +3756,25 @@ class Forecaster:
             "comob" not in models, ValueError, "combo models cannot be tuned"
         )
         for m in models:
-            call_me = m if suffix is None else m+suffix
+            call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
             if not cross_validate:
                 self.tune(dynamic_tuning=dynamic_tuning)
             else:
-                self.cross_validate(dynamic_tuning=dynamic_tuning,**cvkwargs)
-            if not probabilistic:
-                self.auto_forecast(dynamic_testing=dynamic_testing,call_me=call_me)
-            else:
-                self.proba_forecast(
-                    **self.best_params,
-                    dynamic_testing=dynamic_testing,
-                    call_me=call_me,
-                    n_iter=n_iter,
-                )
+                self.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
+            self.auto_forecast(
+                dynamic_testing=dynamic_testing,
+                call_me=call_me,
+                probabilistic=probabilistic,
+                n_iter=n_iter,
+            )
 
             if summary_stats:
                 self.save_summary_stats()
             if feature_importance:
                 self.save_feature_importance(fi_method)
 
-    def save_feature_importance(self,method='pfi',on_error='warn'):
+    def save_feature_importance(self, method="pfi", on_error="warn"):
         """ saves feature info for models that offer it (sklearn models).
         call after evaluating the model you want it for and before changing the estimator.
         this method saves a dataframe listing the feature as the index its score (labeled "weight" in
@@ -3566,48 +3803,53 @@ class Forecaster:
         >>> f.export_feature_importance('xgboost')
         """
         descriptive_assert(
-            method in ('pfi','shap'),
+            method in ("pfi", "shap"),
             ValueError,
-            f'kind must be one of "pfi","shap", got {method}'
+            f'kind must be one of "pfi","shap", got {method}',
         )
         fail = False
         try:
-            if method == 'pfi':
+            if method == "pfi":
                 import eli5
                 from eli5.sklearn import PermutationImportance
 
                 perm = PermutationImportance(self.regr).fit(
-                    self.X, self.y.values[:len(self.X)],
+                    self.X, self.y.values[: len(self.X)],
                 )
                 self.feature_importance = eli5.explain_weights_df(
                     perm, feature_names=self.history[self.call_me]["Xvars"]
                 ).set_index("feature")
             else:
                 import shap
+
                 explainer = shap.TreeExplainer(self.regr)
                 shap_values = explainer.shap_values(self.X)
-                shap_df = pd.DataFrame(shap_values,columns=self.Xvars)
-                shap_fi = pd.DataFrame(
-                    {
-                        'feature':shap_df.columns.to_list(),
-                        'weight':np.abs(shap_df).mean(),
-                        'std':np.abs(shap_df).std(),
-                    }
-                ).set_index('feature').sort_values('weight',ascending=False)
+                shap_df = pd.DataFrame(shap_values, columns=self.Xvars)
+                shap_fi = (
+                    pd.DataFrame(
+                        {
+                            "feature": shap_df.columns.to_list(),
+                            "weight": np.abs(shap_df).mean(),
+                            "std": np.abs(shap_df).std(),
+                        }
+                    )
+                    .set_index("feature")
+                    .sort_values("weight", ascending=False)
+                )
                 self.feature_importance = shap_fi
         except Exception as e:
             fail = True
             error = e
 
         if fail:
-            if on_error == 'warn':
+            if on_error == "warn":
                 logging.warning(
                     f"cannot set {method} feature importance on the {self.estimator} model"
                 )
-            elif on_error == 'raise':
+            elif on_error == "raise":
                 raise TypeError(str(error))
             else:
-                raise ValueError(f'on_error arg not recognized: {on_error}')
+                raise ValueError(f"on_error arg not recognized: {on_error}")
             return
 
         self._bank_fi_to_history()
@@ -3621,9 +3863,7 @@ class Forecaster:
         >>> f.save_summary_stats()
         """
         if not hasattr(self, "summary_stats"):
-            logging.warning(
-                f"{self.estimator} does not have summary stats"
-            )
+            logging.warning(f"{self.estimator} does not have summary stats")
             return
         self._bank_summary_stats_to_history()
 
@@ -3735,12 +3975,7 @@ class Forecaster:
             )
 
     def plot(
-        self,
-        models="all",
-        order_by=None,
-        level=False,
-        print_attr=[],
-        ci=False,
+        self, models="all", order_by=None, level=False, print_attr=[], ci=False,
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
         if any models passed to models were run test_only=True, will raise an error.
@@ -3760,8 +3995,6 @@ class Forecaster:
                 if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
             ci (bool): default False.
                 whether to display the confidence intervals.
-                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting.
-                ignored when level = True.
 
         Returns:
             (Axis): the figure's axis.
@@ -3779,7 +4012,9 @@ class Forecaster:
         _, ax = plt.subplots()
 
         if models is None:
-            sns.lineplot(x=self.current_dates.values, y=self.y.values, label="actuals", ax=ax)
+            sns.lineplot(
+                x=self.current_dates.values, y=self.y.values, label="actuals", ax=ax
+            )
             plt.legend()
             plt.xlabel("Date")
             plt.ylabel("Values")
@@ -3822,17 +4057,21 @@ class Forecaster:
                 else self.history[m]["LevelForecast"]
             )
             sns.lineplot(
-                x=self.future_dates.to_list(), 
-                y=plot[m], 
-                color=_colors_[i], 
-                label=m, 
-                ax = ax
+                x=self.future_dates.to_list(),
+                y=plot[m],
+                color=_colors_[i],
+                label=m,
+                ax=ax,
             )
-            if ci and (not level or 'LevelUpperCI' in self.history[m].keys()):
+            if ci:
                 plt.fill_between(
                     x=self.future_dates.to_list(),
-                    y1=self.history[m]["UpperCI"] if not level else self.history[m]['LevelUpperCI'],
-                    y2=self.history[m]["LowerCI"] if not level else self.history[m]['LevelLowerCI'],
+                    y1=self.history[m]["UpperCI"]
+                    if not level
+                    else self.history[m]["LevelUpperCI"],
+                    y2=self.history[m]["LowerCI"]
+                    if not level
+                    else self.history[m]["LevelLowerCI"],
                     alpha=0.2,
                     color=_colors_[i],
                     label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
@@ -3851,12 +4090,7 @@ class Forecaster:
         return ax
 
     def plot_test_set(
-        self,
-        models="all",
-        order_by=None,
-        include_train=True,
-        level=False,
-        ci=False,
+        self, models="all", order_by=None, include_train=True, level=False, ci=False,
     ):
         """ plots all test-set predictions with the actuals.
 
@@ -3877,8 +4111,6 @@ class Forecaster:
             ci (bool): default False.
                 whether to display the confidence intervals.
                 default is 100 boostrapped samples and a 95% confidence interval.
-                change defaults by calling `set_cilevel()` and `set_bootstrapped_samples()` before forecasting.
-                ignored when level = False.
 
         Returns:
             (Axis): the figure's axis.
@@ -3934,7 +4166,7 @@ class Forecaster:
             x=plot["date"][-plot["actuals_len"] :],
             y=plot["actuals"][-plot["actuals_len"] :],
             label="actuals",
-            ax = ax,
+            ax=ax,
         )
 
         for i, m in enumerate(models):
@@ -3951,13 +4183,17 @@ class Forecaster:
                 color=_colors_[i],
                 alpha=0.7,
                 label=m,
-                ax=ax
+                ax=ax,
             )
-            if ci and (not level or 'LevelTSUpperCI' in self.history[m].keys()):
+            if ci:
                 plt.fill_between(
                     x=test_dates,
-                    y1=self.history[m]["TestSetUpperCI"] if not level else self.history[m]['LevelTSUpperCI'],
-                    y2=self.history[m]["TestSetLowerCI"] if not level else self.history[m]['LevelTSLowerCI'],
+                    y1=self.history[m]["TestSetUpperCI"]
+                    if not level
+                    else self.history[m]["LevelTSUpperCI"],
+                    y2=self.history[m]["TestSetLowerCI"]
+                    if not level
+                    else self.history[m]["LevelTSLowerCI"],
                     alpha=0.2,
                     color=_colors_[i],
                     label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
@@ -3969,17 +4205,19 @@ class Forecaster:
         return ax
 
     def plot_fitted(
-        self,
-        models="all",
-        order_by=None,
+        self, models="all", order_by=None, level=False,
     ):
-        """ plots all fitted values with the actuals.
+        """ plots all fitted values with the actuals. does not support level fitted values (for now).
 
         Args:
             models (list-like,str): default 'all'.
                the forecated models to plot.
                can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
             order_by (str): one of _determine_best_by_, default None.
+            level (bool): default False.
+                if True, will always plot level forecasts.
+                if False, will plot the forecasts at whatever level they were called on.
+                if False and there are a mix of models passed with different integrations, will default to True.
 
         Returns:
             (Axis): the figure's axis.
@@ -3995,23 +4233,23 @@ class Forecaster:
             [d["Integration"] for m, d in self.history.items() if m in models]
         )
         if len(integration) > 1:
-            raise ForecastError.PlottingError(
-                "cannot plot fitted values when forecasts run at different levels"
-            )
+            level = True
 
-        y = self.y.copy()
-        if self.integration == 0:
-            for _ in range(max(integration)):
-                y = y.diff()
+        dates = self.current_dates.to_list() if not level else self.init_dates
+        actuals = self.y.to_list() if not level else self.levely
 
         plot = {
-            "date": self.current_dates.to_list()[-len(y.dropna()) :],
-            "actuals": y.dropna().to_list(),
+            "date": dates,
+            "actuals": actuals,
         }
         sns.lineplot(x=plot["date"], y=plot["actuals"], label="actuals", ax=ax)
 
         for i, m in enumerate(models):
-            plot[m] = self.history[m]["FittedVals"]
+            plot[m] = (
+                self.history[m]["FittedVals"]
+                if not level
+                else self.history[m]["LevelFittedVals"]
+            )
             sns.lineplot(
                 x=plot["date"][-len(plot[m]) :],
                 y=plot[m][-len(plot["date"]) :],
@@ -4094,7 +4332,7 @@ class Forecaster:
         >>> f.pop_using_criterion('AnyPrediction','<',0,delete_all=False)
         """
         descriptive_assert(
-            evaluated_as in ("<", "<=", ">", ">=","=="),
+            evaluated_as in ("<", "<=", ">", ">=", "=="),
             ValueError,
             f'evaluated_as must be one of ("<","<=",">",">=","=="), got {evaluated_as}',
         )
@@ -4138,9 +4376,9 @@ class Forecaster:
     def export(
         self,
         dfs=[
-            "all_fcsts",
             "model_summaries",
             "best_fcst",
+            "all_fcsts",
             "test_set_predictions",
             "lvl_test_set_predictions",
             "lvl_fcsts",
@@ -4148,11 +4386,12 @@ class Forecaster:
         models="all",
         best_model="auto",
         determine_best_by="TestSetRMSE",
+        cis=False,
         to_excel=False,
         out_path="./",
         excel_name="results.xlsx",
     ) -> Union[Dict[str, pd.DataFrame], pd.DataFrame]:
-        """ exports 1-all of 5 pandas dataframes, can write to excel with each dataframe on a separate sheet.
+        """ exports 1-all of 6 pandas dataframes, can write to excel with each dataframe on a separate sheet.
         will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
         Args:
@@ -4171,6 +4410,10 @@ class Forecaster:
                 whether to save to excel.
             out_path (str): default './'.
                 the path to save the excel file to (ignored when `to_excel=False`).
+            cis (bool): default False.
+                whether to export confidence intervals for models in 
+                "all_fcsts", "test_set_predictions", "lvl_test_set_predictions", "lvl_fcsts"
+                dataframes. if True, level confidence intervals will only be exported if available.
             excel_name (str): default 'results.xlsx'.
                 the name to call the excel file (ignored when `to_excel=False`).
 
@@ -4180,6 +4423,11 @@ class Forecaster:
 
         >>> f.export(dfs=['model_summaries','lvl_fcsts'],to_excel=True)
         """
+        descriptive_assert(
+            isinstance(cis, bool),
+            "ValueError",
+            f"argument passed to cis must be a bool type, not {type(cis)}",
+        )
         if isinstance(dfs, str):
             dfs = [dfs]
         else:
@@ -4197,23 +4445,16 @@ class Forecaster:
             "lvl_fcsts",
         ]
         _bad_dfs_ = [i for i in dfs if i not in _dfs_]
-
         if len(_bad_dfs_) > 0:
             raise ValueError(
                 f"values passed to the dfs list must be in {_dfs_}, not {_bad_dfs_}"
             )
-
         best_fcst_name = (
             self.order_fcsts(models, determine_best_by)[0]
             if best_model == "auto"
             else best_model
         )
         output = {}
-        if "all_fcsts" in dfs:
-            all_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
-            for m in self.history.keys():
-                all_fcsts[m] = self.history[m]["Forecast"]
-            output["all_fcsts"] = all_fcsts
         if "model_summaries" in dfs:
             cols = [
                 "ModelNickname",
@@ -4248,6 +4489,10 @@ class Forecaster:
                 "LevelTestSetMAPE",
                 "LevelTestSetMAE",
                 "LevelTestSetR2",
+                "LevelInSampleRMSE",
+                "LevelInSampleMAPE",
+                "LevelInSampleMAE",
+                "LevelInSampleR2",
                 "best_model",
             ]
 
@@ -4286,6 +4531,14 @@ class Forecaster:
                 best_fcst_name
             ] * len(self.future_dates)
             output["best_fcst"] = best_fcst
+        if "all_fcsts" in dfs:
+            all_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
+            for m in self.history.keys():
+                all_fcsts[m] = self.history[m]["Forecast"]
+                if cis:
+                    all_fcsts[m + "_upperci"] = self.history[m]["UpperCI"]
+                    all_fcsts[m + "_lowerci"] = self.history[m]["LowerCI"]
+            output["all_fcsts"] = all_fcsts
         if "test_set_predictions" in dfs:
             test_set_predictions = pd.DataFrame(
                 {"DATE": self.current_dates[-self.test_length :]}
@@ -4293,7 +4546,25 @@ class Forecaster:
             test_set_predictions["actual"] = self.y.to_list()[-self.test_length :]
             for m in models:
                 test_set_predictions[m] = self.history[m]["TestSetPredictions"]
+                if cis:
+                    test_set_predictions[m + "_upperci"] = self.history[m][
+                        "TestSetUpperCI"
+                    ]
+                    test_set_predictions[m + "_lowerci"] = self.history[m][
+                        "TestSetLowerCI"
+                    ]
             output["test_set_predictions"] = test_set_predictions
+        if "lvl_fcsts" in dfs:
+            self._validate_no_test_only(models)
+            lvl_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
+            for m in models:
+                if "LevelForecast" in self.history[m].keys():
+                    lvl_fcsts[m] = self.history[m]["LevelForecast"]
+                    if cis and "LevelUpperCI" in self.history[m].keys():
+                        lvl_fcsts[m + "_upperci"] = self.history[m]["LevelUpperCI"]
+                        lvl_fcsts[m + "_lowerci"] = self.history[m]["LevelLowerCI"]
+            if lvl_fcsts.shape[1] > 1:
+                output["lvl_fcsts"] = lvl_fcsts
         if "lvl_test_set_predictions" in dfs:
             test_set_predictions = pd.DataFrame(
                 {"DATE": self.current_dates[-self.test_length :]}
@@ -4301,15 +4572,14 @@ class Forecaster:
             test_set_predictions["actual"] = self.levely[-self.test_length :]
             for m in models:
                 test_set_predictions[m] = self.history[m]["LevelTestSetPreds"]
+                if cis and "LevelTSUpperCI" in self.history[m].keys():
+                    test_set_predictions[m + "_upperci"] = self.history[m][
+                        "LevelTSUpperCI"
+                    ]
+                    test_set_predictions[m + "_lowerci"] = self.history[m][
+                        "LevelTSLowerCI"
+                    ]
             output["lvl_test_set_predictions"] = test_set_predictions
-        if "lvl_fcsts" in dfs:
-            self._validate_no_test_only(models)
-            lvl_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
-            for m in models:
-                if "LevelForecast" in self.history[m].keys():
-                    lvl_fcsts[m] = self.history[m]["LevelForecast"]
-            if lvl_fcsts.shape[1] > 1:
-                output["lvl_fcsts"] = lvl_fcsts
 
         if to_excel:
             with pd.ExcelWriter(
@@ -4369,9 +4639,7 @@ class Forecaster:
         """
         return self.history[model]["grid_evaluated"]
 
-    def all_feature_info_to_excel(
-        self, out_path="./", excel_name="feature_info.xlsx"
-    ):
+    def all_feature_info_to_excel(self, out_path="./", excel_name="feature_info.xlsx"):
         """ saves all feature importance and summary stats to excel.
         each model where such info is available for gets its own tab.
         be sure to have called save_summary_stats() and/or save_feature_importance() before using this function.
@@ -4491,14 +4759,16 @@ class Forecaster:
             ],
             ignore_index=True,
         )
-        
+
         if not self.require_future_dates:
-            df = df.loc[df['DATE'].isin(self.current_dates.values)]
+            df = df.loc[df["DATE"].isin(self.current_dates.values)]
 
         return df.dropna() if dropna else df
 
     def export_forecasts_with_cis(self, model):
         """ exports a single dataframe with forecasts and upper and lower forecast bounds.
+
+        *deprecated in 0.13.1, to be removed in 0.14.0. use export('all_fcsts', cis=True) instead*
 
         Args:
             model (str):
@@ -4507,6 +4777,11 @@ class Forecaster:
         Returns:
             (DataFrame): A dataframe with forecasts to future dates and corresponding confidence intervals.
         """
+        warnings.warn(
+            "export_test_set_preds_with_cis() is deprecated and will be removed in 0.14.0"
+            " use export('all_fcsts', cis=True) instead",
+            FutureWarning,
+        )
         self._validate_no_test_only([model])
         return pd.DataFrame(
             {
@@ -4522,47 +4797,76 @@ class Forecaster:
     def export_test_set_preds_with_cis(self, model):
         """ exports a single dataframe with test-set predictions, actuals, and upper and lower prediction bounds.
 
+        *deprecated in 0.13.1, to be removed in 0.14.0. use export('test_set_predictions', cis=True) instead*
+
         Args:
             model (str):
-                the model nickname (must exist in history.keys()).
+                the model nickname.
 
         Returns:
             (DataFrame): A dataframe with test-set predictions and actuals with corresponding confidence intervals.
         """
+        warnings.warn(
+            "export_test_set_preds_with_cis is deprecated and will be removed in 0.14.0"
+            " use export('test_set_predictions', cis=True) instead",
+            FutureWarning,
+        )
         return pd.DataFrame(
             {
-                "DATE": self.current_dates.to_list()[-len(self.history[model]["TestSetPredictions"]):],
+                "DATE": self.current_dates.to_list()[
+                    -len(self.history[model]["TestSetPredictions"]) :
+                ],
                 "UpperPreds": self.history[model]["TestSetUpperCI"],
                 "Preds": self.history[model]["TestSetPredictions"],
                 "Actuals": self.history[model]["TestSetActuals"],
                 "LowerPreds": self.history[model]["TestSetLowerCI"],
-                "ModelNickname": [model] * len(self.history[model]["TestSetPredictions"]),
-                "CILevel": [self.history[model]["CILevel"]] * len(self.history[model]["TestSetPredictions"]),
+                "ModelNickname": [model]
+                * len(self.history[model]["TestSetPredictions"]),
+                "CILevel": [self.history[model]["CILevel"]]
+                * len(self.history[model]["TestSetPredictions"]),
             }
         )
 
-    def export_fitted_vals(self,model):
+    def export_fitted_vals(self, model, level=False):
         """ exports a single dataframe with dates, fitted values, actuals, and residuals.
 
         Args:
             model (str):
-                the model nickname (must exist in history.keys()).
+                the model nickname.
+            level (bool): default False.
+                whether to extract level fitted values
 
         Returns:
             (DataFrame): A dataframe with dates, fitted values, actuals, and residuals.
         """
         df = pd.DataFrame(
             {
-                "DATE": self.current_dates.to_list()[-len(self.history[model]["FittedVals"]):],
-                "Actuals": self.y.to_list()[-len(self.history[model]["FittedVals"]):],
-                "FittedVals": self.history[model]["FittedVals"],
+                "DATE": (
+                    self.current_dates.to_list()[
+                        -len(self.history[model]["FittedVals"]) :
+                    ]
+                    if not level
+                    else self.current_dates.to_list()[
+                        -len(self.history[model]["LevelFittedVals"]) :
+                    ]
+                ),
+                "Actuals": (
+                    self.y.to_list()[-len(self.history[model]["FittedVals"]) :]
+                    if not level
+                    else self.levely[-len(self.history[model]["LevelFittedVals"]) :]
+                ),
+                "FittedVals": (
+                    self.history[model]["FittedVals"]
+                    if not level
+                    else self.history[model]["LevelFittedVals"]
+                ),
             }
         )
 
-        df['Residuals'] = df['Actuals'] - df['FittedVals']
+        df["Residuals"] = df["Actuals"] - df["FittedVals"]
         return df
 
-    def backtest(self,model,fcst_length='auto',n_iter=10,jump_back=1):
+    def backtest(self, model, fcst_length="auto", n_iter=10, jump_back=1):
         """ runs a backtest of a selected evaluated model over a certain 
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
@@ -4588,43 +4892,59 @@ class Forecaster:
         Returns:
             None
         """
-        if fcst_length == 'auto':
+        if fcst_length == "auto":
             fcst_length = len(self.future_dates)
         fcst_length = int(fcst_length)
-        metric_results = pd.DataFrame(columns=[f'iter{i}' for i in range(1,n_iter+1)],index=['RMSE','MAE','R2','MAPE'])
+        metric_results = pd.DataFrame(
+            columns=[f"iter{i}" for i in range(1, n_iter + 1)],
+            index=["RMSE", "MAE", "R2", "MAPE"],
+        )
         value_results = pd.DataFrame()
         for i in range(n_iter):
             f = self.__deepcopy__()
             if i > 0:
-                f.current_xreg = {k:pd.Series(v.values[:-i*jump_back]) for k, v in f.current_xreg.items()}
-                f.current_dates = pd.Series(f.current_dates.values[:-i*jump_back])
-                f.y = pd.Series(f.y.values[:-i*jump_back])
-                f.levely = f.levely[:-i*jump_back]
-            
+                f.current_xreg = {
+                    k: pd.Series(v.values[: -i * jump_back])
+                    for k, v in f.current_xreg.items()
+                }
+                f.current_dates = pd.Series(f.current_dates.values[: -i * jump_back])
+                f.y = pd.Series(f.y.values[: -i * jump_back])
+                f.levely = f.levely[: -i * jump_back]
+
             f.set_test_length(fcst_length)
-            f.set_estimator(f.history[model]['Estimator'])
-            descriptive_assert(f.estimator!='combo',ValueError,'combo models cannot be backtest')
-            params = f.history[model]['HyperParams'].copy()
-            if f.history[model]['Xvars'] is not None:
-                params['Xvars'] = f.history[model]['Xvars'][:]
+            f.set_estimator(f.history[model]["Estimator"])
+            descriptive_assert(
+                f.estimator != "combo", ValueError, "combo models cannot be backtest"
+            )
+            params = f.history[model]["HyperParams"].copy()
+            if f.history[model]["Xvars"] is not None:
+                params["Xvars"] = f.history[model]["Xvars"][:]
             if f.estimator in _sklearn_estimators_:
-                params['normalizer'] = f.history[model]['Scaler']
+                params["normalizer"] = f.history[model]["Scaler"]
             f.history = {}
-            f.manual_forecast(**params,test_only=True)
-            test_mets = f.export('model_summaries')
-            test_preds = f.export('lvl_test_set_predictions')
-            metric_results.loc['RMSE',f'iter{i+1}'] = test_mets['LevelTestSetRMSE'].values[0]
-            metric_results.loc['MAE',f'iter{i+1}'] = test_mets['LevelTestSetMAE'].values[0]
-            metric_results.loc['R2',f'iter{i+1}'] = test_mets['LevelTestSetR2'].values[0]
-            metric_results.loc['MAPE',f'iter{i+1}'] = test_mets['LevelTestSetMAPE'].values[0]
-            value_results[f'iter{i+1}actuals'] = test_preds.iloc[:,1].values.copy()
-            value_results[f'iter{i+1}preds'] = test_preds.iloc[:,2].values.copy()
+            f.manual_forecast(**params, test_only=True)
+            test_mets = f.export("model_summaries")
+            test_preds = f.export("lvl_test_set_predictions")
+            metric_results.loc["RMSE", f"iter{i+1}"] = test_mets[
+                "LevelTestSetRMSE"
+            ].values[0]
+            metric_results.loc["MAE", f"iter{i+1}"] = test_mets[
+                "LevelTestSetMAE"
+            ].values[0]
+            metric_results.loc["R2", f"iter{i+1}"] = test_mets["LevelTestSetR2"].values[
+                0
+            ]
+            metric_results.loc["MAPE", f"iter{i+1}"] = test_mets[
+                "LevelTestSetMAPE"
+            ].values[0]
+            value_results[f"iter{i+1}actuals"] = test_preds.iloc[:, 1].values.copy()
+            value_results[f"iter{i+1}preds"] = test_preds.iloc[:, 2].values.copy()
 
-        metric_results['mean'] = metric_results.mean(axis=1)
-        self.history[model]['BacktestMetrics'] = metric_results
-        self.history[model]['BacktestValues'] = value_results
+        metric_results["mean"] = metric_results.mean(axis=1)
+        self.history[model]["BacktestMetrics"] = metric_results
+        self.history[model]["BacktestValues"] = value_results
 
-    def export_backtest_metrics(self,model):
+    def export_backtest_metrics(self, model):
         """ extracts the backtest metrics for a given model.
         only works if `backtest()` has been called.
 
@@ -4634,9 +4954,9 @@ class Forecaster:
         Returns:
             (DataFrame): a copy of the backtest metrics.
         """
-        return self.history[model]['BacktestMetrics'].copy()
+        return self.history[model]["BacktestMetrics"].copy()
 
-    def export_backtest_values(self,model):
+    def export_backtest_values(self, model):
         """ extracts the backtest values for a given model.
         only works if `backtest()` has been called.
 
@@ -4646,4 +4966,4 @@ class Forecaster:
         Returns:
             (DataFrame): a copy of the backtest values.
         """
-        return self.history[model]['BacktestValues'].copy()
+        return self.history[model]["BacktestValues"].copy()

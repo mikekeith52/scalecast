@@ -8,11 +8,12 @@ from scalecast.Forecaster import (
     r2,
 )
 
+
 class SeriesTransformer:
-    def __init__(self,f):
+    def __init__(self, f):
         self.f = f.__deepcopy__()
 
-    def Transform(self,transform_func,**kwargs):
+    def Transform(self, transform_func, **kwargs):
         """ transforms the y attribute in the Forecaster object.
         
         Args:
@@ -32,11 +33,11 @@ class SeriesTransformer:
         >>> transformer = SeriesTransformer(f)
         >>> f = transformer.Transform(log10)
         """
-        self.f.y = pd.Series(transform_func(self.f.y,**kwargs))
-        self.f.levely = list(transform_func(self.f.levely,**kwargs))
+        self.f.y = pd.Series(transform_func(self.f.y, **kwargs))
+        self.f.levely = list(transform_func(self.f.levely, **kwargs))
         return self.f
 
-    def Revert(self,revert_func,full=True,**kwargs):
+    def Revert(self, revert_func, full=True, **kwargs):
         """ reverts the y attribute in the Forecaster object, along with all model results.
 
         Args:
@@ -61,16 +62,12 @@ class SeriesTransformer:
         >>> f = transformer.Transform(log10)
         >>> f = transformer.Revert(log10_revert)
         """
-        self.f.levely = list(revert_func(self.f.levely,**kwargs))
-        self.f.y = pd.Series(revert_func(self.f.y,**kwargs)) if full else self.f.y
+        self.f.levely = list(revert_func(self.f.levely, **kwargs))
+        self.f.y = pd.Series(revert_func(self.f.y, **kwargs)) if full else self.f.y
 
         for m, h in self.f.history.items():
-            for k in (
-                "LevelY",
-                'LevelForecast',
-                "LevelTestSetPreds"
-            ):
-                h[k] = list(revert_func(h[k],**kwargs))
+            for k in ("LevelY", "LevelForecast", "LevelTestSetPreds"):
+                h[k] = list(revert_func(h[k], **kwargs))
 
             pred = h["LevelTestSetPreds"]
             act = self.f.levely[-len(pred) :]
@@ -81,27 +78,27 @@ class SeriesTransformer:
 
             if full:
                 for k in (
-                        "Forecast",
-                        "TestSetPredictions",
-                        "TestSetUpperCI",
-                        "TestSetLowerCI",
-                        "CIPlusMinus",
-                        "UpperCI",
-                        "LowerCI",
-                        "TestSetActuals",
-                    ):
+                    "Forecast",
+                    "TestSetPredictions",
+                    "TestSetUpperCI",
+                    "TestSetLowerCI",
+                    "CIPlusMinus",
+                    "UpperCI",
+                    "LowerCI",
+                    "TestSetActuals",
+                ):
                     try:
-                        h[k] = list(revert_func(h[k],**kwargs))
+                        h[k] = list(revert_func(h[k], **kwargs))
                     except TypeError:
-                        h[k] = revert_func([h[k]],**kwargs)[0]
+                        h[k] = revert_func([h[k]], **kwargs)[0]
 
-                pred = h['TestSetPredictions']
+                pred = h["TestSetPredictions"]
                 act = self.f.y[-len(pred) :]
                 h["TestSetRMSE"] = rmse(act, pred)
                 h["TestSetMAPE"] = mape(act, pred)
                 h["TestSetMAE"] = mae(act, pred)
                 h["TestSetR2"] = r2(act, pred)
-                
+
         return self.f
 
     def LogTransform(self):
@@ -118,7 +115,7 @@ class SeriesTransformer:
         """
         return self.Transform(np.log)
 
-    def LogRevert(self,full=True):
+    def LogRevert(self, full=True):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes a natural log transformation has been called at some point.
 
@@ -136,7 +133,7 @@ class SeriesTransformer:
         >>> f = transformer.LogTransform()
         >>> f = transformer.LogRevert()
         """
-        return self.Revert(np.exp,full=full)
+        return self.Revert(np.exp, full=full)
 
     def ScaleTransform(self):
         """ transforms the y attribute in the Forecaster object using a scale transformation.
@@ -151,22 +148,18 @@ class SeriesTransformer:
         >>> transformer = SeriesTransformer(f)
         >>> f = transformer.ScaleTransform()
         """
-        if hasattr(self,'orig_mean'):
+        if hasattr(self, "orig_mean"):
             return
 
         self.orig_mean = self.f.y.mean()
         self.orig_std = self.f.y.std()
 
-        def func(x,mean,std):
-            return [(i - mean)/std for i in x]
+        def func(x, mean, std):
+            return [(i - mean) / std for i in x]
 
-        return self.Transform(
-            func,
-            mean=self.orig_mean,
-            std=self.orig_std
-        )
+        return self.Transform(func, mean=self.orig_mean, std=self.orig_std)
 
-    def ScaleRevert(self,full=True):
+    def ScaleRevert(self, full=True):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes the scale transformation has been called on the object at some point.
         reversion function: array.std()*array[i]+array.mean().
@@ -185,20 +178,17 @@ class SeriesTransformer:
         >>> f = transformer.ScaleTransform()
         >>> f = transformer.ScaleRevert()
         """
-        def func(x,mean,std):
-            return [std*i+mean for i in x]
+
+        def func(x, mean, std):
+            return [std * i + mean for i in x]
+
         try:
-            f = self.Revert(
-                func,
-                mean=self.orig_mean,
-                std=self.orig_std,
-                full=full,
-            )
-            delattr(self,'orig_mean')
-            delattr(self,'orig_std')
+            f = self.Revert(func, mean=self.orig_mean, std=self.orig_std, full=full,)
+            delattr(self, "orig_mean")
+            delattr(self, "orig_std")
             return f
         except AttributeError:
-            raise ValueError('cannot revert a series that was never scaled.')
+            raise ValueError("cannot revert a series that was never scaled.")
 
     def MinMaxTransform(self):
         """ transforms the y attribute in the Forecaster object using a min-max scale transformation.
@@ -213,22 +203,18 @@ class SeriesTransformer:
         >>> transformer = SeriesTransformer(f)
         >>> f = transformer.MinMaxTransform()
         """
-        if hasattr(self,'orig_min'):
+        if hasattr(self, "orig_min"):
             return
 
         self.orig_min = self.f.y.min()
         self.orig_max = self.f.y.max()
 
-        def func(x,amin,amax):
+        def func(x, amin, amax):
             return [(i - amin) / (amax - amin) for i in x]
 
-        return self.Transform(
-            func,
-            amin=self.orig_min,
-            amax=self.orig_max,
-        )
+        return self.Transform(func, amin=self.orig_min, amax=self.orig_max,)
 
-    def MinMaxRevert(self,full=True):
+    def MinMaxRevert(self, full=True):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes the min-max scale transformation has been called on the object at some point.
         reversion function: array[i]*(array.max() - array.min()) + array.min().
@@ -247,22 +233,19 @@ class SeriesTransformer:
         >>> f = transformer.MinMaxTransform()
         >>> f = transformer.MinMaxRevert()
         """
-        def func(x,amin,amax):
-            return [i * (amax-amin) + amin for i in x]
+
+        def func(x, amin, amax):
+            return [i * (amax - amin) + amin for i in x]
+
         try:
-            f = self.Revert(
-                func,
-                amin=self.orig_min,
-                amax=self.orig_max,
-                full=full,
-            )
-            delattr(self,'orig_min')
-            delattr(self,'orig_max')
+            f = self.Revert(func, amin=self.orig_min, amax=self.orig_max, full=full,)
+            delattr(self, "orig_min")
+            delattr(self, "orig_max")
             return f
         except AttributeError:
-            raise ValueError('cannot revert a series that was never scaled.')
+            raise ValueError("cannot revert a series that was never scaled.")
 
-    def DiffTransform(self,m):
+    def DiffTransform(self, m):
         """ takes differences or seasonal differences in the Forecaster object's y attribute.
         if using this transformation, call `Forecaster.add_diffed_terms()` and 
         `Forecaster.add_lagged_terms()` if you want to use those before calling this function.
@@ -288,28 +271,26 @@ class SeriesTransformer:
         >>> f = transformer.DiffTransform(12) # first 12-period difference
         """
         n = (
-            0 
-            if not hasattr(self,f'orig_y_{m}_0') 
+            0
+            if not hasattr(self, f"orig_y_{m}_0")
             else max(
                 [
-                    int(
-                        a.split('_')[-1]
-                    ) + 1 for a in dir(self) if a.startswith(
-                        f'orig_y_{m}'
-                    )
+                    int(a.split("_")[-1]) + 1
+                    for a in dir(self)
+                    if a.startswith(f"orig_y_{m}")
                 ]
             )
         )
 
-        setattr(self,f'orig_y_{m}_{n}',self.f.y.to_list()[:m])
-        setattr(self,f'orig_dates_{m}_{n}',self.f.current_dates.to_list()) 
+        setattr(self, f"orig_y_{m}_{n}", self.f.y.to_list()[:m])
+        setattr(self, f"orig_dates_{m}_{n}", self.f.current_dates.to_list())
 
         func = lambda x, m: pd.Series(x).diff(m)
-        f = self.Transform(func,m=m)
+        f = self.Transform(func, m=m)
         f.keep_smaller_history(len(f.y) - m)
         return f
 
-    def DiffRevert(self,m):
+    def DiffRevert(self, m):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         calling this strips out all confidence intervals and
         AR values become unusable and have to be re-added to the object.
@@ -338,65 +319,52 @@ class SeriesTransformer:
         >>> f = transformer.DiffRevert(1)
         >>> f = transformer.DiffRevert(1) # back to normal
         """
-        def seasrevert(transformed,orig,m):
+
+        def seasrevert(transformed, orig, m):
             orig = list(orig)[:]
             transformed = list(transformed)
             for i in range(len(orig)):
-                transformed.insert(i,orig[i])
-            for i in range(m,len(transformed)):
-                transformed[i] = transformed[i-m] + transformed[i]
+                transformed.insert(i, orig[i])
+            for i in range(m, len(transformed)):
+                transformed[i] = transformed[i - m] + transformed[i]
             return transformed
-        
-        n = (
-            max(
-                [
-                    int(
-                        a.split('_')[-1]
-                    ) for a in dir(self) if a.startswith(
-                        f'orig_y_{m}'
-                    )
-                ]
-            )
+
+        n = max(
+            [int(a.split("_")[-1]) for a in dir(self) if a.startswith(f"orig_y_{m}")]
         )
-        
-        y_orig = getattr(self,f'orig_y_{m}_{n}')
-        dates_orig = getattr(self,f'orig_dates_{m}_{n}')
-        
-        self.f.y = pd.Series(seasrevert(self.f.y,y_orig,m))
+
+        y_orig = getattr(self, f"orig_y_{m}_{n}")
+        dates_orig = getattr(self, f"orig_dates_{m}_{n}")
+
+        self.f.y = pd.Series(seasrevert(self.f.y, y_orig, m))
         self.f.levely = self.f.y.to_list()
         self.f.current_dates = pd.Series(dates_orig)
 
         for _, h in self.f.history.items():
-            h['Forecast'] = list(
+            h["Forecast"] = list(seasrevert(h["Forecast"], self.f.y[-m:], m))[m:]
+            h["TestSetPredictions"] = list(
                 seasrevert(
-                    h['Forecast'],
-                    self.f.y[-m:],
-                    m
-                )
-            )[m:]
-            h['TestSetPredictions'] = list(
-                seasrevert(
-                    h['TestSetPredictions'],
-                    self.f.y.to_list()[-(m+self.f.test_length):-self.f.test_length],
+                    h["TestSetPredictions"],
+                    self.f.y.to_list()[-(m + self.f.test_length) : -self.f.test_length],
                     m,
                 )
             )[m:]
-            h['LevelY'] = self.f.levely[:]
-            h['LevelForecast'] = h['Forecast'][:]
-            h['LevelTestSetPreds'] = h["TestSetPredictions"][:]
-            h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length:]
+            h["LevelY"] = self.f.levely[:]
+            h["LevelForecast"] = h["Forecast"][:]
+            h["LevelTestSetPreds"] = h["TestSetPredictions"][:]
+            h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
             for k in (
-                    'FittedVals',
-                    "TestSetUpperCI",
-                    "TestSetLowerCI",
-                    "UpperCI",
-                    "LowerCI",
-                ):
-                    h[k] = [np.nan for _ in h[k]]
+                "FittedVals",
+                "TestSetUpperCI",
+                "TestSetLowerCI",
+                "UpperCI",
+                "LowerCI",
+            ):
+                h[k] = [np.nan for _ in h[k]]
 
             h["CIPlusMinus"] = np.nan
 
-        delattr(self,f'orig_y_{m}_{n}')
-        delattr(self,f'orig_dates_{m}_{n}')
+        delattr(self, f"orig_y_{m}_{n}")
+        delattr(self, f"orig_dates_{m}_{n}")
 
-        return self.Revert(lambda x: x) # call here to assign correct test-set metrics
+        return self.Revert(lambda x: x)  # call here to assign correct test-set metrics

@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.1] - 2022-07-24
+### Added
+- added level fitted values and default level confidence intervals for all models called through `Forecaster` and `MVForecaster`.
+### Changed
+- deprecated several export functions and rewrote `Forecaster.export()` and `MVForecaster.export()` to allow confidence intervals when `cis=True`. all deprecated functions should log a FutureWarning and will be removed in 0.14.0. all of these functionalities are now dupliated in `Forecaster.export()` and `MVForecaster.export()`
+  - `Forecaster.export_test_set_preds_with_cis()`
+  - `Forecaster.export_test_set_preds_with_cis()`
+  - `MVForecaster.export_model_summaries()`
+  - `MVForecaster.export_forecasts()`
+  - `MVForecaster.export_test_set_preds()`
+  - `MVForecaster.export_level_forecasts()`
+  - `MVForecaster.export_level_test_set_preds()`
+- made shap an optional add-on due to some installation issues by some users
+### Fixed
+- `notebook.tune_test_forecast()` was missing an argument in the function
+- fixed an issue with `MVForecaster.backtest()` causing some models to return a key error when backtested
+- fixed an issue where `'ValidationMetricValue'` could not be passed to `MVForecaster.set_best_model(determine_best_by)`
+
 ## [0.13.0] - 2022-07-19
 ### Added
 - added probabilistic forecasting through `Forecaster.proba_forecast()` and `MVForecaster.proba_forecast()` methods

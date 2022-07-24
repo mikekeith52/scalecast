@@ -39,7 +39,5 @@ setup(
     'lightgbm',
     'openpyxl',
     'pandas-datareader',
-    'shap',
-    'numba>='
   ],
 )
