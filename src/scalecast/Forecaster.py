@@ -408,7 +408,7 @@ class Forecaster:
 
             fcst = self.forecast[::-1]
             pred = self.history[call_me]["TestSetPredictions"][::-1]
-            fvs = self.history[call_me]["FittedVals"][:]
+            fvs = fvs_use[:]
 
             if integration == 2:
                 fcst.append(y_use[-2] + y_use[-1])
@@ -4413,7 +4413,7 @@ class Forecaster:
             cis (bool): default False.
                 whether to export confidence intervals for models in 
                 "all_fcsts", "test_set_predictions", "lvl_test_set_predictions", "lvl_fcsts"
-                dataframes. if True, level confidence intervals will only be exported if available.
+                dataframes.
             excel_name (str): default 'results.xlsx'.
                 the name to call the excel file (ignored when `to_excel=False`).
 

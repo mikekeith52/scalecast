@@ -1812,7 +1812,7 @@ class MVForecaster:
             cis (bool): default False.
                 whether to export confidence intervals for models in 
                 "all_fcsts", "test_set_predictions", "lvl_test_set_predictions", "lvl_fcsts"
-                dataframes. if True, level confidence intervals will only be exported if available.
+                dataframes.
             out_path (str): default './'.
                 the path to save the excel file to (ignored when `to_excel=False`).
             excel_name (str): default 'results.xlsx'.

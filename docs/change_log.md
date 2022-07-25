@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.2] - 2022-07-24
+### Added
+### Changed
+### Fixed
+- Fixed an issue from 0.13.1 that was caused by running models `test_only = True` on integrated series.
+
 ## [0.13.1] - 2022-07-24
 ### Added
 - added level fitted values and default level confidence intervals for all models called through `Forecaster` and `MVForecaster`.
