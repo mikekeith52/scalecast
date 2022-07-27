@@ -3338,7 +3338,7 @@ class Forecaster:
             f2.tune(dynamic_tuning=dynamic_tuning)
             orig_grid = f2.grid.copy()
             if f2.grid_evaluated.shape[0] == 0:
-                self.grid = pd.DataFrame()
+                self.grid, self.grid_evaluated = pd.DataFrame(), pd.DataFrame()
                 self._find_best_params(grid_evaluated_cv)
                 return
 
@@ -3412,6 +3412,7 @@ class Forecaster:
             logging.warning(
                 f"none of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model"
             )
+            self.validation_metric_value = np.nan
             self.best_params = {}
 
     def manual_forecast(

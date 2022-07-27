@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.3] - 2022-07-27
+### Added
+### Changed
+- SeriesTransformer.diffrevert() now supports an argument `revert_fvs`, which is True by default. since adding level cis, this is now possible.
+### Fixed
+- fixed an issue that caused model evaluation to fail if models were not tuned from the grid successfully. this was an issue since 0.12.3 due to how cross validation changed tuning.
+
 ## [0.13.2] - 2022-07-24
 ### Added
 ### Changed

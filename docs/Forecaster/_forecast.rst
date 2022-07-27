@@ -1,6 +1,6 @@
 Forecasting Different Model Types
 ===================================
-Any time you set an estimator, different arguments become available to you when calling `manual_forecast` or tuning the model. Here is the documentation for all these models:
+Any time you set an estimator, different arguments become available to you when calling `manual_forecast`, `proba_forecast`, or tuning the model. Here is the documentation for all these models:
 
 arima
 --------------------------------------------------

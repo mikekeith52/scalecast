@@ -66,15 +66,22 @@ class SeriesTransformer:
         self.f.y = pd.Series(revert_func(self.f.y, **kwargs)) if full else self.f.y
 
         for m, h in self.f.history.items():
-            for k in ("LevelY", "LevelForecast", "LevelTestSetPreds"):
+            for k in ("LevelY", "LevelForecast", "LevelTestSetPreds", "LevelFittedVals"):
                 h[k] = list(revert_func(h[k], **kwargs))
 
-            pred = h["LevelTestSetPreds"]
-            act = self.f.levely[-len(pred) :]
-            h["LevelTestSetRMSE"] = rmse(act, pred)
-            h["LevelTestSetMAPE"] = mape(act, pred)
-            h["LevelTestSetMAE"] = mae(act, pred)
-            h["LevelTestSetR2"] = r2(act, pred)
+            for i, preds in enumerate(('LevelTestSetPreds','LevelFittedVals')):
+                pred = h[preds]
+                act = self.f.levely[-len(pred) :]
+                if i == 0:
+                    h["LevelTestSetRMSE"] = rmse(act, pred)
+                    h["LevelTestSetMAPE"] = mape(act, pred)
+                    h["LevelTestSetMAE"] = mae(act, pred)
+                    h["LevelTestSetR2"] = r2(act, pred)
+                elif i == 1:
+                    h["LevelInSampleRMSE"] = rmse(act, pred)
+                    h["LevelInSampleMAPE"] = mape(act, pred)
+                    h["LevelInSampleMAE"] = mae(act, pred)
+                    h["LevelInSampleR2"] = r2(act, pred)
 
             if full:
                 for k in (
@@ -86,18 +93,26 @@ class SeriesTransformer:
                     "UpperCI",
                     "LowerCI",
                     "TestSetActuals",
+                    "FittedVals",
                 ):
                     try:
                         h[k] = list(revert_func(h[k], **kwargs))
                     except TypeError:
                         h[k] = revert_func([h[k]], **kwargs)[0]
 
-                pred = h["TestSetPredictions"]
-                act = self.f.y[-len(pred) :]
-                h["TestSetRMSE"] = rmse(act, pred)
-                h["TestSetMAPE"] = mape(act, pred)
-                h["TestSetMAE"] = mae(act, pred)
-                h["TestSetR2"] = r2(act, pred)
+                for i, preds in enumerate(("TestSetPredictions","FittedVals")):
+                    pred = h[preds]
+                    act = self.f.levely[-len(pred) :]
+                    if i == 0:
+                        h["TestSetRMSE"] = rmse(act, pred)
+                        h["TestSetMAPE"] = mape(act, pred)
+                        h["TestSetMAE"] = mae(act, pred)
+                        h["TestSetR2"] = r2(act, pred)
+                    elif i == 1:
+                        h["InSampleRMSE"] = rmse(act, pred)
+                        h["InSampleMAPE"] = mape(act, pred)
+                        h["InSampleMAE"] = mae(act, pred)
+                        h["InSampleR2"] = r2(act, pred)
 
         return self.f
 
@@ -282,7 +297,7 @@ class SeriesTransformer:
             )
         )
 
-        setattr(self, f"orig_y_{m}_{n}", self.f.y.to_list()[:m])
+        setattr(self, f"orig_y_{m}_{n}", self.f.y.to_list())
         setattr(self, f"orig_dates_{m}_{n}", self.f.current_dates.to_list())
 
         func = lambda x, m: pd.Series(x).diff(m)
@@ -290,12 +305,11 @@ class SeriesTransformer:
         f.keep_smaller_history(len(f.y) - m)
         return f
 
-    def DiffRevert(self, m):
+    def DiffRevert(self, m, revert_fvs=True):
         """ reverts the y attribute in the Forecaster object, along with all model results.
-        calling this strips out all confidence intervals and
-        AR values become unusable and have to be re-added to the object.
+        calling this makes so that AR values become unusable and have to be re-added to the object.
         unlike other revert functions, there is no option for full = False. 
-        if using this to revert differences, you cannot also use the native Forecaster.diff() function.
+        if using this to revert differences, you should not also use the native Forecaster.diff() function.
 
         Args:
             m (int): the seasonal difference to take.
@@ -303,6 +317,10 @@ class SeriesTransformer:
                 12 will undifference seasonally 12 periods (monthly data).
                 any int available. use the same values to revert as you used
                 to transform the object originally.
+            revert_fvs (bool): default True.
+                whether to revert fitted values and apply bootstrapped confidence intervals.
+                fitted vals can look very distorted after more than one difference transformation has
+                been taken.
 
         Returns:
             (Forecaster): a Forecaster object with the reverted attributes.
@@ -321,7 +339,7 @@ class SeriesTransformer:
         """
 
         def seasrevert(transformed, orig, m):
-            orig = list(orig)[:]
+            orig = list(orig)[:m]
             transformed = list(transformed)
             for i in range(len(orig)):
                 transformed.insert(i, orig[i])
@@ -353,16 +371,35 @@ class SeriesTransformer:
             h["LevelForecast"] = h["Forecast"][:]
             h["LevelTestSetPreds"] = h["TestSetPredictions"][:]
             h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
-            for k in (
-                "FittedVals",
-                "TestSetUpperCI",
-                "TestSetLowerCI",
-                "UpperCI",
-                "LowerCI",
-            ):
-                h[k] = [np.nan for _ in h[k]]
 
-            h["CIPlusMinus"] = np.nan
+            if revert_fvs:
+                h['FittedVals'] = list(
+                    seasrevert(h['FittedVals'],self.f.y[-len(h['FittedVals'])-m:], m)
+                )[m:]
+                h['LevelFittedVals'] = h['FittedVals'][:]
+                ci_range = self.f._find_cis(self.f.y[-len(h['FittedVals']):],h['FittedVals'])
+                for k in ("LevelUpperCI","UpperCI"):
+                    h[k] = [i + ci_range for i in h["Forecast"]]
+                for k in ("TestSetUpperCI","LevelTSUpperCI"):
+                    h[k] = [i + ci_range for i in h["TestSetPredictions"]]
+                for k in ("LevelLowerCI","LowerCI"):
+                    h[k] = [i - ci_range for i in h["Forecast"]]
+                for k in ("TestSetLowerCI","LevelTSLowerCI"):
+                    h[k] = [i - ci_range for i in h["TestSetPredictions"]]
+            else:
+                for k in (
+                    "FittedVals",
+                    "TestSetUpperCI",
+                    "TestSetLowerCI",
+                    "UpperCI",
+                    "LowerCI",
+                    "LevelUpperCI",
+                    "LevelLowerCI",
+                    "LevelTSUpperCI",
+                    "LevelTSLowerCI",
+                ):
+                    h[k] = [np.nan for _ in h[k]]
+                h["CIPlusMinus"] = np.nan
 
         delattr(self, f"orig_y_{m}_{n}")
         delattr(self, f"orig_dates_{m}_{n}")
