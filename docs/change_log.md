@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.4] - 2022-07-29
+### Added
+- added `util.pdr_load()` function.
+- added `limit_grid_size` as an argument to `Forecaster.tune_test_forecast()`, `MVForecaster.tune_test_forecast()`, and `notebook.tune_test_forecast()` to support randomized grid search through this process.
+### Changed
+- changed dynamic window forecasting loop
+- if trying to cross validate with less data than it is possible to create the correct-sized folds for, the program will no longer raise an error but instead pass default parameters to the `best_params` attribute and log a warning.
+- made cross validation slightly more efficient
+### Fixed
+- changed some source code to reduce the amount of `TypeError`s a user is likely to get (such as passing `int.64` type when `int` type is required)
+
 ## [0.13.3] - 2022-07-27
 ### Added
 ### Changed

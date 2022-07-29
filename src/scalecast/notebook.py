@@ -104,7 +104,7 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
     """ visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
 
     Args:
-        f_dict (dict[str,Forecaster]): dictionary of forcaster objects.
+        f_dict (dict[str,MVForecaster]): dictionary of forcaster objects.
             works best if two or more models have been evaluated in each dictionary value.
         plot_type (str): one of {"forecast","test"}, default "forecast".
             the type of results to visualize.
@@ -192,13 +192,14 @@ def tune_test_forecast(
     summary_stats=False,
     feature_importance=False,
     fi_method="pfi",
+    limit_grid_size=None,
     suffix=None,
     **cvkwargs,
 ):
     """ tunes, tests, and forecasts a series of models with a progress bar through tqdm.
 
     Args:
-        f (Forecaster): the object to visualize.
+        f (Forecaster or MVForecaster): the object to run the models through.
         models (list-like):
             each element must be in _can_be_tuned_.
         cross_validate (bool): default False
@@ -222,11 +223,16 @@ def tune_test_forecast(
             how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
         summary_stats (bool): default False.
             whether to save summary stats for the models that offer those.
+            does not work for `MVForecaster` objects.
         feature_importance (bool): default False.
             whether to save permutation feature importance information for the models that offer those.
+            does not work for `MVForecaster` objects.
         fi_method (str): one of {'pfi','shap'}, default 'pfi'.
             the type of feature importance to save for the models that support it.
             ignored if feature_importance is False.
+            does not work for `MVForecaster` objects.
+        limit_grid_size (int or float): optional. pass an argument here to limit each of the grids being read.
+            see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size
         suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
             later. if unspecified, each model can be called by its estimator name.
         **cvkwargs: passed to the cross_validate() method.
@@ -246,6 +252,9 @@ def tune_test_forecast(
     for m in log_progress(models):
         call_me = m if suffix is None else m + suffix
         f.set_estimator(m)
+        if limit_grid_size is not None:
+            f.ingest_grid(m)
+            f.limit_grid_size(limit_grid_size)
         if cross_validate:
             f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
         else:

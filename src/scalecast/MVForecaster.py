@@ -467,7 +467,7 @@ class MVForecaster:
         """
         _optimizer_funcs_[called] = func
 
-    def tune(self, dynamic_tuning=False):
+    def tune(self, dynamic_tuning=False, cv=False):
         """ tunes the specified estimator using an ingested grid (ingests a grid from MVGrids.py with same name as the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
 
@@ -476,6 +476,9 @@ class MVForecaster:
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, metrics effectively become an average of one-step forecasts.
+            cv (bool): default False.
+                whether the tune is part of a larger cross-validation process.
+                this does not need to specified by the user and should be kept False when calling `tune()`.
 
         Returns:
             None
@@ -543,7 +546,8 @@ class MVForecaster:
             self.grid_evaluated = pd.concat([self.grid_evaluated, metrics], axis=1)
         else:
             self.grid_evaluated = pd.DataFrame()
-        self._find_best_params(self.grid_evaluated)
+        if not cv:
+            self._find_best_params(self.grid_evaluated)
 
     def cross_validate(self, k=5, rolling=False, dynamic_tuning=False):
         """ tunes a model's hyperparameters using time-series cross validation. 
@@ -612,11 +616,11 @@ class MVForecaster:
                         },
                     )
 
-            mvf2.tune(dynamic_tuning=dynamic_tuning)
+            mvf2.tune(dynamic_tuning=dynamic_tuning,cv=True)
             orig_grid = mvf2.grid.copy()
             if mvf2.grid_evaluated.shape[0] == 0:
                 self.grid = pd.DataFrame()
-                self._find_best_params(grid_evaluated_cv)
+                self._find_best_params(mvf2.grid_evaluated)
                 return  # writes a warning and moves on
 
             mvf2.grid_evaluated["fold"] = i
@@ -902,6 +906,7 @@ class MVForecaster:
         dynamic_testing=True,
         probabilistic=False,
         n_iter=20,
+        limit_grid_size=None,
         suffix=None,
         **cvkwargs,
     ):
@@ -926,6 +931,8 @@ class MVForecaster:
                 whether to use a probabilistic forecasting process to set confidence intervals.
             n_iter (int): default 20.
                 how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
+            limit_grid_size (int or float): optional. pass an argument here to limit each of the grids being read.
+                see https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.limit_grid_size
             suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
                 later. if unspecified, each model can be called by its estimator name.
             **cvkwargs: passed to the cross_validate() method.
@@ -944,6 +951,9 @@ class MVForecaster:
         for m in models:
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
+            if limit_grid_size is not None:
+                self.ingest_grid(m)
+                self.limit_grid_size(limit_grid_size)
             if cross_validate:
                 self.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
             else:
@@ -1107,27 +1117,31 @@ class MVForecaster:
                     preds[series] = list(regr.predict(future))
             else:
                 preds = {series: [] for series in trained_models.keys()}
+                preds_draw = {series: [] for series in trained_models.keys()}
                 for i in range(len(future)):
                     fut = scale(self.scaler, future.iloc[i].values.reshape(1, -1))
                     for series, regr in trained_models.items():
-                        preds[series].append(regr.predict(fut)[0])
+                        pred = regr.predict(fut)[0]
+                        preds[series].append(pred)
+                        preds_draw[series].append(pred)
                     if i < len(future) - 1:
                         for c in future.columns.to_list()[len(self.current_xreg) :]:
                             ar = int(c.split("_lag")[-1])
                             series = c.split("_lag")[0]
                             s_num = int(series[1:])
                             idx = i + 1 - ar
+                            if dynamic_testing is not True and (i + 1) % dynamic_testing == 0:
+                                # dynamic window forecasting
+                                preds_draw[series][:(i+1)] = getattr(self, f"series{s_num}")[
+                                    "y"
+                                ].to_list()[-len(future):(-len(future)+i+1)]
+                            
                             if idx <= -1:
                                 future.loc[i + 1, c] = getattr(self, f"series{s_num}")[
                                     "y"
                                 ].to_list()[idx]
-                            elif (
-                                dynamic_testing is not True
-                                and (i + 1) % dynamic_testing == 0
-                            ):
-                                pass
                             else:
-                                future.loc[i + 1, c] = preds[series][idx]
+                                future.loc[i + 1, c] = preds_draw[series][idx]
             return preds
 
         descriptive_assert(

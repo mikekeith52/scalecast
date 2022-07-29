@@ -181,7 +181,7 @@ class Forecaster:
                 must be same length as y and in the same sequence 
                 (index 0 in y corresponds to index 0 in current_dates, etc.).
             require_future_dates (bool): default True.
-                if False, none of your models will forecast into future periods by default.
+                if False, none of the models will forecast into future periods by default.
                 if True, all models will forecast into future periods, 
                 unless run with test_only = True, and when adding regressors, they will automatically
                 be added into future periods.
@@ -648,38 +648,35 @@ class Forecaster:
                 return (regr.predict(p), regr.predict(X), Xvars, regr)
             # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
+            fcst_draw = []
             actuals = {
                 k: list(v)[:] for k, v in future_xreg.items() if k.startswith("AR")
             }
             for i in range(fcst_horizon):
                 p = pd.DataFrame({x: [future_xreg[x][i]] for x in Xvars}).values
                 p = scale(scaler, p)
-                fcst.append(regr.predict(p)[0])
+                pred = regr.predict(p)[0]
+                fcst.append(pred)
+                fcst_draw.append(pred)
                 if not i == (fcst_horizon - 1):
-                    for k, v in future_xreg.items():
-                        if k.startswith("AR"):
-                            ar = int(k[2:])
-                            idx = i + 1 - ar
-                            # full dynamic horizon
-                            if dynamic_testing is True:
-                                if idx > -1:
-                                    try:
-                                        future_xreg[k][i + 1] = fcst[idx]
-                                    except IndexError:
-                                        future_xreg[k].append(fcst[idx])
-                                else:
-                                    try:
-                                        future_xreg[k][i + 1] = y[idx]
-                                    except IndexError:
-                                        future_xreg[k].append(y[idx])
-                            # window forecasting
-                            else:
-                                if (i + 1) % dynamic_testing == 0:
-                                    future_xreg[k][: (i + 1)] = actuals[k][: (i + 1)]
-                                elif idx > -1:
-                                    future_xreg[k][i + 1] = fcst[idx]
-                                else:
-                                    future_xreg[k][i + 1] = y[idx]
+                    for k, v in {k:v for k, v in future_xreg.items() if k.startswith('AR')}.items():
+                        ar = int(k[2:])
+                        idx = i + 1 - ar
+                        # full dynamic horizon
+                        if dynamic_testing is not True and (i + 1) % dynamic_testing == 0:
+                            # dynamic window forecasting
+                            fcst_draw[:(i+1)] = y[-fcst_horizon:(-fcst_horizon+i+1)]
+                        
+                        if idx > -1:
+                            try:
+                                future_xreg[k][i + 1] = fcst_draw[idx]
+                            except IndexError:
+                                future_xreg[k].append(fcst_draw[idx])
+                        else:
+                            try:
+                                future_xreg[k][i + 1] = y[idx]
+                            except IndexError:
+                                future_xreg[k].append(y[idx])
 
             return (fcst, regr.predict(X), Xvars, regr)
 
@@ -2003,11 +2000,11 @@ class Forecaster:
         >>> f.add_ar_terms(4) # adds four lags of y to predict with
         """
         self._validate_future_dates_exist()
+        n = int(n)
 
         if n == 0:
             return
 
-        descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
         descriptive_assert(
             n >= 0, ValueError, f"n must be greater than or equal to 0, got {n}"
         )
@@ -2375,7 +2372,7 @@ class Forecaster:
 
         >>> f.set_validation_length(6) # validation length of 6
         """
-        descriptive_assert(isinstance(n, int), ValueError, f"n must be an int, got {n}")
+        n = int(n)
         descriptive_assert(n > 0, ValueError, f"n must be greater than 1, got {n}")
         if (self.validation_metric == "r2") & (n == 1):
             raise ValueError(
@@ -3033,11 +3030,7 @@ class Forecaster:
         >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only
         """
         self._validate_future_dates_exist()
-        descriptive_assert(
-            isinstance(lags, int),
-            ValueError,
-            f"lags must be an int type greater than 0, got {lags}",
-        )
+        lags = int(lags)
         descriptive_assert(
             lags >= 1,
             ValueError,
@@ -3215,7 +3208,7 @@ class Forecaster:
             )
         self.validation_metric = metric
 
-    def tune(self, dynamic_tuning=False):
+    def tune(self, dynamic_tuning=False, cv=False):
         """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
         the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
@@ -3226,6 +3219,9 @@ class Forecaster:
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
                 setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
                 when False, metrics effectively become an average of one-step forecasts.
+            cv (bool): default False.
+                whether the tune is part of a larger cross-validation process.
+                this does not need to specified by the user and should be kept False when calling `tune()`.
 
         Returns:
             None
@@ -3281,7 +3277,8 @@ class Forecaster:
             self.dynamic_tuning = dynamic_tuning
         else:
             self.grid_evaluated = pd.DataFrame()
-        self._find_best_params(self.grid_evaluated)
+        if not cv:
+            self._find_best_params(self.grid_evaluated)
 
     def cross_validate(self, k=5, rolling=False, dynamic_tuning=False):
         """ tunes a model's hyperparameters using time-series cross validation. 
@@ -3335,11 +3332,11 @@ class Forecaster:
             if rolling:
                 f2.keep_smaller_history(val_size * 2 + f2.test_length)
 
-            f2.tune(dynamic_tuning=dynamic_tuning)
+            f2.tune(dynamic_tuning=dynamic_tuning,cv=True)
             orig_grid = f2.grid.copy()
             if f2.grid_evaluated.shape[0] == 0:
                 self.grid, self.grid_evaluated = pd.DataFrame(), pd.DataFrame()
-                self._find_best_params(grid_evaluated_cv)
+                self._find_best_params(f2.grid_evaluated)
                 return
 
             f2.grid_evaluated["fold"] = i
@@ -3699,6 +3696,7 @@ class Forecaster:
         summary_stats=False,
         feature_importance=False,
         fi_method="pfi",
+        limit_grid_size=None,
         suffix=None,
         **cvkwargs,
     ):
@@ -3733,6 +3731,8 @@ class Forecaster:
             fi_method (str): one of {'pfi','shap'}, default 'pfi'.
                 the type of feature importance to save for the models that support it.
                 ignored if feature_importance is False.
+            limit_grid_size (int or float): optional. pass an argument here to limit each of the grids being read.
+                see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size
             suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
                 later. if unspecified, each model can be called by its estimator name.
             **cvkwargs: passed to the cross_validate() method.
@@ -3759,6 +3759,9 @@ class Forecaster:
         for m in models:
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
+            if limit_grid_size is not None:
+                self.ingest_grid(m)
+                self.limit_grid_size(limit_grid_size)
             if not cross_validate:
                 self.tune(dynamic_tuning=dynamic_tuning)
             else:
