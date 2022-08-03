@@ -259,7 +259,7 @@ def tune_test_forecast(
             f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
         else:
             f.tune(dynamic_tuning=dynamic_tuning)
-        self.auto_forecast(
+        f.auto_forecast(
             dynamic_testing=dynamic_testing,
             call_me=call_me,
             probabilistic=probabilistic,

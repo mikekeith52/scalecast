@@ -150,10 +150,14 @@ class SeriesTransformer:
         """
         return self.Revert(np.exp, full=full)
 
-    def ScaleTransform(self):
+    def ScaleTransform(self,train_only=False):
         """ transforms the y attribute in the Forecaster object using a scale transformation.
         scale defined as (array[i] - array.mean()) / array.std().
+        fit on the training slice of data only.
 
+        Args:
+            train_only (bool): default False.
+                whether to fit the scale transformer on the training set only.
         Returns:
             (Forecaster): a Forecaster object with the transformed attributes.
 
@@ -166,8 +170,10 @@ class SeriesTransformer:
         if hasattr(self, "orig_mean"):
             return
 
-        self.orig_mean = self.f.y.mean()
-        self.orig_std = self.f.y.std()
+        stop_at = len(self.f.y) if not train_only else len(self.f.y) - self.f.test_length
+
+        self.orig_mean = self.f.y.values[:stop_at].mean()
+        self.orig_std = self.f.y.values[:stop_at].std()
 
         def func(x, mean, std):
             return [(i - mean) / std for i in x]
@@ -189,8 +195,9 @@ class SeriesTransformer:
         >>> from scalecast.Forecaster import Forecaster
         >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
+        >>> f.set_test_length(.2) # specify a test set to not leak data with this func
         >>> transformer = SeriesTransformer(f)
-        >>> f = transformer.ScaleTransform()
+        >>> f = transformer.ScaleTransform(train_only=True)
         >>> f = transformer.ScaleRevert()
         """
 
@@ -205,10 +212,14 @@ class SeriesTransformer:
         except AttributeError:
             raise ValueError("cannot revert a series that was never scaled.")
 
-    def MinMaxTransform(self):
+    def MinMaxTransform(self,train_only=False):
         """ transforms the y attribute in the Forecaster object using a min-max scale transformation.
         min-max scale defined as (array[i] - array.min()) / (array.max() - array.min()).
+        fit on the training slice of data only.
 
+        Args:
+            train_only (bool): default False.
+                whether to fit the minmax transformer on the training set only.
         Returns:
             (Forecaster): a Forecaster object with the transformed attributes.
 
@@ -221,8 +232,10 @@ class SeriesTransformer:
         if hasattr(self, "orig_min"):
             return
 
-        self.orig_min = self.f.y.min()
-        self.orig_max = self.f.y.max()
+        stop_at = len(self.f.y) if not train_only else len(self.f.y) - self.f.test_length
+
+        self.orig_min = self.f.y.values[:stop_at].min()
+        self.orig_max = self.f.y.values[:stop_at].max()
 
         def func(x, amin, amax):
             return [(i - amin) / (amax - amin) for i in x]
@@ -244,8 +257,9 @@ class SeriesTransformer:
         >>> from scalecast.Forecaster import Forecaster
         >>> from scalecast.SeriesTransformer import SeriesTransformer
         >>> f = Forecaster(...)
+        >>> f.set_test_length(.2) # specify a test set to not leak data with this func
         >>> transformer = SeriesTransformer(f)
-        >>> f = transformer.MinMaxTransform()
+        >>> f = transformer.MinMaxTransform(train_only=True)
         >>> f = transformer.MinMaxRevert()
         """
 

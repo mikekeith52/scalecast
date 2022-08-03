@@ -4,7 +4,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-def pdr_load(sym,start=None,end=None,src='fred',require_future_dates=True,**kwargs):
+def pdr_load(
+    sym,
+    start=None,
+    end=None,
+    src='fred',
+    require_future_dates=True,
+    future_dates=None,
+    **kwargs
+):
     """ gets data using `pdr.DataReader()`
 
     Args:
@@ -21,6 +29,8 @@ def pdr_load(sym,start=None,end=None,src='fred',require_future_dates=True,**kwar
             if True, all models will forecast into future periods, 
             unless run with test_only = True, and when adding regressors, they will automatically
             be added into future periods.
+        future_dates (int): optional: the future dates to add to the model upon initialization.
+            if not added when object is initialized, can be added later.
         **kwargs passed to pdr.DataReader() function. 
             see https://pandas-datareader.readthedocs.io/en/latest/remote_data.html.
 
@@ -33,7 +43,12 @@ def pdr_load(sym,start=None,end=None,src='fred',require_future_dates=True,**kwar
         f'sym argument only accepts str types, got {type(sym)}'
     )
     df = pdr.DataReader(sym,data_source=src,start=start,end=end,**kwargs)
-    return Forecaster(y=df[sym],current_dates=df.index,require_future_dates=require_future_dates)
+    return Forecaster(
+        y=df[sym],
+        current_dates=df.index,
+        require_future_dates=require_future_dates,
+        future_dates = future_dates,
+    )
 
 def plot_reduction_errors(f):
     """ plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
@@ -80,20 +95,28 @@ def break_mv_forecaster(mvf):
             hist[k]["TestOnly"] = False
         return hist
 
+    mvf1 = mvf.deepcopy()
+
+    set_len = (
+        len(mvf1.series1['y']) 
+        if not mvf1.current_xreg 
+        else len(list(mvf1.current_xreg.values())[0])
+    )
     to_return = []
-    for s in range(mvf.n_series):
+    for s in range(mvf1.n_series):
         f = Forecaster(
-            y=getattr(mvf, f"series{s+1}")["y"],
-            current_dates=mvf.current_dates,
-            integration=getattr(mvf, f"series{s+1}")["integration"],
-            levely=getattr(mvf, f"series{s+1}")["levely"],
-            future_dates=mvf.future_dates,
-            current_xreg=mvf.current_xreg,
-            future_xreg=mvf.future_xreg,
-            test_length=mvf.test_length,
-            validation_length=mvf.validation_length,
+            y=getattr(mvf1, f"series{s+1}")["y"].values[-set_len:],
+            current_dates=mvf1.current_dates.values[-set_len:],
+            integration=getattr(mvf1, f"series{s+1}")["integration"],
+            levely=getattr(mvf1, f"series{s+1}")["levely"][-set_len:],
+            init_dates=getattr(mvf1, f"series{s+1}")["init_dates"][-set_len:],
+            future_dates=mvf1.future_dates.copy(),
+            current_xreg={k:v.copy() for k,v in mvf1.current_xreg.items()},
+            future_xreg={k:v.copy() for k,v in mvf1.future_xreg.items()},
+            test_length=mvf1.test_length,
+            validation_length=mvf1.validation_length,
         )
-        f.history = convert_mv_hist(f, mvf.history, s)
+        f.history = convert_mv_hist(f, mvf1.history, s)
         to_return.append(f)
 
     return tuple(to_return)

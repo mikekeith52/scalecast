@@ -173,7 +173,7 @@ class ForecastError(Exception):
 
 # MAIN OBJECT
 class Forecaster:
-    def __init__(self, y, current_dates, require_future_dates=True, **kwargs):
+    def __init__(self, y, current_dates, require_future_dates=True, future_dates=None, **kwargs):
         """ 
         Args:
             y (list-like): an array of all known observed values.
@@ -188,6 +188,8 @@ class Forecaster:
                 this was added in v 0.12.0 and is considered experimental as of then. it was added
                 to make anomaly detection more convenient. before, the object acted as if
                 require_future_dates were always True.
+            future_dates (int): optional: the future dates to add to the model upon initialization.
+                if not added when object is initialized, can be added later.
 
         Returns:
             (Forecaster): the object.
@@ -218,6 +220,8 @@ class Forecaster:
 
         if not require_future_dates:
             self.generate_future_dates(1)  # placeholder -- never used
+        if future_dates is not None:
+            self.generate_future_dates(future_dates)
 
         globals()["f_init_"] = self.__deepcopy__()
 
@@ -2008,11 +2012,13 @@ class Forecaster:
         descriptive_assert(
             n >= 0, ValueError, f"n must be greater than or equal to 0, got {n}"
         )
+        """ don't think we actually need this
         descriptive_assert(
             self.integration == 0,
             ForecastError,
             "AR terms must be added before differencing (don't worry, they will be differenced too)",
         )
+        """
         for i in range(1, n + 1):
             self.current_xreg[f"AR{i}"] = pd.Series(self.y).shift(i)
             self.future_xreg[f"AR{i}"] = [self.y.values[-i]]
@@ -4269,11 +4275,13 @@ class Forecaster:
         plt.ylabel("Values")
         return ax
 
-    def drop_regressors(self, *args):
+    def drop_regressors(self, *args, error = 'raise'):
         """ drops regressors.
 
         Args:
             *args (str): the names of regressors to drop.
+            error (str): one of 'ignore','raise', default 'raise'.
+                what to do with the error if the xvar is not found in the object.
 
         Returns:
             None
@@ -4283,6 +4291,13 @@ class Forecaster:
         >>> f.drop_regressors('t','t^0.5')
         """
         for a in args:
+            if a not in self.current_xreg:
+                if error == 'raise':
+                    raise ForecastError(f'cannot find {a} in Forecaster object')
+                elif error == 'ignore':
+                    continue
+                else:
+                    raise ValueError(f'arg passed to error not recognized: {error}')
             self.current_xreg.pop(a)
             self.future_xreg.pop(a)
 

@@ -129,6 +129,7 @@ class MVForecaster:
                     "y": f.y.copy().reset_index(drop=True),
                     "levely": f.levely.copy(),
                     "integration": f.integration,
+                    "init_dates": f.init_dates,
                 },
             )
             if i == 0:
@@ -158,7 +159,7 @@ class MVForecaster:
                     self.future_xreg = {k: v[:] in f.future_xreg.items()}
                 else:
                     for k, v in f.current_xreg.items():
-                        if k not in self.current_xreg.keys():
+                        if k not in self.current_xreg.keys() or k.startswith('AR'):
                             self.current_xreg.pop(k)
                             self.future_xreg.pop(k)
             else:

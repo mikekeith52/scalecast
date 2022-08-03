@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.5] - 2022-08-03
+### Added
+- added optional `future_dates` arg to `Forecaster.__init__()` method
+- added `error` argument to the `Forecaster.drop_Xvars()` and `Forecaster.drop_regressors()` methods
+### Changed
+- changed `SeriesTransformer` scaling functions to use only training data if `train_only=True`.
+- took out the error that's raised when trying to add AR terms after data has already been differenced
+### Fixed
+- fixed an issue with the `notebook.tune_test_forecast()` function
+- `MVForecaster` no longer takes AR terms when `merge_Xvars = 'u'`
+- fixed an issue where `util.break_mv_forecaster` was not converting xreg dict correctly
+
 ## [0.13.4] - 2022-07-29
 ### Added
 - added `util.pdr_load()` function.
@@ -15,7 +27,7 @@ All notable changes to this project will be documented in this file. We keep tra
 ## [0.13.3] - 2022-07-27
 ### Added
 ### Changed
-- SeriesTransformer.diffrevert() now supports an argument `revert_fvs`, which is True by default. since adding level cis, this is now possible.
+- `SeriesTransformer.diffrevert()` now supports an argument `revert_fvs`, which is `True` by default. since adding level cis, this is now possible.
 ### Fixed
 - fixed an issue that caused model evaluation to fail if models were not tuned from the grid successfully. this was an issue since 0.12.3 due to how cross validation changed tuning.
 
