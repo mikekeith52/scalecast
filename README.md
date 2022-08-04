@@ -66,7 +66,7 @@ In addition, scalecast offers:
 
 ## Installation
 - Only the base package is needed to get started:  
-`pip install scalecast`  
+`pip install --upgrade scalecast`  
 - Optional add-ons:  
 `pip install darts`  
 `pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  

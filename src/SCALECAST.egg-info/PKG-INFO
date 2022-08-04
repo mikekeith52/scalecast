@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.13.5
+Version: 0.13.6
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -77,7 +77,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         
         ## Installation
         - Only the base package is needed to get started:  
-        `pip install scalecast`  
+        `pip install --upgrade scalecast`  
         - Optional add-ons:  
         `pip install darts`  
         `pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  

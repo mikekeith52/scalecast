@@ -1912,13 +1912,17 @@ class Forecaster:
 
         self.infer_freq()
 
-    def diff(self, i=1):
+    def diff(self, i=1, error='raise'):
         """ differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.
+        to different twice, pass diff(2). if you try to pass diff(1) twice, it will not work.
+        also see: https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html
 
         Args:
             i (int): default 1.
                 the number of differences to take.
                 must be 1 or 2.
+            error (str): one of 'ignore','raise', default 'raise'.
+                what to do with the error if the series has already been differenced.
 
         Returns:
             None
@@ -1927,15 +1931,22 @@ class Forecaster:
         """
         if i == 0:
             return
-        descriptive_assert(
-            self.integration == 0,
-            ForecastError.CannotDiff,
-            "series has already been differenced, if you want to difference again, use undiff() first, then diff(2)",
-        )
+        if self.integration > 0:
+            if error == 'ignore':
+                pass
+            elif error == 'raise':
+                raise ForecastError.CannotDiff(
+                    "series has already been differenced, if you want to difference again, use undiff() first, then diff(2)"
+                )
+            else:
+                raise ValueError(f'arg passed to error not recognized: {error}')
+
         descriptive_assert(
             i in (1, 2),
             ValueError,
-            f"only 1st and 2nd order integrations supported for now, got i={i}",
+            f"only 1st and 2nd order integrations supported, got i={i} "
+            "the SeriesTransformer object can handle more sophisticated differencing "
+            "see https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html",
         )
         self.integration = i
         for _ in range(i):
@@ -2040,11 +2051,13 @@ class Forecaster:
             ValueError,
             f"n must be an array-like of length 2 (P,m), got {N}",
         )
+        """ don't think we actually need this
         descriptive_assert(
             self.integration == 0,
             ForecastError,
             "AR terms must be added before differencing (don't worry, they will be differenced too)",
         )
+        """
         for i in range(N[1], N[1] * N[0] + 1, N[1]):
             self.current_xreg[f"AR{i}"] = pd.Series(self.y).shift(i)
             self.future_xreg[f"AR{i}"] = [self.y.values[-i]]

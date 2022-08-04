@@ -110,7 +110,7 @@ def break_mv_forecaster(mvf):
             integration=getattr(mvf1, f"series{s+1}")["integration"],
             levely=getattr(mvf1, f"series{s+1}")["levely"][-set_len:],
             init_dates=getattr(mvf1, f"series{s+1}")["init_dates"][-set_len:],
-            future_dates=mvf1.future_dates.copy(),
+            future_dates=len(mvf1.future_dates),
             current_xreg={k:v.copy() for k,v in mvf1.current_xreg.items()},
             future_xreg={k:v.copy() for k,v in mvf1.future_xreg.items()},
             test_length=mvf1.test_length,

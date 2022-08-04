@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.6] - 2022-08-04
+### Added
+- added `error` argument to the `Forecaster.diff()` method
+### Changed
+- took out the error that's raised when trying to add AR terms after data has already been differenced using `Forecaster.add_AR_terms()`
+### Fixed
+- fixed an issue with `util.break_mv_forecaster` that was caused from adding `future_dates` arg to `Forecaster.__init__()` method
+
 ## [0.13.5] - 2022-08-03
 ### Added
 - added optional `future_dates` arg to `Forecaster.__init__()` method
