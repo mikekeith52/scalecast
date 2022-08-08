@@ -3677,6 +3677,66 @@ class Forecaster:
                     fcst_step - set_ci_step(fcsts.std(axis=0)[idx],)
                     for idx, fcst_step in enumerate(fcsts.mean(axis=0))
                 ]
+        self.history[call_me]['CIPlusMinus'] = None
+
+    def reeval_cis(self,models='all'):
+        """ generates an expanding confidence interval that uses previously evaluated model classes to determine.
+        need to have evaluated at least three models to be able to use.
+
+        Args:
+            models (str or list-like): default 'all'. the models to regenerate cis for. 
+                needs to have at least 3 to work with.
+        Returns:
+            None
+
+        >>> from scalecast.util import pdr_load
+        >>> from scalecast import GridGenerator
+        >>> f = pdr_load(
+        >>>    'UNRATE',
+        >>>    start='2000-01-01',
+        >>>    end='2022-07-01',
+        >>>    src='fred',
+        >>>    future_dates = 24,
+        >>> )
+        >>> GridGenerator.get_example_grids()
+        >>> f.add_ar_terms(6)
+        >>> models = ('elasticnet','mlp','arima')
+        >>> f.tune_test_forecast(models)
+        >>> f.reeval_cis() # creates cis based on the results from each model
+        """
+        def set_ci_step(s):
+            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
+
+        models = self._parse_models(models,None)
+
+        attr_set_map = {
+            "UpperCI": "Forecast",
+            "LowerCI": "Forecast",
+            "TestSetUpperCI": "TestSetPredictions",
+            "TestSetLowerCI": "TestSetPredictions",
+            "LevelUpperCI": "LevelForecast",
+            "LevelLowerCI": "LevelForecast",
+            "LevelTSUpperCI": "LevelTestSetPreds",
+            "LevelTSLowerCI": "LevelTestSetPreds",
+        }
+
+        for m in models:
+            for i, kv in enumerate(attr_set_map.items()):
+                if i % 2 == 0:
+                    fcsts = np.array(
+                        [self.history[m][kv[1]] for m in models]
+                    )
+                    self.history[m][kv[0]] = [
+                        self.history[m][kv[1]][idx] + set_ci_step(fcsts.std(axis=0)[idx],)
+                        for idx, fcst_step in enumerate(fcsts.mean(axis=0))
+                    ]
+                else:
+                    self.history[m][kv[0]] = [
+                        self.history[m][kv[1]][idx] - set_ci_step(fcsts.std(axis=0)[idx],)
+                        for idx, fcst_step in enumerate(fcsts.mean(axis=0))
+                    ]
+
+            self.history[m]['CIPlusMinus'] = None
 
     def add_sklearn_estimator(self, imported_module, called):
         """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().

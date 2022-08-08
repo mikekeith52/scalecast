@@ -1,4 +1,3 @@
-from scalecast.Forecaster import descriptive_assert, Forecaster
 from scalecast import Forecaster
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
@@ -225,13 +224,13 @@ def pdr_load(
     Returns:
         (Forecaster): a Forecaster object with the dates and y-values loaded.
     """
-    descriptive_assert(
+    Forecaster.descriptive_assert(
         isinstance(sym,str),
         ValueError,
         f'sym argument only accepts str types, got {type(sym)}'
     )
     df = pdr.DataReader(sym,data_source=src,start=start,end=end,**kwargs)
-    return Forecaster(
+    return Forecaster.Forecaster(
         y=df[sym],
         current_dates=df.index,
         require_future_dates=require_future_dates,
@@ -292,7 +291,7 @@ def break_mv_forecaster(mvf):
     )
     to_return = []
     for s in range(mvf1.n_series):
-        f = Forecaster(
+        f = Forecaster.Forecaster(
             y=getattr(mvf1, f"series{s+1}")["y"].values[-set_len:],
             current_dates=mvf1.current_dates.values[-set_len:],
             integration=getattr(mvf1, f"series{s+1}")["integration"],

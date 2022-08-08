@@ -899,6 +899,91 @@ class MVForecaster:
                     for s in fcsts.keys()
                 }
 
+    def reeval_cis(self,models='all'):
+        """ generates an expanding confidence interval that uses previously evaluated model classes to determine.
+        need to have evaluated at least three models to be able to use.
+
+        Args:
+            models (str or list-like): default 'all'. the models to regenerate cis for. 
+                needs to have at least 3 to work with.
+        Returns:
+            None
+
+        >>> from scalecast.MVForecaster import MVForecaster
+        >>> from scalecast.util import pdr_load
+        >>> from scalecast import GridGenerator
+        >>> f1 = pdr_load(
+        >>>    'UNRATE',
+        >>>    start='2000-01-01',
+        >>>    end='2022-07-01',
+        >>>    src='fred',
+        >>>    future_dates = 24,
+        >>> )
+        >>> f2 = pdr_load(
+        >>>    'UTUR',
+        >>>    start='2000-01-01',
+        >>>    end='2022-07-01',
+        >>>    src='fred',
+        >>>    future_dates = 24,
+        >>> )
+        >>> GridGenerator.get_mv_grids()
+        >>> mvf = MVForecaster(f1,f2,names=['UNRATE','UTUR'])
+        >>> models = ('elasticnet','mlp','arima')
+        >>> mvf.tune_test_forecast(models)
+        >>> mvf.reeval_cis() # creates cis based on the results from each model
+        """
+        def set_ci_step(s):
+            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
+
+        models = self._parse_models(models,put_best_on_top=False)
+
+        fcst_attr = (
+            "Forecast",
+            "TestSetPredictions",
+            "LevelForecast",
+            "LevelTestSetPreds",
+        )
+        fcst_attr_map = {
+            attr: {
+                s: np.array(
+                    [self.history[m][attr][s] for m in models]
+                )
+                for s in self.history[models[0]][attr].keys()
+            }
+            for attr in fcst_attr
+        }
+
+        ci_attr_map = {
+            "UpperCI": "Forecast",
+            "LowerCI": "Forecast",
+            "TestSetUpperCI": "TestSetPredictions",
+            "TestSetLowerCI": "TestSetPredictions",
+            "LevelUpperCI": "LevelForecast",
+            "LevelLowerCI": "LevelForecast",
+            "LevelTSUpperCI": "LevelTestSetPreds",
+            "LevelTSLowerCI": "LevelTestSetPreds",
+        }
+
+        for m in models:
+            for i, kv in enumerate(ci_attr_map.items()):
+                if i % 2 == 0:
+                    fcsts = fcst_attr_map[kv[1]]
+                    self.history[m][kv[0]] = {
+                        s: [
+                            fcst_step + set_ci_step(fcsts[s].std(axis=0)[idx],)
+                            for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
+                        ]
+                        for s in fcsts.keys()
+                    }
+                else:
+                    self.history[m][kv[0]] = {
+                        s: [
+                            fcst_step - set_ci_step(fcsts[s].std(axis=0)[idx],)
+                            for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
+                        ]
+                        for s in fcsts.keys()
+                    }
+
     def tune_test_forecast(
         self,
         models,
