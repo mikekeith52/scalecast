@@ -48,6 +48,7 @@ from sklearn.linear_model import SGDRegressor as sgd_
 # FUNCTIONS
 
 # custom metrics - are what you expect except MAPE, which can return None
+# these are now also in util.metrics, would have been better to put them there from the start but oh well
 def mape(y, pred):
     return (
         np.nan if 0 in y else mean_absolute_percentage_error(y, pred)
@@ -65,7 +66,7 @@ def mae(y, pred):
 def r2(y, pred):
     return r2_score(y, pred)
 
-
+# this is used across a few different models
 def prepare_data(Xvars, y, current_xreg):
     if Xvars is None or Xvars == "all":
         Xvars = [x for x in current_xreg.keys()]
@@ -136,6 +137,7 @@ _determine_best_by_ = [
     "LevelTestSetR2",
 ]
 _normalizer_ = ["minmax", "normalize", "scale", None]
+# i do it this way to make mvforecaster work a little better
 _colors_ = [
     "#FFA500",
     "#DC143C",
@@ -154,9 +156,10 @@ _colors_ = [
     "#BDB76B",
     "#DEB887",
 ] * 10
+# keywords that are passed to _bank_history() that I don't want to be recognized as hyperparams
 _not_hyperparams_ = ["Xvars", "normalizer", "tuned", "plot_loss", "plot_loss_test"]
 
-# DESCRIPTIVE ERRORS
+# descriptive errors
 class ForecastError(Exception):
     class CannotDiff(Exception):
         pass
@@ -171,7 +174,6 @@ class ForecastError(Exception):
         pass
 
 
-# MAIN OBJECT
 class Forecaster:
     def __init__(self, y, current_dates, require_future_dates=True, future_dates=None, **kwargs):
         """ 

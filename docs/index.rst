@@ -74,6 +74,7 @@ Index
    Forecaster/GridGenerator
    Forecaster/Notebook
    Forecaster/Multiseries
+   Forecaster/Auxmodels
    Forecaster/Util
 
 .. toctree::

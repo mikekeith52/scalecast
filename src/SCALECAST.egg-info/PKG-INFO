@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.13.6
+Version: 0.13.7
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -84,6 +84,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         `pip install greykite`   
         `pip install shap` (SHAP feature importance)  
         `pip install kats` (for changepoint detection)  
+        `pip install pmdarima` (auto arima)  
         `pip install tqdm` (progress bar with notebook)  
         `pip install ipython` (widgets with notebook)  
         `pip install ipywidgets` (widgets with notebook)  

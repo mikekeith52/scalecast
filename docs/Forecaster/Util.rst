@@ -3,6 +3,11 @@ util
 
 Miscellaneous util functions native to scalecast.
 
+metrics
+----------
+.. autoclass:: src.scalecast.util.metrics
+   :members:
+
 plot_reduction_errors()
 -----------------------------
 .. automodule:: src.scalecast.util.plot_reduction_errors
@@ -40,16 +45,23 @@ break_mv_forecaster()
 
 .. code:: python
 
-    from scalecast.Forecaster import Forecaster
     from scalecast.MVForecaster import MVForecaster
-    from scalecast.util import break_mv_forecaster 
+    from scalecast.util import break_mv_forecaster, pdr_load
 
-    s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-01-01')
-    s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-01-01')
-
-    f1 = Forecaster(y=s1['UTUR'],current_dates=s1.index)
-    f2 = Forecaster(y=s2['UNRATE'],current_dates=s2.index)
+    f1 = prd_load('UTUR',start='2000-01-01',end='2022-01-01',src='fred')
+    f2 = prd_load('UNRATE',start='2000-01-01',end='2022-01-01',src='fred')
 
     mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
 
     f1, f2 = break_mv_forecaster(mvf)
+
+
+pdr_load()
+----------------
+.. automodule:: src.scalecast.util.pdr_load
+    :members:
+
+.. code:: python
+
+    from scalecast.util import pdr_load
+    f = prd_load('UNRATE',start='2000-01-01',src='fred')

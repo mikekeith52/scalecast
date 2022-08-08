@@ -73,6 +73,7 @@ In addition, scalecast offers:
 `pip install greykite`   
 `pip install shap` (SHAP feature importance)  
 `pip install kats` (for changepoint detection)  
+`pip install pmdarima` (auto arima)  
 `pip install tqdm` (progress bar with notebook)  
 `pip install ipython` (widgets with notebook)  
 `pip install ipywidgets` (widgets with notebook)  

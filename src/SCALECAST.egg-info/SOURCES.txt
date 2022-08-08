@@ -40,6 +40,7 @@ src/scalecast/GridGenerator.py
 src/scalecast/MVForecaster.py
 src/scalecast/SeriesTransformer.py
 src/scalecast/__init__.py
+src/scalecast/auxmodels.py
 src/scalecast/multiseries.py
 src/scalecast/notebook.py
 src/scalecast/util.py

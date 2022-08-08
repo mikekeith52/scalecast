@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.7] - 2022-08-08
+### Added
+- added `auxmodels` module with `auto_arima()` and `mlp_stack()` functions
+- added pmdarima as an optional dependency to make auto_arima work
+- added `util.metrics` class
+### Changed
+### Fixed
+
 ## [0.13.6] - 2022-08-04
 ### Added
 - added `error` argument to the `Forecaster.diff()` method
