@@ -994,6 +994,7 @@ class MVForecaster:
         n_iter=20,
         limit_grid_size=None,
         suffix=None,
+        error='raise',
         **cvkwargs,
     ):
         """ iterates through a list of models, tunes them using grids in MVGrids.py, and forecasts them.
@@ -1021,6 +1022,9 @@ class MVForecaster:
                 see https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.limit_grid_size
             suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
                 later. if unspecified, each model can be called by its estimator name.
+            error (str): one of 'ignore','raise','warn'; default 'raise'.
+                what to do with the error if a given model fails.
+                'warn' logs a warning that the model could not be evaluated.
             **cvkwargs: passed to the cross_validate() method.
 
         Returns:
@@ -1044,12 +1048,26 @@ class MVForecaster:
                 self.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
             else:
                 self.tune(dynamic_tuning=dynamic_tuning)
-            self.auto_forecast(
-                dynamic_testing=dynamic_testing,
-                call_me=call_me,
-                probabilistic=probabilistic,
-                n_iter=n_iter,
-            )
+            try:
+                self.auto_forecast(
+                    dynamic_testing=dynamic_testing,
+                    call_me=call_me,
+                    probabilistic=probabilistic,
+                    n_iter=n_iter,
+                )
+            except Exception as e:
+                if error == 'raise':
+                    raise
+                elif error == 'warn':
+                    warnings.warn(
+                        f"{m} model could not be evaluated "
+                        f"here's the error: {e}"
+                    )
+                    continue
+                elif error == 'ignore':
+                    continue
+                else:
+                    raise ValueError(f'value passed to error arg not recognized: {error}')
 
     def set_optimize_on(self, how):
         """ choose how to determine best models by choosing which series should be optimized.

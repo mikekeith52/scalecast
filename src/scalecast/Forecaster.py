@@ -3779,6 +3779,7 @@ class Forecaster:
         fi_method="pfi",
         limit_grid_size=None,
         suffix=None,
+        error='raise',
         **cvkwargs,
     ):
         """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information.
@@ -3816,6 +3817,9 @@ class Forecaster:
                 see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size
             suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
                 later. if unspecified, each model can be called by its estimator name.
+            error (str): one of 'ignore','raise','warn'; default 'raise'.
+                what to do with the error if a given model fails.
+                'warn' logs a warning that the model could not be evaluated.
             **cvkwargs: passed to the cross_validate() method.
 
         Returns:
@@ -3834,9 +3838,6 @@ class Forecaster:
             FileNotFoundError,
             "Grids.py not found in working directory",
         )
-        descriptive_assert(
-            "comob" not in models, ValueError, "combo models cannot be tuned"
-        )
         for m in models:
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
@@ -3847,12 +3848,26 @@ class Forecaster:
                 self.tune(dynamic_tuning=dynamic_tuning)
             else:
                 self.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
-            self.auto_forecast(
-                dynamic_testing=dynamic_testing,
-                call_me=call_me,
-                probabilistic=probabilistic,
-                n_iter=n_iter,
-            )
+            try:
+                self.auto_forecast(
+                    dynamic_testing=dynamic_testing,
+                    call_me=call_me,
+                    probabilistic=probabilistic,
+                    n_iter=n_iter,
+                )
+            except Exception as e:
+                if error == 'raise':
+                    raise
+                elif error == 'warn':
+                    warnings.warn(
+                        f"{m} model could not be evaluated "
+                        f"here's the error: {e}"
+                    )
+                    continue
+                elif error == 'ignore':
+                    continue
+                else:
+                    raise ValueError(f'value passed to error arg not recognized: {error}')
 
             if summary_stats:
                 self.save_summary_stats()

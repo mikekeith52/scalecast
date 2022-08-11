@@ -1,10 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.9] - 2022-08-11
+### Added
+- added error arg to `Forecaster.tune_test_forecast()` and `MVForecater.tune_test_forecast()` methods.
+### Changed
+- took out an error check that was redundant and not even working
+### Fixed
+- fixed some documentation syntax for new objects added last dist
+
 ## [0.13.8] - 2022-08-08
 ### Added
 - added `auxmodels` module with `auto_arima()` and `mlp_stack()` functions
-- added pmdarima as an optional dependency to make auto_arima work
+- added pmdarima as an optional requirement to make auto_arima work
 - added `util.metrics` class
 - added `Forecaster.reeval_cis()` and `MVForecaster.reeval_cis()` methods
 ### Changed

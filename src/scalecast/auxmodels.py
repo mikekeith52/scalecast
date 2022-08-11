@@ -58,25 +58,26 @@ def mlp_stack(
     default values usually perform pretty well from what we have observed.
     recommended to use at least four models in the stack.
 
-    f (Forecaster or MVForecaster): the object to add the model to.
-    model_nicknames (list-like): the names of models previously evaluated within the object.
-        must be sklearn api models.
-    max_samples (float or int): default 0.9.
-        the number of samples to draw with replacement from training set to train each base estimator.
-        if int, then draw max_samples samples.
-        if float, then draw that percentage of samples.
-    max_features (float or int): default 0.5
-        the number of features to draw from training set to train each base estimator.
-        if int, then draw max_features features.
-        if float, then draw that percentage of features.
-    n_estimators (int): default 10.
-        the number of base estimators in the ensemble.
-    hidden_layer_sizes (tuple): default (100,100,100).
-        the layer/hidden layer sizes for the bagged mlp regressor that is the final estimator in the stacked model.
-    solver (str): default 'lbfgs'.
-        the mlp solver.
-    call_me (str): default 'mlp_stack'. the name of the resulting model.
-    **kwargs: passed to the `manual_forecast()` method.
+    Args:
+        f (Forecaster or MVForecaster): the object to add the model to.
+        model_nicknames (list-like): the names of models previously evaluated within the object.
+            must be sklearn api models.
+        max_samples (float or int): default 0.9.
+            the number of samples to draw with replacement from training set to train each base estimator.
+            if int, then draw max_samples samples.
+            if float, then draw that percentage of samples.
+        max_features (float or int): default 0.5
+            the number of features to draw from training set to train each base estimator.
+            if int, then draw max_features features.
+            if float, then draw that percentage of features.
+        n_estimators (int): default 10.
+            the number of base estimators in the ensemble.
+        hidden_layer_sizes (tuple): default (100,100,100).
+            the layer/hidden layer sizes for the bagged mlp regressor that is the final estimator in the stacked model.
+        solver (str): default 'lbfgs'.
+            the mlp solver.
+        call_me (str): default 'mlp_stack'. the name of the resulting model.
+        **kwargs: passed to the `manual_forecast()` method.
 
     Returns:
         None
@@ -95,7 +96,7 @@ def mlp_stack(
     >>> f.add_seasonal_regressors('month',raw=False,sincos=True)
     >>> f.diff()
     >>> f.tune_test_forecast(models,cross_validate=True)
-    >>> mlp_stack(f,model_nicknames=models) # saves a model called auto_arima
+    >>> mlp_stack(f,model_nicknames=models) # saves a model called mlp_stack
     >>> f.export('model_summaries',models='stacking')
     """
     results = f.export('model_summaries')
