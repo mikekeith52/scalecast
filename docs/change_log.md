@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.10] - 2022-08-15
+### Added
+- added probabilistic argument option to `auxmodels.mlp_stack()` function.
+- added Xvars argument to `auxmodels.auto_arima()` function.
+### Changed
+- made it so that an error is raised earlier when using `Forecaster.ingest_Xvars_df()` incorrectly.
+### Fixed
+- fixed an issue with `auxmodels.mlp_stack()` where `**kwargs` were not being passed correctly.
+
 ## [0.13.9] - 2022-08-11
 ### Added
 - added error arg to `Forecaster.tune_test_forecast()` and `MVForecater.tune_test_forecast()` methods.

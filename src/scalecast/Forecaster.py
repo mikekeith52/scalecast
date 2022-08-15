@@ -1946,8 +1946,8 @@ class Forecaster:
         descriptive_assert(
             i in (1, 2),
             ValueError,
-            f"only 1st and 2nd order integrations supported, got i={i} "
-            "the SeriesTransformer object can handle more sophisticated differencing "
+            f"only 1st and 2nd order integrations supported, got i={i}. "
+            "the SeriesTransformer object can handle more sophisticated differencing. "
             "see https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html",
         )
         self.integration = i
@@ -2097,6 +2097,11 @@ class Forecaster:
         current_df = df.loc[df[date_col].isin(self.current_dates)]
         if self.require_future_dates:
             future_df = df.loc[df[date_col] > self.current_dates.values[-1]]
+            descriptive_assert(
+                future_df.shape[0] > 0,
+                ForecastError,
+                'regressor values must be known into the future unless require_future_dates attr is set to False'
+            )
         else:
             future_df = pd.DataFrame({date_col: self.future_dates.to_list()})
             for c in current_df:
@@ -2106,14 +2111,16 @@ class Forecaster:
         descriptive_assert(
             current_df.shape[0] == len(self.y),
             ForecastError,
-            "something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future and specify a date column in date_col parameter",
+            "something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future"
+            " and specify a date column in date_col parameter",
         )
 
         if not use_future_dates:
             descriptive_assert(
                 future_df.shape[0] >= len(self.future_dates),
                 ValueError,
-                "the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object. if you desire to use the dataframe to set the future dates for the object, use use_future_dates=True",
+                "the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object." 
+                " if you desire to use the dataframe to set the future dates for the object, pass True to the use_future_dates argument.",
             )
         else:
             self.future_dates = future_df[date_col]
@@ -2126,7 +2133,8 @@ class Forecaster:
             self.future_xreg[x] = v[: len(self.future_dates)]
             if not len(v) == len(self.future_dates):
                 logging.warning(
-                    f"warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting. its length is {len(v)} and future_dates length is {len(self.future_dates)}"
+                    f"warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting."
+                    " its length is {len(v)} and future_dates length is {len(self.future_dates)}."
                 )
 
     def reduce_Xvars(

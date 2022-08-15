@@ -3,7 +3,7 @@ from sklearn.ensemble import BaggingRegressor
 from sklearn.ensemble import StackingRegressor
 from scalecast.Forecaster import _sklearn_imports_
 
-def auto_arima(f,call_me='auto_arima',**kwargs):
+def auto_arima(f,call_me='auto_arima',Xvars=None,**kwargs):
     """ adds a forecast to a `Forecaster` object using the auto_arima function from pmdarima.
     this function attempts to find the optimal arima order by minimizing information criteria
     on the training slice of data only.
@@ -11,6 +11,7 @@ def auto_arima(f,call_me='auto_arima',**kwargs):
     Args:
         f (Forecaster): the object to add the forecast to
         call_me (str): default 'auto_arima'. the nickname of the resulting forecast
+        Xvars (str or list-like): optional. Xvars to add to the model.
         **kwargs: passed to the auto_arima function from pmdarima.
             see https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html
 
@@ -37,6 +38,7 @@ def auto_arima(f,call_me='auto_arima',**kwargs):
         order = order,
         seasonal_order = seasonal_order,
         trend = trend,
+        Xvars = Xvars,
         call_me = call_me,
     )
 
@@ -49,11 +51,12 @@ def mlp_stack(
     hidden_layer_sizes=(100,100,100),
     solver='lbfgs',
     call_me='mlp_stack',
+    probabilistic=False,
     **kwargs,
 ):
     """ applies a stacking model using a bagged MLP regressor as the final estimator and adds it to a `Forecaster` or `MVForecaster` object.
     see what it does: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html#StackingRegressor
-    this function is not meant to be a model that allows full customization but extra customization is possible when using the 
+    this function is not meant to be a model that allows for full customization but full customization is possible when using the 
     `Forecaster` and `MVForecaster` objects.
     default values usually perform pretty well from what we have observed.
     recommended to use at least four models in the stack.
@@ -77,7 +80,8 @@ def mlp_stack(
         solver (str): default 'lbfgs'.
             the mlp solver.
         call_me (str): default 'mlp_stack'. the name of the resulting model.
-        **kwargs: passed to the `manual_forecast()` method.
+        probabilistic (bool): default False. whether to use probabilistic modeling.
+        **kwargs: passed to the `manual_forecast()` or `proba_forecast()` method.
 
     Returns:
         None
@@ -97,7 +101,7 @@ def mlp_stack(
     >>> f.diff()
     >>> f.tune_test_forecast(models,cross_validate=True)
     >>> mlp_stack(f,model_nicknames=models) # saves a model called mlp_stack
-    >>> f.export('model_summaries',models='stacking')
+    >>> f.export('model_summaries',models='mlp_stack')
     """
     results = f.export('model_summaries')
     
@@ -130,8 +134,17 @@ def mlp_stack(
 
     f.add_sklearn_estimator(StackingRegressor,'stacking')
     f.set_estimator('stacking')
-    f.manual_forecast(
-        estimators=estimators,
-        final_estimator=final_estimator,
-        call_me=call_me,
-    )
+    if not probabilistic:
+        f.manual_forecast(
+            estimators=estimators,
+            final_estimator=final_estimator,
+            call_me=call_me,
+            **kwargs,
+        )
+    else:
+        f.proba_forecast(
+            estimators=estimators,
+            final_estimator=final_estimator,
+            call_me=call_me,
+            **kwargs,
+        )

@@ -132,7 +132,7 @@ class metrics:
             m (int): the seasonal period.
 
         Returns:
-            (float): the derived MAPE.
+            (float): the derived MASE.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]

@@ -2155,6 +2155,7 @@ class MVForecaster:
             " use export('model_summaries') instead",
             FutureWarning,
         )
+        #raise Exception('this function is no longer supported. use `export("model_summaries") instead.')
         return self.export("model_summaries", models=models, series=series)
 
     def export_fitted_vals(self, series="all", models="all", level=False):
