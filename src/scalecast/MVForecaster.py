@@ -485,7 +485,7 @@ class MVForecaster:
         if the grids file does not exist in the working directory, the error will only be raised once tuning is called.
         
         Args:
-            name (str): default MVGrids.
+            name (str): default 'MVGrids.'
                 the name of the file to look for.
                 this file must exist in the working directory.
                 the default will look for a file called "MVGrids.py".
@@ -1051,7 +1051,7 @@ class MVForecaster:
             None
 
         >>> models = ('mlr','mlp','lightgbm')
-        >>> mvf.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> mvf.tune_test_forecast(models,dynamic_testing=False)
         """
         for m in models:
             call_me = m if suffix is None else m + suffix

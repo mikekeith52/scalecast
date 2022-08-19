@@ -19,6 +19,8 @@ These packages can cause issues when installing so they are not included by defa
 
 For auto ARIMA, changepoint detection, and shap feature importance:
 
+.. code:: console
+
    $ pip install pmdarima
    $ pip install kats
    $ pip install shap

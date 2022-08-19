@@ -3163,7 +3163,7 @@ class Forecaster:
         if the grids file does not exist in the working directory, the error will only be raised once tuning is called.
         
         Args:
-            name (str): default Grids.
+            name (str): default 'Grids'.
                 the name of the file to look for.
                 this file must exist in the working directory.
                 the default will look for a file called "Grids.py".
