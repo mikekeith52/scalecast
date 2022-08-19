@@ -17,6 +17,12 @@ If you want to apply the theta (from darts), prophet (from Facebook), and/or sil
 
 These packages can cause issues when installing so they are not included by default in the scalecast dependencies list.
 
+For auto ARIMA, changepoint detection, and shap feature importance:
+
+   $ pip install pmdarima
+   $ pip install kats
+   $ pip install shap
+
 If you are using Jupyter, there are notebook functions available that require the following installation:
 
 .. code:: console

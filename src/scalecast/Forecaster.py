@@ -215,6 +215,7 @@ class Forecaster:
         self.init_dates = list(current_dates)
         self.cilevel = 0.95
         self.bootstrap_samples = 100
+        self.grids_file = 'Grids'
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -267,6 +268,7 @@ class Forecaster:
     CILevel={}
     BootstrapSamples={}
     CurrentEstimator={}
+    GridsFile={}
 )""".format(
             self.current_dates.values[0].astype(str),
             self.current_dates.values[-1].astype(str),
@@ -282,6 +284,7 @@ class Forecaster:
             self.cilevel,
             self.bootstrap_samples,
             None if not hasattr(self, "estimator") else self.estimator,
+            self.grids_file,
         )
 
     def _split_data(self, X, y, test_length, tune):
@@ -2189,15 +2192,15 @@ class Forecaster:
                 "sqrt" keeps the square root of the total number of observations rounded down.
             gird_search (bool): default True.
                 whether to run a grid search for optimal hyperparams on the validation set.
-                if use_loaded_grid is False, uses the Grids.py file currently available in the working directory 
-                or creates a new Grids.py file with default values if none available to determine the grid to use.
+                if use_loaded_grid is False, uses a grids file currently available in the working directory 
+                or creates a new grids file called Grids.py with default values if none available to determine the grid to use.
                 the grid search is only run once and then those hyperparameters are used for
                 all subsequent pfi runs when method == 'pfi'.
                 in any utilized grid, do not include 'Xvars' as a key.
                 if you want to access the chosen hyperparams after the fact, they are stored in the reduction_hyperparams
                 attribute.
             use_loaded_grid (bool): default False.
-                whether to use the currently loaded grid in the object instead of using a grid in Grids.py.
+                whether to use the currently loaded grid in the object instead of using a grid from a file.
                 in any utilized grid, do not include 'Xvars' as a key.
             dynamic_tuning (bool or int): default False.
                 whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
@@ -3155,13 +3158,28 @@ class Forecaster:
         else:
             self.estimator = estimator
 
+    def set_grids_file(self,name='Grids'):
+        """ sets the name of the file where the object will look automatically for grids when calling `tune()`, `tune_test_forecast()`, or similar function.
+        if the grids file does not exist in the working directory, the error will only be raised once tuning is called.
+        
+        Args:
+            name (str): default Grids.
+                the name of the file to look for.
+                this file must exist in the working directory.
+                the default will look for a file called "Grids.py".
+
+        >>> f.set_grids_file('ModGrids') # expects to find a file called ModGrids.py in working directory.
+        """
+        descriptive_assert(isinstance(name,str),ValueError,f'name argument expected str type, got {type(name)}')
+        self.grids_file = name
+
     def ingest_grid(self, grid):
         """ ingests a grid to tune the estimator.
 
         Args:
             grid (dict or str):
                 if dict, must be a user-created grid.
-                if str, must match the name of a dict grid stored in Grids.py.
+                if str, must match the name of a dict grid stored in a grids file.
 
         Returns:
             None
@@ -3174,11 +3192,20 @@ class Forecaster:
         def expand_grid(d):
             return pd.DataFrame([row for row in product(*d.values())], columns=d.keys())
 
-        if isinstance(grid, str):
-            import Grids
-
-            importlib.reload(Grids)
-            grid = getattr(Grids, grid)
+        try:
+            if isinstance(grid, str):
+                Grids = importlib.import_module(self.grids_file)
+                importlib.reload(Grids)
+                grid = getattr(Grids, grid)
+        except SyntaxError:
+            raise
+        except:
+            raise ForecastError.NoGrid(
+                f"tried to load a grid called {self.estimator} from {self.grids_file}.py, "
+                "but either the file could not be found in the current directory, "
+                "there is no grid with that name, or the dictionary values are not list-like. "
+                "try ingest_grid() with a dictionary grid passed manually."
+            )
         grid = expand_grid(grid)
         self.grid = grid
 
@@ -3260,14 +3287,7 @@ class Forecaster:
         >>> f.auto_forecast()
         """
         if not hasattr(self, "grid"):
-            try:
-                self.ingest_grid(self.estimator)
-            except SyntaxError:
-                raise
-            except:
-                raise ForecastError.NoGrid(
-                    f"to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the Grids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually."
-                )
+            self.ingest_grid(self.estimator)
 
         if self.estimator in _cannot_be_tuned_:
             raise ForecastError(f"{self.estimator} models cannot be tuned")
@@ -3313,7 +3333,7 @@ class Forecaster:
         """ tunes a model's hyperparameters using time-series cross validation. 
         monitors the metric specified in the valiation_metric attribute. 
         set an estimator before calling. 
-        reads a grid for the estimator from Grids.py unless a grid is ingested manually. 
+        reads a grid for the estimator from a grids file unless a grid is ingested manually. 
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
@@ -3790,7 +3810,7 @@ class Forecaster:
         error='raise',
         **cvkwargs,
     ):
-        """ iterates through a list of models, tunes them using grids in Grids.py, forecasts them, and can save feature information.
+        """ iterates through a list of models, tunes them using grids in a grids file, forecasts them, and can save feature information.
 
         Args:
             models (list-like):
@@ -3841,11 +3861,6 @@ class Forecaster:
             ValueError,
             f"all models passed to models argument most be one of {_estimators_}",
         )
-        descriptive_assert(
-            os.path.isfile("./Grids.py"),
-            FileNotFoundError,
-            "Grids.py not found in working directory",
-        )
         for m in models:
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
@@ -3868,8 +3883,8 @@ class Forecaster:
                     raise
                 elif error == 'warn':
                     warnings.warn(
-                        f"{m} model could not be evaluated "
-                        f"here's the error: {e}"
+                        f"{m} model could not be evaluated. "
+                        f"here's the error: {e}."
                     )
                     continue
                 elif error == 'ignore':

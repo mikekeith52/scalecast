@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.13.11] - 2022-08-19
+### Added
+- added grids_file attribute to `Forecaster` and `MVForecaster` objects, as well as `set_grids_file()` method to both objects.
+### Changed
+### Fixed
+
 ## [0.13.10] - 2022-08-15
 ### Added
 - added probabilistic argument option to `auxmodels.mlp_stack()` function.

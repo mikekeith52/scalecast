@@ -153,7 +153,6 @@ class SeriesTransformer:
     def ScaleTransform(self,train_only=False):
         """ transforms the y attribute in the Forecaster object using a scale transformation.
         scale defined as (array[i] - array.mean()) / array.std().
-        fit on the training slice of data only.
 
         Args:
             train_only (bool): default False.
@@ -215,7 +214,6 @@ class SeriesTransformer:
     def MinMaxTransform(self,train_only=False):
         """ transforms the y attribute in the Forecaster object using a min-max scale transformation.
         min-max scale defined as (array[i] - array.min()) / (array.max() - array.min()).
-        fit on the training slice of data only.
 
         Args:
             train_only (bool): default False.

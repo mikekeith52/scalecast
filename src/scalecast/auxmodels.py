@@ -10,7 +10,7 @@ def auto_arima(f,call_me='auto_arima',Xvars=None,**kwargs):
 
     Args:
         f (Forecaster): the object to add the forecast to
-        call_me (str): default 'auto_arima'. the nickname of the resulting forecast
+        call_me (str): default 'auto_arima'. the name of the resulting model.
         Xvars (str or list-like): optional. Xvars to add to the model.
         **kwargs: passed to the auto_arima function from pmdarima.
             see https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html

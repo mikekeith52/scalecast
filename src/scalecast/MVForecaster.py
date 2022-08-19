@@ -9,6 +9,7 @@ import seaborn as sns
 from collections import Counter
 import logging
 from scipy import stats
+import importlib
 
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
 logging.captureWarnings(True)
@@ -96,7 +97,6 @@ class MVForecaster:
                 raise ValueError("all series must be same length")
             elif not_same_len_action == "trim":
                 from scalecast.multiseries import keep_smallest_first_date
-
                 keep_smallest_first_date(*fs)
             else:
                 raise ValueError(
@@ -119,6 +119,7 @@ class MVForecaster:
         self.validation_metric = "rmse"
         self.cilevel = 0.95
         self.bootstrap_samples = 100
+        self.grids_file = 'MVGrids'
         self.freq = fs[0].freq
         self.n_series = len(fs)
         for i, f in enumerate(fs):
@@ -222,6 +223,7 @@ class MVForecaster:
     BootstrapSamples={}
     CurrentEstimator={}
     OptimizeOn={}
+    GridsFile={}
 )""".format(
             self.current_dates.values[0].astype(str),
             self.current_dates.values[-1].astype(str),
@@ -241,6 +243,7 @@ class MVForecaster:
             self.bootstrap_samples,
             self.estimator,
             self.optimize_on,
+            self.grids_file,
         )
 
     def __copy__(self):
@@ -375,7 +378,7 @@ class MVForecaster:
         Args:
             grid (dict or str):
                 if dict, must be a user-created grid.
-                if str, must match the name of a dict grid stored in MVGrids.py.
+                if str, must match the name of a dict grid stored in a grids file.
 
         Returns:
             None
@@ -388,11 +391,20 @@ class MVForecaster:
         def expand_grid(d):
             return pd.DataFrame([row for row in product(*d.values())], columns=d.keys())
 
-        if isinstance(grid, str):
-            import MVGrids
-
-            grid = getattr(MVGrids, grid)
-
+        try:
+            if isinstance(grid, str):
+                MVGrids = importlib.import_module(self.grids_file)
+                importlib.reload(MVGrids)
+                grid = getattr(MVGrids, grid)
+        except SyntaxError:
+            raise
+        except:
+            raise ForecastError.NoGrid(
+                f"tried to load a grid called {self.estimator} from {self.grids_file}.py, "
+                "but either the file could not be found in the current directory, "
+                "there is no grid with that name, or the dictionary values are not list-like. "
+                "try ingest_grid() with a dictionary grid passed manually."
+            )
         grid = expand_grid(grid)
         self.grid = grid
 
@@ -468,8 +480,23 @@ class MVForecaster:
         """
         _optimizer_funcs_[called] = func
 
+    def set_grids_file(self,name='MVGrids'):
+        """ sets the name of the file where the object will look automatically for grids when calling `tune()`, `tune_test_forecast()`, or similar function.
+        if the grids file does not exist in the working directory, the error will only be raised once tuning is called.
+        
+        Args:
+            name (str): default MVGrids.
+                the name of the file to look for.
+                this file must exist in the working directory.
+                the default will look for a file called "MVGrids.py".
+
+        >>> mvf.set_grids_file('ModGrids') # expects to find a file called ModGrids.py in working directory.
+        """
+        descriptive_assert(isinstance(name,str),ValueError,f'name argument expected str type, got {type(name)}')
+        self.grids_file = name
+
     def tune(self, dynamic_tuning=False, cv=False):
-        """ tunes the specified estimator using an ingested grid (ingests a grid from MVGrids.py with same name as the estimator by default).
+        """ tunes the specified estimator using an ingested grid (ingests a grid from a grids file with same name as the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
 
         Args:
@@ -489,14 +516,7 @@ class MVForecaster:
         >>> mvf.auto_forecast()
         """
         if not hasattr(self, "grid"):
-            try:
-                self.ingest_grid(self.estimator)
-            except SyntaxError:
-                raise
-            except:
-                raise ForecastError.NoGrid(
-                    f"to tune, a grid must be loaded. tried to load a grid called {self.estimator}, but either the MVGrids.py file could not be found in the current directory, there is no grid with that name, or the dictionary values are not list-like. try ingest_grid() with a dictionary grid passed manually."
-                )
+            self.ingest_grid(self.estimator)
 
         series, labels = self._parse_series("all")
         labels = (
@@ -554,7 +574,7 @@ class MVForecaster:
         """ tunes a model's hyperparameters using time-series cross validation. 
         monitors the metric specified in the valiation_metric attribute. 
         set an estimator before calling. this is an alternative method to tune().
-        reads a grid for the estimator from MVGrids.py unless a grid is ingested manually. 
+        reads a grid for the estimator from a grids file unless a grid is ingested manually. 
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
@@ -997,7 +1017,7 @@ class MVForecaster:
         error='raise',
         **cvkwargs,
     ):
-        """ iterates through a list of models, tunes them using grids in MVGrids.py, and forecasts them.
+        """ iterates through a list of models, tunes them using grids in a grids file, and forecasts them.
 
         Args:
             models (list-like): the models to iterate through.
@@ -1033,11 +1053,6 @@ class MVForecaster:
         >>> models = ('mlr','mlp','lightgbm')
         >>> mvf.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
         """
-        descriptive_assert(
-            os.path.isfile("./MVGrids.py"),
-            FileNotFoundError,
-            "MVGrids.py not found in working directory",
-        )
         for m in models:
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
@@ -1060,8 +1075,8 @@ class MVForecaster:
                     raise
                 elif error == 'warn':
                     warnings.warn(
-                        f"{m} model could not be evaluated "
-                        f"here's the error: {e}"
+                        f"{m} model could not be evaluated. "
+                        f"here's the error: {e}."
                     )
                     continue
                 elif error == 'ignore':
@@ -1084,6 +1099,18 @@ class MVForecaster:
         else:
             series, labels = self._parse_series(how)
             self.optimize_on = labels[0]
+
+    def _get_optimal_lags(
+        self,
+        max_lag,
+        min_lag=1,
+        estimator='mlr',
+        n_draws=100,
+        cross_validate=False,        
+        cvkwargs={},
+        **kwargs,
+    ):
+        pass
 
     def _forecast(
         self, fcster, dynamic_testing, tune=False, normalizer="minmax", lags=1, **kwargs
