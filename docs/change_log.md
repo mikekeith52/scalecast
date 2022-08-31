@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.14.0]
+### Added
+- added the `Forecaster.auto_Xvar_select()` method
+- added a check for NAs in `Forecaster` and `MVForecaster` when evaluating grids and validation metric is mape. a descriptive error is raised if NAs are found (#10)
+- added `Forecaster.drop_all_Xvars()`
+- added `Forecaster.determine_best_series_length()`
+- added `Forecaster.restore_series_length()`
+### Changed
+- removed deprecated functions identified and labeled in 0.13.1
+- `Forecaster.keep_smaller_history()` can now accept numpy int types as an argument.
+### Fixed
+
 ## [0.13.11] - 2022-08-19
 ### Added
 - added grids_file attribute to `Forecaster` and `MVForecaster` objects, as well as `set_grids_file()` method to both objects.

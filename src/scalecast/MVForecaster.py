@@ -686,6 +686,8 @@ class MVForecaster:
                     grid_evaluated["optimized_metric"]
                     == grid_evaluated["optimized_metric"].max()
                 ].index.to_list()[0]
+            elif self.validation_metric == 'mape' and grid_evaluated['metric_value'].isna().all():
+                raise ValueError('validation metric cannot be mape when 0s are in the validation set.')
             else:
                 best_params_idx = self.grid.loc[
                     grid_evaluated["optimized_metric"]
@@ -2160,31 +2162,6 @@ class MVForecaster:
         else:
             return output
 
-    def export_model_summaries(self, models="all", series="all"):
-        """ exports a dataframe with information about each model and its performance on each series.
-
-        *deprecated in 0.13.1, to be removed in 0.14.0. use export('model_summaries') instead*
-
-        Args:
-            models (list-like or str): default 'all'.
-               the forecasted models to plot.
-               name of the model, 'all', or list-like of model names.
-               'top_' and None not supported.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
-
-        Returns:
-            (DataFrame): the resulting model summaries.
-        """
-        warnings.warn(
-            "export_model_summaries() is deprecated and will be removed in 0.14.0"
-            " use export('model_summaries') instead",
-            FutureWarning,
-        )
-        #raise Exception('this function is no longer supported. use `export("model_summaries") instead.')
-        return self.export("model_summaries", models=models, series=series)
-
     def export_fitted_vals(self, series="all", models="all", level=False):
         """ exports a dataframe of fitted values and actuals
 
@@ -2221,140 +2198,6 @@ class MVForecaster:
             i += 1
         return pd.DataFrame({c: v[-length:] for c, v in dfd.items()})
 
-    def export_forecasts(self, series="all", models="all", cis=False):
-        """ exports a dataframe of forecasts at whatever level the forecast was performed.
-
-        *deprecated in 0.13.1, to be removed in 0.14.0. use export('all_fcsts') instead*
-
-        Args:
-            models (list-like or str): default 'all'.
-               name of the model, 'all', or list-like of model names.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
-            cis (bool): default False.
-                whether to include confidence intervals for each series/model.
-                ignored if not True.
-
-        Returns:
-            (DataFrame): the forecasts for all selected series and models.
-        """
-        warnings.warn(
-            "export_forecasts() is deprecated and will be removed in 0.14.0"
-            " use export('all_fcsts') instead",
-            FutureWarning,
-        )
-        series, labels = self._parse_series(series)
-        models = self._parse_models(models, False)
-        df = pd.DataFrame({"DATE": self.future_dates.to_list()})
-        for l, s in zip(labels, series):
-            for m in models:
-                df[f"{l}_{m}_fcst"] = self.history[m]["Forecast"][s][:]
-                if cis:
-                    df[f"{l}_{m}_upper"] = self.history[m]["UpperCI"][s][:]
-                    df[f"{l}_{m}_lower"] = self.history[m]["LowerCI"][s][:]
-        return df
-
-    def export_test_set_preds(self, series="all", models="all", cis=False):
-        """ exports a dataframe of test set preds and actuals.
-
-        *deprecated in 0.13.1, to be removed in 0.14.0. use export('test_set_predictions') instead*
-
-        Args:
-            models (list-like or str): default 'all'.
-               name of the model, 'all', or list-like of model names.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
-            cis (bool): default False.
-                whether to include confidence intervals for each series/model.
-                ignored if not True.
-
-        Returns:
-            (DataFrame): the test set preds for all selected series and models.
-        """
-        warnings.warn(
-            "export_test_set_preds() is deprecated and will be removed in 0.14.0"
-            " use export('test_set_predictions') instead",
-            FutureWarning,
-        )
-        series, labels = self._parse_series(series)
-        models = self._parse_models(models, False)
-        df = pd.DataFrame({"DATE": self.current_dates.to_list()[-self.test_length :]})
-        i = 0
-        for l, s in zip(labels, series):
-            df[f"{l}_actuals"] = getattr(self, f"series{i+1}")["y"].to_list()[
-                -self.test_length :
-            ]
-            for m in models:
-                df[f"{l}_{m}_test_preds"] = self.history[m]["TestSetPredictions"][s][:]
-                if cis:
-                    df[f"{l}_{m}_upper"] = self.history[m]["TestSetUpperCI"][s][:]
-                    df[f"{l}_{m}_lower"] = self.history[m]["TestSetLowerCI"][s][:]
-            i += 1
-        return df
-
-    def export_level_forecasts(self, series="all", models="all"):
-        """ exports a dataframe of level forecasts.
-
-        *deprecated in 0.13.1, to be removed in 0.14.0. use export('test_set_predictions') instead*
-
-        Args:
-            models (list-like or str): default 'all'.
-               name of the model, 'all', or list-like of model names.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
-
-        Returns:
-            (DataFrame): the level forecasts for all selected series and models.
-        """
-        warnings.warn(
-            "export_level_forecasts() is deprecated and will be removed in 0.14.0"
-            " use export('test_set_predictions') instead",
-            FutureWarning,
-        )
-        series, labels = self._parse_series(series)
-        models = self._parse_models(models, False)
-        df = pd.DataFrame({"DATE": self.future_dates.to_list()})
-        for l, s in zip(labels, series):
-            for m in models:
-                df[f"{l}_{m}_fcst"] = self.history[m]["LevelForecast"][s][:]
-        return df
-
-    def export_level_test_set_preds(self, series="all", models="all"):
-        """ exports a dataframe of level test set preds and actuals.
-
-        *deprecated in 0.13.1, to be removed in 0.14.0. use export('lvl_test_set_predictions') instead*
-
-        Args:
-            models (list-like or str): default 'all'.
-               name of the model, 'all', or list-like of model names.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
-
-        Returns:
-            (DataFrame): the level forecasts for all selected series and models.
-        """
-        warnings.warn(
-            "export_level_test_set_preds() is deprecated and will be removed in 0.14.0"
-            " use export('lvl_test_set_predictions') instead",
-            FutureWarning,
-        )
-        series, labels = self._parse_series(series)
-        models = self._parse_models(models, False)
-        df = pd.DataFrame({"DATE": self.current_dates.to_list()[-self.test_length :]})
-        i = 0
-        for l, s in zip(labels, series):
-            df[f"{l}_actuals"] = getattr(self, f"series{i+1}")["levely"][
-                -self.test_length :
-            ]
-            for m in models:
-                df[f"{l}_{m}_test_preds"] = self.history[m]["LevelTestSetPreds"][s][:]
-            i += 1
-        return df
-
     def export_validation_grid(self, model):
         """ exports a validation grid for a selected model.
 
@@ -2384,12 +2227,19 @@ class MVForecaster:
                 if int, uses that as the forecast length.
             n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
-                each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
+                each iteration takes observations (this number is determined by the value passed to the jump_back arg)
+                off the end to redo the cast until all of n_iter is exhausted.
             jump_back (int): default 1. 
                 the number of time steps between two consecutive training sets.
 
         Returns:
             None
+
+        >>> mvf.set_estimator('mlr')
+        >>> mvf.manual_forecast()
+        >>> mvf.backtest('mlr')
+        >>> backtest_metrics = mvf.export_backtest_metrics('mlr')
+        >>> backetest_values = mvf.export_backtest_values('mlr')
         """
         if fcst_length == "auto":
             fcst_length = len(self.future_dates)

@@ -78,7 +78,6 @@ def prepare_data(Xvars, y, current_xreg):
     X = X[Xvars].values
     return Xvars, y, X
 
-
 # descriptive assert statement for error catching
 def descriptive_assert(statement, ErrorType, error_message):
     try:
@@ -2361,6 +2360,534 @@ class Forecaster:
                 x: v for x, v in self.future_xreg.items() if x in self.reduced_Xvars
             }
 
+    def auto_Xvar_select(
+        self,
+        estimator = 'mlr',
+        try_trend = True,
+        trend_estimator = 'mlr',
+        decomp_trend = True,
+        decomp_method = 'additive',
+        try_ln_trend = True,
+        max_trend_poly_order = 2,
+        try_seasonalities = True,
+        seasonality_repr = ['sincos'],
+        exclude_seasonalities = [],
+        irr_cycles = None, # list of cycles
+        max_ar = 'auto', # set to 0 to not test
+        test_already_added = True,
+        monitor = 'ValidationMetricValue',
+        cross_validate = False,
+        dynamic_tuning=False,
+        cvkwargs={},
+        **kwargs,
+    ):
+        """ attempts to find the ideal trend, seasonality, and look-back representations for the stored series by systematically adding regressors to the object and monintoring a passed metric value.
+        searches for trend first, then seasonalities, then optimal lag order, then the best combination of all of the above, along with irregular cycles (if specified) and any 
+        regressors already added to the object.
+        the function offers flexibility around setting Xvars it must add to the object by letting the user add these regressors before calling the function, 
+        telling the function not to re-search for them, and telling the function not to drop them when considering the optimal combination of regressors.
+        the final optimal combination of regressors is determined by grouping all extracted regressors into trends, seasonalities, irregular cycles, ar terms, and regressors already added,
+        and tying all combinations of all these groups.
+        
+        Args:
+            estimator (str): one of _sklearn_estimators_. default 'mlr'.
+                the estimator to use to determine the best seasonal and lag regressors.
+            try_trend (bool): default True.
+                whether to search for trend representations of the series.
+            trend_estimator (str): one of _sklearn_estimators_. default 'mlr'.
+                ignored if try_trend is False.
+                the estimator to use to determine the best trend representation.
+            decomp_trend (bool): default True. whether to decompose the series to estimate the trend.
+                ignored if try_trend is False.
+                the idea is there can be many seasonalities represented by scalecast, but only one trend,
+                so using a decomposition method for trend could lead to finding a better trend representation.
+            decomp_method (str): one of 'additive','multiplicative'. default 'additive'.
+                ignored if try_trend is False. ignored if decomp_trend is False.
+                the decomp method used to represent the trend.
+            try_ln_trend (bool): default True.
+                ignored if try_trend is False.
+                whether to search logged trend representations.
+            max_trend_poly_order (int): default 2.
+                the highest order trend representation that will be searched.
+            try_seasonalities (bool): default True.
+                whether to search for seasonal representations.
+                this function uses a hierachical approach from secondly --> quarterly representations.
+                minutely will search all seasonal representations up to quarterly to find the best hierarchy of seasonalities.
+                anything lower than second and higher than quarter will not receive a seasonality with this method.
+                day seasonality and lower will try both 'day' and 'dayofweek' seasonalities.
+                everything else will try yearly cycles, so for non-yearly cycles to be searched for such frequencies, 
+                use the irr_cycles argument.
+            seasonality_repr (list or dict[str,list]): default ['sincos'].
+                ignored if try_seasonalities is False.
+                how to represent the extracted seasonalties. the default will use fourier representations only.
+                other elements to add to the list: 'dummy','raw','drop_first'. can add multiple or one of these.
+                if dict, the key needs to be the seasonal representation ('quarter' for quarterly, 'month' for monthly)
+                and the value a list. if a seasonal representation is not found in this dictionary, it will default to
+                ['sincos'], i.e. a fourier representation.
+            exclude_seasonalities (list): default []. 
+                ignored if try_seasonalities is False.
+                add in this list any seasonal representations to skip searching.
+                if you have day frequency and you only want to search dayofweek, you should specify this as:
+                ['day','week','month','quarter'].
+            irr_cycles (list[int]): optional. 
+                add any irregular cycles to a list as integers to search for irregular cycles using this method.
+            max_ar ('auto' or int): the highest lag order to search for.
+                if 'auto', will use the test-set length as the lag order.
+                set to 0 to skip searching for lag terms.
+            test_already_added (bool): default True.
+                if there are already regressors added to the series, you can either always keep them in the object
+                by setting this to False, or by default, it is possible they will be dropped when looking for the
+                optimal combination of regressors in the object.
+            monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
+                the metric to be monitored when making reduction decisions. 
+            cross_validate (bool): default False.
+                whether to tune the model with cross validation. 
+                if False, uses the validation slice of data to tune.
+                if not monitoring ValidationMetricValue, you will want to leave this False.
+            dynamic_tuning (bool or int): default False.
+                whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
+            cvkwargs (dict): default {}. passed to the cross_validate() method.
+            **kwargs: passed to manual_forecast() method and can include arguments related to 
+                a given model's hyperparameters or dynamic_testing.
+                do not pass Xvars.
+
+        Returns:
+            (dict[tuple[float]]): a dictionary where each key is a tuple of variable combinations 
+            and the value is the derived metric (based on value passed to monitor argument).
+
+        >>> import pandas as pd
+        >>> from scalecast.Forecaster import Forecaster
+        >>> import pandas_datareader as pdr
+        >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
+        >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index,future_dates=24)
+        >>> f.diff()
+        >>> f.add_covid19_regressor()
+        >>> f.set_test_length(24)
+        >>> f.set_validation_length(12)
+        >>> f.auto_Xvar_select()
+        """
+        def Xvar_select_forecast(
+            f,
+            estimator,
+            Xvars = 'all',
+        ):
+            f.set_estimator(estimator)
+            if monitor == 'ValidationMetricValue':
+                grid = {k:[v] for k, v in kwargs.items()}
+                grid['Xvars'] = [Xvars]
+                f.ingest_grid(grid)
+                if not cross_validate:
+                    f.tune(dynamic_tuning=dynamic_tuning)
+                else:
+                    f.cross_validate(**cvkwargs,dynamic_tuning=dynamic_tuning)
+                f.history[estimator] = {monitor: f.validation_metric_value}
+            else:
+                f.manual_forecast(**kwargs,Xvars=Xvars)
+            return f.history[estimator][monitor]
+
+        def parse_best_metrics(metrics):
+            x = [m[0] for m in Counter(metrics).most_common()]
+            return None if not x else x[0] if using_r2 else x[-1]
+        
+        def get_Xvar_combos(
+            f,
+            best_trend,
+            best_seasonality,
+            best_ar_order,
+            regressors_already_added,
+            seas_to_try,
+        ):
+            trend_regressors = []
+            if best_trend is not None:
+                f.add_time_trend()
+                if best_trend.startswith('ln'):
+                    f.add_logged_terms('t',drop=True)
+                    trend_regressors.append('lnt')
+                else:
+                    trend_regressors.append('t')
+                if '^' in best_trend:
+                    pwr = int(best_trend.split('^')[-1])
+                    if best_trend.startswith('ln'):
+                        f.add_poly_terms('lnt',pwr=pwr)
+                        trend_regressors += ['lnt^' + str(pwr) for i in range(2,pwr+1)]
+                    else:
+                        f.add_poly_terms('t',pwr=pwr)
+                        trend_regressors += ['t^' + str(pwr) for i in range(2,pwr+1)]
+
+            seas_regressors = []
+            if best_seasonality is not None:
+                seas_to_try = seas_to_try[:(seas_to_try.index(best_seasonality) + 1)]
+                if isinstance(seasonality_repr,list):
+                    f.add_seasonal_regressors(
+                        *seas_to_try,
+                        raw='raw' in seasonality_repr,
+                        sincos='sincos' in seasonality_repr,
+                        dummy='dummy' in seasonality_repr,
+                        drop_first='drop_first' in seasonality_repr,
+                    )
+                elif isinstance(seasonality_repr,dict):
+                    for s in seas_to_try:
+                        if s in seasonality_repr:
+                            f.add_seasonal_regressors(
+                                s,
+                                raw='raw' in seasonality_repr[s],
+                                sincos='sincos' in seasonality_repr[s],
+                                dummy='dummy' in seasonality_repr[s],
+                                drop_first='drop_first' in seasonality_repr[s],
+
+                            )
+                        else:
+                            f.add_seasonal_regressors(
+                                s,
+                                raw=False,
+                                sincos=True,
+                            )
+                for s in seas_to_try:
+                    seas_regressors += [
+                        x for x in f.get_regressor_names() if (x == s + 'sin') or (x == s + 'cos')
+                    ]
+            if best_ar_order is not None:
+                f.add_ar_terms(best_ar_order)
+                ar_regressors = [x for x in f.get_regressor_names() if x.startswith('AR')]
+            else:
+                ar_regressors = []
+            if irr_cycles is not None:
+                for i in irr_cycles:
+                    f.add_cycle(i)
+                irr_regressors = [
+                    'cycle' + str(i) + 'sin' for i in irr_cycles
+                ] + [
+                    'cycle' + str(i) + 'cos' for i in irr_cycles
+                ]
+            else:
+                irr_regressors = []
+
+            Xvars = [
+                regressors_already_added, # just already added
+                trend_regressors + seas_regressors + regressors_already_added,
+                trend_regressors + ar_regressors + regressors_already_added,
+                trend_regressors + irr_regressors + regressors_already_added,
+                trend_regressors + seas_regressors + ar_regressors + regressors_already_added,
+                trend_regressors + seas_regressors + ar_regressors + irr_regressors + regressors_already_added,
+                seas_regressors + ar_regressors + regressors_already_added,
+                seas_regressors + ar_regressors + irr_regressors + regressors_already_added,
+                ar_regressors + irr_regressors + regressors_already_added,
+            ]
+            if test_already_added: # if this is False, user has to take a combo that includes those already added
+                Xvars += [
+                    trend_regressors, # just trend
+                    seas_regressors, # just seasonality
+                    ar_regressors, # just ar
+                    irr_regressors, # just irr
+                    trend_regressors + seas_regressors,
+                    trend_regressors + ar_regressors,
+                    trend_regressors + irr_regressors,
+                    trend_regressors + seas_regressors + ar_regressors,
+                    trend_regressors + seas_regressors + ar_regressors + irr_regressors,
+                    seas_regressors + ar_regressors,
+                    seas_regressors + ar_regressors + irr_regressors,
+                    ar_regressors + irr_regressors,
+                ]
+            # https://stackoverflow.com/questions/2213923/removing-duplicates-from-a-list-of-lists
+            Xvars_deduped = []
+            for xvar_set in Xvars:
+                if xvar_set and xvar_set not in Xvars_deduped:
+                    Xvars_deduped.append(xvar_set)
+            return Xvars_deduped
+
+        using_r2 = monitor.endswith("R2") or (
+                self.validation_metric == "r2" and monitor == "ValidationMetricValue"
+            )
+
+        trend_metrics = {}
+        seasonality_metrics = {}
+        irr_cycles_metrics = {}
+        ar_metrics = {}
+        final_metrics = {}
+
+        seas_to_try = []
+
+        regressors_already_added = self.get_regressor_names()
+        f = self.deepcopy()
+        f.drop_all_Xvars()
+
+        if try_trend:
+            if decomp_trend:
+                try:
+                    decomp = f.seasonal_decompose(
+                        model=decomp_method,
+                        extrapolate_trend='freq',
+                    )
+                    ft = Forecaster(
+                        y = decomp.trend,
+                        current_dates = decomp.trend.index,
+                        require_future_dates=False,
+                    )
+                except Exception as e:
+                    warnings.warn(
+                        f'trend decomposition did not work and raised this error: {e} '
+                        'switching to non-decomp method'
+                    )
+                    decomp_trend = False
+            if not decomp_trend:
+                ft = f.deepcopy()
+
+            ft.add_time_trend()
+            ft.set_test_length(f.test_length)
+            ft.set_validation_length(f.validation_length)
+            f1 = ft.deepcopy()
+            Xvar_select_forecast(f1,trend_estimator)
+            trend_metrics['t'] = f1.history[trend_estimator][monitor]
+            if max_trend_poly_order > 1:
+                for i in range(2,max_trend_poly_order+1):
+                    f1.add_poly_terms('t',pwr=i)
+                    trend_metrics['t' + str(i)] = Xvar_select_forecast(f1,trend_estimator)
+            if try_ln_trend:
+                f2 = ft.deepcopy()
+                f2.add_logged_terms('t',drop=True)
+                Xvar_select_forecast(f2,trend_estimator)
+                trend_metrics['lnt'] = f2.history[trend_estimator][monitor]
+                if max_trend_poly_order > 1:
+                    for i in range(2,max_trend_poly_order+1):
+                        f2.add_poly_terms('lnt',pwr=i)
+                        trend_metrics['lnt' + str(i)] = Xvar_select_forecast(f2,trend_estimator)
+        best_trend = parse_best_metrics(trend_metrics)
+        
+        if try_seasonalities:
+            seasonalities = {
+                (
+                    'Q',
+                    'BQ',
+                    'QS',
+                    'Q-DEC',
+                    'Q-JAN',
+                    'Q-FEB',
+                    'Q-MAR',
+                    'Q-APR',
+                    'Q-MAY',
+                    'Q-JUN',
+                    'Q-JUL',
+                    'Q-AUG',
+                    'Q-SEP',
+                    'Q-OCT',
+                    'Q-NOV',
+                    'BQ-DEC',
+                    'BQ-JAN',
+                    'BQ-FEB',
+                    'BQ-MAR',
+                    'BQ-APR',
+                    'BQ-MAY',
+                    'BQ-JUN',
+                    'BQ-JUL',
+                    'BQ-AUG',
+                    'BQ-SEP',
+                    'BQ-OCT',
+                    'BQ-NOV',
+                    'QS-DEC',
+                    'QS-JAN',
+                    'QS-FEB',
+                    'QS-MAR',
+                    'QS-APR',
+                    'QS-MAY',
+                    'QS-JUN',
+                    'QS-JUL',
+                    'QS-AUG',
+                    'QS-SEP',
+                    'QS-OCT',
+                    'QS-NOV',
+                ):['quarter'],
+                (
+                    'M',
+                    'MS',
+                    'SM',
+                    'BM',
+                ):['month'],
+                (
+                    'W',
+                    'W-SUN',
+                    'W-MON',
+                    'W-TUE',
+                    'W-WED',
+                    'W-THU',
+                    'W-FRI',
+                    'W-SAT',
+                ):['week'],
+                ('B','D'):['day','dayofweek'],
+                ('H',):['hour'],
+                ('T',):['minute'],
+                ('S',):['second'],
+            }
+                        
+            i = 0
+            for freq, seas in seasonalities.items():
+                seas_to_try += [s for s in seas if s not in exclude_seasonalities]
+                if f.freq in freq:
+                    i+=1
+                    break
+            if not i:
+                warnings.warn(f'no seasonalities are currently associated with the {f.freq} frequency')
+            else:
+                seas_to_try.reverse() # lowest to highest order seasonality
+                for i,s in enumerate(seas_to_try):
+                    f1 = f.deepcopy()
+                    f1.set_estimator(estimator)
+                    if isinstance(seasonality_repr,list):
+                        f1.add_seasonal_regressors(
+                            *seas_to_try[:(i+1)],
+                            raw='raw' in seasonality_repr, # since this defaults to True, do it this way
+                            sincos='sincos' in seasonality_repr,
+                            dummy='dummy' in seasonality_repr,
+                            drop_first='drop_first' in seasonality_repr,
+                        )
+                    elif isinstance(seasonality_repr,dict):
+                        for s1 in seas_to_try[:(i+1)]:
+                            if s1 in seasonality_repr:
+                                f1.add_seasonal_regressors(
+                                    s1,
+                                    raw='raw' in seasonality_repr[s1],
+                                    sincos='sincos' in seasonality_repr[s1],
+                                    dummy='dummy' in seasonality_repr[s1],
+                                    drop_first='drop_first' in seasonality_repr[s1],
+
+                                )
+                            else: # default to fourier
+                                f1.add_seasonal_regressors(
+                                    s1,
+                                    raw=False,
+                                    sincos=True,
+                                )
+                    else:
+                        raise TypeError(f'seasonality_repr must be list or dict type, got {type(seasonality_repr)}')
+                    seasonality_metrics[s] = Xvar_select_forecast(f1,estimator)
+        best_seasonality = parse_best_metrics(seasonality_metrics)
+        
+        if max_ar == 'auto' or max_ar > 0:
+            max_ar = f.test_length if max_ar == 'auto' else max_ar
+            for i in range(1,max_ar+1):
+                f1 = f.deepcopy()
+                f1.add_ar_terms(i)
+                ar_metrics[i] = Xvar_select_forecast(f1,estimator)
+        best_ar_order = parse_best_metrics(ar_metrics)
+
+        f = self.deepcopy()
+
+        Xvars = get_Xvar_combos(
+            f,
+            best_trend,
+            best_seasonality,
+            best_ar_order,
+            regressors_already_added,
+            seas_to_try,
+        )
+        for xvar_set in Xvars:
+            final_metrics[tuple(xvar_set)] =  Xvar_select_forecast(
+                f,
+                estimator,
+                Xvars=xvar_set,
+            )
+        best_combo = parse_best_metrics(final_metrics)
+
+        f.drop_Xvars(*[x for x in f.get_regressor_names() if x not in best_combo])
+        self.current_xreg = f.current_xreg
+        self.future_xreg = f.future_xreg
+        return final_metrics
+
+    def determine_best_series_length(
+        self,
+        estimator = 'mlr',
+        min_obs = 100,
+        max_obs = None,
+        step = 25,
+        monitor = 'ValidationMetricValue',
+        cross_validate = False,
+        dynamic_tuning = False,
+        cvkwargs = {},
+        chop = True,
+        **kwargs,
+    ):
+        """ attempts to find the optimal length for the series to produce accurate forecasts by systematically shortening the series, running estimations, and monitoring a passed metric value.
+        in time series, since there are structural breaks and drifts, shorter can be better.
+        this should be run after Xvars have already been added to the object.
+
+        Args:
+            estimator (str): one of _estimators_. default 'mlr'.
+                the estimator to use to determine the best series length.
+            min_obs (int): default 100.
+                the shortest representation of the series to search.
+            max_obs (int): optional.
+                the longest representation of the series to search.
+                by default, the last estimation will be run on all available observations.
+            step (int): default 25.
+                how big a step to take between iterations.
+            monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
+                the metric to be monitored when making reduction decisions. 
+            cross_validate (bool): default False.
+                whether to tune the model with cross validation. 
+                if False, uses the validation slice of data to tune.
+                if not monitoring ValidationMetricValue, you will want to leave this False.
+            dynamic_tuning (bool or int): default False.
+                whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
+            cvkwargs (dict): default {}. passed to the cross_validate() method.
+            chop (bool): default True. whether to shorten the series if a shorter length is found to be best.
+            **kwargs: passed to manual_forecast() method and can include arguments related to 
+                a given model's hyperparameters, dynamic_testing, or Xvars.
+
+        Returns:
+            (dict[int[float]]): a dictionary where each key is a series length and the value is the derived metric (based on value passed to monitor argument).
+
+        >>> import pandas as pd
+        >>> from scalecast.Forecaster import Forecaster
+        >>> import pandas_datareader as pdr
+        >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
+        >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index,future_dates=24)
+        >>> f.diff()
+        >>> f.add_covid19_regressor()
+        >>> f.set_test_length(24)
+        >>> f.set_validation_length(12)
+        >>> f.auto_Xvar_select()
+        >>> f.determine_best_series_length()
+        """
+        def Xvar_select_forecast(
+            f,
+            estimator,
+        ):
+            f.set_estimator(estimator)
+            if monitor == 'ValidationMetricValue':
+                grid = {k:[v] for k, v in kwargs.items()}
+                f.ingest_grid(grid)
+                if not cross_validate:
+                    f.tune(dynamic_tuning=dynamic_tuning)
+                else:
+                    f.cross_validate(**cvkwargs,dynamic_tuning=dynamic_tuning)
+                f.history[estimator] = {monitor: f.validation_metric_value}
+            else:
+                f.manual_forecast(**kwargs)
+            return f.history[estimator][monitor]
+
+        def parse_best_metrics(metrics):
+            x = [m[0] for m in Counter(metrics).most_common()]
+            return None if not x else x[0] if using_r2 else x[-1]
+
+        using_r2 = monitor.endswith("R2") or (
+                self.validation_metric == "r2" and monitor == "ValidationMetricValue"
+            )
+
+        history_metrics = {}
+        max_obs = len(self.y) if max_obs is None else max_obs
+        for i in np.arange(min_obs,max_obs,step):
+            f = self.deepcopy()
+            f.keep_smaller_history(i)
+            history_metrics[i] = Xvar_select_forecast(f,estimator)
+        if i < max_obs:
+            f = self.deepcopy()
+            history_metrics[max_obs] = Xvar_select_forecast(f,estimator)
+        best_history_to_keep = parse_best_metrics(history_metrics)
+
+        if chop:
+            self.keep_smaller_history(best_history_to_keep)
+        
+        return history_metrics
+
     def set_test_length(self, n=1):
         """ sets the length of the test set.
 
@@ -3126,6 +3653,17 @@ class Forecaster:
 
         self.integration = 0
 
+    def restore_series_length(self):
+        """ restores the series to its original size, undifferences, and drops all Xvars.
+        """
+        self.current_xreg = {}
+        self.future_xreg = {}
+
+        self.current_dates = pd.Series(self.init_dates)
+        self.y = pd.Series(self.levely)
+
+        self.integration = 0
+
     def set_estimator(self, estimator):
         """ sets the estimator to forecast with.
 
@@ -3430,6 +3968,8 @@ class Forecaster:
                     grid_evaluated["metric_value"]
                     == grid_evaluated["metric_value"].max()
                 ].index.to_list()[0]
+            elif self.validation_metric == 'mape' and grid_evaluated['metric_value'].isna().all():
+                raise ValueError('validation metric cannot be mape when 0s are in the validation set.')
             else:
                 best_params_idx = self.grid.loc[
                     grid_evaluated["metric_value"]
@@ -4009,6 +4549,7 @@ class Forecaster:
             n = datetime.datetime.strptime(n, "%Y-%m-%d")
         if (type(n) is datetime.datetime) or (type(n) is pd.Timestamp):
             n = len([i for i in self.current_dates if i >= n])
+        n = int(n)
         descriptive_assert(
             isinstance(n, int),
             ValueError,
@@ -4428,6 +4969,11 @@ class Forecaster:
         >>> f.drop_Xvars('t','t^0.5')
         """
         self.drop_regressors(*args)
+
+    def drop_all_Xvars(self):
+        """ drops all regressors.
+        """
+        self.drop_Xvars(*self.get_regressor_names())
 
     def pop(self, *args):
         """ deletes evaluated forecasts from the object's memory.
@@ -4897,68 +5443,6 @@ class Forecaster:
 
         return df.dropna() if dropna else df
 
-    def export_forecasts_with_cis(self, model):
-        """ exports a single dataframe with forecasts and upper and lower forecast bounds.
-
-        *deprecated in 0.13.1, to be removed in 0.14.0. use export('all_fcsts', cis=True) instead*
-
-        Args:
-            model (str):
-                the model nickname (must exist in history.keys()).
-
-        Returns:
-            (DataFrame): A dataframe with forecasts to future dates and corresponding confidence intervals.
-        """
-        warnings.warn(
-            "export_test_set_preds_with_cis() is deprecated and will be removed in 0.14.0"
-            " use export('all_fcsts', cis=True) instead",
-            FutureWarning,
-        )
-        self._validate_no_test_only([model])
-        return pd.DataFrame(
-            {
-                "DATE": self.future_dates.to_list(),
-                "UpperForecast": self.history[model]["UpperCI"],
-                "Forecast": self.history[model]["Forecast"],
-                "LowerForecast": self.history[model]["LowerCI"],
-                "ModelNickname": [model] * len(self.future_dates),
-                "CILevel": [self.history[model]["CILevel"]] * len(self.future_dates),
-            }
-        )
-
-    def export_test_set_preds_with_cis(self, model):
-        """ exports a single dataframe with test-set predictions, actuals, and upper and lower prediction bounds.
-
-        *deprecated in 0.13.1, to be removed in 0.14.0. use export('test_set_predictions', cis=True) instead*
-
-        Args:
-            model (str):
-                the model nickname.
-
-        Returns:
-            (DataFrame): A dataframe with test-set predictions and actuals with corresponding confidence intervals.
-        """
-        warnings.warn(
-            "export_test_set_preds_with_cis is deprecated and will be removed in 0.14.0"
-            " use export('test_set_predictions', cis=True) instead",
-            FutureWarning,
-        )
-        return pd.DataFrame(
-            {
-                "DATE": self.current_dates.to_list()[
-                    -len(self.history[model]["TestSetPredictions"]) :
-                ],
-                "UpperPreds": self.history[model]["TestSetUpperCI"],
-                "Preds": self.history[model]["TestSetPredictions"],
-                "Actuals": self.history[model]["TestSetActuals"],
-                "LowerPreds": self.history[model]["TestSetLowerCI"],
-                "ModelNickname": [model]
-                * len(self.history[model]["TestSetPredictions"]),
-                "CILevel": [self.history[model]["CILevel"]]
-                * len(self.history[model]["TestSetPredictions"]),
-            }
-        )
-
     def export_fitted_vals(self, model, level=False):
         """ exports a single dataframe with dates, fitted values, actuals, and residuals.
 
@@ -5007,7 +5491,7 @@ class Forecaster:
         two results are extracted: a dataframe of actuals and predictions across each iteration and
         a dataframe of test-set metrics across each iteration with a mean total as the last column.
         these results are stored in the Forecaster object's history and can be extracted by calling 
-        `export_backtest_metrics()` and `export_backtest_values()`.
+        `f.export_backtest_metrics()` and `f.export_backtest_values()`.
         combo models cannot be backtest and will raise an error if you attempt to do so.
 
         Args:
@@ -5017,12 +5501,19 @@ class Forecaster:
                 if int, uses that as the forecast length.
             n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
-                each iteration takes one observation off the end to redo the cast until all of n_iter is exhausted.
+                each iteration takes observations (this number is determined by the value passed to the jump_back arg)
+                off the end to redo the cast until all of n_iter is exhausted.
             jump_back (int): default 1. 
                 the number of time steps between two consecutive training sets.
 
         Returns:
             None
+
+        >>> f.set_estimator('mlr')
+        >>> f.manual_forecast()
+        >>> f.backtest('mlr')
+        >>> backtest_metrics = f.export_backtest_metrics('mlr')
+        >>> backetest_values = f.export_backtest_values('mlr')
         """
         if fcst_length == "auto":
             fcst_length = len(self.future_dates)
