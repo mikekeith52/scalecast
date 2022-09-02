@@ -10,6 +10,54 @@ Scalecast is a light-weight modeling procedure, wrapper, and results container m
 
 The scalecast package was designed to address this situation and offer advanced machine learning models and experiments that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
 
+```python
+import pandas_datareader as pdr
+from scalecast.Forecaster import Forecaster
+from scalecast.SeriesTransformer import SeriesTransformer
+from scalecast import GridGenerator
+import matplotlib.pyplot as plt
+
+GridGenerator.get_example_grids()
+
+df = pdr.get_data_fred(
+  'HOUSTNSA',
+  start='1959-01-01',
+  end='2022-07-01'
+)
+f = Forecaster(
+  y=df['HOUSTNSA'],
+  current_dates=df.index,
+  future_dates=24,
+)
+
+transformer = SeriesTransformer(f)
+f = transformer.LogTransform()
+f = transformer.DiffTransform(1)
+
+# validation splits
+f.set_test_length(0.2)
+f.set_validation_length(24)
+# prepare series for forecast
+f.add_covid19_regressor()
+f.auto_Xvar_select(cross_validate=True)
+f.determine_best_series_length()
+
+f.set_estimator('elasticnet')
+f.tune()
+f.auto_forecast()
+
+f = transformer.DiffRevert(1)
+f = transformer.LogRevert()
+
+f.plot()
+plt.show()
+
+results = f.export(
+  ['model_summaries','lvl_fcsts']
+)
+```
+![](./assets/results.png)
+
 The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html) (for one series) and [`MVForecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html) (for multiple series) wrappers around the following estimators: 
 
 - [Scikit-Learn](https://scikit-learn.org/stable/)
