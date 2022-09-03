@@ -11,11 +11,11 @@ Scalecast is a light-weight modeling procedure, wrapper, and results container m
 The scalecast package was designed to address this situation and offer advanced machine learning models and experiments that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
 
 ```python
-import pandas_datareader as pdr
 from scalecast.Forecaster import Forecaster
 from scalecast.SeriesTransformer import SeriesTransformer
 from scalecast import GridGenerator
 import matplotlib.pyplot as plt
+import pandas_datareader as pdr
 
 GridGenerator.get_example_grids()
 
