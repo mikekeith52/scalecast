@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.14.0
+Version: 0.14.1
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -20,6 +20,54 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         Scalecast is a light-weight modeling procedure, wrapper, and results container meant for those who are looking for the fastest way possible to apply, tune, and validate many different model classes for forecasting applications. In the Data Science industry, it is often asked of practitioners to deliver predictions and ranges of predictions for several lines of businesses or data slices, 100s or even 1000s. In such situations, it is common to see a simple linear regression or some other quick procedure applied to all lines due to the complexity of the task. This works well enough for people who need to deliver *something*, but more can be achieved.  
         
         The scalecast package was designed to address this situation and offer advanced machine learning models and experiments that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
+        
+        ```python
+        from scalecast.Forecaster import Forecaster
+        from scalecast.SeriesTransformer import SeriesTransformer
+        from scalecast import GridGenerator
+        import matplotlib.pyplot as plt
+        import pandas_datareader as pdr
+        
+        GridGenerator.get_example_grids()
+        
+        df = pdr.get_data_fred(
+          'HOUSTNSA',
+          start='1959-01-01',
+          end='2022-07-01'
+        )
+        f = Forecaster(
+          y=df['HOUSTNSA'],
+          current_dates=df.index,
+          future_dates=24,
+        )
+        
+        transformer = SeriesTransformer(f)
+        f = transformer.LogTransform()
+        f = transformer.DiffTransform(1)
+        
+        # validation splits
+        f.set_test_length(0.2)
+        f.set_validation_length(24)
+        # prepare series for forecast
+        f.add_covid19_regressor()
+        f.auto_Xvar_select(cross_validate=True)
+        f.determine_best_series_length()
+        
+        f.set_estimator('elasticnet')
+        f.tune()
+        f.auto_forecast()
+        
+        f = transformer.DiffRevert(1)
+        f = transformer.LogRevert()
+        
+        f.plot()
+        plt.show()
+        
+        results = f.export(
+          ['model_summaries','lvl_fcsts']
+        )
+        ```
+        ![](./assets/results.png)
         
         The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html) (for one series) and [`MVForecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html) (for multiple series) wrappers around the following estimators: 
         

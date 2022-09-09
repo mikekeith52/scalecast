@@ -1,7 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.14.0]
+## [0.14.1] - 2022-09-09
+### Added
+- if there are not enough observations to use in cross validation (usually because too many AR terms were added), an error is raised when calling the `Forecater.cross_validate()` and `MVForecaster.cross_validation()` functions
+### Changed
+- no `Forecaster.auto_Xvar_select()` no longer raises errors if more AR terms passed to max_ar argument than the model is able to estimate
+### Fixed
+- `Forecaster.determine_best_series_length()` will no longer fail if the min_obs arg value is greater than the amount of observations in the series
+- found more instances where `TypeError`s should not be raised (such as passing an `int64` type when `int` is required)
+- fixed an issue that occurs after selecting Xvars with `Forecaster.auto_Xvar_select()` on an integrated series then loading to `MVForecaster`
+- fixed the error raised when 0 or less is passed to the `Forecaster.set_validation_length()` and `MVForecaster.set_validation_length()` functions
+
+## [0.14.0] - 2022-08-31
 ### Added
 - added the `Forecaster.auto_Xvar_select()` method
 - added a check for NAs in `Forecaster` and `MVForecaster` when evaluating grids and validation metric is mape. a descriptive error is raised if NAs are found (#10)

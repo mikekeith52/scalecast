@@ -6,6 +6,7 @@ license.txt
 setup.cfg
 setup.py
 assets/logo2.png
+assets/results.png
 docs/0.17
 docs/Makefile
 docs/about.rst

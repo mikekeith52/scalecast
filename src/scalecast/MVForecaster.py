@@ -123,6 +123,7 @@ class MVForecaster:
         self.freq = fs[0].freq
         self.n_series = len(fs)
         for i, f in enumerate(fs):
+            f.typ_set() # synchronize all the junk in there
             setattr(
                 self,
                 f"series{i+1}",
@@ -335,7 +336,7 @@ class MVForecaster:
         >>> mvf.set_validation_length(6) # validation length of 6
         """
         if n <= 0:
-            raise ValueError(f"n must be greater than 1, got {n}")
+            raise ValueError(f"n must be greater than 0, got {n}")
         if (self.validation_metric == "r2") & (n == 1):
             raise ValueError(
                 "can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()"
@@ -593,6 +594,11 @@ class MVForecaster:
         mvf = self.__deepcopy__()
         usable_obs = len(mvf.series1["y"]) - mvf.test_length
         val_size = usable_obs // (k + 1)
+        descriptive_assert(
+            val_size > 0,
+            ForecastError,
+            f'not enough observations in sample to cross validate.'
+        )
         mvf.set_validation_length(val_size)
         grid_evaluated_cv = pd.DataFrame()
         for i in range(k):

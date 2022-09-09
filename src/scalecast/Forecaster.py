@@ -2486,7 +2486,7 @@ class Forecaster:
             return f.history[estimator][monitor]
 
         def parse_best_metrics(metrics):
-            x = [m[0] for m in Counter(metrics).most_common()]
+            x = [m[0] for m in Counter(metrics).most_common() if not np.isnan(m[1])]
             return None if not x else x[0] if using_r2 else x[-1]
         
         def get_Xvar_combos(
@@ -2764,9 +2764,18 @@ class Forecaster:
         if max_ar == 'auto' or max_ar > 0:
             max_ar = f.test_length if max_ar == 'auto' else max_ar
             for i in range(1,max_ar+1):
-                f1 = f.deepcopy()
-                f1.add_ar_terms(i)
-                ar_metrics[i] = Xvar_select_forecast(f1,estimator)
+                try:
+                    f1 = f.deepcopy()
+                    f1.add_ar_terms(i)
+                    ar_metrics[i] = Xvar_select_forecast(f1,estimator)
+                    if np.isnan(ar_metrics[i]):
+                        warnings.warn(f'cannot estimate {estimator} model with {i} AR terms')
+                        ar_metrics.pop(i)
+                        break
+                except (IndexError,AttributeError):
+                    warnings.warn(f'cannot estimate {estimator} model with {i} AR terms')
+                    break
+        
         best_ar_order = parse_best_metrics(ar_metrics)
 
         f = self.deepcopy()
@@ -2874,6 +2883,7 @@ class Forecaster:
 
         history_metrics = {}
         max_obs = len(self.y) if max_obs is None else max_obs
+        i = len(self.y) - 1
         for i in np.arange(min_obs,max_obs,step):
             f = self.deepcopy()
             f.keep_smaller_history(i)
@@ -2932,7 +2942,7 @@ class Forecaster:
         >>> f.set_validation_length(6) # validation length of 6
         """
         n = int(n)
-        descriptive_assert(n > 0, ValueError, f"n must be greater than 1, got {n}")
+        descriptive_assert(n > 0, ValueError, f"n must be greater than 0, got {n}")
         if (self.validation_metric == "r2") & (n == 1):
             raise ValueError(
                 "can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()"
@@ -3903,7 +3913,13 @@ class Forecaster:
             if ars:
                 usable_obs -= max(ars)
         val_size = usable_obs // (k + 1)
+        descriptive_assert(
+            val_size > 0,
+            ForecastError,
+            f'not enough observations in sample to cross validate.'
+        )
         f.set_validation_length(val_size)
+
         grid_evaluated_cv = pd.DataFrame()
         for i in range(k):
             if i > 0:
@@ -4809,22 +4825,19 @@ class Forecaster:
         }
         plot["actuals_len"] = min(len(plot["date"]), len(plot["actuals"]))
 
-        if str(include_train).isnumeric():
+        if not isinstance(include_train,bool):
+            include_train = int(include_train)
             descriptive_assert(
-                (include_train > 1) & isinstance(include_train, int),
+                include_train > 1,
                 ValueError,
                 f"include_train must be a bool type or an int greater than 1, got {include_train}",
             )
             plot["actuals"] = plot["actuals"][-include_train:]
             plot["date"] = plot["date"][-include_train:]
-        elif isinstance(include_train, bool):
+        else:
             if not include_train:
                 plot["actuals"] = plot["actuals"][-self.test_length :]
                 plot["date"] = plot["date"][-self.test_length :]
-        else:
-            raise ValueError(
-                f"include_train argument not recognized: ({include_train})"
-            )
 
         sns.lineplot(
             x=plot["date"][-plot["actuals_len"] :],
