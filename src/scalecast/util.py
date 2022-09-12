@@ -218,7 +218,7 @@ def pdr_load(
             be added into future periods.
         future_dates (int): optional: the future dates to add to the model upon initialization.
             if not added when object is initialized, can be added later.
-        **kwargs passed to pdr.DataReader() function. 
+        **kwargs: passed to pdr.DataReader() function. 
             see https://pandas-datareader.readthedocs.io/en/latest/remote_data.html.
 
     Returns:
