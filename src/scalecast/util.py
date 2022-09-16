@@ -1,4 +1,6 @@
 from scalecast import Forecaster
+from scalecast import MVForecaster
+import MVForecaster
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -198,13 +200,18 @@ def pdr_load(
     src='fred',
     require_future_dates=True,
     future_dates=None,
+    integrate=False,
+    max_integration=1,
+    MVForecaster_kwargs={},
     **kwargs
 ):
     """ gets data using `pdr.DataReader()`
 
     Args:
-        sym (str): the name of the series to extract.
-            cannot be an array of symbols.
+        sym (str or list-like): the name of the series to extract.
+            if str (one series), returns a Forecaster object.
+            if list-like, returns an MVForecaster object. 
+            series of higher frequencies will having missing values filled using a forward fill.
         start (str or datetime): the start date to extract data.
         end (str or datetime): the end date to extract data.
         src (str): the source of the API pull.
@@ -216,26 +223,52 @@ def pdr_load(
             if True, all models will forecast into future periods, 
             unless run with test_only = True, and when adding regressors, they will automatically
             be added into future periods.
-        future_dates (int): optional: the future dates to add to the model upon initialization.
+            will be ignored if sym is list-like.
+        future_dates (int): optional. the future dates to add to the model upon initialization.
             if not added when object is initialized, can be added later.
+        integrate (bool): default False. whether to take differences in extraced data if it is found to be non-stationary.
+        max_integration (int or bool): default 1. the max number of differences to take in the data. 
+            ignored when integrate is False.
+        MVForecaster_kwargs (dict): default {}. if sym is list-like, 
+            these arguments will be passed to the `MVForecaster()` init function.
+            if 'names' is not found in the dict, names are automatically added so that the
+            MVForecaster keeps the names of the extracted symbols.
+            to keep no names, pass `MVForecaster_kwargs = {'names':None,...}`.
         **kwargs: passed to pdr.DataReader() function. 
             see https://pandas-datareader.readthedocs.io/en/latest/remote_data.html.
 
     Returns:
-        (Forecaster): a Forecaster object with the dates and y-values loaded.
+        (Forecaster or MVForecaster): an object with the dates and y-values loaded.
     """
-    Forecaster.descriptive_assert(
-        isinstance(sym,str),
-        ValueError,
-        f'sym argument only accepts str types, got {type(sym)}'
-    )
     df = pdr.DataReader(sym,data_source=src,start=start,end=end,**kwargs)
-    return Forecaster.Forecaster(
-        y=df[sym],
-        current_dates=df.index,
-        require_future_dates=require_future_dates,
-        future_dates = future_dates,
-    )
+    if isinstance(sym,str):
+        f = Forecaster.Forecaster(
+            y=df[sym],
+            current_dates=df.index,
+            require_future_dates=require_future_dates,
+            future_dates = future_dates,
+        )
+        if integrate:
+            f.integrate(max_integration=max_integration)
+        return f
+    else:
+        fs = []
+        for s in sym:
+            df[s].fillna(method='ffill',inplace=True)
+            f = Forecaster.Forecaster(
+                y = df[s],
+                current_dates=df.index,
+                future_dates = future_dates,
+            )
+            if integrate:
+                f.integrate(max_integration=max_integration)
+            fs.append(f)
+        if 'names' not in MVForecaster_kwargs:
+            MVForecaster_kwargs['names'] = sym
+        return MVForecaster.MVForecaster(
+            *fs,
+            **MVForecaster_kwargs,
+        )
 
 def plot_reduction_errors(f):
     """ plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
@@ -307,3 +340,63 @@ def break_mv_forecaster(mvf):
         to_return.append(f)
 
     return tuple(to_return)
+
+def find_optimal_lag_order(mvf,train_only=False,**kwargs):
+    """ returns the otpimal lag order for a mutlivariate process using the statsmodels function:
+    https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.var_model.VAR.select_order.html.
+    the exogenous regressors are set based on Xvars loaded in the `MVForecaster` object.
+
+    Args:
+        mvf (MVForecaster): the MVForecaster object with series loaded to find the optimal order for
+        train_only (bool): default False. whether to use the training data only in the test.
+        **kwargs: passed to the referenced statsmodels function
+
+    Returns:
+        (LagOrderResults): lag selections.
+    """
+    from statsmodels.tsa.vector_ar.var_model import VAR
+    data = np.array(
+        [getattr(mvf,f'series{i+1}')['y'].astype(float).values for i in range(mvf.n_series)],
+    ).T
+
+    if mvf.current_xreg:
+        exog = pd.DataFrame(mvf.current_xreg).values
+    else:
+        exog = None
+
+    if train_only:
+        data = data[:-mvf.test_length]
+        if exog is not None:
+            exog = exog[:-mvf.test_length]
+
+    model = VAR(data,exog=exog)
+
+    return model.select_order(
+        **kwargs,
+    )
+
+def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
+    """ returns the optimal cointigration rank for a multivariate process using the function from statsmodels: 
+    https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.select_coint_rank.html
+
+    Args:
+       mvf (MVForecaster): the MVForecaster object with series loaded to find the optimal rank for
+       train_only (bool): default False. whether to use the training data only in the test.
+        **kwargs: passed to the referenced statsmodels function
+
+    Returns:
+        (CointRankResults): object containing the cointegration rank suggested by the test and allowing a summary to be printed.
+    """
+    from statsmodels.tsa.vector_ar.vecm import select_coint_rank
+    data = np.array(
+        [getattr(mvf,f'series{i+1}')['y'].values for i in range(mvf.n_series)],
+    ).T
+    if train_only:
+        data = data[:-mvf.test_length]
+    
+    return select_coint_rank(
+        data,
+        det_order=det_order,
+        k_ar_diff=k_ar_diff,
+        **kwargs,
+    )

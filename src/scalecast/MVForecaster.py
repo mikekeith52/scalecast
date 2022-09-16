@@ -84,6 +84,8 @@ class MVForecaster:
         Returns:
             (MVForecaster): the object.
         """
+        for f in fs:
+            f.typ_set()
         if (
             len(set([len(f.current_dates) for f in fs])) > 1
             or len(set([min(f.current_dates) for f in fs])) > 1
@@ -123,7 +125,6 @@ class MVForecaster:
         self.freq = fs[0].freq
         self.n_series = len(fs)
         for i, f in enumerate(fs):
-            f.typ_set() # synchronize all the junk in there
             setattr(
                 self,
                 f"series{i+1}",
@@ -1108,18 +1109,6 @@ class MVForecaster:
             series, labels = self._parse_series(how)
             self.optimize_on = labels[0]
 
-    def _get_optimal_lags(
-        self,
-        max_lag,
-        min_lag=1,
-        estimator='mlr',
-        n_draws=100,
-        cross_validate=False,        
-        cvkwargs={},
-        **kwargs,
-    ):
-        pass
-
     def _forecast(
         self, fcster, dynamic_testing, tune=False, normalizer="minmax", lags=1, **kwargs
     ):
@@ -1139,13 +1128,14 @@ class MVForecaster:
                 does not need to be specified by user.
             normalizer (str): one of _normalizer_. default 'minmax'.
                 if not None, normalizer applied to training data only to not leak.
-            lags (int | list[int] | dict[str,int | list[int]]): default 1.
+            lags (int | list[int] | dict[str,(int | list[int])]): default 1.
                 the lags to add from each series to forecast with.
-                needs to use at least one lag (otherwise, use a univariate approach).
+                needs to use at least one lag for any sklearn model.
+                some models in the `scalecast.auxmodels` module require you to pass None or 0 to lags.
                 if int, that many lags will be added for all series
-                if list, each element must be ints, and only those lags will be added for each series.
+                if list, each element must be int types, and only those lags will be added for each series.
                 if dict, the key must be the user-selected series name, 'series{n}' or 'y{n}' and key is list or int.
-            **kwargs: treated as model hyperparameters and passed to the applicable sklearn estimator.
+            **kwargs: treated as model hyperparameters and passed to the applicable sklearn or other type of estimator.
 
         >>> mvf.set_estimator('gbt')
         >>> mvf.manual_forecast(lags=3) # adds three lags for each series
@@ -1157,6 +1147,14 @@ class MVForecaster:
         def prepare_data(lags):
             observed = pd.DataFrame(self.current_xreg)
             future = pd.DataFrame(self.future_xreg, index=range(len(self.future_dates)))
+            
+            if lags is None or not lags:
+                observedy = pd.DataFrame(
+                    {f'y{i+1}':getattr(self,f'series{i+1}')['y'].to_list() for i in range(self.n_series)}
+                )
+                observed = pd.concat([observedy,observed],axis=1)
+                return observed, future
+
             for i in range(self.n_series):
                 if str(lags).isnumeric() or isinstance(lags, float):
                     lags = int(lags)
@@ -1235,8 +1233,8 @@ class MVForecaster:
             Returns:
                 (ndarray): The scaled x values.
             """
-            if not scaler is None:
-                return scaler.transform(X)
+            if not scaler is None and lags:
+                return scaler.transform(X if not hasattr(X,'values') else X.values)
             else:
                 return X.values if hasattr(X, "values") else X
 
@@ -1244,16 +1242,33 @@ class MVForecaster:
             self.scaler = self._parse_normalizer(X, normalizer)
             X = scale(self.scaler, X)
             regr = _sklearn_imports_[fcster](**kwargs)
+            # below added for vecm model -- could be expanded for others as well
+            extra_kws_map = {
+                'dates':self.current_dates.values.copy(),
+                'n_series':self.n_series,
+                'freq':self.freq,
+            }
+            if hasattr(regr,'_scalecast_set'):
+                for att in regr._scalecast_set:
+                    setattr(regr,att,extra_kws_map[att])
+            
             regr.fit(X, y)
             return regr
 
         def evaluate(trained_models, future, dynamic_testing):
             future = future.reset_index(drop=True)
-            if dynamic_testing is False:
+            if lags is None or not lags:
+                future = scale(self.scaler, future)
+                p = trained_models.predict(future)
+                preds = {
+                    f'y{i+1}':list(p[:,i]) for i in range(self.n_series)
+                }
+            elif dynamic_testing is False:
                 preds = {}
                 future = scale(self.scaler, future)
                 for series, regr in trained_models.items():
                     preds[series] = list(regr.predict(future))
+            
             else:
                 preds = {series: [] for series in trained_models.keys()}
                 preds_draw = {series: [] for series in trained_models.keys()}
@@ -1299,16 +1314,24 @@ class MVForecaster:
         observed, future = prepare_data(lags)
 
         # test the model
-        trained = {}
-        for i in range(self.n_series):
-            trained[f"y{i+1}"] = train(
+        if lags is None or not lags:
+            trained = train(
                 X=observed.values[:-test_length].copy(),
-                y=getattr(self, f"series{i+1}")["y"]
-                .values[-observed.shape[0] : -test_length]
-                .copy(),
+                y=None,
                 normalizer=normalizer,
                 **kwargs,
             )
+        else:
+            trained = {}
+            for i in range(self.n_series):
+                trained[f"y{i+1}"] = train(
+                    X=observed.values[:-test_length].copy(),
+                    y=getattr(self, f"series{i+1}")["y"]
+                    .values[-observed.shape[0] : -test_length]
+                    .copy(),
+                    normalizer=normalizer,
+                    **kwargs,
+                )
 
         preds = evaluate(
             trained,
@@ -1329,20 +1352,28 @@ class MVForecaster:
                 },
             )
 
-        trained_full = {}
-        for i in range(self.n_series):
-            trained_full[f"y{i+1}"] = train(
+        if lags is None or not lags:
+            trained_full = train(
                 X=observed.copy(),
-                y=getattr(self, f"series{i+1}")["y"]
-                .values[-observed.shape[0] :]
-                .copy(),
+                y=None,
                 normalizer=normalizer,
                 **kwargs,
             )
+        else:
+            trained_full = {}
+            for i in range(self.n_series):
+                trained_full[f"y{i+1}"] = train(
+                    X=observed.copy(),
+                    y=getattr(self, f"series{i+1}")["y"]
+                    .values[-observed.shape[0] :]
+                    .copy(),
+                    normalizer=normalizer,
+                    **kwargs,
+                )
 
         self.dynamic_testing = dynamic_testing
         self.test_set_pred = preds.copy()
-        self.trained_models = trained_full
+        self.trained_models = trained_full # does not go to history
         self.fitted_values = evaluate(trained_full, observed.copy(), False)
         return evaluate(trained_full, future.copy(), True)
 
@@ -1366,25 +1397,25 @@ class MVForecaster:
             ValueError,
             f"normalizer must be one of {_normalizer_}, got {normalizer}",
         )
+        X_train = X_train if not hasattr(X_train,'values') else X_train.values
         if normalizer == "minmax":
             from sklearn.preprocessing import MinMaxScaler as Scaler
         elif normalizer == "normalize":
             from sklearn.preprocessing import Normalizer as Scaler
         elif normalizer == "scale":
             from sklearn.preprocessing import StandardScaler as Scaler
-        elif normalizer == "pt":  # fixing an issue with 0.3.7
+        elif normalizer == "pt":
             try:
                 from sklearn.preprocessing import PowerTransformer as Scaler
-
                 scaler = Scaler()
                 scaler.fit(X_train)
                 return scaler
             except ValueError:
+                from sklearn.preprocessing import StandardScaler as Scaler
                 logging.warning(
                     f"the pt normalizer did not work for the {self.estimator} model, defaulting to a StandardScaler"
                 )
                 normalizer = "scale"
-                from sklearn.preprocessing import StandardScaler as Scaler
         else:
             return None
 
@@ -1487,7 +1518,7 @@ class MVForecaster:
             "Estimator": self.estimator,
             "Xvars": list(self.current_xreg.keys()),
             "HyperParams": {
-                k: v for k, v in kwargs.items() if k not in ("normalizer", "lags")
+                k: v for k, v in kwargs.items() if k not in ("normalizer", "lags", "mvf")
             },
             "Lags": kwargs["lags"] if "lags" in kwargs.keys() else 1,
             "Scaler": kwargs["normalizer"]
@@ -1907,7 +1938,7 @@ class MVForecaster:
             )
             sns.lineplot(
                 x=self.current_dates.to_list(),
-                y=act,
+                y=act[-len(self.current_dates):],
                 label=f"{labels[i]} actual",
                 ax=ax,
                 color=_series_colors_[i],

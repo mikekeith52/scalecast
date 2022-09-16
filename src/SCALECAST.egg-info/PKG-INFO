@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.14.1
+Version: 0.14.2
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -28,6 +28,12 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         import matplotlib.pyplot as plt
         import pandas_datareader as pdr
         
+        models = (
+          'elasticnet',
+          'lightgbm',
+          'mlp',
+        )
+        
         GridGenerator.get_example_grids()
         
         df = pdr.get_data_fred(
@@ -53,14 +59,13 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         f.auto_Xvar_select(cross_validate=True)
         f.determine_best_series_length()
         
-        f.set_estimator('elasticnet')
-        f.tune()
-        f.auto_forecast()
+        f.tune_test_forecast(models)
         
         f = transformer.DiffRevert(1)
         f = transformer.LogRevert()
         
-        f.plot()
+        f.reeval_cis() # expanding cis based on all model results
+        f.plot(ci=True)
         plt.show()
         
         results = f.export(
@@ -83,10 +88,10 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           - [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html)
           - [Support Vector Machine](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
           - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator)
-        - [XGBoost](https://xgboost.readthedocs.io/en/stable/)
-        - [LightGBM](https://lightgbm.readthedocs.io/en/latest/)
+        - [XGBoost](https://xgboost.readthedocs.io/en/stable/parameter.html)
+        - [LightGBM](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html#lightgbm.LGBMRegressor)
         
-        The `Forecaster` object only can also use:
+        The `Forecaster` object only can use:
         
         - [StatsModels](https://www.statsmodels.org/stable/)
           - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
@@ -101,6 +106,12 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         - [LinkedIn Greykite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
           - [silverkite](https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html)
         - [Native Combo model](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_combo)
+        
+        The `MVForecaster` object only can use:
+        - [StatsModels](https://www.statsmodels.org/stable/)
+          - [VECM](https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html)
+        
+        Want more models? Open a [feature request](https://github.com/mikekeith52/scalecast/issues/new)!  
         
         The library interfaces nicely with interactive notebook applications.
         

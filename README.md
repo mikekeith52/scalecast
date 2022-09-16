@@ -80,7 +80,7 @@ The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/late
 - [XGBoost](https://xgboost.readthedocs.io/en/stable/parameter.html)
 - [LightGBM](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html#lightgbm.LGBMRegressor)
 
-The `Forecaster` object only can also use:
+The `Forecaster` object only can use:
 
 - [StatsModels](https://www.statsmodels.org/stable/)
   - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
@@ -95,6 +95,12 @@ The `Forecaster` object only can also use:
 - [LinkedIn Greykite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
   - [silverkite](https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html)
 - [Native Combo model](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_combo)
+
+The `MVForecaster` object only can use:
+- [StatsModels](https://www.statsmodels.org/stable/)
+  - [VECM](https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html)
+
+Want more models? Open a [feature request](https://github.com/mikekeith52/scalecast/issues/new)!  
 
 The library interfaces nicely with interactive notebook applications.
 

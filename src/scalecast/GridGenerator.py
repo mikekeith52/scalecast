@@ -165,6 +165,14 @@ svr={
     'lags':[1,3,6],
 }
 
+vecm = {
+    'lags':[0],
+    'normalizer':[None],
+    'k_ar_diff':range(1,13),
+    'deterministic':["n","co","lo","li","cili","colo"],
+    'seasons':[0,12],
+}
+
 xgboost = {
     'n_estimators':[150,200,250],
     'scale_pos_weight':[5,10],
@@ -189,6 +197,7 @@ rf = {}
 silverkite = {}
 svr={}
 theta = {}
+vecm = {}
 xgboost = {}
 """
 

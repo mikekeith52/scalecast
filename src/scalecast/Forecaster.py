@@ -641,7 +641,11 @@ class Forecaster:
             true_forecast,
         ):
             def scale(scaler, X):
-                return scaler.transform(X) if scaler is not None else X
+                return (
+                    scaler.transform(X if not hasattr(X,'values') else X.values) 
+                    if scaler is not None 
+                    else X
+                )
 
             # apply the normalizer fit on training data only
             X = scale(scaler, X)
@@ -944,12 +948,13 @@ class Forecaster:
             **kwargs: passed to the ARIMA() function from statsmodels. endog and exog passed automatically. 
                 https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html
         """
+        from statsmodels.tsa.arima.model import ARIMA
+        
         if not dynamic_testing:
             logging.warning(
                 "dynamic_testing argument will be ignored for the arima model"
             )
         self.dynamic_testing = True
-        from statsmodels.tsa.arima.model import ARIMA
 
         Xvars = (
             [x for x in self.current_xreg.keys() if not x.startswith("AR")]
@@ -958,7 +963,7 @@ class Forecaster:
             if Xvars is not None
             else Xvars
         )
-        Xvars_orig = None if Xvars is None else None if len(Xvars) == 0 else Xvars
+        Xvars_orig = None if Xvars is None else None if not Xvars else Xvars
         test_length = (
             self.test_length if not tune else self.validation_length + self.test_length
         )
@@ -1052,13 +1057,13 @@ class Forecaster:
 
             **kwargs: passed to the Prophet() function from fbprophet.
         """
+        from fbprophet import Prophet
         if not dynamic_testing:
             logging.warning(
                 "dynamic_testing argument will be ignored for the prophet model"
             )
         self.dynamic_testing = True
-        from fbprophet import Prophet
-
+        
         X = pd.DataFrame(
             {k: v for k, v in self.current_xreg.items() if not k.startswith("AR")}
         )

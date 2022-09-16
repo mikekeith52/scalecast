@@ -8,6 +8,84 @@ metrics
 .. autoclass:: src.scalecast.util.metrics
    :members:
 
+break_mv_forecaster()
+-----------------------------
+.. automodule:: src.scalecast.util.break_mv_forecaster
+    :members:
+
+.. code:: python
+
+    from scalecast.MVForecaster import MVForecaster
+    from scalecast.util import break_mv_forecaster, pdr_load
+
+    f1 = prd_load('UTUR',start='2000-01-01',end='2022-01-01',src='fred')
+    f2 = prd_load('UNRATE',start='2000-01-01',end='2022-01-01',src='fred')
+
+    mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
+
+    f1, f2 = break_mv_forecaster(mvf)
+
+find_optimal_coint_rank()
+----------------------------
+.. automodule:: src.scalecast.util.find_optimal_coint_rank
+    :members:
+
+.. code:: python
+
+  from scalecast.Forecaster import Forecaster
+  from scalecast.MVForecaster import MVForecaster
+  from scalecast.util import find_optimal_coint_rank
+  import pandas datareader as pdr
+
+  s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-01-01')
+  s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-01-01')
+
+  f1 = Forecaster(y=s1['UTUR'],current_dates=s1.index)
+  f2 = Forecaster(y=s2['UNRATE'],current_dates=s2.index)
+
+  mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
+
+  coint_res = find_optimal_coint_rank(mvf,det_order=-1,k_ar_diff=8,train_only=True)
+  print(coint_res) # prints a report
+  rank = coint_res.rank # best rank
+
+find_optimal_lag_order()
+---------------------------
+.. automodule:: src.scalecast.util.find_optimal_lag_order
+    :members:
+
+.. code:: python
+
+  from scalecast.Forecaster import Forecaster
+  from scalecast.MVForecaster import MVForecaster
+  from scalecast.util import find_optimal_lag_order
+  import pandas datareader as pdr
+
+  s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-01-01')
+  s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-01-01')
+
+  f1 = Forecaster(y=s1['UTUR'],current_dates=s1.index)
+  f2 = Forecaster(y=s2['UNRATE'],current_dates=s2.index)
+
+  f1.diff()
+  f2.diff()
+
+  mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
+
+  lag_order_res = find_optimal_lag_order(mvf,train_only=True)
+  lag_order_aic = lag_order_res.aic # picks the best lag order according to aic
+
+
+pdr_load()
+----------------
+.. automodule:: src.scalecast.util.pdr_load
+    :members:
+
+.. code:: python
+
+    from scalecast.util import pdr_load
+    f = prd_load('UNRATE',start='2000-01-01',src='fred')
+
 plot_reduction_errors()
 -----------------------------
 .. automodule:: src.scalecast.util.plot_reduction_errors
@@ -37,31 +115,3 @@ plot_reduction_errors()
     f.reduce_Xvars(method='pfi')
     
     plot_reduction_errors(f)
-
-break_mv_forecaster()
------------------------------
-.. automodule:: src.scalecast.util.break_mv_forecaster
-    :members:
-
-.. code:: python
-
-    from scalecast.MVForecaster import MVForecaster
-    from scalecast.util import break_mv_forecaster, pdr_load
-
-    f1 = prd_load('UTUR',start='2000-01-01',end='2022-01-01',src='fred')
-    f2 = prd_load('UNRATE',start='2000-01-01',end='2022-01-01',src='fred')
-
-    mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
-
-    f1, f2 = break_mv_forecaster(mvf)
-
-
-pdr_load()
-----------------
-.. automodule:: src.scalecast.util.pdr_load
-    :members:
-
-.. code:: python
-
-    from scalecast.util import pdr_load
-    f = prd_load('UNRATE',start='2000-01-01',src='fred')

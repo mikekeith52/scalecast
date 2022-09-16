@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.14.2] - 2022-09-16
+### Added
+- `util.pdr_load()` now accepts multiple series and returns an MVForecaster object of everything loaded together
+- added more arguments to the `util.pdr_load()` function
+- added `auxmodels.vecm` model, which is a model class that can be imported using the `MVForecaster.add_sklearn_estimator()` function (#11)
+- modified the source code in the `MVForecaster` object to accomodate new model classes (e.g. vecm)
+- added a vecm grid to the example grids
+- added the `util.find_optimal_coint_rank()` and `util.find_optimal_lag_order()` functions
+### Changed
+- changed scaling in `Forecaster` and `MVForecaster` to circumvent a warning having to do with feature names
+### Fixed
+- added called `Forecaster.Forecaster.typ_set()` right after `MVForecater.__init__()`, before chopping dates to fix weird loading errors that occured once in a while
+
 ## [0.14.1] - 2022-09-09
 ### Added
 - if there are not enough observations to use in cross validation (usually because too many AR terms were added), an error is raised when calling the `Forecater.cross_validate()` and `MVForecaster.cross_validation()` functions
