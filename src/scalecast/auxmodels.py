@@ -33,9 +33,6 @@ class vecm:
                 and "lo" when using a linear term. 
             seasons (int): default 0. Number of periods in a seasonal cycle. 0 means no seasons.
             first_season (int): default 0. Season of the first observation.
-
-        Returns:
-            an initialized model.
         """
         self.k_ar_diff = k_ar_diff
         self.exog_coint = exog_coint
