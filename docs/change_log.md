@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.14.2] - 2022-09-16
+## [0.14.3] - 2022-09-23
 ### Added
 - `util.pdr_load()` now accepts multiple series and returns an MVForecaster object of everything loaded together
 - added more arguments to the `util.pdr_load()` function
@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. We keep tra
 - changed scaling in `Forecaster` and `MVForecaster` to circumvent a warning having to do with feature names
 ### Fixed
 - added called `Forecaster.Forecaster.typ_set()` right after `MVForecater.__init__()`, before chopping dates to fix weird loading errors that occured once in a while
+- fixed the util function that wasn't working in 0.14.2 and yanked that release. everything scheduled for 0.14.3 will now be part of 0.14.4.
 
 ## [0.14.1] - 2022-09-09
 ### Added

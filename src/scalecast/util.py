@@ -1,6 +1,5 @@
 from scalecast import Forecaster
 from scalecast import MVForecaster
-import MVForecaster
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
