@@ -13,6 +13,7 @@ class vecm:
         deterministic="n",
         seasons=0,
         first_season=0,
+        freq = None,
     ):
         """ initializes a Vector Error Correction Model.
         uses the statsmodels implementation: https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html
@@ -33,6 +34,8 @@ class vecm:
                 and "lo" when using a linear term. 
             seasons (int): default 0. Number of periods in a seasonal cycle. 0 means no seasons.
             first_season (int): default 0. Season of the first observation.
+            freq (str): optional. the frequency of the time-series. 
+                a pandas offset or 'B', 'D', 'W', 'M', 'A', or 'Q'.
         """
         self.k_ar_diff = k_ar_diff
         self.exog_coint = exog_coint
@@ -40,7 +43,8 @@ class vecm:
         self.deterministic = deterministic
         self.seasons = seasons
         self.first_season = first_season
-        self._scalecast_set = ['dates','freq','n_series'] # these attrs are set when imported into scalecast
+        self.freq = freq
+        self._scalecast_set = ['dates','n_series'] # these attrs are set when imported into scalecast
 
     def fit(self,X,y=None):
         """ fits the model.
@@ -68,7 +72,7 @@ class vecm:
             deterministic=self.deterministic,
             seasons=self.seasons,
             first_season=self.first_season,
-            dates = self.dates[:X.shape[0]],
+            dates=self.dates[:X.shape[0]],
             freq = self.freq,
         ).fit()
         

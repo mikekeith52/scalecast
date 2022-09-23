@@ -18,10 +18,12 @@ break_mv_forecaster()
     from scalecast.MVForecaster import MVForecaster
     from scalecast.util import break_mv_forecaster, pdr_load
 
-    f1 = prd_load('UTUR',start='2000-01-01',end='2022-01-01',src='fred')
-    f2 = prd_load('UNRATE',start='2000-01-01',end='2022-01-01',src='fred')
-
-    mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
+    mvf = pdr_load(
+        ['UTUR','UNRATE'],
+        start='2000-01-01',
+        end='2022-01-01',
+        future_dates=12,
+    )
 
     f1, f2 = break_mv_forecaster(mvf)
 
@@ -35,7 +37,7 @@ find_optimal_coint_rank()
   from scalecast.Forecaster import Forecaster
   from scalecast.MVForecaster import MVForecaster
   from scalecast.util import find_optimal_coint_rank
-  import pandas datareader as pdr
+  import pandas_datareader as pdr
 
   s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-01-01')
   s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-01-01')
@@ -59,7 +61,7 @@ find_optimal_lag_order()
   from scalecast.Forecaster import Forecaster
   from scalecast.MVForecaster import MVForecaster
   from scalecast.util import find_optimal_lag_order
-  import pandas datareader as pdr
+  import pandas_datareader as pdr
 
   s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-01-01')
   s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-01-01')
@@ -84,7 +86,8 @@ pdr_load()
 .. code:: python
 
     from scalecast.util import pdr_load
-    f = prd_load('UNRATE',start='2000-01-01',src='fred')
+    f = pdr_load('UNRATE',start='2000-01-01',src='fred')
+    mvf = pdr_load(['UNRATE','UTUR'],start='2000-01-01',src='fred')
 
 plot_reduction_errors()
 -----------------------------

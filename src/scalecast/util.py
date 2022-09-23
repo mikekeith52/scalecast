@@ -204,7 +204,7 @@ def pdr_load(
     MVForecaster_kwargs={},
     **kwargs
 ):
-    """ gets data using `pdr.DataReader()`
+    """ gets data using `pandas_datareader.DataReader()` and loads the series into a Forecaster or MVForecaster object.
 
     Args:
         sym (str or list-like): the name of the series to extract.

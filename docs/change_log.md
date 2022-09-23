@@ -1,7 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.14.3] - 2022-09-23
+## [0.14.4] - 2022-09-23
+### Added
+- added the tf_model attribute to the `Forecaster` object for users to access and save rnn and lstm models (#12)
+- added `figsize` arg to all forecast plotting methods in `Forecaster` and `MVForecaster`
+- added a link to the M4 example in the readme
+### Changed
+### Fixed
+- took out the `freq` argument from `auxmodels.vecm` (which was being set automatically) since it is optional when dates are passed and was causing frequencies that statsmodels does not recognize to fail (#13)
+
+## [0.14.3] - 2022-09-16
 ### Added
 - `util.pdr_load()` now accepts multiple series and returns an MVForecaster object of everything loaded together
 - added more arguments to the `util.pdr_load()` function
@@ -10,9 +19,9 @@ All notable changes to this project will be documented in this file. We keep tra
 - added a vecm grid to the example grids
 - added the `util.find_optimal_coint_rank()` and `util.find_optimal_lag_order()` functions
 ### Changed
-- changed scaling in `Forecaster` and `MVForecaster` to circumvent a warning having to do with feature names
+- changed scaling syntax in `Forecaster` and `MVForecaster` to circumvent a warning having to do with feature names--only numpy arrays are scaled now (not dataframes)
 ### Fixed
-- added called `Forecaster.Forecaster.typ_set()` right after `MVForecater.__init__()`, before chopping dates to fix weird loading errors that occured once in a while
+- added a call of `Forecaster.Forecaster.typ_set()` right after `MVForecater.__init__()`, before chopping dates to fix weird loading errors that occured once in a while
 - fixed the util function that wasn't working in 0.14.2 and yanked that release. everything scheduled for 0.14.3 will now be part of 0.14.4.
 
 ## [0.14.1] - 2022-09-09

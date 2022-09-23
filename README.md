@@ -179,7 +179,7 @@ In addition, scalecast offers:
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
 
 ### Scaled Forecasting on Many Series
-- An example using the [M4 dataset](https://github.com/Mcompetitions/M4-methods) coming soon!
+- [M4](https://github.com/mikekeith52/scalecast-examples/tree/main/m4)  
 - [May the Forecasts Be with You](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/multi-series/multi-series.html)
 

@@ -228,11 +228,15 @@ class Forecaster:
         globals()["f_init_"] = self.__deepcopy__()
 
     def __copy__(self):
+        if hasattr(self,'tf_model'):
+            delattr(self,'tf_model')
         obj = type(self).__new__(self.__class__)
         obj.__dict__.update(self.__dict__)
         return obj
 
     def __deepcopy__(self):
+        if hasattr(self,'tf_model'):
+            delattr(self,'tf_model')
         obj = type(self).__new__(self.__class__)
         obj.__dict__.update(self.__dict__)
         obj.__dict__ = copy.deepcopy(obj.__dict__)
@@ -565,6 +569,7 @@ class Forecaster:
             "summary_stats",
             "models",
             "weights",
+            "tf_model",
         ):
             try:
                 delattr(self, attr)
@@ -1567,6 +1572,7 @@ class Forecaster:
             fvs = [p[0] * (ymax - ymin) + ymin for p in fvs[1:][::-1]] + [
                 p * (ymax - ymin) + ymin for p in fvs[0]
             ]
+            self.tf_model = test_model
             return (pred, fvs + [np.nan] * self.test_length, None, None)
 
         model = get_compiled_model(y_new)
@@ -1579,6 +1585,8 @@ class Forecaster:
             p[0] * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[1:][::-1]
         ] + [p * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[0]]
         fcst = [p * (self.y.max() - self.y.min()) + self.y.min() for p in fcst[0]]
+
+        self.tf_model = model
 
         return (fcst, fvs, None, None)
 
@@ -1842,7 +1850,6 @@ class Forecaster:
         Returns:
             None
         """
-        self.y = pd.Series(self.y)
         if (
             how != "midpoint"
         ):  # only works if there aren't more than 2 na one after another
@@ -4660,7 +4667,13 @@ class Forecaster:
             )
 
     def plot(
-        self, models="all", order_by=None, level=False, print_attr=[], ci=False,
+        self, 
+        models="all", 
+        order_by=None, 
+        level=False, 
+        print_attr=[], 
+        ci=False, 
+        figsize=(6.4,4.8),
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
         if any models passed to models were run test_only=True, will raise an error.
@@ -4680,6 +4693,7 @@ class Forecaster:
                 if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
             ci (bool): default False.
                 whether to display the confidence intervals.
+            figsize (tuple): default (6.4,4.8). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -4694,7 +4708,7 @@ class Forecaster:
         except (ValueError, TypeError):
             models = None
 
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
 
         if models is None:
             sns.lineplot(
@@ -4775,7 +4789,13 @@ class Forecaster:
         return ax
 
     def plot_test_set(
-        self, models="all", order_by=None, include_train=True, level=False, ci=False,
+        self, 
+        models="all", 
+        order_by=None, 
+        include_train=True, 
+        level=False, 
+        ci=False,
+        figsize=(6.4,4.8),
     ):
         """ plots all test-set predictions with the actuals.
 
@@ -4796,6 +4816,7 @@ class Forecaster:
             ci (bool): default False.
                 whether to display the confidence intervals.
                 default is 100 boostrapped samples and a 95% confidence interval.
+            figsize (tuple): default (6.4,4.8). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -4805,7 +4826,7 @@ class Forecaster:
         >>> f.plot(order_by='LevelTestSetMAPE') # plots all test-set results
         >>> plt.show()
         """
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -4887,7 +4908,11 @@ class Forecaster:
         return ax
 
     def plot_fitted(
-        self, models="all", order_by=None, level=False,
+        self, 
+        models="all", 
+        order_by=None, 
+        level=False,
+        figsize=(6.4,4.8),
     ):
         """ plots all fitted values with the actuals. does not support level fitted values (for now).
 
@@ -4900,6 +4925,7 @@ class Forecaster:
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
                 if False and there are a mix of models passed with different integrations, will default to True.
+            figsize (tuple): default (6.4,4.8). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -4909,7 +4935,7 @@ class Forecaster:
         >>> f.plot_fitted(order_by='LevelTestSetMAPE') # plots all fitted values
         >>> plt.show()
         """
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]

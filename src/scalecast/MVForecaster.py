@@ -1246,7 +1246,6 @@ class MVForecaster:
             extra_kws_map = {
                 'dates':self.current_dates.values.copy(),
                 'n_series':self.n_series,
-                'freq':self.freq,
             }
             if hasattr(regr,'_scalecast_set'):
                 for att in regr._scalecast_set:
@@ -1725,7 +1724,13 @@ class MVForecaster:
         return models
 
     def plot(
-        self, models="all", series="all", put_best_on_top=False, level=False, ci=False
+        self, 
+        models="all", 
+        series="all", 
+        put_best_on_top=False, 
+        level=False, 
+        ci=False, 
+        figsize=(6.4,4.8),
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
 
@@ -1745,6 +1750,7 @@ class MVForecaster:
                 if False and there are a mix of models passed with different integrations, will default to True.
             ci (bool): default False.
                 whether to display the confidence intervals.
+            figsize (tuple): default (6.4,4.8). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -1756,7 +1762,7 @@ class MVForecaster:
         models = self._parse_models(models, put_best_on_top)
         integration = [v for s, v in self.integration.items() if s in series]
         level = True if len(set(integration)) > 1 else level
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
 
         k = 0
         for i, s in enumerate(series):
@@ -1812,6 +1818,7 @@ class MVForecaster:
         include_train=True,
         level=False,
         ci=False,
+        figsize=(6.4,4.8),
     ):
         """  plots all test-set predictions with the actuals.
 
@@ -1836,6 +1843,7 @@ class MVForecaster:
                 if False and there are a mix of models passed with different integrations, will default to True.
             ci (bool): default False.
                 whether to display the confidence intervals.
+            figsize (tuple): default (6.4,4.8). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -1854,7 +1862,7 @@ class MVForecaster:
             if include_train is False
             else include_train
         )
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
 
         k = 0
         for i, s in enumerate(series):
@@ -1905,7 +1913,13 @@ class MVForecaster:
         plt.ylabel("Values")
         return ax
 
-    def plot_fitted(self, models="all", series="all", level=False):
+    def plot_fitted(
+        self, 
+        models="all", 
+        series="all", 
+        level=False,
+        figsize=(6.4,4.8),
+    ):
         """ plots fitted values with the actuals.
 
         Args:
@@ -1919,6 +1933,7 @@ class MVForecaster:
             level (bool): default False.
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
+            figsize (tuple): default (6.4,4.8). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -1928,7 +1943,7 @@ class MVForecaster:
         """
         series, labels = self._parse_series(series)
         models = self._parse_models(models, False)
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(figsize=figsize)
         k = 0
         for i, s in enumerate(series):
             act = (
