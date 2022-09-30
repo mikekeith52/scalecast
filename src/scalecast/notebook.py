@@ -17,6 +17,7 @@ def results_vis(
     plot_type: str = "forecast",
     print_attr: list = [],
     include_train: Union[bool, int] = True,
+    figsize = (12,6),
 ) -> None:
     """ visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.
 
@@ -51,6 +52,7 @@ def results_vis(
                 level=lv_selection,
                 print_attr=print_attr,
                 ci=ci_selection,
+                figsize=figsize,
             )
         else:
             selected_data.plot_test_set(
@@ -59,6 +61,7 @@ def results_vis(
                 include_train=include_train,
                 level=lv_selection,
                 ci=ci_selection,
+                figsize=figsize,
             )
         plt.title(ts_selection + " Forecast Results", size=16)
         plt.show()
@@ -100,7 +103,7 @@ def results_vis(
     button.on_click(on_button_clicked)
 
 
-def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
+def results_vis_mv(f_dict, plot_type="forecast", include_train=True, figsize = (12,6)):
     """ visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
 
     Args:
@@ -129,6 +132,7 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
                 series=se_selection,
                 level=lv_selection,
                 ci=ci_selection,
+                figsize=figsize,
             )
         else:
             selected_data.plot_test_set(
@@ -137,6 +141,7 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True):
                 level=lv_selection,
                 ci=ci_selection,
                 include_train=include_train,
+                figsize=figsize,
             )
         plt.title(ts_selection + " Forecast Results", size=16)
         plt.show()

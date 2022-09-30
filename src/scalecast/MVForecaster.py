@@ -1741,7 +1741,7 @@ class MVForecaster:
                'top_' and None not supported.
             series (list-like or str): default 'all'.
                the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
+               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
             put_best_on_top (bool): only set to True if you have previously called set_best_model().
                 if False, ignored.
             level (bool): default False.
@@ -1829,7 +1829,7 @@ class MVForecaster:
                'top_' and None not supported.
             series (list-like or str): default 'all'.
                the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
+               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
             put_best_on_top (bool): only set to True if you have previously called set_best_model().
                 if False, ignored.
             include_train (bool or int): default True.
@@ -1929,7 +1929,7 @@ class MVForecaster:
                'top_' and None not supported.
             series (list-like or str): default 'all'.
                the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
+               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
             level (bool): default False.
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
@@ -2005,7 +2005,7 @@ class MVForecaster:
                'top_' and None not supported.
             series (list-like or str): default 'all'.
                the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
+               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
             to_excel (bool): default False.
                 whether to save to excel.
             cis (bool): default False.
@@ -2222,7 +2222,7 @@ class MVForecaster:
                name of the model, 'all', or list-like of model names.
             series (list-like or str): default 'all'.
                the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of model names.
+               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
             level (bool): default False.
                 whether to export level fitted values
 

@@ -1,7 +1,6 @@
 # Contributing
 
-Want to contribute? Email mikekeith52@gmail.com with your ideas. The following is needed:  
-- Issues and feature requests using the Issues tab in GitHub.  
-- More example notebooks displayed on the [examples](https://scalecast-examples.readthedocs.io/en/latest/) webpage. If you fork the [scalecast-examples](https://github.com/mikekeith52/scalecast-examples) repository and submit a merge request with a good notebook that showcases scalecast, we will host it and give you credit.   
-- Requests to add more models to the library.  
+Want to contribute? Email mikekeith52@gmail.com with your ideas or open an [issue/feature request](https://github.com/mikekeith52/scalecast/issues/new). The following is needed:  
+- More models added to the library, such as a genetic algorithm and the n-beats model
+- More example notebooks displayed on the [examples](https://scalecast-examples.readthedocs.io/en/latest/) webpage. If you fork the [scalecast-examples](https://github.com/mikekeith52/scalecast-examples) repository and submit a merge request with a good notebook that showcases scalecast, we will host it and give you credit.    
 - Better unit testing before making distribution updates.  
