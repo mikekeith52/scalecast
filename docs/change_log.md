@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.14.6] - 2022-10-07
+### Added
+### Changed
+- changed the default figsize for all plotting functions to (12,6).
+### Fixed
+
 ## [0.14.5] - 2022-09-30
 ### Added
 ### Changed

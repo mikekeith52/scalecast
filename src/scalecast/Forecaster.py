@@ -4673,7 +4673,7 @@ class Forecaster:
         level=False, 
         print_attr=[], 
         ci=False, 
-        figsize=(6.4,4.8),
+        figsize=(12,6),
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
         if any models passed to models were run test_only=True, will raise an error.
@@ -4693,7 +4693,7 @@ class Forecaster:
                 if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
             ci (bool): default False.
                 whether to display the confidence intervals.
-            figsize (tuple): default (6.4,4.8). size of the resulting figure.
+            figsize (tuple): default (12,6). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -4795,7 +4795,7 @@ class Forecaster:
         include_train=True, 
         level=False, 
         ci=False,
-        figsize=(6.4,4.8),
+        figsize=(12,6),
     ):
         """ plots all test-set predictions with the actuals.
 
@@ -4816,7 +4816,7 @@ class Forecaster:
             ci (bool): default False.
                 whether to display the confidence intervals.
                 default is 100 boostrapped samples and a 95% confidence interval.
-            figsize (tuple): default (6.4,4.8). size of the resulting figure.
+            figsize (tuple): default (12,6). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -4912,7 +4912,7 @@ class Forecaster:
         models="all", 
         order_by=None, 
         level=False,
-        figsize=(6.4,4.8),
+        figsize=(12,6),
     ):
         """ plots all fitted values with the actuals. does not support level fitted values (for now).
 
@@ -4925,7 +4925,7 @@ class Forecaster:
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
                 if False and there are a mix of models passed with different integrations, will default to True.
-            figsize (tuple): default (6.4,4.8). size of the resulting figure.
+            figsize (tuple): default (12,6). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.

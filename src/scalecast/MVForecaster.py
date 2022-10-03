@@ -1730,7 +1730,7 @@ class MVForecaster:
         put_best_on_top=False, 
         level=False, 
         ci=False, 
-        figsize=(6.4,4.8),
+        figsize=(12,6),
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
 
@@ -1750,7 +1750,7 @@ class MVForecaster:
                 if False and there are a mix of models passed with different integrations, will default to True.
             ci (bool): default False.
                 whether to display the confidence intervals.
-            figsize (tuple): default (6.4,4.8). size of the resulting figure.
+            figsize (tuple): default (12,6). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -1818,7 +1818,7 @@ class MVForecaster:
         include_train=True,
         level=False,
         ci=False,
-        figsize=(6.4,4.8),
+        figsize=(12,6),
     ):
         """  plots all test-set predictions with the actuals.
 
@@ -1843,7 +1843,7 @@ class MVForecaster:
                 if False and there are a mix of models passed with different integrations, will default to True.
             ci (bool): default False.
                 whether to display the confidence intervals.
-            figsize (tuple): default (6.4,4.8). size of the resulting figure.
+            figsize (tuple): default (12,6). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.
@@ -1918,7 +1918,7 @@ class MVForecaster:
         models="all", 
         series="all", 
         level=False,
-        figsize=(6.4,4.8),
+        figsize=(12,6),
     ):
         """ plots fitted values with the actuals.
 
@@ -1933,7 +1933,7 @@ class MVForecaster:
             level (bool): default False.
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
-            figsize (tuple): default (6.4,4.8). size of the resulting figure.
+            figsize (tuple): default (12,6). size of the resulting figure.
 
         Returns:
             (Axis): the figure's axis.

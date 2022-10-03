@@ -34,6 +34,7 @@ def results_vis(
             whether to include the complete training set in the plot or how many traning-set observations to include.
             passed to include_train parameter when plot_type = 'test'.
             ignored when plot_type = 'forecast'.
+        figsize (tuple): default (12,6). size of the resulting figure.
 
     Returns:
         None 
@@ -115,6 +116,7 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True, figsize = (
             whether to include the complete training set in the plot or how many traning-set observations to include.
             passed to include_train parameter when plot_type = 'test'.
             ignored when plot_type = 'forecast'.
+        figsize (tuple): default (12,6). size of the resulting figure.
 
     Returns:
         None
