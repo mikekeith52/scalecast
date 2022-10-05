@@ -1,7 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.14.6] - 2022-10-07
+## [0.14.7] - 2022-10-05
+### Added
+### Changed
+### Fixed
+- added `trend_estimator_kwargs` to the `Forecaster.auto_Xvar_select()` function to avoid an error that occurs when mixing estimators and not using default hyperparameters
+
+## [0.14.6] - 2022-10-03
 ### Added
 ### Changed
 - changed the default figsize for all plotting functions to (12,6).

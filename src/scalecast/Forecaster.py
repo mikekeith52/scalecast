@@ -2166,9 +2166,9 @@ class Forecaster:
         cvkwargs={},
         **kwargs,
     ):
-        """ reduces the regressor variables stored in the object. two methods are available:
-        l1 which uses a simple l1 penalty and Lasso regressor; as well as pfi that stands for 
-        permutation feature importance and shap, both of which offers more flexibility to view how removing
+        """ reduces the regressor variables stored in the object. three methods are available:
+        l1 which uses a simple l1 penalty and Lasso regressor; pfi that stands for 
+        permutation feature importance; and shap. pfi and shap offer more flexibility to view how removing
         variables one-at-a-time, according to which variable is evaluated as least helpful to the
         model after each model evaluation, affects a given error metric for any scikit-learn model.
         after each variable reduction, the model is re-run and pfi re-evaluated. when using pfi, feature scores
@@ -2377,6 +2377,7 @@ class Forecaster:
         estimator = 'mlr',
         try_trend = True,
         trend_estimator = 'mlr',
+        trend_estimator_kwargs = {},
         decomp_trend = True,
         decomp_method = 'additive',
         try_ln_trend = True,
@@ -2409,6 +2410,7 @@ class Forecaster:
             trend_estimator (str): one of _sklearn_estimators_. default 'mlr'.
                 ignored if try_trend is False.
                 the estimator to use to determine the best trend representation.
+            trend_estimator_kwargs (dict): default {}. the model parameters to pass to the trend_estimator model.
             decomp_trend (bool): default True. whether to decompose the series to estimate the trend.
                 ignored if try_trend is False.
                 the idea is there can be many seasonalities represented by scalecast, but only one trend,
@@ -2481,6 +2483,7 @@ class Forecaster:
         def Xvar_select_forecast(
             f,
             estimator,
+            kwargs,
             Xvars = 'all',
         ):
             f.set_estimator(estimator)
@@ -2648,21 +2651,29 @@ class Forecaster:
             ft.set_test_length(f.test_length)
             ft.set_validation_length(f.validation_length)
             f1 = ft.deepcopy()
-            Xvar_select_forecast(f1,trend_estimator)
+            Xvar_select_forecast(f1,trend_estimator,trend_estimator_kwargs)
             trend_metrics['t'] = f1.history[trend_estimator][monitor]
             if max_trend_poly_order > 1:
                 for i in range(2,max_trend_poly_order+1):
                     f1.add_poly_terms('t',pwr=i)
-                    trend_metrics['t' + str(i)] = Xvar_select_forecast(f1,trend_estimator)
+                    trend_metrics['t' + str(i)] = Xvar_select_forecast(
+                        f1,
+                        trend_estimator,
+                        trend_estimator_kwargs,
+                    )
             if try_ln_trend:
                 f2 = ft.deepcopy()
                 f2.add_logged_terms('t',drop=True)
-                Xvar_select_forecast(f2,trend_estimator)
+                Xvar_select_forecast(f2,trend_estimator,trend_estimator_kwargs)
                 trend_metrics['lnt'] = f2.history[trend_estimator][monitor]
                 if max_trend_poly_order > 1:
                     for i in range(2,max_trend_poly_order+1):
                         f2.add_poly_terms('lnt',pwr=i)
-                        trend_metrics['lnt' + str(i)] = Xvar_select_forecast(f2,trend_estimator)
+                        trend_metrics['lnt' + str(i)] = Xvar_select_forecast(
+                            f2,
+                            trend_estimator,
+                            trend_estimator_kwargs,
+                        )
         best_trend = parse_best_metrics(trend_metrics)
         
         if try_seasonalities:
@@ -2770,7 +2781,7 @@ class Forecaster:
                                 )
                     else:
                         raise TypeError(f'seasonality_repr must be list or dict type, got {type(seasonality_repr)}')
-                    seasonality_metrics[s] = Xvar_select_forecast(f1,estimator)
+                    seasonality_metrics[s] = Xvar_select_forecast(f1,estimator,kwargs)
         best_seasonality = parse_best_metrics(seasonality_metrics)
         
         if max_ar == 'auto' or max_ar > 0:
@@ -2779,7 +2790,7 @@ class Forecaster:
                 try:
                     f1 = f.deepcopy()
                     f1.add_ar_terms(i)
-                    ar_metrics[i] = Xvar_select_forecast(f1,estimator)
+                    ar_metrics[i] = Xvar_select_forecast(f1,estimator,kwargs)
                     if np.isnan(ar_metrics[i]):
                         warnings.warn(f'cannot estimate {estimator} model with {i} AR terms')
                         ar_metrics.pop(i)
@@ -2804,6 +2815,7 @@ class Forecaster:
             final_metrics[tuple(xvar_set)] =  Xvar_select_forecast(
                 f,
                 estimator,
+                kwargs,
                 Xvars=xvar_set,
             )
         best_combo = parse_best_metrics(final_metrics)
