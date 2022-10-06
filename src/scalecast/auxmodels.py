@@ -16,7 +16,8 @@ class vecm:
         freq = None,
     ):
         """ initializes a Vector Error Correction Model.
-        uses the statsmodels implementation: https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html
+        uses the statsmodels implementation: https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html.
+        see it used with scalecast: https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html
 
         Args:
             exog_coint (ndarray): default None. deterministic terms inside the cointegration relation.

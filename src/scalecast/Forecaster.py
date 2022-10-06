@@ -181,6 +181,8 @@ class Forecaster:
             current_dates (list-like): an array of all known observed dates.
                 must be same length as y and in the same sequence 
                 (index 0 in y corresponds to index 0 in current_dates, etc.).
+                can pass any numerical index if dates are unknown; in this case, 
+                it will act as if dates are in nanosecond frequency.
             require_future_dates (bool): default True.
                 if False, none of the models will forecast into future periods by default.
                 if True, all models will forecast into future periods, 

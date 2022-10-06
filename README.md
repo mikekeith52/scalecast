@@ -163,6 +163,9 @@ In addition, scalecast offers:
 - Theta
   - [Easily Employ A Theta Model For Time Series](https://medium.com/towards-data-science/easily-employ-a-theta-model-for-time-series-b94465099a00)
   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html)
+- VECM
+  - [Employ a VECM to predict FANG Stocks with an ML Framework](https://medium.com/p/52f170ec68e6)
+  - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html)
 - Other Notebooks
   - [Prophet](https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html)
   - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
@@ -176,7 +179,9 @@ In addition, scalecast offers:
 
 ### Model Input Selection
 - [Variable Reduction Techniques for Time Series](https://medium.com/towards-data-science/variable-reduction-techniques-for-time-series-646743f726d4)
-- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
+- [Auto Model Specification with ML Techniques for Time Series](https://mikekeith52.medium.com/auto-model-specification-with-ml-techniques-for-time-series-e7b9a90ae9d7)
+- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
+- [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html)
 
 ### Scaled Forecasting on Many Series
 - [M4](https://github.com/mikekeith52/scalecast-examples/tree/main/m4)  
