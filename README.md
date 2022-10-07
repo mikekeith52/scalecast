@@ -98,7 +98,7 @@ The `Forecaster` object only can use:
 
 The `MVForecaster` object only can use:
 - [StatsModels](https://www.statsmodels.org/stable/)
-  - [VECM](https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html)
+  - [VECM](https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm)
 
 Want more models? Open a [feature request](https://github.com/mikekeith52/scalecast/issues/new)!  
 
