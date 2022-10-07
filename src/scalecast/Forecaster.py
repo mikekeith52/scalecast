@@ -2403,6 +2403,7 @@ class Forecaster:
         telling the function not to re-search for them, and telling the function not to drop them when considering the optimal combination of regressors.
         the final optimal combination of regressors is determined by grouping all extracted regressors into trends, seasonalities, irregular cycles, ar terms, and regressors already added,
         and tying all combinations of all these groups.
+        see the example: https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html
         
         Args:
             estimator (str): one of _sklearn_estimators_. default 'mlr'.
