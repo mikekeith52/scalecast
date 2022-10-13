@@ -427,6 +427,7 @@ class Forecaster:
             if integration == 2:
                 fcst.append(y_use[-2] + y_use[-1])
                 pred.append(y_use[-(len(pred) + 2)] + y_use[-(len(pred) + 1)])
+                ## fix me!!
                 fvs.insert(0, y_use[-len(fvs) - 1] + y_use[-len(fvs) - 2])
             else:
                 fcst.append(self.levely[-1])
@@ -2390,6 +2391,7 @@ class Forecaster:
         irr_cycles = None, # list of cycles
         max_ar = 'auto', # set to 0 to not test
         test_already_added = True,
+        must_keep = [],
         monitor = 'ValidationMetricValue',
         cross_validate = False,
         dynamic_tuning=False,
@@ -2455,6 +2457,9 @@ class Forecaster:
                 if there are already regressors added to the series, you can either always keep them in the object
                 by setting this to False, or by default, it is possible they will be dropped when looking for the
                 optimal combination of regressors in the object.
+            must_keep (list-like): default []. the names of any regressors that must be kept in the object.
+                all regressors here must already be added to the Forecaster object before calling the function.
+                this is ignored if test_already_added is False since it becomes redundant.
             monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
                 the metric to be monitored when making reduction decisions. 
             cross_validate (bool): default False.
@@ -2605,17 +2610,21 @@ class Forecaster:
                     seas_regressors + ar_regressors,
                     seas_regressors + ar_regressors + irr_regressors,
                     ar_regressors + irr_regressors,
+                    [], # potentially just must_keep
                 ]
+                Xvars = [xvar_list + must_keep for xvar_list in Xvars]
+            
             # https://stackoverflow.com/questions/2213923/removing-duplicates-from-a-list-of-lists
             Xvars_deduped = []
             for xvar_set in Xvars:
                 if xvar_set and xvar_set not in Xvars_deduped:
-                    Xvars_deduped.append(xvar_set)
+                    #https://stackoverflow.com/questions/60062818/difference-between-removing-duplicates-from-a-list-using-dict-and-set
+                    Xvars_deduped.append(list(dict.fromkeys(xvar_set))) # dedupe and preserve order
             return Xvars_deduped
 
         using_r2 = monitor.endswith("R2") or (
-                self.validation_metric == "r2" and monitor == "ValidationMetricValue"
-            )
+            self.validation_metric == "r2" and monitor == "ValidationMetricValue"
+        )
 
         trend_metrics = {}
         seasonality_metrics = {}
@@ -2626,6 +2635,7 @@ class Forecaster:
         seas_to_try = []
 
         regressors_already_added = self.get_regressor_names()
+        must_keep = [x for x in must_keep if x in regressors_already_added]
         f = self.deepcopy()
         f.drop_all_Xvars()
 
