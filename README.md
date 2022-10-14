@@ -13,14 +13,16 @@ The scalecast package was designed to address this situation and offer advanced 
 ```python
 from scalecast.Forecaster import Forecaster
 from scalecast.SeriesTransformer import SeriesTransformer
+from scalecast.auxmodels import mlp_stack
 from scalecast import GridGenerator
 import matplotlib.pyplot as plt
 import pandas_datareader as pdr
 
 models = (
+  'mlr',
   'elasticnet',
   'lightgbm',
-  'mlp',
+  'knn',
 )
 
 GridGenerator.get_example_grids()
@@ -49,12 +51,13 @@ f.auto_Xvar_select(cross_validate=True)
 f.determine_best_series_length()
 
 f.tune_test_forecast(models)
+mlp_stack(f,models)
 
 f = transformer.DiffRevert(1)
 f = transformer.LogRevert()
 
 f.reeval_cis() # expanding cis based on all model results
-f.plot(ci=True)
+f.plot(ci=True,order_by='LevelTestSetMAPE')
 plt.show()
 
 results = f.export(
