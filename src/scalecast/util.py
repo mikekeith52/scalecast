@@ -205,7 +205,7 @@ def pdr_load(
     **kwargs
 ):
     """ gets data using `pandas_datareader.DataReader()` and loads the series into a Forecaster or MVForecaster object.
-    works pretty well when the src arg is its default ('fred'), but there are some issues with other sources.
+    this functions works well when the src arg is its default ('fred'), but there are some issues with other sources.
 
     Args:
         sym (str or list-like): the name of the series to extract.

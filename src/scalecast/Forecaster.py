@@ -1938,7 +1938,7 @@ class Forecaster:
                 self.future_xreg[k] = [self.y.values[-ar]] # just gets one future ar
 
     def integrate(self, critical_pval=0.05, train_only=False, max_integration=None):
-        """ differences the series 0, 1, or 2 times based on ADF test results.
+        """ differences the series up to 1 time based on Augmented Dickey-Fuller test results.
         if series is already differenced, calling this function does nothing.
 
         Args:
