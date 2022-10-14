@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.14.7
+Version: 0.14.8
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -39,7 +39,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         df = pdr.get_data_fred(
           'HOUSTNSA',
           start='1959-01-01',
-          end='2022-07-01'
+          end='2022-08-01'
         )
         f = Forecaster(
           y=df['HOUSTNSA'],
@@ -109,7 +109,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         
         The `MVForecaster` object only can use:
         - [StatsModels](https://www.statsmodels.org/stable/)
-          - [VECM](https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html)
+          - [VECM](https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm)
         
         Want more models? Open a [feature request](https://github.com/mikekeith52/scalecast/issues/new)!  
         
@@ -124,11 +124,13 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
           - [Grid search using time series cross validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
           - [Backtest](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest)
+        - [Probabilistic Forecasting](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.proba_forecast)
         - Model input analysis
           - [Feature importance scoring](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance)
             - [SHAP](https://shap.readthedocs.io/en/latest/index.html)
             - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
           - [Summary stats for descriptive models](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_summary_stats)
+          - [Auto Feature Selection](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.auto_Xvar_select)
           - [Feature reduction](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.reduce_Xvars)
         - [Anomaly detection](https://scalecast.readthedocs.io/en/latest/Forecaster/AnomalyDetector.html)
         - [Changepoint detection](https://scalecast.readthedocs.io/en/latest/Forecaster/ChangepointDetector.html)
@@ -174,6 +176,9 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         - Theta
           - [Easily Employ A Theta Model For Time Series](https://medium.com/towards-data-science/easily-employ-a-theta-model-for-time-series-b94465099a00)
           - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html)
+        - VECM
+          - [Employ a VECM to predict FANG Stocks with an ML Framework](https://medium.com/p/52f170ec68e6)
+          - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html)
         - Other Notebooks
           - [Prophet](https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html)
           - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
@@ -187,7 +192,9 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         
         ### Model Input Selection
         - [Variable Reduction Techniques for Time Series](https://medium.com/towards-data-science/variable-reduction-techniques-for-time-series-646743f726d4)
-        - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
+        - [Auto Model Specification with ML Techniques for Time Series](https://mikekeith52.medium.com/auto-model-specification-with-ml-techniques-for-time-series-e7b9a90ae9d7)
+        - [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
+        - [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html)
         
         ### Scaled Forecasting on Many Series
         - [M4](https://github.com/mikekeith52/scalecast-examples/tree/main/m4)  

@@ -200,11 +200,12 @@ def pdr_load(
     require_future_dates=True,
     future_dates=None,
     integrate=False,
-    max_integration=1,
+    diff=False,
     MVForecaster_kwargs={},
     **kwargs
 ):
     """ gets data using `pandas_datareader.DataReader()` and loads the series into a Forecaster or MVForecaster object.
+    works pretty well when the src arg is its default ('fred'), but there are some issues with other sources.
 
     Args:
         sym (str or list-like): the name of the series to extract.
@@ -225,9 +226,9 @@ def pdr_load(
             will be ignored if sym is list-like.
         future_dates (int): optional. the future dates to add to the model upon initialization.
             if not added when object is initialized, can be added later.
-        integrate (bool): default False. whether to take differences in extraced data if it is found to be non-stationary.
-        max_integration (int or bool): default 1. the max number of differences to take in the data. 
-            ignored when integrate is False.
+        integrate (bool): default False. whether to take first differences in extraced data if it is found to be non-stationary.
+        diff (bool): default False. whether to take first differences in extracted data 
+            without running the ADF test to check stationarity.
         MVForecaster_kwargs (dict): default {}. if sym is list-like, 
             these arguments will be passed to the `MVForecaster()` init function.
             if 'names' is not found in the dict, names are automatically added so that the
@@ -248,7 +249,9 @@ def pdr_load(
             future_dates = future_dates,
         )
         if integrate:
-            f.integrate(max_integration=max_integration)
+            f.integrate()
+        elif diff:
+            f.diff()
         return f
     else:
         fs = []
@@ -260,7 +263,9 @@ def pdr_load(
                 future_dates = future_dates,
             )
             if integrate:
-                f.integrate(max_integration=max_integration)
+                f.integrate()
+            elif diff:
+                f.diff()
             fs.append(f)
         if 'names' not in MVForecaster_kwargs:
             MVForecaster_kwargs['names'] = sym

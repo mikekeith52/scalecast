@@ -132,7 +132,7 @@ class SeriesTransformer:
 
     def LogRevert(self, full=True):
         """ reverts the y attribute in the Forecaster object, along with all model results.
-        assumes a natural log transformation has been called at some point.
+        assumes a natural log transformation has already been called.
 
         Args:
             full (bool): whether to revert all attributes, or just the level attributes.
@@ -149,6 +149,40 @@ class SeriesTransformer:
         >>> f = transformer.LogRevert()
         """
         return self.Revert(np.exp, full=full)
+
+    def SqrtTransform(self):
+        """ transforms the y attribute in the Forecaster object using a square-root transformation.
+
+        Returns:
+            (Forecaster): a Forecaster object with the transformed attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.SqrtTransform()
+        """
+        return self.Transform(np.sqrt)
+
+    def SqrtRevert(self, full=True):
+        """ reverts the y attribute in the Forecaster object, along with all model results.
+        assumes a square-root transformation has already been called.
+
+        Args:
+            full (bool): whether to revert all attributes, or just the level attributes.
+                if False, all non-level results will remain unchanged.
+
+        Returns:
+            (Forecaster): a Forecaster object with the reverted attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.SqrtTransform()
+        >>> f = transformer.SqrtRevert()
+        """
+        return self.Revert(np.square, full=full)
 
     def ScaleTransform(self,train_only=False):
         """ transforms the y attribute in the Forecaster object using a scale transformation.
@@ -317,7 +351,7 @@ class SeriesTransformer:
         f.keep_smaller_history(len(f.y) - m)
         return f
 
-    def DiffRevert(self, m, revert_fvs=True):
+    def DiffRevert(self, m):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         calling this makes so that AR values become unusable and have to be re-added to the object.
         unlike other revert functions, there is no option for full = False. 
@@ -329,10 +363,6 @@ class SeriesTransformer:
                 12 will undifference seasonally 12 periods (monthly data).
                 any int available. use the same values to revert as you used
                 to transform the object originally.
-            revert_fvs (bool): default True.
-                whether to revert fitted values and apply bootstrapped confidence intervals.
-                fitted vals can look very distorted after more than one difference transformation has
-                been taken.
 
         Returns:
             (Forecaster): a Forecaster object with the reverted attributes.
@@ -384,34 +414,19 @@ class SeriesTransformer:
             h["LevelTestSetPreds"] = h["TestSetPredictions"][:]
             h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
 
-            if revert_fvs:
-                h['FittedVals'] = list(
-                    seasrevert(h['FittedVals'],self.f.y[-len(h['FittedVals'])-m:], m)
-                )[m:]
-                h['LevelFittedVals'] = h['FittedVals'][:]
-                ci_range = self.f._find_cis(self.f.y[-len(h['FittedVals']):],h['FittedVals'])
-                for k in ("LevelUpperCI","UpperCI"):
-                    h[k] = [i + ci_range for i in h["Forecast"]]
-                for k in ("TestSetUpperCI","LevelTSUpperCI"):
-                    h[k] = [i + ci_range for i in h["TestSetPredictions"]]
-                for k in ("LevelLowerCI","LowerCI"):
-                    h[k] = [i - ci_range for i in h["Forecast"]]
-                for k in ("TestSetLowerCI","LevelTSLowerCI"):
-                    h[k] = [i - ci_range for i in h["TestSetPredictions"]]
-            else:
-                for k in (
-                    "FittedVals",
-                    "TestSetUpperCI",
-                    "TestSetLowerCI",
-                    "UpperCI",
-                    "LowerCI",
-                    "LevelUpperCI",
-                    "LevelLowerCI",
-                    "LevelTSUpperCI",
-                    "LevelTSLowerCI",
-                ):
-                    h[k] = [np.nan for _ in h[k]]
-                h["CIPlusMinus"] = np.nan
+            h['FittedVals'] = list(
+                seasrevert(h['FittedVals'],self.f.y[-len(h['FittedVals'])-m:], m)
+            )[m:]
+            h['LevelFittedVals'] = h['FittedVals'][:]
+            ci_range = self.f._find_cis(self.f.y[-len(h['FittedVals']):],h['FittedVals'])
+            for k in ("LevelUpperCI","UpperCI"):
+                h[k] = [i + ci_range for i in h["Forecast"]]
+            for k in ("TestSetUpperCI","LevelTSUpperCI"):
+                h[k] = [i + ci_range for i in h["TestSetPredictions"]]
+            for k in ("LevelLowerCI","LowerCI"):
+                h[k] = [i - ci_range for i in h["Forecast"]]
+            for k in ("TestSetLowerCI","LevelTSLowerCI"):
+                h[k] = [i - ci_range for i in h["TestSetPredictions"]]
 
         delattr(self, f"orig_y_{m}_{n}")
         delattr(self, f"orig_dates_{m}_{n}")

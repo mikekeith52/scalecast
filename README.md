@@ -28,7 +28,7 @@ GridGenerator.get_example_grids()
 df = pdr.get_data_fred(
   'HOUSTNSA',
   start='1959-01-01',
-  end='2022-07-01'
+  end='2022-08-01'
 )
 f = Forecaster(
   y=df['HOUSTNSA'],

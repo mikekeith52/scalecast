@@ -224,8 +224,10 @@ def tune_test_forecast(
             if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
             setting this to False or 1 means faster performance, 
             but gives a less-good indication of how well the forecast will perform out x amount of periods.
-        probabilistic (bool): default False.
-            whether to use a probabilistic forecasting process to set confidence intervals.
+        probabilistic (bool, str, or list-like): default False.
+            if bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
+            if str, the name of a single model to apply a probabilistic process to.
+            if list-like, a list of models to apply a probabilistic process to.
         n_iter (int): default 20.
             how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
         summary_stats (bool): default False.
@@ -257,6 +259,11 @@ def tune_test_forecast(
             )
         )
     for m in log_progress(models):
+        m_prob = (
+            probabilistic if isinstance(probabilistic,bool) 
+            else m == probabilistic if isinstance(probabilistic,str) 
+            else m in probabilistic
+        )
         call_me = m if suffix is None else m + suffix
         f.set_estimator(m)
         if limit_grid_size is not None:
@@ -269,7 +276,7 @@ def tune_test_forecast(
         f.auto_forecast(
             dynamic_testing=dynamic_testing,
             call_me=call_me,
-            probabilistic=probabilistic,
+            probabilistic=m_prob,
             n_iter=n_iter,
         )
 

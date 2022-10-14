@@ -417,38 +417,21 @@ class Forecaster:
                 self.history[call_me][attr] = getattr(self, attr)
 
         self.history[call_me]["LevelY"] = self.levely[:]
-        if self.integration > 0:
+        
+        if self.integration == 1:
             integration = self.integration
 
             fcst = self.forecast[::-1]
             pred = self.history[call_me]["TestSetPredictions"][::-1]
             fvs = fvs_use[:]
 
-            if integration == 2:
-                fcst.append(y_use[-2] + y_use[-1])
-                pred.append(y_use[-(len(pred) + 2)] + y_use[-(len(pred) + 1)])
-                ## fix me!!
-                fvs.insert(0, y_use[-len(fvs) - 1] + y_use[-len(fvs) - 2])
-            else:
-                fcst.append(self.levely[-1])
-                pred.append(self.levely[-(len(pred) + 1)])
-                fvs.insert(0, self.levely[-len(fvs) - 1])
+            fcst.append(self.levely[-1])
+            pred.append(self.levely[-(len(pred) + 1)])
+            fvs.insert(0, self.levely[-len(fvs) - 1])
 
             fcst = list(np.cumsum(fcst[::-1]))[1:]
             pred = list(np.cumsum(pred[::-1]))[1:]
             fvs = list(np.cumsum(fvs))[1:]
-
-            if integration == 2:
-                fcst.reverse()
-                fcst.append(self.levely[-1])
-                fcst = list(np.cumsum(fcst[::-1]))[1:]
-
-                pred.reverse()
-                pred.append(self.levely[-(len(pred) + 1)])
-                pred = list(np.cumsum(pred[::-1]))[1:]
-
-                fvs.insert(0, self.levely[-len(fvs) - 1])
-                fvs = list(np.cumsum(fvs))[1:]
 
             ci_range = self._find_cis(self.levely[-len(fvs) :], fvs)
             self.history[call_me]["LevelForecast"] = fcst[:]
@@ -1931,96 +1914,61 @@ class Forecaster:
 
         self.infer_freq()
 
-    def diff(self, i=1, error='raise'):
+    def diff(self):
         """ differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.
-        to different twice, pass diff(2). if you try to pass diff(1) twice, it will not work.
-        also see: https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html
-
-        Args:
-            i (int): default 1.
-                the number of differences to take.
-                must be 1 or 2.
-            error (str): one of 'ignore','raise', default 'raise'.
-                what to do with the error if the series has already been differenced.
+        if series is already differenced, calling this function does nothing.
+        as of 0.14.8, only one-differencing supported. two-differencing and other transformations must use the 
+        SeriesTransformer object:
+        https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html
 
         Returns:
             None
 
-        >>> f.diff(2) # differences y twice
+        >>> f.diff() # differences y once
         """
-        if i == 0:
+        if self.integration == 1:
             return
-        if self.integration > 0:
-            if error == 'ignore':
-                pass
-            elif error == 'raise':
-                raise ForecastError.CannotDiff(
-                    "series has already been differenced, if you want to difference again, use undiff() first, then diff(2)"
-                )
-            else:
-                raise ValueError(f'arg passed to error not recognized: {error}')
 
-        descriptive_assert(
-            i in (1, 2),
-            ValueError,
-            f"only 1st and 2nd order integrations supported, got i={i}. "
-            "the SeriesTransformer object can handle more sophisticated differencing. "
-            "see https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html",
-        )
-        self.integration = i
-        for _ in range(i):
-            self.y = self.y.diff()
+        self.integration = 1
+        self.y = self.y.diff()
         for k, v in self.current_xreg.items():
             if k.startswith("AR"):
                 ar = int(k[2:])
-                for _ in range(i):
-                    self.current_xreg[k] = v.diff()
-                self.future_xreg[k] = [self.y.values[-ar]]
+                self.current_xreg[k] = v.diff()
+                self.future_xreg[k] = [self.y.values[-ar]] # just gets one future ar
 
-    def integrate(self, critical_pval=0.05, train_only=False, max_integration=2):
+    def integrate(self, critical_pval=0.05, train_only=False, max_integration=None):
         """ differences the series 0, 1, or 2 times based on ADF test results.
+        if series is already differenced, calling this function does nothing.
 
         Args:
             critical_pval (float): default 0.05.
                 the p-value threshold in the statistical test to accept the alternative hypothesis.
             train_only (bool): default False.
-                if True, will exclude the test set from the ADF test (to avoid leakage).
-            max_integration (int): one of {1,2}, default 2.
-                if 1, will only difference data up to one time even if the results of the test indicate two integrations.
-                if 2, behaves how you would expect.
+                if True, will exclude the test data set from the Augmented Dickey-Fuller test (to avoid leakage).
+            max_integration (None): deprecated. not used since 0.14.8 since two-level differencing no longer supported.
+                this arg will be taken out of the function eventually. 
 
         Returns:
             None
 
-        >>> f.integrate(max_integration=1) # differences y only once if it is not stationarity
-        >>> f.integrate() # differences y up to twice it is not stationarity and if its first difference is not stationary
+        >>> f.integrate() # differences y once if it is not stationarity
         """
-        descriptive_assert(
-            self.integration == 0,
-            ForecastError,
-            "can only run integrate() when series hasn't been differenced",
-        )
-        descriptive_assert(
-            isinstance(train_only, bool), ValueError, "train_only must be True or False"
-        )
-        res0 = adfuller(
+        if max_integration is not None:
+            warnings.warn(
+                'max_integation is no longer needed in the `Forecaster.integrate()` method and will be removed eventually.',
+                FutureWarning,
+            )
+        if self.integration == 1:
+            return
+        
+        res = adfuller(
             self.y.dropna()
             if not train_only
             else self.y.dropna().values[: -self.test_length]
         )
-        if res0[1] <= critical_pval:
-            return
-
-        res1 = adfuller(
-            self.y.diff().dropna()
-            if not train_only
-            else self.y.diff().dropna().values[: -self.test_length]
-        )
-        if (res1[1] <= critical_pval) | (max_integration == 1):
+        if res[1] >= critical_pval:
             self.diff()
-            return
-
-        self.diff(2)
 
     def add_ar_terms(self, n):
         """ adds auto-regressive terms.
@@ -2042,13 +1990,6 @@ class Forecaster:
         descriptive_assert(
             n >= 0, ValueError, f"n must be greater than or equal to 0, got {n}"
         )
-        """ don't think we actually need this
-        descriptive_assert(
-            self.integration == 0,
-            ForecastError,
-            "AR terms must be added before differencing (don't worry, they will be differenced too)",
-        )
-        """
         for i in range(1, n + 1):
             self.current_xreg[f"AR{i}"] = pd.Series(self.y).shift(i)
             self.future_xreg[f"AR{i}"] = [self.y.values[-i]]
@@ -2070,13 +2011,6 @@ class Forecaster:
             ValueError,
             f"n must be an array-like of length 2 (P,m), got {N}",
         )
-        """ don't think we actually need this
-        descriptive_assert(
-            self.integration == 0,
-            ForecastError,
-            "AR terms must be added before differencing (don't worry, they will be differenced too)",
-        )
-        """
         for i in range(N[1], N[1] * N[0] + 1, N[1]):
             self.current_xreg[f"AR{i}"] = pd.Series(self.y).shift(i)
             self.future_xreg[f"AR{i}"] = [self.y.values[-i]]
@@ -3671,8 +3605,9 @@ class Forecaster:
         obs_to_keep = len(self.y) - lags
         self.keep_smaller_history(obs_to_keep)
 
-    def undiff(self, suppress_error=False):
+    def undiff(self):
         """ undifferences y to original level and drops all regressors (such as AR terms).
+        if y was never differenced, calling this does nothing.
 
         Args:
             suppress_error (bool): default False.
@@ -3685,12 +3620,7 @@ class Forecaster:
         """
         self.typ_set()
         if self.integration == 0:
-            if suppress_error:
-                return
-            else:
-                raise ForecastError.CannotUndiff(
-                    "cannot undiff a series that was never differenced"
-                )
+            return
 
         self.current_xreg = {}
         self.future_xreg = {}
@@ -4423,8 +4353,10 @@ class Forecaster:
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            probabilistic (bool): default False.
-                whether to use a probabilistic forecasting process to set confidence intervals.
+            probabilistic (bool, str, or list-like): default False.
+                if bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
+                if str, the name of a single model to apply a probabilistic process to.
+                if list-like, a list of models to apply a probabilistic process to.
             n_iter (int): default 20.
                 how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
             summary_stats (bool): default False.
@@ -4455,6 +4387,11 @@ class Forecaster:
             f"all models passed to models argument most be one of {_estimators_}",
         )
         for m in models:
+            m_prob = (
+                probabilistic if isinstance(probabilistic,bool) 
+                else m == probabilistic if isinstance(probabilistic,str) 
+                else m in probabilistic
+            )
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
             if limit_grid_size is not None:
@@ -4465,10 +4402,11 @@ class Forecaster:
             else:
                 self.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
             try:
+
                 self.auto_forecast(
                     dynamic_testing=dynamic_testing,
                     call_me=call_me,
-                    probabilistic=probabilistic,
+                    probabilistic=m_prob,
                     n_iter=n_iter,
                 )
             except Exception as e:
@@ -4746,14 +4684,13 @@ class Forecaster:
 
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
-        )
+        ) # how many different integrations are we working with?
         if len(integration) > 1:
             level = True
 
         y = self.y.copy()
-        if self.integration == 0:
-            for _ in range(max(integration)):
-                y = y.diff()
+        if self.integration == 0 and max(integration) == 1:
+            y = y.diff()
         self._validate_no_test_only(models)
         plot = {
             "date": self.current_dates.to_list()[-len(y.dropna()) :]
@@ -4860,9 +4797,8 @@ class Forecaster:
             level = True
 
         y = self.y.copy()
-        if self.integration == 0:
-            for _ in range(max(integration)):
-                y = y.diff()
+        if self.integration == 0 and max(integration) == 1:
+            y = y.diff()
 
         plot = {
             "date": self.current_dates.to_list()[-len(y.dropna()) :]

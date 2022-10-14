@@ -1043,8 +1043,10 @@ class MVForecaster:
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            probabilistic (bool): default False.
-                whether to use a probabilistic forecasting process to set confidence intervals.
+            probabilistic (bool, str, or list-like): default False.
+                if bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
+                if str, the name of a single model to apply a probabilistic process to.
+                if list-like, a list of models to apply a probabilistic process to.
             n_iter (int): default 20.
                 how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
             limit_grid_size (int or float): optional. pass an argument here to limit each of the grids being read.
@@ -1063,6 +1065,11 @@ class MVForecaster:
         >>> mvf.tune_test_forecast(models,dynamic_testing=False)
         """
         for m in models:
+            m_prob = (
+                probabilistic if isinstance(probabilistic,bool) 
+                else m == probabilistic if isinstance(probabilistic,str) 
+                else m in probabilistic
+            )
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
             if limit_grid_size is not None:
@@ -1076,7 +1083,7 @@ class MVForecaster:
                 self.auto_forecast(
                     dynamic_testing=dynamic_testing,
                     call_me=call_me,
-                    probabilistic=probabilistic,
+                    probabilistic=m_prob,
                     n_iter=n_iter,
                 )
             except Exception as e:
@@ -1475,10 +1482,6 @@ class MVForecaster:
             for series, p in preds.items():
                 if integration[series] == 0:
                     continue
-                elif integration == 2:
-                    first_obs = actuals[series][-1] - actuals[series][-2]
-                    preds[series].insert(0, first_obs)
-                    preds[series] = list(np.cumsum(preds[series]))[1:]
                 first_obs = actuals[series][-1]
                 preds[series].insert(0, first_obs)
                 preds[series] = list(np.cumsum(preds[series]))[1:]
