@@ -48,7 +48,6 @@ f.set_validation_length(24)
 # prepare series for forecast
 f.add_covid19_regressor()
 f.auto_Xvar_select(cross_validate=True)
-f.determine_best_series_length()
 
 f.tune_test_forecast(models)
 mlp_stack(f,models)
