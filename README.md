@@ -86,10 +86,10 @@ The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/late
 The `Forecaster` object only can use:
 
 - [StatsModels](https://www.statsmodels.org/stable/)
-  - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
-  - [Holt-Winters Exponential Smoothing](https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html)
+  - [ARIMA](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_arima)
+  - [Holt-Winters Exponential Smoothing](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_hwes)
 - [Darts](https://unit8co.github.io/darts/)
-  - [Four Theta](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html)
+  - [Four Theta](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_theta)
 - [Keras TensorFlow Cells](https://keras.io/)
   - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
   - [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN)

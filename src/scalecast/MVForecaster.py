@@ -1134,7 +1134,7 @@ class MVForecaster:
                 whether the model is being tuned.
                 does not need to be specified by user.
             normalizer (str): one of _normalizer_. default 'minmax'.
-                if not None, normalizer applied to training data only to not leak.
+                if not None, normalizer fit on the training data only to not leak.
             lags (int | list[int] | dict[str,(int | list[int])]): default 1.
                 the lags to add from each series to forecast with.
                 needs to use at least one lag for any sklearn model.

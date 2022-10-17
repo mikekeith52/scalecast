@@ -1,5 +1,8 @@
 from scalecast import Forecaster
 from scalecast import MVForecaster
+from scalecast import SeriesTransformer
+from scalecast.auxmodels import auto_arima
+import scalecast.Pipeline
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -404,3 +407,111 @@ def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
         k_ar_diff=k_ar_diff,
         **kwargs,
     )
+
+def find_series_transformation(
+    f,
+    goal=['stationary'],
+    train_only=False,
+    critical_pval=.05,
+    log = True,
+    m='auto',
+    adf_kwargs = {},
+    **kwargs,
+):
+    """ finds an optimal set of transformations to achieve some passed goal with the end result that forecasts are more accurate.
+
+    Args:
+        f (Forecaster): the object that stores the series to test.
+        goal (list-like): one or multiple of 'stationary', 'seasonally_adj'. other options may be coming in the future.
+            if more than one goal is passed, will try to satisfy all goals in the order they passed.
+            for stationary: uses an Augmented Dickey-Fuller test to determine if the series is stationary.
+            if not stationary, returns a diff transformation and log transformation if log is True.
+            for seasonall_adj: uses seasonal auto_arima to find the optimal seasonal diff.
+        train_only (bool): default False. whether to use train set only in all statistical tests.
+        log (bool): default True. whether to log and diff the series if it is found to be non-stationary or just diff.
+        critical_pval (float): default 0.05. the cutoff p-value to use to determine statistical signficance in the 
+            Augmented Dickey-Fuller test and to run the auto_arima selection (substitutes for `alpha` arg).
+        m (str or int): default 'auto': the time-steps in the data that count one seasonal step.
+            uses the M4 competition values. for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
+            so pass your own values for other frequencies.
+        adf_kwargs (dict): default {}. keyword args to pass to the Augmented Dickey-Fuller test function. 
+        **kwargs: passed to the auto_arima() function when searching for optimal seasonal diff.
+
+    Returns:
+        (Transformer, Reverter): a `Transformer` object with the identified transforming functions and
+        the `Reverter` object with the `Transformer` counterpart functions.
+    """
+    def make_stationary(f,train_only,critical_pval,log,adf_kwargs,**kwargs):
+        transformers = []
+        stationary = f.adf_test(
+            train_only=train_only,
+            full_res=False,
+            critical_pval=critical_pval,
+            **adf_kwargs
+        )
+        if not stationary:
+            if log and f.y.min() > 0:
+                transformers += [('LogTransform',)]
+            transformers += [('DiffTransform',1)]  
+        return transformers
+
+    def seasonally_adj(f,train_only,critical_pval,log,adf_kwargs,**kwargs):
+        transformers = []
+        if m == 1:
+            return transformers
+
+        auto_arima(f,m=m,seasonal=True,alpha=critical_pval,**kwargs)
+        I = f.auto_arima_params['seasonal_order'][1]
+        for i in range(1,I+1):
+            transformers += [('DiffTransform',m)]
+
+        return transformers
+
+    f = f.deepcopy()
+    transformer = SeriesTransformer.SeriesTransformer(f)
+
+    if m == 'auto':
+        if f.freq is not None:
+            if f.freq.startswith('M'):
+                m = 12
+            elif f.freq.startswith('Q'):
+                m = 4
+            elif f.freq.startswith('H'):
+                m = 24
+            else:
+                m = 1
+        else:
+            m = 1
+
+    possible_args = {
+        'stationary':make_stationary,
+        'seasonally_adj':seasonally_adj,
+    }
+    bad_args = [g for g in goal if g not in possible_args]
+    if len(bad_args) > 0:
+        raise ValueError(f'values passed to goal arg cannot be used: {bad_args}')
+
+    transformers = []
+    reverters = []
+    for g in goal:
+        t = possible_args[g](
+            f,
+            train_only=train_only,
+            critical_pval=critical_pval,
+            log=log,
+            adf_kwargs=adf_kwargs,
+            **kwargs
+        )
+        transformers += t
+    for t in transformers[::-1]:
+        r = (t[0].replace('Transform','Revert'),)
+        if len(t) > 1:
+            r += t[1:]
+        reverters.append(r)
+
+    final_transformer = Pipeline.Transformer(transformers = transformers)
+    final_reverter = Pipeline.Reverter(
+        reverters = reverters, 
+        base_transformer = final_transformer
+    )
+    return final_transformer, final_reverter
