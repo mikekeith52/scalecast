@@ -590,7 +590,7 @@ class Forecaster:
                 be sure to have added them to the Forecaster object first.
                 None means all Xvars added to the Forecaster object will be used.
             normalizer (str): one of _normalizer_. default 'minmax'.
-                if not None, normalizer applied to training data only to not leak.
+                if not None, normalizer fit on the training data only to not leak.
             test_only (bool): default False:
                 whether to stop your model after the testing process.
                 all forecasts in history will be equivalent to test-set predictions.
@@ -2788,6 +2788,8 @@ class Forecaster:
         """ attempts to find the optimal length for the series to produce accurate forecasts by systematically shortening the series, running estimations, and monitoring a passed metric value.
         in time series, since there are structural breaks and drifts, shorter can be better.
         this should be run after Xvars have already been added to the object.
+        do not run this when using the `SeriesTransform.DiffRevert()` process. 
+        there is no danger in running this with the `Forecaster.diff()` function. 
 
         Args:
             estimator (str): one of _estimators_. default 'mlr'.
@@ -2813,7 +2815,8 @@ class Forecaster:
                 a given model's hyperparameters, dynamic_testing, or Xvars.
 
         Returns:
-            (dict[int[float]]): a dictionary where each key is a series length and the value is the derived metric (based on value passed to monitor argument).
+            (dict[int[float]]): a dictionary where each key is a series length and the value is the derived metric 
+            (based on what was passed to the monitor argument).
 
         >>> import pandas as pd
         >>> from scalecast.Forecaster import Forecaster
@@ -2953,16 +2956,17 @@ class Forecaster:
         self.bootstrap_samples = n
 
     def adf_test(
-        self, critical_pval=0.05, quiet=True, full_res=False, train_only=False, **kwargs
+        self, critical_pval=0.05, quiet=True, full_res=True, train_only=False, **kwargs
     ):
         """ tests the stationarity of the y series using augmented dickey fuller.
+        ports from statsmodels: https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
 
         Args:
             critical_pval (float): default 0.05.
                 the p-value threshold in the statistical test to accept the alternative hypothesis.
             quiet (bool): default True.
                 if False, prints whether the tests suggests stationary or non-stationary data.
-            full_res (bool): default False.
+            full_res (bool): default True.
                 if True, returns a dictionary with the pvalue, evaluated statistic, and other statistical information (returns what the adfuller() function from statsmodels does).
                 if False, returns a bool that matches whether the test indicates stationarity.
             train_only (bool): default False.
@@ -2971,7 +2975,7 @@ class Forecaster:
 
         Returns:
             (bool or tuple): if bool (full_res = False), returns whether the test suggests stationarity.
-                otherwise, returns the full results (stat, pval, etc.) of the test.
+            otherwise, returns the full results (stat, pval, etc.) of the test.
 
         >>> stat, pval, _, _, _, _ = f.adf_test(full_res=True)
         """
@@ -2995,6 +2999,21 @@ class Forecaster:
                 return False
         else:
             return res
+
+    def normality_test(self, train_only=False):
+        """ runs D'Agostino and Pearson's test for normality
+        ported from scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html.
+        holds the null hypothesis that the series is normally distributed.
+
+        Args:
+            train_only (bool): default False.
+                if True, will exclude the test set from the test (to avoid leakage).
+
+        Returns: 
+            (float, float): the derived statistic and pvalue.
+        """
+        y = self.y.values if not train_only else self.y.values[: -self.test_length]
+        return stats.normaltest(y)
 
     def plot_acf(self, diffy=False, train_only=False, **kwargs):
         """ plots an autocorrelation function of the y values.

@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.0]
+### Added
+- added the `Pipeline` module.
+- added `util.find_optimal_series_transformation()`
+- added `Forecaster.normality_test()` function
+### Changed
+- changed the default `full_res` arg in `Forecaster.adf_test()` to `True`
+- changed links to some model documentation in readme
+### Fixed
+
 ## [0.14.8] - 2022-10-14
 ### Added
 - added `must_keep` arg to `Forecater.auto_Xvar_select()`.
@@ -14,7 +24,7 @@ All notable changes to this project will be documented in this file. We keep tra
     - [`util.pdr_load()`](https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#module-src.scalecast.util.pdr_load)
 - changed accepted values that can be passed to the `probabilistic` arg in the `Forecaster.tune_test_forecast()`, `MVForecaster.tune_test_forecast()`, and `notebook.tune_test_forecast()` functions so that some models can be forecasted probabilistically and others don't have to be (speeds up processing time generally).
 ### Fixed
-- issues with second-differencing have all been resolved since second differencing is no longer supported
+- issues with second-differencing have all been resolved since second differencing is no longer supported natively in the `Forecaster` object.
 - took out `revert_fvs` from `SeriesTransformer.DiffRevert()` function because it hasn't been working.
 
 ## [0.14.7] - 2022-10-05
