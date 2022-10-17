@@ -17,7 +17,6 @@ docs/initialization.rst
 docs/installation.rst
 docs/make.bat
 docs/requirements.txt
-docs/warnings.log
 docs/Forecaster/AnomalyDetector.rst
 docs/Forecaster/Auxmodels.rst
 docs/Forecaster/ChangepointDetector.rst
@@ -27,6 +26,7 @@ docs/Forecaster/GridGenerator.rst
 docs/Forecaster/MVForecaster.rst
 docs/Forecaster/Multiseries.rst
 docs/Forecaster/Notebook.rst
+docs/Forecaster/Pipeline.rst
 docs/Forecaster/SeriesTransformer.rst
 docs/Forecaster/Util.rst
 docs/Forecaster/_forecast.rst
@@ -40,6 +40,7 @@ src/scalecast/ChangepointDetector.py
 src/scalecast/Forecaster.py
 src/scalecast/GridGenerator.py
 src/scalecast/MVForecaster.py
+src/scalecast/Pipeline.py
 src/scalecast/SeriesTransformer.py
 src/scalecast/__init__.py
 src/scalecast/auxmodels.py
@@ -51,6 +52,7 @@ src/scalecast/__pycache__/ChangepointDetector.cpython-38.pyc
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
 src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/MVForecaster.cpython-38.pyc
+src/scalecast/__pycache__/Pipeline.cpython-38.pyc
 src/scalecast/__pycache__/SeriesTransformer.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
 src/scalecast/__pycache__/auxmodels.cpython-38.pyc

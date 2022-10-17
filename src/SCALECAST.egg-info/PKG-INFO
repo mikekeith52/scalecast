@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.14.8
+Version: 0.15.0
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -24,14 +24,16 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         ```python
         from scalecast.Forecaster import Forecaster
         from scalecast.SeriesTransformer import SeriesTransformer
+        from scalecast.auxmodels import mlp_stack
         from scalecast import GridGenerator
         import matplotlib.pyplot as plt
         import pandas_datareader as pdr
         
         models = (
+          'mlr',
           'elasticnet',
           'lightgbm',
-          'mlp',
+          'knn',
         )
         
         GridGenerator.get_example_grids()
@@ -57,15 +59,15 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         # prepare series for forecast
         f.add_covid19_regressor()
         f.auto_Xvar_select(cross_validate=True)
-        f.determine_best_series_length()
         
         f.tune_test_forecast(models)
+        mlp_stack(f,models)
         
         f = transformer.DiffRevert(1)
         f = transformer.LogRevert()
         
         f.reeval_cis() # expanding cis based on all model results
-        f.plot(ci=True)
+        f.plot(ci=True,order_by='LevelTestSetMAPE')
         plt.show()
         
         results = f.export(
@@ -94,10 +96,10 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         The `Forecaster` object only can use:
         
         - [StatsModels](https://www.statsmodels.org/stable/)
-          - [ARIMA](https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html)
-          - [Holt-Winters Exponential Smoothing](https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html)
+          - [ARIMA](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_arima)
+          - [Holt-Winters Exponential Smoothing](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_hwes)
         - [Darts](https://unit8co.github.io/darts/)
-          - [Four Theta](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html)
+          - [Four Theta](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_theta)
         - [Keras TensorFlow Cells](https://keras.io/)
           - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
           - [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN)
