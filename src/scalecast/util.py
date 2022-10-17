@@ -97,7 +97,7 @@ class metrics:
 
     def smape(a,f):
         """ symmetric mean absolute percentage error (sMAPE).
-        uses the same definition as used in M4 competition.
+        uses the same definition as used in the M4 competition.
         does not multiply by 100.
         see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
@@ -126,7 +126,7 @@ class metrics:
 
     def mase(a,f,obs,m):
         """ mean absolute scaled error (MASE).
-        uses the same definition as used in M4 competition.
+        uses the same definition as used in the M4 competition.
         see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
         Args:
@@ -158,7 +158,7 @@ class metrics:
 
     def msis(a,uf,lf,obs,m,alpha=0.05):
         """ mean scaled interval score (MSIS) for evaluating confidence intervals.
-        uses the same definition as used in M4 competition.
+        uses the same definition as used in the M4 competition.
         lower values are better.
         see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
