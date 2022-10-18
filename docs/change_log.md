@@ -1,7 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file. We keep track of changes in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.15.0]
+## [0.15.1] - 2022-10-18
+### Added
+- added the `SeriesTransformer.DetrendTransform()` and `SeriesTransformer.DetrendRevert()` functions.
+### Changed
+### Fixed
+- all reverter functions in `SeriesTransformer` revert level confidence intervals.
+
+## [0.15.0] - 2022-10-17
 ### Added
 - added the `Pipeline` module.
 - added `util.find_optimal_series_transformation()`

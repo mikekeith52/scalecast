@@ -97,7 +97,7 @@ class metrics:
 
     def smape(a,f):
         """ symmetric mean absolute percentage error (sMAPE).
-        uses the same definition as used in M4 competition.
+        uses the same definition as used in the M4 competition.
         does not multiply by 100.
         see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
@@ -126,7 +126,7 @@ class metrics:
 
     def mase(a,f,obs,m):
         """ mean absolute scaled error (MASE).
-        uses the same definition as used in M4 competition.
+        uses the same definition as used in the M4 competition.
         see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
         Args:
@@ -158,7 +158,7 @@ class metrics:
 
     def msis(a,uf,lf,obs,m,alpha=0.05):
         """ mean scaled interval score (MSIS) for evaluating confidence intervals.
-        uses the same definition as used in M4 competition.
+        uses the same definition as used in the M4 competition.
         lower values are better.
         see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
@@ -208,7 +208,7 @@ def pdr_load(
     **kwargs
 ):
     """ gets data using `pandas_datareader.DataReader()` and loads the series into a Forecaster or MVForecaster object.
-    works pretty well when the src arg is its default ('fred'), but there are some issues with other sources.
+    this functions works well when the src arg is its default ('fred'), but there are some issues with other sources.
 
     Args:
         sym (str or list-like): the name of the series to extract.
@@ -431,8 +431,9 @@ def find_series_transformation(
         log (bool): default True. whether to log and diff the series if it is found to be non-stationary or just diff.
         critical_pval (float): default 0.05. the cutoff p-value to use to determine statistical signficance in the 
             Augmented Dickey-Fuller test and to run the auto_arima selection (substitutes for `alpha` arg).
-        m (str or int): default 'auto': the time-steps in the data that count one seasonal step.
-            uses the M4 competition values. for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
+        m (str or int): default 'auto': the number of observations that counts one seasonal step.
+            when 'auto', uses the M4 competition values: 
+            for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
             so pass your own values for other frequencies.
         adf_kwargs (dict): default {}. keyword args to pass to the Augmented Dickey-Fuller test function. 
         **kwargs: passed to the auto_arima() function when searching for optimal seasonal diff.

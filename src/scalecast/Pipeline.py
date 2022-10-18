@@ -260,7 +260,7 @@ class Pipeline:
         """ applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
 
         Args:
-            f (Forecaster): the Forecaster object that stores the series that will be reverted.
+            f (Forecaster): the Forecaster object that stores the series that will be sent through the pipeline.
             **kwargs: passed to any 'function' types passed in the pipeline.
 
         Returns:
