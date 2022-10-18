@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.15.0
+Version: 0.15.1
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -23,7 +23,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         
         ```python
         from scalecast.Forecaster import Forecaster
-        from scalecast.SeriesTransformer import SeriesTransformer
+        from scalecast.Pipeline import Pipeline, Transformer, Reverter
         from scalecast.auxmodels import mlp_stack
         from scalecast import GridGenerator
         import matplotlib.pyplot as plt
@@ -43,28 +43,44 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           start='1959-01-01',
           end='2022-08-01'
         )
+        
         f = Forecaster(
           y=df['HOUSTNSA'],
           current_dates=df.index,
           future_dates=24,
         )
         
-        transformer = SeriesTransformer(f)
-        f = transformer.LogTransform()
-        f = transformer.DiffTransform(1)
+        def forecaster(f,models):
+            """ add Xvars and forecast
+            """
+            f.add_covid19_regressor()
+            f.auto_Xvar_select(cross_validate=True)
+            f.tune_test_forecast(models)
+            mlp_stack(f,models)
+                
+        transformer = Transformer(
+            transformers = [
+                ('LogTransform',),
+                ('DiffTransform',1),
+            ],
+        )
+        reverter = Reverter(
+            # list reverters in reverse order
+            reverters = [
+                ('DiffRevert',1),
+                ('LogRevert',),
+            ],
+            base_transformer = transformer,
+        )
+        pipeline = Pipeline(
+            steps = [
+                ('Transform',transformer),
+                ('Forecast',forecaster),
+                ('Revert',reverter),
+            ],
+        )
         
-        # validation splits
-        f.set_test_length(0.2)
-        f.set_validation_length(24)
-        # prepare series for forecast
-        f.add_covid19_regressor()
-        f.auto_Xvar_select(cross_validate=True)
-        
-        f.tune_test_forecast(models)
-        mlp_stack(f,models)
-        
-        f = transformer.DiffRevert(1)
-        f = transformer.LogRevert()
+        f = pipeline.fit_predict(f,models=models)
         
         f.reeval_cis() # expanding cis based on all model results
         f.plot(ci=True,order_by='LevelTestSetMAPE')
