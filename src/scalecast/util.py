@@ -431,8 +431,9 @@ def find_series_transformation(
         log (bool): default True. whether to log and diff the series if it is found to be non-stationary or just diff.
         critical_pval (float): default 0.05. the cutoff p-value to use to determine statistical signficance in the 
             Augmented Dickey-Fuller test and to run the auto_arima selection (substitutes for `alpha` arg).
-        m (str or int): default 'auto': the time-steps in the data that count one seasonal step.
-            uses the M4 competition values. for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
+        m (str or int): default 'auto': the number of observations that counts one seasonal step.
+            when 'auto', uses the M4 competition values: 
+            for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
             so pass your own values for other frequencies.
         adf_kwargs (dict): default {}. keyword args to pass to the Augmented Dickey-Fuller test function. 
         **kwargs: passed to the auto_arima() function when searching for optimal seasonal diff.

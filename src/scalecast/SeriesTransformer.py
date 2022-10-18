@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from scalecast.Forecaster import (
     Forecaster,
+    ForecastError,
     rmse,
     mape,
     mae,
@@ -66,7 +67,16 @@ class SeriesTransformer:
         self.f.y = pd.Series(revert_func(self.f.y, **kwargs)) if full else self.f.y
 
         for m, h in self.f.history.items():
-            for k in ("LevelY", "LevelForecast", "LevelTestSetPreds", "LevelFittedVals"):
+            for k in (
+                "LevelY", 
+                "LevelForecast", 
+                "LevelTestSetPreds", 
+                "LevelFittedVals",
+                "LevelLowerCI",
+                "LevelTSLowerCI",
+                "LevelUpperCI",
+                "LevelTSUpperCI",
+            ):
                 h[k] = list(revert_func(h[k], **kwargs))
 
             for i, preds in enumerate(('LevelTestSetPreds','LevelFittedVals')):
@@ -116,6 +126,175 @@ class SeriesTransformer:
 
         return self.f
 
+    def DetrendTransform(
+            self,
+            poly_order=1,
+            ln_trend=False,
+            seasonal_lags=0,
+            m='auto',
+            fit_intercept=True,
+            train_only=False,
+        ):
+        """ detrends the series using an OLS estimator.
+        only call this once if you want to revert the series later.
+        the passed Forecaster object must have future dates or be initiated with `require_future_dates=False`.
+        make sure the test length has already been set as well.
+        if the test length changes between the time the transformation is called
+        and when models are called, you will get this error when reverting: 
+        ValueError: All arrays must be of the same length.
+        the ols model from statsmodels will be stored in the detrend_model attribute.
+
+        Args:
+            poly_order (int): default 1. the polynomial order to use.
+            ln_trend (bool): default False. whether to use a natural logarithmic trend.
+            seasonal_lags (int): default 0. the number of seasonal lags to use in the estimation.
+            m (int or str): default 'auto'. the number of observations that counts one seasonal step.
+                ignored when seasonal_lags = 0.
+                when 'auto', uses the M4 competition values:
+                for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
+                so pass your own values for other frequencies.
+            fit_intercept (bool): default True. whether to fit an intercept in the model.
+            train_only (bool): default False. whether to fit the OLS model on the training set only.
+
+        Returns:
+            (Forecaster): a Forecaster object with the transformed attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.DetrendTransform(ln_trend=True)
+        """
+        import statsmodels.api as sm 
+        
+        self.detrend_origy = self.f.y.copy()
+        self.detrend_origlevely = self.f.levely.copy()
+        self.detrend_origdates = self.f.current_dates.copy()
+
+        fmod = self.f.deepcopy()
+        fmod.drop_all_Xvars()
+        fmod.add_time_trend()
+
+        if seasonal_lags > 0:
+            if m == 'auto':
+                if fmod.freq is not None:
+                    if fmod.freq.startswith('M'):
+                        m = 12
+                    elif fmod.freq.startswith('Q'):
+                        m = 4
+                    elif fmod.freq.startswith('H'):
+                        m = 24
+                    else:
+                        m = 1
+                else:
+                    m = 1
+            if m > 1:
+                fmod.add_lagged_terms('t',lags=m*seasonal_lags)
+                fmod.drop_Xvars(*[
+                    x for x in fmod.get_regressor_names() if (
+                        x.startswith(
+                            'tlag'
+                        ) and int(
+                            x.split('tlag_')[-1]
+                        ) % m != 0
+                    ) and x != 't'
+                ])
+            else:
+                warnings.warn(
+                    f'cannot add seasonal lags automatally for {fmod.freq} frequency. '
+                    'set a value for m manually.'
+                )
+        if ln_trend:
+            fmod.add_logged_terms(*fmod.get_regressor_names(),drop=True)
+        fmod.add_poly_terms(*fmod.get_regressor_names(),pwr=poly_order)
+
+        dataset = fmod.export_Xvars_df().set_index('DATE')
+        if fit_intercept:
+            dataset = sm.add_constant(dataset)
+
+        train_set = dataset.loc[fmod.current_dates] # full dataset minus future dates
+        model_inputs = train_set.iloc[:-fmod.test_length,:] if train_only else train_set.copy() # what will be used to fit the model
+        test_set = train_set.iloc[-fmod.test_length:,:] # the test set for reverting models later
+        future_set = dataset.loc[fmod.future_dates] # the future inputs for reverting models later
+
+        y = fmod.y.values
+        y_train = y.copy() if not train_only else y[:-fmod.test_length].copy()
+
+        ols_mod = sm.OLS(y_train,model_inputs).fit()
+        fvs = ols_mod.predict(train_set) # reverts fitted values
+        fvs_fut = ols_mod.predict(future_set) # reverts forecasts
+        fvs_test = ols_mod.predict(test_set) # reverts test-set predictions
+
+        self.f.keep_smaller_history(len(train_set))
+        self.f.y = self.f.y.values - fvs.values
+        self.f.levely = list(self.f.y)
+        self.f.typ_set()
+
+        self.detrend_model = ols_mod
+        self.detrend_fvs = fvs
+        self.detrend_fvs_fut = fvs_fut
+        self.detrend_fvs_test = fvs_test
+        return self.f
+
+    def DetrendRevert(self):
+        """ reverts the y attribute in the Forecaster object, along with all model results.
+        assumes a detrend transformation has already been called and uses all model information
+        already recorded from that transformation to revert.
+        if the test length changes in the Forecaster object between the time the transformation is called
+        and when models are called, you will get this error when reverting: 
+        ValueError: All arrays must be of the same length.
+        
+        Returns:
+            (Forecaster): a Forecaster object with the reverted attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.DetrendTransform(ln_trend=True)
+        >>> f = transformer.DetrendRevert()
+        """
+        try:
+            self.f.levely = self.detrend_origlevely
+            self.f.y = self.detrend_origy
+            self.f.current_dates = self.detrend_origdates
+        except AttributeError:
+            raise ForecastError('before reverting a trend, make sure DetrendTransform has already been called.')
+
+        fvs = {
+            "LevelTestSetPreds":self.detrend_fvs_test,
+            "TestSetPredictions":self.detrend_fvs_test,
+            "LevelFittedVals":self.detrend_fvs,
+            "FittedVals":self.detrend_fvs,
+            "LevelForecast":self.detrend_fvs_fut,
+            "Forecast":self.detrend_fvs_fut,
+            "TestSetUpperCI":self.detrend_fvs_test,
+            "TestSetLowerCI":self.detrend_fvs_test,
+            "UpperCI":self.detrend_fvs_fut,
+            "LowerCI":self.detrend_fvs_fut,
+            "LevelLowerCI":self.detrend_fvs_fut,
+            "LevelTSLowerCI":self.detrend_fvs_test,
+            "LevelUpperCI":self.detrend_fvs_fut,
+            "LevelTSUpperCI":self.detrend_fvs_test,
+        }
+
+        for m, h in self.f.history.items():
+            for k,v in fvs.items():
+                h[k] = [i + fvs for i, fvs in zip(h[k],v)]
+
+        for a in (
+            'detrend_origy',
+            'detrend_origlevely',
+            'detrend_origdates',
+            'detrend_model',
+            'detrend_fvs',
+            'detrend_fvs_fut',
+            'detrend_fvs_test',
+        ):
+            delattr(self,a)
+
+        return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
+        
     def LogTransform(self):
         """ transforms the y attribute in the Forecaster object using a natural log transformation.
 
