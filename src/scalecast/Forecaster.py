@@ -2365,10 +2365,10 @@ class Forecaster:
             try_seasonalities (bool): default True.
                 whether to search for seasonal representations.
                 this function uses a hierachical approach from secondly --> quarterly representations.
-                minutely will search all seasonal representations up to quarterly to find the best hierarchy of seasonalities.
+                secondly will search all seasonal representations up to quarterly to find the best hierarchy of seasonalities.
                 anything lower than second and higher than quarter will not receive a seasonality with this method.
                 day seasonality and lower will try both 'day' and 'dayofweek' seasonalities.
-                everything else will try yearly cycles, so for non-yearly cycles to be searched for such frequencies, 
+                everything else will try cycles that reset yearly, so to search for intermitent seasonal fluctuations, 
                 use the irr_cycles argument.
             seasonality_repr (list or dict[str,list]): default ['sincos'].
                 ignored if try_seasonalities is False.
@@ -2376,7 +2376,7 @@ class Forecaster:
                 other elements to add to the list: 'dummy','raw','drop_first'. can add multiple or one of these.
                 if dict, the key needs to be the seasonal representation ('quarter' for quarterly, 'month' for monthly)
                 and the value a list. if a seasonal representation is not found in this dictionary, it will default to
-                ['sincos'], i.e. a fourier representation.
+                ['sincos'], i.e. a fourier representation. 'drop_first' ignored when 'dummy' is also not present.
             exclude_seasonalities (list): default []. 
                 ignored if try_seasonalities is False.
                 add in this list any seasonal representations to skip searching.
