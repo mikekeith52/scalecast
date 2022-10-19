@@ -1,14 +1,14 @@
 
 from setuptools import setup, find_packages
 import shutil
-from src.scalecast.__init__ import __version__ as version
+#from src.scalecast.__init__ import __version__ as version
 import os
 
 long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = version,
+  version = '0.15.2',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,

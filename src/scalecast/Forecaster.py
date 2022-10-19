@@ -1937,7 +1937,7 @@ class Forecaster:
                 self.current_xreg[k] = v.diff()
                 self.future_xreg[k] = [self.y.values[-ar]] # just gets one future ar
 
-    def integrate(self, critical_pval=0.05, train_only=False, max_integration=None):
+    def integrate(self, critical_pval=0.05, train_only=False, max_integration=None, **kwargs):
         """ differences the series up to 1 time based on Augmented Dickey-Fuller test results.
         if series is already differenced, calling this function does nothing.
 
@@ -1948,6 +1948,8 @@ class Forecaster:
                 if True, will exclude the test data set from the Augmented Dickey-Fuller test (to avoid leakage).
             max_integration (None): deprecated. not used since 0.14.8 since two-level differencing no longer supported.
                 this arg will be taken out of the function eventually. 
+            **kwargs: passed to the `adfuller()` function from statsmodels 
+                https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
 
         Returns:
             None
@@ -1965,7 +1967,8 @@ class Forecaster:
         res = adfuller(
             self.y.dropna()
             if not train_only
-            else self.y.dropna().values[: -self.test_length]
+            else self.y.dropna().values[: -self.test_length],
+            **kwargs,
         )
         if res[1] >= critical_pval:
             self.diff()
@@ -2971,7 +2974,8 @@ class Forecaster:
                 if False, returns a bool that matches whether the test indicates stationarity.
             train_only (bool): default False.
                 if True, will exclude the test set from the test (to avoid leakage).
-            **kwargs: passed to adfuller() function from statsmodels.
+            **kwargs: passed to the `adfuller()` function from statsmodels 
+                https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
 
         Returns:
             (bool or tuple): if bool (full_res = False), returns whether the test suggests stationarity.
@@ -3012,7 +3016,7 @@ class Forecaster:
         Returns: 
             (float, float): the derived statistic and pvalue.
         """
-        y = self.y.values if not train_only else self.y.values[: -self.test_length]
+        y = self.y.dropna().values if not train_only else self.y.dropna().values[: -self.test_length]
         return stats.normaltest(y)
 
     def plot_acf(self, diffy=False, train_only=False, **kwargs):

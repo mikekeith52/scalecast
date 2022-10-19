@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.15.1
+Version: 0.15.2
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -49,26 +49,33 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           current_dates=df.index,
           future_dates=24,
         )
+        f.set_test_length(.2)
+        f.set_validation_length(24)
         
         def forecaster(f,models):
             """ add Xvars and forecast
             """
             f.add_covid19_regressor()
-            f.auto_Xvar_select(cross_validate=True)
-            f.tune_test_forecast(models)
+            f.auto_Xvar_select()
+            f.tune_test_forecast(
+                models,
+                dynamic_testing=24, # test-set metrics will be an average of rolling 24-step forecasts
+                cross_validate=True,
+                k = 3,
+            )
             mlp_stack(f,models)
                 
         transformer = Transformer(
             transformers = [
-                ('LogTransform',),
                 ('DiffTransform',1),
+                ('DiffTransform',12),
             ],
         )
         reverter = Reverter(
             # list reverters in reverse order
             reverters = [
+                ('DiffRevert',12),
                 ('DiffRevert',1),
-                ('LogRevert',),
             ],
             base_transformer = transformer,
         )

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import warnings
 from scalecast.Forecaster import (
     Forecaster,
     ForecastError,
@@ -8,7 +9,6 @@ from scalecast.Forecaster import (
     mae,
     r2,
 )
-
 
 class SeriesTransformer:
     def __init__(self, f):
@@ -228,7 +228,12 @@ class SeriesTransformer:
         self.f.keep_smaller_history(len(train_set))
         self.f.y = self.f.y.values - fvs.values
         self.f.levely = list(self.f.y)
-        self.f.typ_set()
+
+        # i'm not 100% sure we need this and it does cause one thing to break so i'm doing this for now.
+        try: 
+            self.f.typ_set(); 
+        except: 
+            warnings.warn('type seting the Forecaster object did not work in the trend transform, continuing as is.')
 
         self.detrend_model = ols_mod
         self.detrend_fvs = fvs
@@ -594,10 +599,10 @@ class SeriesTransformer:
             h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
 
             h['FittedVals'] = list(
-                seasrevert(h['FittedVals'],self.f.y[-len(h['FittedVals'])-m:], m)
+                seasrevert(h['FittedVals'],self.f.y.values[-len(h['FittedVals'])-m:], m)
             )[m:]
             h['LevelFittedVals'] = h['FittedVals'][:]
-            ci_range = self.f._find_cis(self.f.y[-len(h['FittedVals']):],h['FittedVals'])
+            ci_range = self.f._find_cis(self.f.y.values[-len(h['FittedVals']):],h['FittedVals'])
             for k in ("LevelUpperCI","UpperCI"):
                 h[k] = [i + ci_range for i in h["Forecast"]]
             for k in ("TestSetUpperCI","LevelTSUpperCI"):

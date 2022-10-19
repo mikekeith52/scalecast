@@ -3,7 +3,6 @@ from scalecast.SeriesTransformer import SeriesTransformer
 from typing import List, Tuple, Union
 import typing
 
-
 class Transformer:
     def __init__(self,transformers: List[Tuple]):
         """ initiates the transformer pipeline.
