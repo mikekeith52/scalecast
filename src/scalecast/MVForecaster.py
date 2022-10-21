@@ -157,14 +157,12 @@ class MVForecaster:
             elif merge_Xvars in ("intersection", "i"):
                 if i == 0:
                     self.current_xreg = {
-                        k: v.copy().reset_index(drop=True) in f.current_xreg.items()
+                        k: v.copy().reset_index(drop=True) for k,v in f.current_xreg.items() if not k.startswith('AR')
                     }
-                    self.future_xreg = {k: v[:] in f.future_xreg.items()}
+                    self.future_xreg = {k: v[:] for k,v in f.future_xreg.items() if not k.startswith('AR')}
                 else:
-                    for k, v in f.current_xreg.items():
-                        if k not in self.current_xreg.keys() or k.startswith('AR'):
-                            self.current_xreg.pop(k)
-                            self.future_xreg.pop(k)
+                    f.drop_Xvars(*[k for k in f.current_xreg if k not in self.current_xreg or k.startswith('AR')])
+
             else:
                 raise ValueError(
                     f"merge_Xvars must be one of ('union','u','intersection','i'), got {merge_Xvars}"

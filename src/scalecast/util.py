@@ -607,6 +607,8 @@ def find_optimal_transformation(
     final_transformer = []
     final_reverter = []
 
+    exception_types = (IndexError,AttributeError,ValueError,ZeroDivisionError) # errors to pass over
+
     for tr in try_order:
         if tr == 'boxcox':
             def boxcox_tr(x,lmbda):
@@ -630,7 +632,7 @@ def find_optimal_transformation(
                         met = comp_met
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
-                except (ValueError,ZeroDivisionError,IndexError) as e:
+                except exception_types as e:
                     warnings.warn(f'lambda value of {lmbda} cannot be evaluated. error: {e}')
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
@@ -653,7 +655,7 @@ def find_optimal_transformation(
                         met = comp_met
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
-                except (ValueError,IndexError) as e:
+                except exception_types as e:
                     warnings.warn(f'detrend_kwargs {kw} cannot be evaluated. error: {e}')
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
@@ -674,7 +676,7 @@ def find_optimal_transformation(
                     met = comp_met
                     best_transformer = transformer[:]
                     best_reverter = reverter[:]
-            except (ValueError,IndexError) as e:
+            except exception_types as e:
                 warnings.warn(f'series first difference could not be evaluated. error: {e}')
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
@@ -696,7 +698,7 @@ def find_optimal_transformation(
                         met = comp_met
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
-                except (ValueError,IndexError) as e:
+                except exception_types as e:
                     warnings.warn(f'series first seasonal difference could not be evaluated. error: {e}')
                 final_transformer = best_transformer[:]
                 final_reverter = best_reverter[:]
@@ -721,7 +723,7 @@ def find_optimal_transformation(
                         met = comp_met
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
-                except (ValueError,IndexError) as e:                 
+                except exception_types as e:                 
                     warnings.warn(f'{s} scaler cannot be evaluated. error: {e}')
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
