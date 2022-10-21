@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.4] - 2022-10-21
+### Added
+### Changed
+### Fixed
+- changed where import calls occur in the `SeriesTransformer` module to avoid a circular import that can happen
+- added `AttributeError` to the list of exceptions to catch in `util.find_optimal_transformations()` function.
+- fixed initiating MVForecaster() when `merge_Xvars=='i'`.
+
 ## [0.15.3] - 2022-10-20
 ### Added
 - increased documentation around forecasting different model types.
