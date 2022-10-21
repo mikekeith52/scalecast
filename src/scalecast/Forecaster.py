@@ -866,6 +866,8 @@ class Forecaster:
         """
         from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
 
+        kwargs = {k:bool(v) if isinstance(v,np.bool_) else v for k, v in kwargs.items()} # issue #19
+
         if not dynamic_testing:
             logging.warning("dynamic_testing is True always for hwes model")
         self.dynamic_testing = True
@@ -1046,12 +1048,12 @@ class Forecaster:
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
 
-            **kwargs: passed to the Prophet() function from fbprophet.
+            **kwargs: passed to the Prophet() function from prophet: https://facebook.github.io/prophet/docs/quick_start.html#python-api.
         """
-        from fbprophet import Prophet
+        from prophet import Prophet
         if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument will be ignored for the prophet model"
+            warnings.warn(
+                "dynamic_testing argument is ignored for the prophet model."
             )
         self.dynamic_testing = True
         
@@ -1251,7 +1253,8 @@ class Forecaster:
         fitted values are the last fcst_length worth of values only.
         anything this function can do, rnn can also do. 
         this function is simpler to set up than rnn.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html
+        the model is saved in the 'tf_model' attribute.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
             
         Args:
             dynamic_testing (bool): default True.
@@ -1351,6 +1354,7 @@ class Forecaster:
         cannot be tuned.
         only xvar options are the series' own history (specified in lags argument).
         always uses minmax normalizer.
+        the model is saved in the 'tf_model' attribute.
         see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
 
         Args:
@@ -1937,7 +1941,7 @@ class Forecaster:
                 self.current_xreg[k] = v.diff()
                 self.future_xreg[k] = [self.y.values[-ar]] # just gets one future ar
 
-    def integrate(self, critical_pval=0.05, train_only=False, max_integration=None):
+    def integrate(self, critical_pval=0.05, train_only=False, max_integration=None, **kwargs):
         """ differences the series up to 1 time based on Augmented Dickey-Fuller test results.
         if series is already differenced, calling this function does nothing.
 
@@ -1948,6 +1952,8 @@ class Forecaster:
                 if True, will exclude the test data set from the Augmented Dickey-Fuller test (to avoid leakage).
             max_integration (None): deprecated. not used since 0.14.8 since two-level differencing no longer supported.
                 this arg will be taken out of the function eventually. 
+            **kwargs: passed to the `adfuller()` function from statsmodels 
+                https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
 
         Returns:
             None
@@ -1965,7 +1971,8 @@ class Forecaster:
         res = adfuller(
             self.y.dropna()
             if not train_only
-            else self.y.dropna().values[: -self.test_length]
+            else self.y.dropna().values[: -self.test_length],
+            **kwargs,
         )
         if res[1] >= critical_pval:
             self.diff()
@@ -2971,7 +2978,8 @@ class Forecaster:
                 if False, returns a bool that matches whether the test indicates stationarity.
             train_only (bool): default False.
                 if True, will exclude the test set from the test (to avoid leakage).
-            **kwargs: passed to adfuller() function from statsmodels.
+            **kwargs: passed to the `adfuller()` function from statsmodels 
+                https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
 
         Returns:
             (bool or tuple): if bool (full_res = False), returns whether the test suggests stationarity.
@@ -3012,7 +3020,7 @@ class Forecaster:
         Returns: 
             (float, float): the derived statistic and pvalue.
         """
-        y = self.y.values if not train_only else self.y.values[: -self.test_length]
+        y = self.y.dropna().values if not train_only else self.y.dropna().values[: -self.test_length]
         return stats.normaltest(y)
 
     def plot_acf(self, diffy=False, train_only=False, **kwargs):

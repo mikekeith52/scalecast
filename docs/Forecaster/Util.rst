@@ -77,29 +77,24 @@ find_optimal_lag_order()
   lag_order_res = find_optimal_lag_order(mvf,train_only=True)
   lag_order_aic = lag_order_res.aic # picks the best lag order according to aic
 
-find_series_transformation()
+find_optimal_transformation()
 -----------------------------------
-.. automodule:: src.scalecast.util.find_series_transformation
+.. automodule:: src.scalecast.util.find_optimal_transformation
     :members:
 
 .. code:: python
 
   from scalecast.Forecaster import Forecaster
   from scaleast.Pipeline import Pipeline, Transformer, Reverter
-  from scalecast.util import find_series_transformation
-
-  t, r = find_series_transformation(
-      f,
-      goal=['stationary','seasonally_adj'],
-      train_only=True,
-      critical_pval = .01,
-  )
+  from scalecast.util import find_optimal_transformation
+  import pandas_datareader as pdr
 
   def forecaster(f):
       f.add_covid19_regressor()
       f.auto_Xvar_select(cross_validate=True)
       f.set_estimator('mlr')
       f.manual_forecast()
+
   df = pdr.get_data_fred(
       'HOUSTNSA',
       start='1959-01-01',
@@ -112,12 +107,56 @@ find_series_transformation()
   )
   f.set_test_length(0.2)
   f.set_validation_length(24)
-  transformer, reverter = find_series_transformation(
+  transformer, reverter = find_optimal_transformation(f)
+  print(transformer)
+  print(reverter) # see what transformers and reverters were chosen
+  pipeline = Pipeline(
+      steps = [
+          ('Transform',transformer),
+          ('Forecast',forecaster),
+          ('Revert',reverter),
+      ],
+  )
+  f = pipeline.fit_predict(f)
+
+find_statistical_transformation()
+-----------------------------------
+.. automodule:: src.scalecast.util.find_statistical_transformation
+    :members:
+
+.. code:: python
+
+  from scalecast.Forecaster import Forecaster
+  from scaleast.Pipeline import Pipeline, Transformer, Reverter
+  from scalecast.util import find_statistical_transformation
+  import pandas_datareader as pdr
+
+  def forecaster(f):
+      f.add_covid19_regressor()
+      f.auto_Xvar_select(cross_validate=True)
+      f.set_estimator('mlr')
+      f.manual_forecast()
+
+  df = pdr.get_data_fred(
+      'HOUSTNSA',
+      start='1959-01-01',
+      end='2022-08-01'
+  )
+  f = Forecaster(
+      y=df['HOUSTNSA'],
+      current_dates=df.index,
+      future_dates=24,
+  )
+  f.set_test_length(0.2)
+  f.set_validation_length(24)
+  transformer, reverter = find_statistical_transformation(
       f,
       goal=['stationary','seasonally_adj'],
       train_only=True,
       critical_pval = .01,
   )
+  print(transformer)
+  print(reverter) # see what transformers and reverters were chosen
   pipeline = Pipeline(
       steps = [
           ('Transform',transformer),

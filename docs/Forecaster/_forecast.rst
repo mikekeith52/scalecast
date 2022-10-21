@@ -41,6 +41,7 @@ lstm
 
 >>> f.set_estimator('lstm')
 >>> f.manual_forecast() # above args are now available in this function
+>>> f.tf_model.summary() # view a summary of the model's parameters
 
 multivariate
 ---------------------------------------------------------------
@@ -71,6 +72,7 @@ rnn
 
 >>> f.set_estimator('rnn')
 >>> f.manual_forecast() # above args are now available in this function
+>>> f.tf_model.summary() # view a summary of the model's parameters
 
 silverkite
 --------------------------------------------------
@@ -92,6 +94,7 @@ sklearn
 
 >>> f.set_estimator('mlp')
 >>> f.proba_forecast() # probabilistic forecasting
+>>> f.regr # access the sklearn model properties
 
 theta
 -------------------------------------------------

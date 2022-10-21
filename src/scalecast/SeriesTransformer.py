@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import warnings
 from scalecast.Forecaster import (
     Forecaster,
     ForecastError,
@@ -8,7 +9,7 @@ from scalecast.Forecaster import (
     mae,
     r2,
 )
-
+from scalecast.util import _convert_m
 
 class SeriesTransformer:
     def __init__(self, f):
@@ -177,17 +178,12 @@ class SeriesTransformer:
 
         if seasonal_lags > 0:
             if m == 'auto':
-                if fmod.freq is not None:
-                    if fmod.freq.startswith('M'):
-                        m = 12
-                    elif fmod.freq.startswith('Q'):
-                        m = 4
-                    elif fmod.freq.startswith('H'):
-                        m = 24
-                    else:
-                        m = 1
-                else:
-                    m = 1
+                m = _convert_m(m,fmod.freq)
+                if m == 1:
+                    warnings.warn(
+                        f'cannot add seasonal lags automatically for the {fmod.freq} frequency. '
+                        'set a value for m manually.'
+                    )
             if m > 1:
                 fmod.add_lagged_terms('t',lags=m*seasonal_lags)
                 fmod.drop_Xvars(*[
@@ -199,11 +195,6 @@ class SeriesTransformer:
                         ) % m != 0
                     ) and x != 't'
                 ])
-            else:
-                warnings.warn(
-                    f'cannot add seasonal lags automatally for {fmod.freq} frequency. '
-                    'set a value for m manually.'
-                )
         if ln_trend:
             fmod.add_logged_terms(*fmod.get_regressor_names(),drop=True)
         fmod.add_poly_terms(*fmod.get_regressor_names(),pwr=poly_order)
@@ -228,7 +219,12 @@ class SeriesTransformer:
         self.f.keep_smaller_history(len(train_set))
         self.f.y = self.f.y.values - fvs.values
         self.f.levely = list(self.f.y)
-        self.f.typ_set()
+
+        # i'm not 100% sure we need this and it does cause one thing to break so i'm doing this for now.
+        try: 
+            self.f.typ_set(); 
+        except: 
+            warnings.warn('type seting the Forecaster object did not work in the trend transform, continuing as is.')
 
         self.detrend_model = ols_mod
         self.detrend_fvs = fvs
@@ -594,10 +590,10 @@ class SeriesTransformer:
             h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
 
             h['FittedVals'] = list(
-                seasrevert(h['FittedVals'],self.f.y[-len(h['FittedVals'])-m:], m)
+                seasrevert(h['FittedVals'],self.f.y.values[-len(h['FittedVals'])-m:], m)
             )[m:]
             h['LevelFittedVals'] = h['FittedVals'][:]
-            ci_range = self.f._find_cis(self.f.y[-len(h['FittedVals']):],h['FittedVals'])
+            ci_range = self.f._find_cis(self.f.y.values[-len(h['FittedVals']):],h['FittedVals'])
             for k in ("LevelUpperCI","UpperCI"):
                 h[k] = [i + ci_range for i in h["Forecast"]]
             for k in ("TestSetUpperCI","LevelTSUpperCI"):

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.15.1
+Version: 0.15.3
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -49,26 +49,33 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
           current_dates=df.index,
           future_dates=24,
         )
+        f.set_test_length(.2)
+        f.set_validation_length(24)
         
         def forecaster(f,models):
             """ add Xvars and forecast
             """
             f.add_covid19_regressor()
-            f.auto_Xvar_select(cross_validate=True)
-            f.tune_test_forecast(models)
+            f.auto_Xvar_select()
+            f.tune_test_forecast(
+                models,
+                dynamic_testing=24, # test-set metrics will be an average of rolling 24-step forecasts
+                cross_validate=True,
+                k = 3,
+            )
             mlp_stack(f,models)
                 
         transformer = Transformer(
             transformers = [
-                ('LogTransform',),
                 ('DiffTransform',1),
+                ('DiffTransform',12),
             ],
         )
         reverter = Reverter(
             # list reverters in reverse order
             reverters = [
+                ('DiffRevert',12),
                 ('DiffRevert',1),
-                ('LogRevert',),
             ],
             base_transformer = transformer,
         )
@@ -159,7 +166,7 @@ Description: # 🌄 Scalecast: The practitioner's time series forecasting librar
         `pip install --upgrade scalecast`  
         - Optional add-ons:  
         `pip install darts`  
-        `pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
+        `pip install prophet` 
         `pip install greykite`   
         `pip install shap` (SHAP feature importance)  
         `pip install kats` (for changepoint detection)  
