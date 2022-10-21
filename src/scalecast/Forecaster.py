@@ -866,6 +866,8 @@ class Forecaster:
         """
         from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
 
+        kwargs = {k:bool(v) if isinstance(v,np.bool_) else v for k, v in kwargs.items()} # issue #19
+
         if not dynamic_testing:
             logging.warning("dynamic_testing is True always for hwes model")
         self.dynamic_testing = True
@@ -1046,12 +1048,12 @@ class Forecaster:
                 any plot or export of forecasts into a future horizon will fail for this model
                 and not all methods will raise descriptive errors.
 
-            **kwargs: passed to the Prophet() function from fbprophet.
+            **kwargs: passed to the Prophet() function from prophet: https://facebook.github.io/prophet/docs/quick_start.html#python-api.
         """
-        from fbprophet import Prophet
+        from prophet import Prophet
         if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument will be ignored for the prophet model"
+            warnings.warn(
+                "dynamic_testing argument is ignored for the prophet model."
             )
         self.dynamic_testing = True
         
@@ -1251,7 +1253,8 @@ class Forecaster:
         fitted values are the last fcst_length worth of values only.
         anything this function can do, rnn can also do. 
         this function is simpler to set up than rnn.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html
+        the model is saved in the 'tf_model' attribute.
+        see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
             
         Args:
             dynamic_testing (bool): default True.
@@ -1351,6 +1354,7 @@ class Forecaster:
         cannot be tuned.
         only xvar options are the series' own history (specified in lags argument).
         always uses minmax normalizer.
+        the model is saved in the 'tf_model' attribute.
         see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
 
         Args:

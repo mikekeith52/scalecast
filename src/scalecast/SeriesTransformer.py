@@ -9,6 +9,7 @@ from scalecast.Forecaster import (
     mae,
     r2,
 )
+from scalecast.util import _convert_m
 
 class SeriesTransformer:
     def __init__(self, f):
@@ -177,17 +178,12 @@ class SeriesTransformer:
 
         if seasonal_lags > 0:
             if m == 'auto':
-                if fmod.freq is not None:
-                    if fmod.freq.startswith('M'):
-                        m = 12
-                    elif fmod.freq.startswith('Q'):
-                        m = 4
-                    elif fmod.freq.startswith('H'):
-                        m = 24
-                    else:
-                        m = 1
-                else:
-                    m = 1
+                m = _convert_m(m,fmod.freq)
+                if m == 1:
+                    warnings.warn(
+                        f'cannot add seasonal lags automatically for the {fmod.freq} frequency. '
+                        'set a value for m manually.'
+                    )
             if m > 1:
                 fmod.add_lagged_terms('t',lags=m*seasonal_lags)
                 fmod.drop_Xvars(*[
@@ -199,11 +195,6 @@ class SeriesTransformer:
                         ) % m != 0
                     ) and x != 't'
                 ])
-            else:
-                warnings.warn(
-                    f'cannot add seasonal lags automatally for {fmod.freq} frequency. '
-                    'set a value for m manually.'
-                )
         if ln_trend:
             fmod.add_logged_terms(*fmod.get_regressor_names(),drop=True)
         fmod.add_poly_terms(*fmod.get_regressor_names(),pwr=poly_order)

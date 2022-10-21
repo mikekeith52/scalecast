@@ -155,7 +155,7 @@ In addition, scalecast offers:
 `pip install --upgrade scalecast`  
 - Optional add-ons:  
 `pip install darts`  
-`pip install fbprophet` (see [here](https://stackoverflow.com/questions/49889404/fbprophet-installation-error-failed-building-wheel-for-fbprophet) to resolve a common installation issue if using Anaconda)  
+`pip install prophet` 
 `pip install greykite`   
 `pip install shap` (SHAP feature importance)  
 `pip install kats` (for changepoint detection)  
