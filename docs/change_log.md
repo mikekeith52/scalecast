@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.5] - 2022-10-22
+### Added
+- added the `Pipeline.MVPipeline` object.
+### Changed
+### Fixed
+
 ## [0.15.4] - 2022-10-21
 ### Added
 ### Changed
