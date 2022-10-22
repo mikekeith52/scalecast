@@ -281,3 +281,143 @@ class Pipeline:
             else:
                 func(f,**kwargs)
         return f
+
+class MVPipeline:
+    def __init__(
+        self,
+        steps: List[Tuple[str,Union[List[Transformer],List[Reverter],'function']]],
+        **kwargs,
+    ):
+        """ initiates the full pipeline for multivariate forecasting applications.
+
+        Args:
+            steps: (list[tuple]): a list of transform, forecast, and revert funcs to apply
+                to multiple Forecaster objects. the first element of each tuple names the step.
+                the second element should be a list of Transformer objects, a list of Reverter objecsts,
+                a list of functions, or a single function. if it is a function or list of functions, 
+                the first argument in the should require a Forecaster or MVForecaster object.
+                if it is a list of functions, Transformer, or Revereter objects,
+                each one of these will be called on the Forecaster objects in the order they are passed
+                to the `fit_predict()` method.
+                functions are checked for as objects that do not contain the `fit_transform()` method,
+                so adding more elements to the Pipeline may be possible if it has a `fit_transform()` method.
+            **kwargs: passed to MVForecaster() 
+                https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.__init__
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.Pipeline import MVPipeline
+        >>> from scalecast.util import pdr_load, find_optimal_transformation
+        >>> 
+        >>> def auto_Xvar_select(f):
+        >>>    f.auto_Xvar_select(max_ar=0)
+        >>> def forecaster(mvf):
+        >>>     mvf.set_test_length(24)
+        >>>     mvf.set_estimator('elasticnet')
+        >>>     mvf.manual_forecast(alpha=.2,lags=12)
+        >>>
+        >>> f1 = pdr_load('UTUR',future_dates=24,start='1970-01-01',end='2022-07-01')
+        >>> f2 = pdr_load('UTPHCI',future_dates=24,start='1970-01-01',end='2022-07-01')
+        >>> f3 = pdr_load('UNRATE',future_dates=24,start='1970-01-01',end='2022-07-01')
+        >>> # doing this helps the `DetrendTransform()` function
+        >>> fs = [f1,f2,f3]
+        >>> for f in fs:
+        >>>     f.set_test_length(24)
+        >>>
+        >>> transformer1, reverter1 = find_optimal_transformation(f1)
+        >>> transformer2, reverter2 = find_optimal_transformation(f2)
+        >>> transformer3, reverter3 = find_optimal_transformation(f3)
+        >>> 
+        >>> pipeline = MVPipeline(
+        >>>     steps = [
+        >>>         ('Transform',[transformer1,transformer2,transformer3]),
+        >>>         ('Select Xvars',[auto_Xvar_select]*3), # finds xvars for each object
+        >>>         ('Forecast',forecaster,), # combines to an mvf object
+        >>>         ('Revert',[reverter1,reverter2,reverter3]), # breaks back to f objects
+        >>>     ],
+        >>>     names = ['UTUR','UTPHCI','UNRATE'],
+        >>>     merge_Xvars = 'i',
+        >>> )
+        """
+        for step in steps:
+            if not isinstance(step,tuple):
+                raise TypeError(f'expected elements of pipeline steps list to be tuple type, got {type(step)}')
+        
+        self.steps = steps
+        self.kwargs = kwargs
+
+    def __repr__(self):
+        return (
+            "MVPipeline(\n"
+            "  steps = [\n"
+            "    {}\n"
+            "  ]\n"
+            ")".format(",\n    ".join([str(i) for i in self.steps]))
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
+    def fit_predict(self,*fs: Forecaster,**kwargs):
+        """ applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
+        the order of Forecaster passed to *fs is the order all functions in lists will be applied.
+
+        Args:
+            *fs (Forecaster): the Forecaster objects that stores the series that will be sent through the pipeline.
+            **kwargs: passed to any 'function' types passed in the pipeline.
+
+        Returns:
+            (Tuple[Forecaster] | MVForecaster): if the last element in the pipeline is a list of reverter functions
+                this function returns the individual Forecaster objects. if not, an MVForecaster object is returned.
+        
+        >>> pipeline = MVPipeline(
+        >>>    steps = [
+        >>>        ('Transform',[transformer1,transformer2,transformer3]),
+        >>>        ('Select Xvars',[auto_Xvar_select]*3), # applied to Forecaster objects
+        >>>        ('Forecast',forecaster,), # combines to an mvf object and calls the function
+        >>>        ('Revert',[reverter1,reverter2,reverter3]), # breaks back to f objects
+        >>>    ],
+        >>>    names = ['UTUR','UTPHCI','UNRATE'], # used to combine to the mvf object
+        >>>    merge_Xvars = 'i', # used to combine to the mvf object
+        >>> )
+        >>> f1, f2, f3 = pipeline.fit_predict(f1,f2,f3)
+        """
+        from scalecast.MVForecaster import MVForecaster
+        from scalecast.util import break_mv_forecaster
+        from scalecast.multiseries import keep_smallest_first_date
+
+        if 'not_same_len_action' not in kwargs:
+            keep_smallest_first_date(*fs)
+        elif kwargs['not_same_len_action'] == 'trim':
+            keep_smallest_first_date(*fs)
+
+        i = 0
+        fs = list(fs)
+        for step in self.steps:
+            func_list = step[1]
+            if hasattr(func_list,'__len__'):
+                if len(fs) != len(func_list):
+                    raise ValueError('must pass as many functions as there are Forecaster objects.')
+                if hasattr(func_list[0],'fit_transform'):
+                    if i == 1:
+                        fs = list(break_mv_forecaster(mvf))
+                        i += 1
+                    for idx, func in enumerate(zip(fs,func_list)):
+                        if func[1] is not None:
+                            if i == 2: # reverting
+                                if hasattr(func[1].base_transformer,'base_transformer'):
+                                    func[1].base_transformer.base_transformer.f = func[0]
+                                else:
+                                    func[1].base_transformer.f = func[0]
+                            fs[idx] = func[1].fit_transform(func[0])
+                else:
+                    for f, func in zip(fs,func_list):
+                        if func is not None:
+                            func(f,**kwargs)
+            else:
+                if i == 0:
+                    mvf = MVForecaster(*fs,**self.kwargs)
+                    i += 1
+                func_list(mvf,**kwargs)
+        return tuple(fs) if i == 2 else mvf
+
+
