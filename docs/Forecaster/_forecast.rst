@@ -1,9 +1,11 @@
 Forecasting Different Model Types
 ===================================
-Any time you set an estimator, different arguments become available to you when calling `manual_forecast`, `proba_forecast`, or tuning the model. Here is the documentation for all these models:
+Any time you set an estimator, different arguments become available to you when calling `manual_forecast`, `proba_forecast`, or tuning the model. This page lists all model types native to scalecast. See also the `auxmodels <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html>`_ module.
 
 arima
 --------------------------------------------------
+See also `auto_arima <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html>`_.
+
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_arima
     :members:
     :undoc-members:
@@ -45,6 +47,8 @@ lstm
 
 multivariate
 ---------------------------------------------------------------
+See also `vecm <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_.
+
 .. automodule:: src.scalecast.MVForecaster.MVForecaster._forecast
     :members:
     :undoc-members:
@@ -87,6 +91,8 @@ silverkite
 
 sklearn
 --------------------------------------------------
+See also `mlp_stack <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#module-src.scalecast.auxmodels.mlp_stack>`_.
+
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_sklearn
     :members:
     :undoc-members:
