@@ -418,6 +418,6 @@ class MVPipeline:
                     mvf = MVForecaster(*fs,**self.kwargs)
                     i += 1
                 func_list(mvf,**kwargs)
-        return fs if i == 2 else mvf
+        return tuple(fs) if i == 2 else mvf
 
 
