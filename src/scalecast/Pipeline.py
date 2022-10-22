@@ -367,7 +367,7 @@ class MVPipeline:
 
         Returns:
             (Tuple[Forecaster] | MVForecaster): if the last element in the pipeline is a list of reverter functions
-                this function returns the individual Forecaster objects. if not, an MVForecaster object is returned.
+            this function returns the individual Forecaster objects. if not, an MVForecaster object is returned.
         
         >>> pipeline = MVPipeline(
         >>>    steps = [
