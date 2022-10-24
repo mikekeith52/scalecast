@@ -80,9 +80,6 @@ class MVForecaster:
                 series can always be referred to with 'series...' and 'y...' notation, even if user-selected names are provided.
                 the order the series are supplied will be maintained.
             **kwargs: become attributes.
-
-        Returns:
-            (MVForecaster): the object.
         """
         for f in fs:
             f.typ_set()
@@ -498,6 +495,8 @@ class MVForecaster:
     def tune(self, dynamic_tuning=False, cv=False):
         """ tunes the specified estimator using an ingested grid (ingests a grid from a grids file with same name as the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
 
         Args:
             dynamic_tuning (bool): default False.
@@ -578,6 +577,8 @@ class MVForecaster:
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
 
         Args:
             k (int): default 5. the number of folds. must be at least 2.

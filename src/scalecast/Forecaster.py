@@ -177,10 +177,9 @@ class Forecaster:
     def __init__(self, y, current_dates, require_future_dates=True, future_dates=None, **kwargs):
         """ 
         Args:
-            y (list-like): an array of all known observed values.
-            current_dates (list-like): an array of all known observed dates.
-                must be same length as y and in the same sequence 
-                (index 0 in y corresponds to index 0 in current_dates, etc.).
+            y (list-like): an array of all observed values.
+            current_dates (list-like): an array of all observed dates.
+                must be same length as y and in the same sequence.
                 can pass any numerical index if dates are unknown; in this case, 
                 it will act as if dates are in nanosecond frequency.
             require_future_dates (bool): default True.
@@ -188,14 +187,9 @@ class Forecaster:
                 if True, all models will forecast into future periods, 
                 unless run with test_only = True, and when adding regressors, they will automatically
                 be added into future periods.
-                this was added in v 0.12.0 and is considered experimental as of then. it was added
-                to make anomaly detection more convenient. before, the object acted as if
-                require_future_dates were always True.
             future_dates (int): optional: the future dates to add to the model upon initialization.
                 if not added when object is initialized, can be added later.
-
-        Returns:
-            (Forecaster): the object.
+            **kwargs: become attributes.
         """
         self.y = y
         self.current_dates = current_dates
@@ -1253,7 +1247,7 @@ class Forecaster:
         fitted values are the last fcst_length worth of values only.
         anything this function can do, rnn can also do. 
         this function is simpler to set up than rnn.
-        the model is saved in the 'tf_model' attribute.
+        the model is saved in the tf_model attribute.
         see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
             
         Args:
@@ -1354,7 +1348,7 @@ class Forecaster:
         cannot be tuned.
         only xvar options are the series' own history (specified in lags argument).
         always uses minmax normalizer.
-        the model is saved in the 'tf_model' attribute.
+        the model is saved in the tf_model attribute.
         see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
 
         Args:
@@ -1598,7 +1592,7 @@ class Forecaster:
         applying the same weights to the fitted values, test-set metrics, and predictions. 
         A user can supply their own weights or let the algorithm determine optimal weights 
         based on a passed error metric (such as "TestSetMAPE"). To avoid overfitting, it is 
-        recommended to use the default value, "ValidationSetMetric" to determine weights, 
+        recommended to use the default value, "ValidationMetricValue" to determine weights, 
         although this is not possible if the selected models have not all been tuned on the 
         validation set. The weighting uses a MaxMin scaler when an error metric is passed, 
         and a MinMax scaler when r-squared is selected as the metric to base weights on. 
@@ -3810,7 +3804,8 @@ class Forecaster:
         """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
         the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
-        results are stored in the best_params attribute.
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
 
         Args:
             dynamic_tuning (bool): default False.
@@ -3879,7 +3874,8 @@ class Forecaster:
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
-        results are stored in best_params attribute.
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
 
         Args:
             k (int): default 5. the number of folds. must be at least 2.
