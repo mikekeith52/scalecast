@@ -169,7 +169,8 @@ In addition, scalecast offers:
 ## Links
 ### Official Docs
   - [Read the Docs](https://scalecast.readthedocs.io/en/latest/)
-  - [Introductory Example](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/introduction.html)
+  - [Introductory Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/introduction.html)
+  - [Introductory Blog Post](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)
   - [Examples Repository](https://github.com/mikekeith52/scalecast-examples)
   - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)
 
@@ -211,9 +212,9 @@ In addition, scalecast offers:
 - [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html)
 
 ### Scaled Forecasting on Many Series
-- [M4](https://github.com/mikekeith52/scalecast-examples/tree/main/m4)  
+- [M4 Notebook](https://github.com/mikekeith52/scalecast-examples/tree/main/m4)  
 - [May the Forecasts Be with You](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
-- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/multi-series/multi-series.html)
+- [Introductory Notebook Section](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/introduction.html#Scaled-Automated-Forecasting)
 
 ### Anomaly Detection
 - [Anomaly Detection for Time Series with Monte Carlo Simulations](https://towardsdatascience.com/anomaly-detection-for-time-series-with-monte-carlo-simulations-e43c77ba53c?source=email-85177a9cbd35-1658325190052-activity.collection_post_approved)
