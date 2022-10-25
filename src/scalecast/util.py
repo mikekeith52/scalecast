@@ -549,7 +549,7 @@ def find_optimal_transformation(
             the metrics to monitor are limited to level in-sample and level out-of-sample metrics.
             'TestSetRMSE' and 'LevelTestSetRMSE' are the same in this function, same with all level and non-level counterparts.
         lags (str or int): default 'auto'. the number of lags that will be used as inputs for the estimator.
-            if 'auto', uses the value passed or assigned to m (one seasonal cycle).
+            if 'auto', uses the value passed or assigned to m (one seasonal cycle). if multiple values passed to m, uses the first.
         try_order (list-like): default ['detrend','boxcox','first_diff','first_seasonal_diff','scale'].
             the transformations to try and also the order to try them in.
             changing the order here can change the final transformations derived, since level will 
@@ -565,10 +565,11 @@ def find_optimal_transformation(
             only up to one scaler will be selected.
             must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
         scale_on_train_only (bool): default False. whether to call the scaler on the training set only.
-        m (str or int): default 'auto': the number of observations that counts one seasonal step.
+        m (str, int, list[int]): default 'auto': the number of observations that counts one seasonal step.
             when 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
-            so pass your own values for other frequencies.
+            so pass your own values for other frequencies. if m == 1, no first seasonal difference will be tried.
+            if list, multiple seasonal differences can be tried and up to that many seasonal differences can be selected.
         **kwargs: passed to the `Forecaster.manual_forecast()` function and possible values change based on which
             estimator is used.
 
@@ -598,7 +599,7 @@ def find_optimal_transformation(
     f.history = {}
 
     m = _convert_m(m,f.freq)
-    lags = m if lags == 'auto' else lags
+    lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[1] if lags == 'auto' else lags
     forecaster(f)
     
     level_met = f.export('model_summaries')[monitor].values[0]
@@ -682,29 +683,32 @@ def find_optimal_transformation(
             final_reverter = best_reverter[:]
             level_met = met
         elif tr == 'first_seasonal_diff':
-            if m > 1:
-                met = level_met
-                transformer = final_transformer[:]
-                reverter = final_reverter[:]
-                best_transformer = transformer[:]
-                best_reverter = reverter[:]
-                try:
-                    transformer.append(('DiffTransform',m))
-                    reverter.reverse(); reverter.append(('DiffRevert',m)); reverter.reverse()
-                    f = make_pipeline_fit_predict(f,transformer,reverter)
-                    comp_met = f.export('model_summaries')[monitor].values[0]
-                    comp_met = -comp_met if monitor.endswith('R2') else comp_met
-                    if comp_met < met:
-                        met = comp_met
-                        best_transformer = transformer[:]
-                        best_reverter = reverter[:]
-                except exception_types as e:
-                    warnings.warn(f'series first seasonal difference could not be evaluated. error: {e}')
-                final_transformer = best_transformer[:]
-                final_reverter = best_reverter[:]
-                level_met = met
-            else:
-                warnings.warn('series first seasonal difference cannot be evaluated when m = 1.')
+            if not hasattr(m,'__len__'):
+                m = [m]
+            for mi in m:
+                if mi > 1:
+                    met = level_met
+                    transformer = final_transformer[:]
+                    reverter = final_reverter[:]
+                    best_transformer = transformer[:]
+                    best_reverter = reverter[:]
+                    try:
+                        transformer.append(('DiffTransform',mi))
+                        reverter.reverse(); reverter.append(('DiffRevert',mi)); reverter.reverse()
+                        f = make_pipeline_fit_predict(f,transformer,reverter)
+                        comp_met = f.export('model_summaries')[monitor].values[0]
+                        comp_met = -comp_met if monitor.endswith('R2') else comp_met
+                        if comp_met < met:
+                            met = comp_met
+                            best_transformer = transformer[:]
+                            best_reverter = reverter[:]
+                    except exception_types as e:
+                        warnings.warn(f'series first seasonal difference could not be evaluated. error: {e}')
+                    final_transformer = best_transformer[:]
+                    final_reverter = best_reverter[:]
+                    level_met = met
+                else:
+                    warnings.warn('series first seasonal difference cannot be evaluated when m = 1.')
         elif tr == 'scale':
             for i, s in enumerate(scale_type):
                 transformer = final_transformer[:]

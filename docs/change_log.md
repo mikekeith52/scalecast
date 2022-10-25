@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.6] - 2022-10-25
+### Added
+### Changed
+- the `m` argument in `util.find_optimal_transformation` can be a list and multiple seasonal differences can be tried in that function
+- changed how level plotting is peformed in `Forecaster.plot()` and `Forecaster.plot_test_set()`
+### Fixed
+- fixed how history['LevelY'] attribute is undifferenced in `SeriesTransformer`, which was causing plots to be incorrect.
+
 ## [0.15.5] - 2022-10-22
 ### Added
 - added the `Pipeline.MVPipeline` object.

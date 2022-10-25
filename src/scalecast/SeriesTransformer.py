@@ -67,8 +67,7 @@ class SeriesTransformer:
         self.f.y = pd.Series(revert_func(self.f.y, **kwargs)) if full else self.f.y
 
         for m, h in self.f.history.items():
-            for k in (
-                "LevelY", 
+            for k in ( 
                 "LevelForecast", 
                 "LevelTestSetPreds", 
                 "LevelFittedVals",
@@ -78,6 +77,7 @@ class SeriesTransformer:
                 "LevelTSUpperCI",
             ):
                 h[k] = list(revert_func(h[k], **kwargs))
+            h['LevelY'] = self.f.levely
 
             for i, preds in enumerate(('LevelTestSetPreds','LevelFittedVals')):
                 pred = h[preds]

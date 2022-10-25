@@ -4719,11 +4719,11 @@ class Forecaster:
             "date": self.current_dates.to_list()[-len(y.dropna()) :]
             if not level
             else self.current_dates.to_list()[
-                -len(self.history[models[0]]["LevelY"]) :
+                -len(self.levely) :
             ],
             "actuals": y.dropna().to_list()
             if not level
-            else self.history[models[0]]["LevelY"],
+            else self.levely,
         }
         plot["actuals_len"] = min(len(plot["date"]), len(plot["actuals"]))
 
@@ -4827,11 +4827,11 @@ class Forecaster:
             "date": self.current_dates.to_list()[-len(y.dropna()) :]
             if not level
             else self.current_dates.to_list()[
-                -len(self.history[models[0]]["LevelY"]) :
+                -len(self.levely) :
             ],
             "actuals": y.dropna().to_list()
             if not level
-            else self.history[models[0]]["LevelY"],
+            else self.levely,
         }
         plot["actuals_len"] = min(len(plot["date"]), len(plot["actuals"]))
 
