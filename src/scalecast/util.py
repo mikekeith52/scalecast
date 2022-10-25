@@ -556,9 +556,9 @@ def find_optimal_transformation(
             be compared to the first transformation and if it is found to be better than level, it will
             carry over to be tried in conjunction with the next transformation and so forth.
             the default list contains all possible transformations for this function.
-        bocox_lambdas (list-like): default [-0.5,0,0.5].
+        boxcox_lambdas (list-like): default [-0.5,0,0.5].
             the lambda values to try for a boxcox transformation.
-            0 means natural log. only up to one bocox transformation will be selected.
+            0 means natural log. only up to one boxcox transformation will be selected.
         detrend_kwargs (list-like[dict]): default [{'poly_order':1},{'poly_order':2}].
             the types of detrending to try. only up to one one detrender will be selected.
         scale_type (list-like): default ['Scale','MinMax']. the type of scaling to try.
