@@ -1,4 +1,4 @@
-# 🌄 Scalecast: The practitioner's time series forecasting library
+# Scalecast
 
 <p align="center">
   <img src="https://github.com/mikekeith52/scalecast-examples/blob/main/logo2.png" />
@@ -6,9 +6,11 @@
 
 ## About
 
-Scalecast is a light-weight modeling procedure, wrapper, and results container meant for those who are looking for the fastest way possible to apply, tune, and validate many different model classes for forecasting applications. In the Data Science industry, it is often asked of practitioners to deliver predictions and ranges of predictions for several lines of businesses or data slices, 100s or even 1000s. In such situations, it is common to see a simple linear regression or some other quick procedure applied to all lines due to the complexity of the task. This works well enough for people who need to deliver *something*, but more can be achieved.  
+Scalecast is a light-weight time-series forecasting procedure, wrapper, and results container built by and for applied Data Scientists using an ML framework. It offers a streamlined transforming, tuning, reverting, and reporting interface with many model classes, from basic ARIMA and linear models to boosted trees and recurrent neural nets. No matter which models you want to play with, the uniform interface makes it easy and fun to get results quickly.
 
-The scalecast package was designed to address this situation and offer advanced machine learning models and experiments that can be applied, optimized, and validated quickly. Unlike many libraries, the predictions produced by scalecast are always dynamic by default, not averages of one-step forecasts, so you don't run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you download a library that looks like it's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood. You can't predict the unpredictable, and you won't see such things with scalecast.  
+All forecasts are validated out-of-sample, usually with a dynamic recursive approach (RNNs use a direct point estimate). You won't ever run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you run a model that's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood, which is easy to fall into, especially for those not specialized in time series. You can't predict the unpredictable, and you won't see such things with scalecast.  
+
+## Starter Code
 
 ```python
 from scalecast.Forecaster import Forecaster
@@ -88,6 +90,7 @@ results = f.export(
 ```
 ![](./assets/results.png)
 
+## Models
 The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html) (for one series) and [`MVForecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html) (for multiple series) wrappers around the following estimators: 
 
 - [Scikit-Learn](https://scikit-learn.org/stable/)
@@ -133,7 +136,7 @@ The library interfaces nicely with interactive notebook applications.
   <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="700" height="300"/>
 </p>
 
-In addition, scalecast offers:
+## Features
 - Model Validation
   - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
   - [Grid search using time series cross validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
@@ -152,19 +155,19 @@ In addition, scalecast offers:
 
 ## Installation
 - Only the base package is needed to get started:  
-`pip install --upgrade scalecast`  
+  - `pip install --upgrade scalecast`  
 - Optional add-ons:  
-`pip install darts`  
-`pip install prophet` 
-`pip install greykite`   
-`pip install shap` (SHAP feature importance)  
-`pip install kats` (for changepoint detection)  
-`pip install pmdarima` (auto arima)  
-`pip install tqdm` (progress bar with notebook)  
-`pip install ipython` (widgets with notebook)  
-`pip install ipywidgets` (widgets with notebook)  
-`jupyter nbextension enable --py widgetsnbextension` (widgets with notebook)  
-`jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets with Lab)  
+  - `pip install darts`  
+  - `pip install prophet`  
+  - `pip install greykite`  
+  - `pip install shap` (SHAP feature importance)  
+  - `pip install kats` (changepoint detection)  
+  - `pip install pmdarima` (auto arima)  
+  - `pip install tqdm` (progress bar for notebook)  
+  - `pip install ipython` (widgets for notebook)  
+  - `pip install ipywidgets` (widgets for notebook)  
+  - `jupyter nbextension enable --py widgetsnbextension` (widgets for notebook)  
+  - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets for Lab)  
 
 ## Links
 ### Official Docs
@@ -222,4 +225,4 @@ In addition, scalecast offers:
 - [Notebook2](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/anomalies/monte%20carlo/monte%20carlo.ipynb)
 
 ## See Contributing
-- [Contributing.md](./Contributing.md)
+- [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)

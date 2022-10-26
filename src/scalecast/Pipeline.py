@@ -197,8 +197,6 @@ class Pipeline:
         >>> 
         >>> models = ['mlr','elasticnet']
         >>> def forecaster(f,models):
-        >>>     f.set_test_length(0.2)
-        >>>     f.set_validation_length(24)
         >>>     f.add_covid19_regressor()
         >>>     f.auto_Xvar_select(cross_validate=True)
         >>>     f.tune_test_forecast(models)
@@ -213,6 +211,8 @@ class Pipeline:
         >>>     current_dates=df.index,
         >>>     future_dates=24,
         >>> )
+        >>> f.set_test_length(0.2)
+        >>> f.set_validation_length(24)
         >>> transformer = Transformer(
         >>>     transformers = [
         >>>         ('LogTransform',),

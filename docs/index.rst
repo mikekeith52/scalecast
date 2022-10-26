@@ -3,10 +3,53 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Official Docs
+Scalecast Official Docs
 ==========================
 
-Welcome to the scalecast official docs!
+**The pratictioner's forecasting library.** Including automated model selection, model optimization, pipelines, visualization, and reporting.
+
+.. code:: console
+
+   $ pip install --upgrade scalecast
+
+.. image:: https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g
+ :target: https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html#Scaled-Automated-Forecasting
+
+Forecasting with Python has never been easier.
+
+.. code:: python
+   
+   import pandas as pd
+   from scalecast.Forecaster import Forecaster
+   from scalecast import GridGenerator
+
+   GridGenerator.get_example_grids()
+
+   data = pd.read_csv('data.csv')
+   f = Forecaster(
+      y = data['values'],
+      current_dates = data['date'],
+      future_dates = 24, # forecast horizon
+   )
+   f.set_estimator('xgboost')
+
+   f.auto_Xvar_select()
+   f.cross_validate(k=3)
+   f.auto_forecast()
+
+   results = f.export(['lvl_fcsts','model_summaries'])
+
+:doc:`about` Readme
+   Overview, starter code, and installation.
+
+:doc:`Forecaster/ForecasterGlobals`
+   Key terms to to that will make your life easier.
+
+:doc:`Forecaster/_forecast`
+   What models are available?
+
+:doc:`change_log`
+   Recent additions and bug fixes.
 
 .. image:: https://img.shields.io/badge/python-3.7+-blue.svg
  :target: https://pepy.tech/project/scalecast
@@ -16,21 +59,8 @@ Welcome to the scalecast official docs!
  :target: https://pepy.tech/project/scalecast
 .. image:: https://img.shields.io/github/workflow/status/unit8co/darts/darts%20release%20workflow/master
  :target: https://img.shields.io/github/workflow/status/unit8co/darts/darts%20release%20workflow/master
-
-Overview
---------------
-
-:doc:`about`
-   Who is this meant for and what sets it apart?
-
-:doc:`installation`
-   Base package + dependencies.
-
-:doc:`initialization`
-   How to call the object and make forecasts.
-
-:doc:`change_log`
-   See what's changed.
+.. image:: https://img.shields.io/badge/code%20style-black-black
+ :target: https://github.com/psf/black
 
 Index
 ------
@@ -40,12 +70,10 @@ Index
 
 .. toctree::
    :maxdepth: 4
-   :caption: Overview:
+   :caption: ReadMe:
    :hidden:  
 
    about
-   installation
-   initialization
 
 .. toctree::
    :maxdepth: 4
