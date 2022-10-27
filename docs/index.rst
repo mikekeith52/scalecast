@@ -43,7 +43,7 @@ Forecasting with Python has never been easier.
    Overview, starter code, and installation.
 
 :doc:`Forecaster/ForecasterGlobals`
-   Key terms to to that will make your life easier.
+   Key terms to know that will make your life easier.
 
 :doc:`Forecaster/_forecast`
    What models are available?
