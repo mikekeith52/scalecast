@@ -39,6 +39,27 @@ Forecasting with Python has never been easier.
 
    results = f.export(['lvl_fcsts','model_summaries'])
 
+Dynamic Recursive Forecasting
+--------------------------------
+
+Scalecast allows you to use a series' lags (autoregressive, or AR, terms) as inputs by employng a dynamic recursive forecasting method to generate predictions and validate all models out-of-sample.
+
+.. image:: _static/RecurisveForecasting.png
+ :alt: Recursive Forecasting
+
+Dynamic Recursive Forecasting with Peaks at the Test Set
+------------------------------------------------------------
+
+The recrursive process can be tweaked to allow the model to "peak" at real values during the testing phase. You can choose after how many steps the model is allowed to peak by specifying `dynamic_testing=<int>`. The advantage here is that you can report your test-set metrics as an average of rolling smaller-step forecasts to glean a better idea about how well your algorithm can predict over a specific forecast horizon. For example, if you only need a two-step forecast into a future horizon but want to set aside a four-period test-set:
+
+.. image:: _static/RecurisveForecastingdt2.png
+ :alt: Recursive Forecasting with Peaking
+
+This same concept holds for if you want to set aside a 20% test-set but only need the algorithm to be able to predict 24 months into the future.
+
+Links
+---------
+
 :doc:`about` Readme
    Overview, starter code, and installation.
 

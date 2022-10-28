@@ -1,7 +1,7 @@
 # Scalecast
 
 <p align="center">
-  <img src="https://github.com/mikekeith52/scalecast-examples/blob/main/logo2.png" />
+  <img src="./docs/_static/logo2.png" alt="Scalecast Logo"/>
 </p>
 
 ## About
@@ -88,7 +88,7 @@ results = f.export(
   ['model_summaries','lvl_fcsts']
 )
 ```
-![](./assets/results.png)
+![Readme Example Vis](./docs/_static/results.png)
 
 ## Models
 The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html) (for one series) and [`MVForecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html) (for multiple series) wrappers around the following estimators: 
