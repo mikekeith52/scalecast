@@ -60,8 +60,14 @@ This same concept holds for if you want to set aside a 20% test-set but only nee
 Links
 ---------
 
-:doc:`about` Readme
+`Readme <about.rst>`_
    Overview, starter code, and installation.
+
+`Introductory Notebook <https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html>`_
+   A well-organized notebook that will quickly show you a lot of cool features.
+
+`Examples <https://scalecast-examples.readthedocs.io/en/latest/index.html>`_
+   Other example notebooks.
 
 :doc:`Forecaster/ForecasterGlobals`
    Key terms that will make your life easier when reading documentation.

@@ -1,4 +1,4 @@
-🌄
+Readme
 ========
 
 .. include:: ../README.md
