@@ -226,5 +226,3 @@ The library interfaces nicely with interactive notebook applications.
 
 ## See Contributing
 - [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)
-
-![](assets/RecurisveForecasting.png)
