@@ -55,7 +55,7 @@ The recrursive process can be tweaked to allow the model to "peak" at real value
 .. image:: _static/RecurisveForecastingdt2.png
  :alt: Recursive Forecasting with Peaking
 
-This same concept holds for if you want to set aside a 20% test-set but only need the algorithm to be able to predict 24 months into the future. `dynamic_testing=True` is the default and `dynamic_testing=1` or `dynamic_testing=False` means the test-set metrics are averages of one-step forecasts.
+`dynamic_testing=True` is the default and `dynamic_testing=1` or `dynamic_testing=False` means the test-set metrics are averages of one-step forecasts.
 
 Links
 ---------
