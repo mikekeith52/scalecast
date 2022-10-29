@@ -579,6 +579,8 @@ class MVForecaster:
         all train sizes will be the same for each fold. 
         the chosen parameters are stored in the best_params attribute.
         the full validation grid is stored in grid_evaluated.
+        normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
+        rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
 
         Args:
             k (int): default 5. the number of folds. must be at least 2.
