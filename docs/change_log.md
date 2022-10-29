@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.7] - 2022-10-28
+### Added
+### Changed
+- changed `dynamic_testing = <int>` to same way it was in 0.12.8 when it was introduced because it gives better and more efficient results in both `Forecaster` and `MVForecaster`.
+### Fixed
+
 ## [0.15.6] - 2022-10-25
 ### Added
 ### Changed

@@ -1276,31 +1276,22 @@ class MVForecaster:
             
             else:
                 preds = {series: [] for series in trained_models.keys()}
-                preds_draw = {series: [] for series in trained_models.keys()}
                 for i in range(len(future)):
-                    fut = scale(self.scaler, future.iloc[i].values.reshape(1, -1))
+                    fut = scale(self.scaler,future.iloc[i].values.reshape(1,-1))
                     for series, regr in trained_models.items():
-                        pred = regr.predict(fut)[0]
-                        preds[series].append(pred)
-                        preds_draw[series].append(pred)
+                        preds[series].append(regr.predict(fut)[0])
                     if i < len(future) - 1:
-                        for c in future.columns.to_list()[len(self.current_xreg) :]:
-                            ar = int(c.split("_lag")[-1])
-                            series = c.split("_lag")[0]
+                        for c in future.columns.to_list()[len(self.current_xreg):]:
+                            ar = int(c.split('_lag')[-1])
+                            series = c.split('_lag')[0]
                             s_num = int(series[1:])
                             idx = i + 1 - ar
-                            if dynamic_testing is not True and (i + 1) % dynamic_testing == 0:
-                                # dynamic window forecasting
-                                preds_draw[series][:(i+1)] = getattr(self, f"series{s_num}")[
-                                    "y"
-                                ].to_list()[-len(future):(-len(future)+i+1)]
-                            
                             if idx <= -1:
-                                future.loc[i + 1, c] = getattr(self, f"series{s_num}")[
-                                    "y"
-                                ].to_list()[idx]
+                                future.loc[i+1,c] = getattr(self, f'series{s_num}')['y'].to_list()[idx]
+                            elif dynamic_testing is not True and (i+1) % dynamic_testing == 0:
+                                pass
                             else:
-                                future.loc[i + 1, c] = preds_draw[series][idx]
+                                future.loc[i+1,c] = preds[series][idx]
             return preds
 
         descriptive_assert(

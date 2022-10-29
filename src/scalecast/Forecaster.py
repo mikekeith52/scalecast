@@ -618,68 +618,59 @@ class Forecaster:
             scaler.fit(X)
             return scaler
 
-        def evaluate_model(
-            scaler,
-            regr,
-            X,
-            y,
-            Xvars,
-            fcst_horizon,
-            future_xreg,
-            dynamic_testing,
-            true_forecast,
-        ):
-            def scale(scaler, X):
-                return (
-                    scaler.transform(X if not hasattr(X,'values') else X.values) 
-                    if scaler is not None 
-                    else X
-                )
+        def evaluate_model(scaler,regr,X,y,Xvars,fcst_horizon,future_xreg,dynamic_testing,true_forecast):
+            def scale(scaler,X):
+                return scaler.transform(X) if scaler is not None else X
 
             # apply the normalizer fit on training data only
             X = scale(scaler, X)
-            self.X = X  # for feature importance setting
+            self.X = X # for feature importance setting
             regr.fit(X, y)
             # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
-            if (not [x for x in Xvars if x.startswith("AR")]) | (
-                dynamic_testing is False
+            if (
+                (
+                    not [x for x in Xvars if x.startswith("AR")]
+                ) | (
+                    dynamic_testing is False
+                )
             ):
                 p = pd.DataFrame(future_xreg).values[:fcst_horizon]
                 p = scale(scaler, p)
-                return (regr.predict(p), regr.predict(X), Xvars, regr)
+                return (regr.predict(p),regr.predict(X),Xvars,regr)
             # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
-            fcst_draw = []
-            actuals = {
-                k: list(v)[:] for k, v in future_xreg.items() if k.startswith("AR")
-            }
+            actuals = {k:list(v)[:] for k, v in future_xreg.items() if k.startswith('AR')}
             for i in range(fcst_horizon):
                 p = pd.DataFrame({x: [future_xreg[x][i]] for x in Xvars}).values
                 p = scale(scaler, p)
-                pred = regr.predict(p)[0]
-                fcst.append(pred)
-                fcst_draw.append(pred)
+                fcst.append(regr.predict(p)[0])
                 if not i == (fcst_horizon - 1):
-                    for k, v in {k:v for k, v in future_xreg.items() if k.startswith('AR')}.items():
-                        ar = int(k[2:])
-                        idx = i + 1 - ar
-                        # full dynamic horizon
-                        if dynamic_testing is not True and (i + 1) % dynamic_testing == 0:
-                            # dynamic window forecasting
-                            fcst_draw[:(i+1)] = y[-fcst_horizon:(-fcst_horizon+i+1)]
-                        
-                        if idx > -1:
-                            try:
-                                future_xreg[k][i + 1] = fcst_draw[idx]
-                            except IndexError:
-                                future_xreg[k].append(fcst_draw[idx])
-                        else:
-                            try:
-                                future_xreg[k][i + 1] = y[idx]
-                            except IndexError:
-                                future_xreg[k].append(y[idx])
+                    for k, v in future_xreg.items():
+                        if k.startswith("AR"):
+                            ar = int(k[2:])
+                            idx = i + 1 - ar
+                            # full dynamic horizon
+                            if dynamic_testing is True:
+                                if idx > -1:
+                                    try:
+                                        future_xreg[k][i + 1] = fcst[idx]
+                                    except IndexError:
+                                        future_xreg[k].append(fcst[idx])
+                                else:
+                                    try:
+                                        future_xreg[k][i + 1] = y[idx]
+                                    except IndexError:
+                                        future_xreg[k].append(y[idx])
+                            # window forecasting
+                            else:
+                                if (i+1) % dynamic_testing  == 0:
+                                    future_xreg[k][:(i + 1)] = actuals[k][:(i + 1)]
+                                elif idx > -1:
+                                    future_xreg[k][i + 1] = fcst[idx]
+                                else:
+                                    future_xreg[k][i + 1] = y[idx]
 
-            return (fcst, regr.predict(X), Xvars, regr)
+            return (fcst,regr.predict(X),Xvars,regr)
 
         descriptive_assert(
             len(self.current_xreg.keys()) > 0,
