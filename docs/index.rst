@@ -50,7 +50,7 @@ Scalecast allows you to use a series' lags (autoregressive, or AR, terms) as inp
 Dynamic Recursive Forecasting with Peaking
 ------------------------------------------------------------
 
-The recrursive process can be tweaked to allow the model to "peak" at real values during the testing phase. You can choose after how many steps the model is allowed to peak by specifying `dynamic_testing=<int>`. The advantage here is that you can report your test-set metrics as an average of rolling smaller-step forecasts to glean a better idea about how well your algorithm can predict over a specific forecast horizon. For example, if you only need a two-step forecast into a future horizon but want to set aside a four-period test-set:
+The recrursive process can be tweaked to allow the model to "peak" at real values during the testing phase. You can choose after how many steps the model is allowed to peak by specifying `dynamic_testing=<int>`. The advantage here is that you can report your test-set metrics as an average of rolling smaller-step forecasts to glean a better idea about how well your algorithm can predict over a specific forecast horizon. For example, if you only need a two-step forecast but want to set aside a four-period test-set:
 
 .. image:: _static/RecurisveForecastingdt2.png
  :alt: Recursive Forecasting with Peaking
