@@ -593,16 +593,17 @@ class SeriesTransformer:
                 seasrevert(h['FittedVals'],self.f.y.values[-len(h['FittedVals'])-m:], m)
             )[m:]
             h['LevelFittedVals'] = h['FittedVals'][:]
-            ci_range = self.f._find_cis(self.f.y.values[-len(h['FittedVals']):],h['FittedVals'])
-            for k in ("LevelUpperCI","UpperCI"):
-                h[k] = [i + ci_range for i in h["Forecast"]]
-            for k in ("TestSetUpperCI","LevelTSUpperCI"):
-                h[k] = [i + ci_range for i in h["TestSetPredictions"]]
-            for k in ("LevelLowerCI","LowerCI"):
-                h[k] = [i - ci_range for i in h["Forecast"]]
-            for k in ("TestSetLowerCI","LevelTSLowerCI"):
-                h[k] = [i - ci_range for i in h["TestSetPredictions"]]
-
+            #ci_range = self.f._find_cis(self.f.y.values[-len(h['FittedVals']):],h['FittedVals'])
+            for k in ("LevelUpperCI","UpperCI","LevelLowerCI","LowerCI"):
+                h[k] = list(seasrevert(h[k], self.f.y[-m:], m))[m:]
+            for k in ("TestSetUpperCI","LevelTSUpperCI","TestSetLowerCI","LevelTSLowerCI"):
+                h[k] = list(
+                    seasrevert(
+                        h[k],
+                        self.f.y.to_list()[-(m + self.f.test_length) : -self.f.test_length],
+                        m,
+                    )
+                )[m:]
         delattr(self, f"orig_y_{m}_{n}")
         delattr(self, f"orig_dates_{m}_{n}")
 
