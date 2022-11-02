@@ -945,8 +945,8 @@ class MVForecaster:
                 it is recommended to set n_iter to at least 3 with this method.
                 see https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.backtest.
             models (str or list-like): default 'all'. the models to regenerate cis for. 
-                needs to have at least 3 to work with.
-            n_iter (int) - default 10. the number of iterations to backtest. 
+                recommended to have at least three for method = 'naive'.
+            n_iter (int) - default 10. the number of iterations to backtest. recommended to be at least 3 for method = 'backtest'. 
                 models will iteratively train on all data before the fcst_length worth of values. 
                 each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
                 off the end to redo the cast until all of n_iter is exhausted. ignored when method == 'naive'.
