@@ -4259,7 +4259,7 @@ class Forecaster:
         """ generates a dynamic confidence interval for passed models.
 
         Args:
-            method (str): one of "naive", "backtest".
+            method (str): one of "naive", "backtest". default "naive".
                 if "naive", calculates confidence intervals by determining the standard deviation of each point of
                 every evaluated model passed to the function. time-steps that all models estimated closer together will receive smaller
                 intervals and steps where the models diverge significantly receive larger intervals.

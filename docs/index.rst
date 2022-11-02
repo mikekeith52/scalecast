@@ -97,16 +97,10 @@ Index
 
 .. toctree::
    :maxdepth: 4
-   :caption: ReadMe:
-   :hidden:  
-
-   about
-
-.. toctree::
-   :maxdepth: 4
    :caption: High Level:
    :hidden:
 
+   about
    Forecaster/ForecasterGlobals
    Forecaster/_forecast
 

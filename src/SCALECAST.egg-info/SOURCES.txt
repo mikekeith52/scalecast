@@ -15,7 +15,6 @@ docs/conf.py
 docs/index.rst
 docs/make.bat
 docs/requirements.txt
-docs/warnings.log
 docs/Forecaster/AnomalyDetector.rst
 docs/Forecaster/Auxmodels.rst
 docs/Forecaster/ChangepointDetector.rst
