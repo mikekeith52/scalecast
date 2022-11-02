@@ -202,6 +202,7 @@ The library interfaces nicely with interactive notebook applications.
   - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
   - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
   - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
+  - [Confidence Intervals](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
   
 ### The importance of dynamic validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
