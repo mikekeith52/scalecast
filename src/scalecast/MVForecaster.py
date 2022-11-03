@@ -1047,13 +1047,13 @@ class MVForecaster:
                                     resids[s],
                                     pd.DataFrame(
                                         {
-                                            'resids':(results_s.iloc[:,i+1] - results_s.iloc[:,i+2]).to_list(),
-                                            'stepnum':[i//3]*bt_length
+                                            'resids':(results_s.iloc[:,i+1] - results_s.iloc[:,i+2]).values,
+                                            'stepnum':np.arange(results_s.shape[0])
                                         }
                                     )
                                 ]
                             )
-                    resids[s] = resids[s].std(axis=1)
+                    resids[s] = resids[s].groupby('stepnum')['resids'].std()
                 for i, kv in enumerate(ci_attr_map.items()):
                     if i % 2 == 0:
                         fcsts = fcst_attr_map[kv[1]]

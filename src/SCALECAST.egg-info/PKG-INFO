@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.15.8
+Version: 0.15.9
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -213,6 +213,7 @@ Description: # Scalecast
           - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
           - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
           - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
+          - [Confidence Intervals](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
           
         ### The importance of dynamic validation
         - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)

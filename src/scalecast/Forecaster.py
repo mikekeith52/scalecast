@@ -4349,13 +4349,13 @@ class Forecaster:
                                 resids,
                                 pd.DataFrame(
                                     {
-                                        'resids':(results.iloc[:,i+1] - results.iloc[:,i+2]).to_list(),
-                                        'stepnum':[i//3]*bt_length
+                                        'resids':(results.iloc[:,i+1] - results.iloc[:,i+2]).values,
+                                        'stepnum':np.arange(results.shape[0])
                                     }
                                 )
                             ]
                         )
-                resids_std = resids.std(axis=1)
+                resids_std = resids.groupby('stepnum')['resids'].std()
                 for i, kv in enumerate(attr_set_map.items()):
                     vals = self.history[m][kv[1]]
                     resids_tmp = resids_std.iloc[:len(vals)]

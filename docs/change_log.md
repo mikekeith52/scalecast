@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.9] - 2022-11-03
+### Added
+### Changed
+### Fixed
+- fixed getting cis with backtesting. only the first backtest iteration was being used.
+
 ## [0.15.8] - 2022-11-02
 ### Added
 - added `method` argument to `Forecaster.reeval_cis()` and `MVForecaster.reeval_cis()` and included an option to get confidence intervals through backtesting.
