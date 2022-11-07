@@ -129,6 +129,10 @@ _determine_best_by_ = [
     "InSampleMAPE",
     "InSampleMAE",
     "InSampleR2",
+    "LevelInSampleRMSE",
+    "LevelInSampleMAPE",
+    "LevelInSampleMAE",
+    "LevelInSampleR2",
     "ValidationMetricValue",
     "LevelTestSetRMSE",
     "LevelTestSetMAPE",
@@ -177,10 +181,9 @@ class Forecaster:
     def __init__(self, y, current_dates, require_future_dates=True, future_dates=None, **kwargs):
         """ 
         Args:
-            y (list-like): an array of all known observed values.
-            current_dates (list-like): an array of all known observed dates.
-                must be same length as y and in the same sequence 
-                (index 0 in y corresponds to index 0 in current_dates, etc.).
+            y (list-like): an array of all observed values.
+            current_dates (list-like): an array of all observed dates.
+                must be same length as y and in the same sequence.
                 can pass any numerical index if dates are unknown; in this case, 
                 it will act as if dates are in nanosecond frequency.
             require_future_dates (bool): default True.
@@ -188,14 +191,9 @@ class Forecaster:
                 if True, all models will forecast into future periods, 
                 unless run with test_only = True, and when adding regressors, they will automatically
                 be added into future periods.
-                this was added in v 0.12.0 and is considered experimental as of then. it was added
-                to make anomaly detection more convenient. before, the object acted as if
-                require_future_dates were always True.
             future_dates (int): optional: the future dates to add to the model upon initialization.
                 if not added when object is initialized, can be added later.
-
-        Returns:
-            (Forecaster): the object.
+            **kwargs: become attributes.
         """
         self.y = y
         self.current_dates = current_dates
@@ -620,68 +618,59 @@ class Forecaster:
             scaler.fit(X)
             return scaler
 
-        def evaluate_model(
-            scaler,
-            regr,
-            X,
-            y,
-            Xvars,
-            fcst_horizon,
-            future_xreg,
-            dynamic_testing,
-            true_forecast,
-        ):
-            def scale(scaler, X):
-                return (
-                    scaler.transform(X if not hasattr(X,'values') else X.values) 
-                    if scaler is not None 
-                    else X
-                )
+        def evaluate_model(scaler,regr,X,y,Xvars,fcst_horizon,future_xreg,dynamic_testing,true_forecast):
+            def scale(scaler,X):
+                return scaler.transform(X) if scaler is not None else X
 
             # apply the normalizer fit on training data only
             X = scale(scaler, X)
-            self.X = X  # for feature importance setting
+            self.X = X # for feature importance setting
             regr.fit(X, y)
             # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
-            if (not [x for x in Xvars if x.startswith("AR")]) | (
-                dynamic_testing is False
+            if (
+                (
+                    not [x for x in Xvars if x.startswith("AR")]
+                ) | (
+                    dynamic_testing is False
+                )
             ):
                 p = pd.DataFrame(future_xreg).values[:fcst_horizon]
                 p = scale(scaler, p)
-                return (regr.predict(p), regr.predict(X), Xvars, regr)
+                return (regr.predict(p),regr.predict(X),Xvars,regr)
             # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
-            fcst_draw = []
-            actuals = {
-                k: list(v)[:] for k, v in future_xreg.items() if k.startswith("AR")
-            }
+            actuals = {k:list(v)[:] for k, v in future_xreg.items() if k.startswith('AR')}
             for i in range(fcst_horizon):
                 p = pd.DataFrame({x: [future_xreg[x][i]] for x in Xvars}).values
                 p = scale(scaler, p)
-                pred = regr.predict(p)[0]
-                fcst.append(pred)
-                fcst_draw.append(pred)
+                fcst.append(regr.predict(p)[0])
                 if not i == (fcst_horizon - 1):
-                    for k, v in {k:v for k, v in future_xreg.items() if k.startswith('AR')}.items():
-                        ar = int(k[2:])
-                        idx = i + 1 - ar
-                        # full dynamic horizon
-                        if dynamic_testing is not True and (i + 1) % dynamic_testing == 0:
-                            # dynamic window forecasting
-                            fcst_draw[:(i+1)] = y[-fcst_horizon:(-fcst_horizon+i+1)]
-                        
-                        if idx > -1:
-                            try:
-                                future_xreg[k][i + 1] = fcst_draw[idx]
-                            except IndexError:
-                                future_xreg[k].append(fcst_draw[idx])
-                        else:
-                            try:
-                                future_xreg[k][i + 1] = y[idx]
-                            except IndexError:
-                                future_xreg[k].append(y[idx])
+                    for k, v in future_xreg.items():
+                        if k.startswith("AR"):
+                            ar = int(k[2:])
+                            idx = i + 1 - ar
+                            # full dynamic horizon
+                            if dynamic_testing is True:
+                                if idx > -1:
+                                    try:
+                                        future_xreg[k][i + 1] = fcst[idx]
+                                    except IndexError:
+                                        future_xreg[k].append(fcst[idx])
+                                else:
+                                    try:
+                                        future_xreg[k][i + 1] = y[idx]
+                                    except IndexError:
+                                        future_xreg[k].append(y[idx])
+                            # window forecasting
+                            else:
+                                if (i+1) % dynamic_testing  == 0:
+                                    future_xreg[k][:(i + 1)] = actuals[k][:(i + 1)]
+                                elif idx > -1:
+                                    future_xreg[k][i + 1] = fcst[idx]
+                                else:
+                                    future_xreg[k][i + 1] = y[idx]
 
-            return (fcst, regr.predict(X), Xvars, regr)
+            return (fcst,regr.predict(X),Xvars,regr)
 
         descriptive_assert(
             len(self.current_xreg.keys()) > 0,
@@ -1253,7 +1242,7 @@ class Forecaster:
         fitted values are the last fcst_length worth of values only.
         anything this function can do, rnn can also do. 
         this function is simpler to set up than rnn.
-        the model is saved in the 'tf_model' attribute.
+        the model is saved in the tf_model attribute.
         see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
             
         Args:
@@ -1354,7 +1343,7 @@ class Forecaster:
         cannot be tuned.
         only xvar options are the series' own history (specified in lags argument).
         always uses minmax normalizer.
-        the model is saved in the 'tf_model' attribute.
+        the model is saved in the tf_model attribute.
         see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
 
         Args:
@@ -1598,7 +1587,7 @@ class Forecaster:
         applying the same weights to the fitted values, test-set metrics, and predictions. 
         A user can supply their own weights or let the algorithm determine optimal weights 
         based on a passed error metric (such as "TestSetMAPE"). To avoid overfitting, it is 
-        recommended to use the default value, "ValidationSetMetric" to determine weights, 
+        recommended to use the default value, "ValidationMetricValue" to determine weights, 
         although this is not possible if the selected models have not all been tuned on the 
         validation set. The weighting uses a MaxMin scaler when an error metric is passed, 
         and a MinMax scaler when r-squared is selected as the metric to base weights on. 
@@ -1912,7 +1901,12 @@ class Forecaster:
             descriptive_assert(
                 len(self.current_xreg[k]) == len(self.y),
                 ForecastError,
-                "something went wrong when setting covariate values--try resetting the object and trying again",
+                "length of array representing the input '{}' does match the length of the stored observed values: ({} vs. {})."
+                " if you do not know how this happened, consider raising an issue: https://github.com/mikekeith52/scalecast/issues/new.".format(
+                    k,
+                    len(self.current_xreg[k]),
+                    len(self.y),
+                ),
             )
             self.future_xreg[k] = [float(x) for x in self.future_xreg[k]]
 
@@ -3810,7 +3804,8 @@ class Forecaster:
         """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
         the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
-        results are stored in the best_params attribute.
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
 
         Args:
             dynamic_tuning (bool): default False.
@@ -3879,7 +3874,10 @@ class Forecaster:
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
-        results are stored in best_params attribute.
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
+        normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
+        rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
 
         Args:
             k (int): default 5. the number of folds. must be at least 2.
@@ -4257,13 +4255,29 @@ class Forecaster:
                 ]
         self.history[call_me]['CIPlusMinus'] = None
 
-    def reeval_cis(self,models='all'):
-        """ generates an expanding confidence interval that uses previously evaluated model classes to determine.
-        need to have evaluated at least three models to be able to use.
+    def reeval_cis(self, method = 'naive', models='all', n_iter=10, jump_back=1):
+        """ generates a dynamic confidence interval for passed models.
 
         Args:
+            method (str): one of "naive", "backtest". default "naive".
+                if "naive", calculates confidence intervals by determining the standard deviation of each point of
+                every evaluated model passed to the function. time-steps that all models estimated closer together will receive smaller
+                intervals and steps where the models diverge significantly receive larger intervals.
+                this is a computationally cheap method but if all models perform similarly poorly, it can generate tight intervals, which is 
+                a downside. it is recommended to use at least 3 models with this method.
+                if "backtest", calculates confidence intervals by backtesting each model and determining the standard deviation of the out-of-sample
+                residual of each forecast step for both test-set predictions and actuals.
+                this is a generalizable way to obtain trustworthy confidence intervals for all models, but it is more computationally expensive,
+                it does not work for objects that were transformed and then reverted. it also does not work for combo models.
+                it is recommended to set n_iter to at least 3 with this method.
+                see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest.
             models (str or list-like): default 'all'. the models to regenerate cis for. 
-                needs to have at least 3 to work with.
+                recommended to have at least three for method = 'naive'.
+            n_iter (int) - default 10. the number of iterations to backtest. recommended to be at least 3 for method = 'backtest'. 
+                models will iteratively train on all data before the fcst_length worth of values. 
+                each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
+                off the end to redo the cast until all of n_iter is exhausted. ignored when method == 'naive'.
+            jump_back (int) - default 1. the number of time steps between two consecutive training sets. ignored when method == 'naive'.
         Returns:
             None
 
@@ -4298,23 +4312,66 @@ class Forecaster:
             "LevelTSLowerCI": "LevelTestSetPreds",
         }
 
-        for m in models:
-            for i, kv in enumerate(attr_set_map.items()):
-                if i % 2 == 0:
-                    fcsts = np.array(
-                        [self.history[m][kv[1]] for m in models]
+        if method == 'naive':
+            if len(models) < 3:
+                warnings.warn('reeval_cis(method="naive") does not work well with fewer than three models.')
+            for m in models:
+                for i, kv in enumerate(attr_set_map.items()):
+                    if i % 2 == 0:
+                        fcsts = np.array(
+                            [self.history[m][kv[1]] for m in models]
+                        )
+                        self.history[m][kv[0]] = [
+                            self.history[m][kv[1]][idx] + set_ci_step(fcsts.std(axis=0)[idx],)
+                            for idx, fcst_step in enumerate(fcsts.mean(axis=0))
+                        ]
+                    else:
+                        self.history[m][kv[0]] = [
+                            self.history[m][kv[1]][idx] - set_ci_step(fcsts.std(axis=0)[idx],)
+                            for idx, fcst_step in enumerate(fcsts.mean(axis=0))
+                        ]
+        elif method == 'backtest':
+            for m in models:
+                bt_length = max(len(self.history[m]['Forecast']),self.history[m]['TestSetLength'])
+                try:
+                    self.backtest(model=m, fcst_length=bt_length, n_iter=n_iter, jump_back=jump_back)
+                except ForecastError:
+                    raise ForecastError(
+                        'backtested confidence intervals do not work when object was transformed and then reverted.'
+                        ' if object was not transformed and then reverted, raise an issue: https://github.com/mikekeith52/scalecast/issues/new.'
                     )
-                    self.history[m][kv[0]] = [
-                        self.history[m][kv[1]][idx] + set_ci_step(fcsts.std(axis=0)[idx],)
-                        for idx, fcst_step in enumerate(fcsts.mean(axis=0))
-                    ]
-                else:
-                    self.history[m][kv[0]] = [
-                        self.history[m][kv[1]][idx] - set_ci_step(fcsts.std(axis=0)[idx],)
-                        for idx, fcst_step in enumerate(fcsts.mean(axis=0))
-                    ]
-
+                results = self.export_backtest_values(m)
+                resids = pd.DataFrame(columns = ['resids','stepnum'])
+                for i, col in enumerate(results):
+                    if i%3 == 0:
+                        resids = pd.concat(
+                            [
+                                resids,
+                                pd.DataFrame(
+                                    {
+                                        'resids':(results.iloc[:,i+1] - results.iloc[:,i+2]).values,
+                                        'stepnum':np.arange(results.shape[0])
+                                    }
+                                )
+                            ]
+                        )
+                resids_std = resids.groupby('stepnum')['resids'].std()
+                for i, kv in enumerate(attr_set_map.items()):
+                    vals = self.history[m][kv[1]]
+                    resids_tmp = resids_std.iloc[:len(vals)]
+                    if i % 2 == 0:
+                        self.history[m][kv[0]] = [
+                            vals[idx] + set_ci_step(val)
+                            for idx, val in enumerate(resids_tmp)
+                        ]
+                    else:
+                        self.history[m][kv[0]] = [
+                            vals[idx] - set_ci_step(val)
+                            for idx, val in enumerate(resids_tmp)
+                        ]
             self.history[m]['CIPlusMinus'] = None
+        else:
+            raise ValueError(f'method expected one of "naive", "backtest", got {method}')
 
     def add_sklearn_estimator(self, imported_module, called):
         """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
@@ -4723,11 +4780,11 @@ class Forecaster:
             "date": self.current_dates.to_list()[-len(y.dropna()) :]
             if not level
             else self.current_dates.to_list()[
-                -len(self.history[models[0]]["LevelY"]) :
+                -len(self.levely) :
             ],
             "actuals": y.dropna().to_list()
             if not level
-            else self.history[models[0]]["LevelY"],
+            else self.levely,
         }
         plot["actuals_len"] = min(len(plot["date"]), len(plot["actuals"]))
 
@@ -4831,11 +4888,11 @@ class Forecaster:
             "date": self.current_dates.to_list()[-len(y.dropna()) :]
             if not level
             else self.current_dates.to_list()[
-                -len(self.history[models[0]]["LevelY"]) :
+                -len(self.levely) :
             ],
             "actuals": y.dropna().to_list()
             if not level
-            else self.history[models[0]]["LevelY"],
+            else self.levely,
         }
         plot["actuals_len"] = min(len(plot["date"]), len(plot["actuals"]))
 
@@ -4888,6 +4945,52 @@ class Forecaster:
                     alpha=0.2,
                     color=_colors_[i],
                     label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
+                )
+
+        plt.legend()
+        plt.xlabel("Date")
+        plt.ylabel("Values")
+        return ax
+
+    def plot_backtest_values(self,model,figsize=(12,6)):
+        """ plots all backtest values over every iteration. only plots one model at a time.
+
+        Args:
+            model (str): the model nickname to plot the backtest values for. must have called f.backtest(model)
+                previously.
+            figsize (tuple): default (12,6). size of the resulting figure.
+        
+        Returns:
+            (Axis): the figure's axis.
+
+        >>> f.set_estimator('elasticnet')
+        >>> f.manual_forecast(alpha=.2)
+        >>> f.backtest('elasticnet')
+        >>> f.plot_backtest_values('elasticnet') # plots all backtest values
+        >>> plt.show()
+        """
+        _, ax = plt.subplots(figsize=figsize)
+        values = self.export_backtest_values(model)
+        y = self.levely[:]
+        dates = self.current_dates.to_list()
+        ac_len = min(len(y),len(dates))
+
+        sns.lineplot(
+            x = dates[-ac_len:],
+            y = y[-ac_len:],
+            label="actuals",
+            ax=ax,
+        )
+
+        for i, col in enumerate(values):
+            if i % 3 == 0:
+                sns.lineplot(
+                    x = values.iloc[:,i], # dates
+                    y = values.iloc[:,i+2], # predictions
+                    label = f'iter {i//3+1}',
+                    ax = ax,
+                    color=_colors_[i//3],
+                    alpha = 0.7,
                 )
 
         plt.legend()
@@ -5529,7 +5632,7 @@ class Forecaster:
         Args:
             model (str): the model to run the backtest for. use the model nickname.
             fcst_length (int or str): default 'auto'. 
-                if 'auto', uses the same forecast length as saved in the object currently.
+                if 'auto', uses the same forecast length as the number of future dates saved in the object currently.
                 if int, uses that as the forecast length.
             n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
@@ -5592,6 +5695,7 @@ class Forecaster:
             metric_results.loc["MAPE", f"iter{i+1}"] = test_mets[
                 "LevelTestSetMAPE"
             ].values[0]
+            value_results[f"iter{i+1}dates"] = test_preds['DATE'].values.copy()
             value_results[f"iter{i+1}actuals"] = test_preds.iloc[:, 1].values.copy()
             value_results[f"iter{i+1}preds"] = test_preds.iloc[:, 2].values.copy()
 
@@ -5614,6 +5718,8 @@ class Forecaster:
     def export_backtest_values(self, model):
         """ extracts the backtest values for a given model.
         only works if `backtest()` has been called.
+        the DataFrame will return columns for the date (first), actuals (second), and predictions (third)
+        across every backtest iteration (10 by default).
 
         Args:
             model (str): the model nickname to extract values for.

@@ -80,9 +80,6 @@ class MVForecaster:
                 series can always be referred to with 'series...' and 'y...' notation, even if user-selected names are provided.
                 the order the series are supplied will be maintained.
             **kwargs: become attributes.
-
-        Returns:
-            (MVForecaster): the object.
         """
         for f in fs:
             f.typ_set()
@@ -498,6 +495,8 @@ class MVForecaster:
     def tune(self, dynamic_tuning=False, cv=False):
         """ tunes the specified estimator using an ingested grid (ingests a grid from a grids file with same name as the estimator by default).
         any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
 
         Args:
             dynamic_tuning (bool): default False.
@@ -578,6 +577,10 @@ class MVForecaster:
         each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
+        the chosen parameters are stored in the best_params attribute.
+        the full validation grid is stored in grid_evaluated.
+        normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
+        rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
 
         Args:
             k (int): default 5. the number of folds. must be at least 2.
@@ -926,13 +929,28 @@ class MVForecaster:
                     for s in fcsts.keys()
                 }
 
-    def reeval_cis(self,models='all'):
-        """ generates an expanding confidence interval that uses previously evaluated model classes to determine.
-        need to have evaluated at least three models to be able to use.
+    def reeval_cis(self, method = 'naive', models='all', n_iter=10, jump_back=1):
+        """ generates a dynamic confidence interval for passed models.
 
         Args:
+            method (str): one of "naive", "backtest". default "naive".
+                if "naive", calculates confidence intervals by determining the standard deviation of each point of
+                every evaluated model passed to the function. time-steps that all models estimated closer together will receive smaller
+                intervals and steps where the models diverge significantly receive larger intervals.
+                this is a computationally cheap method but if all models perform similarly poorly, it can generate tight intervals, which is 
+                a downside. it is recommended to use at least 3 models with this method.
+                if "backtest", calculates confidence intervals by backtesting each model and determining the standard deviation of the out-of-sample
+                residual of each forecast step for both test-set predictions and actuals.
+                this is a generalizable way to obtain trustworthy confidence intervals for all models, but it is more computationally expensive.
+                it is recommended to set n_iter to at least 3 with this method.
+                see https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.backtest.
             models (str or list-like): default 'all'. the models to regenerate cis for. 
-                needs to have at least 3 to work with.
+                recommended to have at least three for method = 'naive'.
+            n_iter (int) - default 10. the number of iterations to backtest. recommended to be at least 3 for method = 'backtest'. 
+                models will iteratively train on all data before the fcst_length worth of values. 
+                each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
+                off the end to redo the cast until all of n_iter is exhausted. ignored when method == 'naive'.
+            jump_back (int) - default 1. the number of time steps between two consecutive training sets. ignored when method == 'naive'.
         Returns:
             None
 
@@ -957,12 +975,13 @@ class MVForecaster:
         >>> mvf = MVForecaster(f1,f2,names=['UNRATE','UTUR'])
         >>> models = ('elasticnet','mlp','arima')
         >>> mvf.tune_test_forecast(models)
-        >>> mvf.reeval_cis() # creates cis based on the results from each model
+        >>> mvf.reeval_cis() # creates expanding cis
         """
         def set_ci_step(s):
             return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
 
         models = self._parse_models(models,put_best_on_top=False)
+        series, labels = self._parse_series("all")
 
         fcst_attr = (
             "Forecast",
@@ -975,7 +994,7 @@ class MVForecaster:
                 s: np.array(
                     [self.history[m][attr][s] for m in models]
                 )
-                for s in self.history[models[0]][attr].keys()
+                for s in series
             }
             for attr in fcst_attr
         }
@@ -991,25 +1010,71 @@ class MVForecaster:
             "LevelTSLowerCI": "LevelTestSetPreds",
         }
 
-        for m in models:
-            for i, kv in enumerate(ci_attr_map.items()):
-                if i % 2 == 0:
-                    fcsts = fcst_attr_map[kv[1]]
-                    self.history[m][kv[0]] = {
-                        s: [
-                            fcst_step + set_ci_step(fcsts[s].std(axis=0)[idx],)
-                            for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
-                        ]
-                        for s in fcsts.keys()
-                    }
-                else:
-                    self.history[m][kv[0]] = {
-                        s: [
-                            fcst_step - set_ci_step(fcsts[s].std(axis=0)[idx],)
-                            for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
-                        ]
-                        for s in fcsts.keys()
-                    }
+        if method == 'naive':
+            if len(models) < 3:
+                warnings.warn('reeval_cis(method="naive") does not work well with fewer than three models.')
+            for m in models:
+                for i, kv in enumerate(ci_attr_map.items()):
+                    if i % 2 == 0:
+                        fcsts = fcst_attr_map[kv[1]]
+                        self.history[m][kv[0]] = {
+                            s: [
+                                fcst_step + set_ci_step(fcsts[s].std(axis=0)[idx],)
+                                for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
+                            ]
+                            for s in fcsts.keys()
+                        }
+                    else:
+                        self.history[m][kv[0]] = {
+                            s: [
+                                fcst_step - set_ci_step(fcsts[s].std(axis=0)[idx],)
+                                for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
+                            ]
+                            for s in fcsts.keys()
+                        }
+        elif method == 'backtest':
+            for j, m in enumerate(models):
+                bt_length = max(len(self.history[m]['Forecast']['y1']),self.history[m]['TestSetLength'])
+                self.backtest(model=m, fcst_length=bt_length, n_iter=n_iter, jump_back=jump_back)
+                results = self.export_backtest_values(m)
+                resids = {s:pd.DataFrame(columns = ['resids','stepnum']) for s in series}
+                for lab, s in zip(labels,series):
+                    results_s = results[[c for c in results if c.startswith(lab)]]
+                    for i, col in enumerate(results_s):
+                        if i%3 == 0:
+                            resids[s] = pd.concat(
+                                [
+                                    resids[s],
+                                    pd.DataFrame(
+                                        {
+                                            'resids':(results_s.iloc[:,i+1] - results_s.iloc[:,i+2]).values,
+                                            'stepnum':np.arange(results_s.shape[0])
+                                        }
+                                    )
+                                ]
+                            )
+                    resids[s] = resids[s].groupby('stepnum')['resids'].std()
+                for i, kv in enumerate(ci_attr_map.items()):
+                    if i % 2 == 0:
+                        fcsts = fcst_attr_map[kv[1]]
+                        self.history[m][kv[0]] = {
+                            s:[
+                                fcsts[s][j][idx] + set_ci_step(val)
+                                for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
+                            ]
+                            for s in series
+                        }
+                    else:
+                        self.history[m][kv[0]] = {
+                            s:[
+                                fcsts[s][j][idx] - set_ci_step(val)
+                                for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
+                            ]
+                            for s in series
+                        }
+            self.history[m]['CIPlusMinus'] = None
+        else:
+            raise ValueError(f'method expected one of "naive", "backtest", got {method}')
 
     def tune_test_forecast(
         self,
@@ -1275,31 +1340,22 @@ class MVForecaster:
             
             else:
                 preds = {series: [] for series in trained_models.keys()}
-                preds_draw = {series: [] for series in trained_models.keys()}
                 for i in range(len(future)):
-                    fut = scale(self.scaler, future.iloc[i].values.reshape(1, -1))
+                    fut = scale(self.scaler,future.iloc[i].values.reshape(1,-1))
                     for series, regr in trained_models.items():
-                        pred = regr.predict(fut)[0]
-                        preds[series].append(pred)
-                        preds_draw[series].append(pred)
+                        preds[series].append(regr.predict(fut)[0])
                     if i < len(future) - 1:
-                        for c in future.columns.to_list()[len(self.current_xreg) :]:
-                            ar = int(c.split("_lag")[-1])
-                            series = c.split("_lag")[0]
+                        for c in future.columns.to_list()[len(self.current_xreg):]:
+                            ar = int(c.split('_lag')[-1])
+                            series = c.split('_lag')[0]
                             s_num = int(series[1:])
                             idx = i + 1 - ar
-                            if dynamic_testing is not True and (i + 1) % dynamic_testing == 0:
-                                # dynamic window forecasting
-                                preds_draw[series][:(i+1)] = getattr(self, f"series{s_num}")[
-                                    "y"
-                                ].to_list()[-len(future):(-len(future)+i+1)]
-                            
                             if idx <= -1:
-                                future.loc[i + 1, c] = getattr(self, f"series{s_num}")[
-                                    "y"
-                                ].to_list()[idx]
+                                future.loc[i+1,c] = getattr(self, f'series{s_num}')['y'].to_list()[idx]
+                            elif dynamic_testing is not True and (i+1) % dynamic_testing == 0:
+                                pass
                             else:
-                                future.loc[i + 1, c] = preds_draw[series][idx]
+                                future.loc[i+1,c] = preds[series][idx]
             return preds
 
         descriptive_assert(
@@ -2276,7 +2332,7 @@ class MVForecaster:
         Args:
             model (str): the model to run the backtest for. use the model nickname.
             fcst_length (int or str): default 'auto'. 
-                if 'auto', uses the same forecast length as saved in the object currently.
+                if 'auto', uses the same forecast length as the number of future dates saved in the object currently.
                 if int, uses that as the forecast length.
             n_iter (int): default 10. the number of iterations to backtest.
                 models will iteratively train on all data before the fcst_length worth of values.
@@ -2344,6 +2400,7 @@ class MVForecaster:
                     metric_results.loc[(s, m), f"iter{i+1}"] = test_mets.loc[
                         test_mets["Series"] == s, f"LevelTestSet{m}"
                     ].values[0]
+                value_results[f"{s}_iter{i+1}dates"] = test_preds["DATE"]
                 value_results[f"{s}_iter{i+1}actuals"] = test_preds[f"{s}_actuals"]
                 value_results[f"{s}_iter{i+1}preds"] = test_preds[f"{s}_{model}_lvl_ts"]
         metric_results["mean"] = metric_results.mean(axis=1)

@@ -1,6 +1,36 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.9] - 2022-11-03
+### Added
+### Changed
+### Fixed
+- fixed getting cis with backtesting. only the first backtest iteration was being used.
+
+## [0.15.8] - 2022-11-02
+### Added
+- added `method` argument to `Forecaster.reeval_cis()` and `MVForecaster.reeval_cis()` and included an option to get confidence intervals through backtesting.
+- added `Forcaster.plot_backtest_values()`.
+### Changed
+- changed some error messages to be more descriptive and to encourage raising issues on github.
+- changed how level confidence intervals are obtained when calling `SeriesTransformer.DiffRevert()` to be more efficient.
+- the backtest_values DataFrame now includes dates in `Forecaster` and `MVForecaster`. the order of the dataframe is Date --> Actuals --> Preds for all iterations.
+### Fixed
+
+## [0.15.7] - 2022-10-28
+### Added
+### Changed
+- changed `dynamic_testing = <int>` to same way it was in 0.12.8 when it was introduced because it gives better and more efficient results in both `Forecaster` and `MVForecaster`.
+### Fixed
+
+## [0.15.6] - 2022-10-25
+### Added
+### Changed
+- the `m` argument in `util.find_optimal_transformation` can be a list and multiple seasonal differences can be tried in that function
+- changed how level plotting is peformed in `Forecaster.plot()` and `Forecaster.plot_test_set()`
+### Fixed
+- fixed how history['LevelY'] attribute is undifferenced in `SeriesTransformer`, which was causing plots to be incorrect.
+
 ## [0.15.5] - 2022-10-22
 ### Added
 - added the `Pipeline.MVPipeline` object.
