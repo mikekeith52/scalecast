@@ -2368,7 +2368,7 @@ class Forecaster:
                 this function uses a hierachical approach from secondly --> quarterly representations.
                 secondly will search all seasonal representations up to quarterly to find the best hierarchy of seasonalities.
                 anything lower than second and higher than quarter will not receive a seasonality with this method.
-                day seasonality and lower will try both 'day' and 'dayofweek' seasonalities.
+                day seasonality and lower will try, 'day', 'dayofweek', and 'dayofyear' seasonalities.
                 everything else will try cycles that reset yearly, so to search for intermitent seasonal fluctuations, 
                 use the irr_cycles argument.
             seasonality_repr (list or dict[str,list]): default ['sincos'].
@@ -2382,7 +2382,7 @@ class Forecaster:
                 ignored if try_seasonalities is False.
                 add in this list any seasonal representations to skip searching.
                 if you have day frequency and you only want to search dayofweek, you should specify this as:
-                ['day','week','month','quarter'].
+                ['dayofweek','week','month','quarter'].
             irr_cycles (list[int]): optional. 
                 add any irregular cycles to a list as integers to search for irregular cycles using this method.
             max_ar ('auto' or int): the highest lag order to search for.
@@ -2502,7 +2502,11 @@ class Forecaster:
                             )
                 for s in seas_to_try:
                     seas_regressors += [
-                        x for x in f.get_regressor_names() if (x == s + 'sin') or (x == s + 'cos')
+                        x for x in f.get_regressor_names() 
+                        if (x == s + 'sin') 
+                        or (x == s + 'cos') 
+                        or x.startswith(s + '_') 
+                        or x == s 
                     ]
             if best_ar_order is not None:
                 f.add_ar_terms(best_ar_order)
@@ -2683,7 +2687,7 @@ class Forecaster:
                     'W-FRI',
                     'W-SAT',
                 ):['week'],
-                ('B','D'):['day','dayofweek'],
+                ('B','D'):['dayofweek','day','dayofyear'],
                 ('H',):['hour'],
                 ('T',):['minute'],
                 ('S',):['second'],
@@ -3136,9 +3140,16 @@ class Forecaster:
         return seasonal_decompose(X.dropna(), **kwargs)
 
     def add_seasonal_regressors(
-        self, *args, raw=True, sincos=False, dummy=False, drop_first=False
+        self, 
+        *args, 
+        raw=True, 
+        sincos=False, 
+        dummy=False, 
+        drop_first=False,
+        cycle_lens=None,
     ):
-        """ adds seasonal regressors.
+        """ adds seasonal regressors. 
+        can be in the form of Fourier transformed values, dummy values, or ordered integer values.
 
         Args:
             *args: each of str type.
@@ -3153,13 +3164,25 @@ class Forecaster:
                 whether to use dummy variables from the raw int values.
             drop_first (bool): default False.
                 whether to drop the first observed dummy level.
-                not relevant when dummy = False
+                not relevant when dummy = False.
+            cycle_lens (dict): optional. a dictionary that specifies a cycle length for each selected seasonality.
+                if this is not specified or a selected seasonality is not added to the dictionary as a key, the
+                cycle length will be selected automatically as the maximum value observed for the given seasonality.
+                not relevant when sincos = False.
 
         Returns:
             None
 
         >>> f.add_seasonal_regressors('year')
-        >>> f.add_seasonal_regressors('month','week','quarter',raw=False,sincos=True)
+        >>> f.add_seasonal_regressors(
+        >>>     'dayofyear',
+        >>>     'month',
+        >>>     'week',
+        >>>     'quarter',
+        >>>     raw=False,
+        >>>     sincos=True,
+        >>>     cycle_lens={'dayofyear':365.25},
+        >>> )
         >>> f.add_seasonal_regressors('dayofweek',raw=False,dummy=True,drop_first=True)
         """
         self._validate_future_dates_exist()
@@ -3192,8 +3215,10 @@ class Forecaster:
                 self.future_xreg[s] = _raw_fut.to_list()
             if sincos:
                 _cycles = (
-                    _raw.max()
-                )  # does not always capture the complete cycle, but this is probably the best we can do
+                    _raw.max() if cycle_lens is None 
+                    else _raw.max()  if s not in cycle_lens 
+                    else cycle_lens[s]
+                )
                 self.current_xreg[f"{s}sin"] = np.sin(np.pi * _raw / (_cycles / 2))
                 self.current_xreg[f"{s}cos"] = np.cos(np.pi * _raw / (_cycles / 2))
                 self.future_xreg[f"{s}sin"] = np.sin(

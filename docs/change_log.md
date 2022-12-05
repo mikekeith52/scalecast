@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.10] - 2022-12-05
+### Added
+- added `dayofyear` to search for in `Forecater.auto_Xvar_select()` when frequency is daily or lower.
+- added `cycle_lens` argument to `Forecaster.add_seasonal_regressors()`.
+### Changed
+### Fixed
+- fixed how seasonalities are selected when they are not Fourier transformed in `Forecaster.auto_Xvar_select()`.
+
 ## [0.15.9] - 2022-11-03
 ### Added
 ### Changed
