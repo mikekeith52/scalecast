@@ -2747,7 +2747,7 @@ class Forecaster:
                         warnings.warn(f'cannot estimate {estimator} model with {i} AR terms')
                         ar_metrics.pop(i)
                         break
-                except (IndexError,AttributeError):
+                except (IndexError,AttributeError,ForecastError):
                     warnings.warn(f'cannot estimate {estimator} model with {i} AR terms')
                     break
         

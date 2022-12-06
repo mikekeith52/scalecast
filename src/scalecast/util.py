@@ -608,7 +608,7 @@ def find_optimal_transformation(
     final_transformer = []
     final_reverter = []
 
-    exception_types = (IndexError,AttributeError,ValueError,ZeroDivisionError) # errors to pass over
+    exception_types = (IndexError,AttributeError,ValueError,ZeroDivisionError,Forecaster.ForecastError) # errors to pass over
 
     for tr in try_order:
         if tr == 'boxcox':

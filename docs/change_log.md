@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.11] - 2022-12-06
+### Added
+### Changed
+### Fixed
+- fixed exception catching in `Forecaster.auto_Xvar_select()` and `util.find_optimal_transformation()`
+
 ## [0.15.10] - 2022-12-05
 ### Added
 - added `dayofyear` to search for in `Forecater.auto_Xvar_select()` when frequency is daily or lower.
