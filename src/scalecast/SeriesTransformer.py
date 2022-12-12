@@ -76,7 +76,7 @@ class SeriesTransformer:
                 "LevelUpperCI",
                 "LevelTSUpperCI",
             ):
-                h[k] = list(revert_func(h[k], **kwargs))
+                h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
             h['LevelY'] = self.f.levely
 
             for i, preds in enumerate(('LevelTestSetPreds','LevelFittedVals')):

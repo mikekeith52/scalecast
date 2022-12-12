@@ -4102,8 +4102,8 @@ class Forecaster:
                 dynamic_testing=dynamic_testing, test_only=test_only, **kwargs
             )
         )  # 0 - forecast, 1 - fitted vals, 2 - Xvars, 3 - regr
-        self.forecast = [i for i in result[0]]
-        self.fitted_values = [i for i in result[1]]
+        self.forecast = pd.Series(result[0]).fillna(method='ffill').to_list()
+        self.fitted_values = pd.Series(result[1]).fillna(method='ffill').to_list()
         self.Xvars = result[2]
         self.regr = result[3]
         if self.estimator in ("arima", "hwes"):

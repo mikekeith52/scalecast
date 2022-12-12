@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.12] - 2022-12-12
+### Added
+### Changed
+- fill N/A for all forecasts with a forward fill to prevent some max-value errors, both when forecasting and reverting transformations
+### Fixed
+
 ## [0.15.11] - 2022-12-06
 ### Added
 ### Changed
