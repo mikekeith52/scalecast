@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.13] - 2022-01-23
+### Added
+- added a str representation for the `SeriesTransformer` object
+- added `exclude_models` argument to `SeriesTransformer.Revert()` and similar functions
+### Changed
+### Fixed
+- cleaned up some documentation links
+
 ## [0.15.12] - 2022-12-12
 ### Added
 ### Changed

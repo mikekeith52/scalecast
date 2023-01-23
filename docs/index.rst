@@ -82,10 +82,6 @@ Links
  :target: https://pepy.tech/project/scalecast
 .. image:: https://static.pepy.tech/personalized-badge/scalecast?period=total&units=international_system&left_color=black&right_color=brightgreen&left_text=Downloads
  :target: https://pepy.tech/project/scalecast
-.. image:: https://static.pepy.tech/personalized-badge/scalecast?period=month&units=international_system&left_color=black&right_color=brightgreen&left_text=Downloads/Month
- :target: https://pepy.tech/project/scalecast
-.. image:: https://img.shields.io/github/workflow/status/unit8co/darts/darts%20release%20workflow/master
- :target: https://img.shields.io/github/workflow/status/unit8co/darts/darts%20release%20workflow/master
 .. image:: https://img.shields.io/badge/code%20style-black-black
  :target: https://github.com/psf/black
 
