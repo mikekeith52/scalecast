@@ -84,6 +84,9 @@ Links
  :target: https://pepy.tech/project/scalecast
 .. image:: https://img.shields.io/badge/code%20style-black-black
  :target: https://github.com/psf/black
+.. image:: https://readthedocs.org/projects/scalecast/badge/?version=latest
+ :target: https://scalecast.readthedocs.io/en/latest/?badge=latest
+ :alt: Documentation Status
 
 Index
 ------
