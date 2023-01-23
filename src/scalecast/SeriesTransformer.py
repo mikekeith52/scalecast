@@ -379,7 +379,7 @@ class SeriesTransformer:
         >>> f = transformer.SqrtTransform()
         >>> f = transformer.SqrtRevert()
         """
-        return self.Revert(np.square, full=full)
+        return self.Revert(np.square, **kwargs)
 
     def ScaleTransform(self,train_only=False):
         """ transforms the y attribute in the Forecaster object using a scale transformation.
@@ -496,7 +496,7 @@ class SeriesTransformer:
             return [i * (amax - amin) + amin for i in x]
 
         try:
-            f = self.Revert(func, amin=self.orig_min, amax=self.orig_max, full=full, **kwargs)
+            f = self.Revert(func, amin=self.orig_min, amax=self.orig_max, **kwargs)
             delattr(self, "orig_min")
             delattr(self, "orig_max")
             return f
