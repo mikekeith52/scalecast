@@ -11,8 +11,20 @@ from scalecast.Forecaster import (
 )
 
 class SeriesTransformer:
-    def __init__(self, f):
-        self.f = f.__deepcopy__()
+    def __init__(self, f, deepcopy=True):
+        """ Initiates the object.
+
+        Args:
+            f (Forecaster): the Forecaster object that will receive each transformation/revert
+            deepcopy (bool): default True. whether to store a deepcopy of the Forecaster object in the SeriesTransformer object
+        """
+        self.f = f.__deepcopy__() if deepcopy else f
+
+    def __repr__(self):
+        return "SeriesTransformer(\n{}\n)".format(self.f)
+
+    def __str__(self):
+        return self.__repr__()
 
     def Transform(self, transform_func, **kwargs):
         """ transforms the y attribute in the Forecaster object.
@@ -38,7 +50,7 @@ class SeriesTransformer:
         self.f.levely = list(transform_func(self.f.levely, **kwargs))
         return self.f
 
-    def Revert(self, revert_func, full=True, **kwargs):
+    def Revert(self, revert_func, full=True, exclude_models = [], **kwargs):
         """ reverts the y attribute in the Forecaster object, along with all model results.
 
         Args:
@@ -46,6 +58,8 @@ class SeriesTransformer:
                 if using a user function, first argument must be the array to transform.
             full (bool): whether to revert all attributes, or just the level attributes.
                 if False, all non-level results will remain unchanged.
+            exclude_models (list-like): models to not revert. this is useful if you are transforming
+                and reverting an object over and over.
             **kwargs: passed to the function passed to revert_func.
 
         Returns:
@@ -67,6 +81,8 @@ class SeriesTransformer:
         self.f.y = pd.Series(revert_func(self.f.y, **kwargs)) if full else self.f.y
 
         for m, h in self.f.history.items():
+            if m in exclude_models:
+                continue
             for k in ( 
                 "LevelForecast", 
                 "LevelTestSetPreds", 
@@ -106,7 +122,7 @@ class SeriesTransformer:
                     "FittedVals",
                 ):
                     try:
-                        h[k] = list(revert_func(h[k], **kwargs))
+                        h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
                     except TypeError:
                         h[k] = revert_func([h[k]], **kwargs)[0]
 
@@ -232,13 +248,17 @@ class SeriesTransformer:
         self.detrend_fvs_test = fvs_test
         return self.f
 
-    def DetrendRevert(self):
+    def DetrendRevert(self, exclude_models = []):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes a detrend transformation has already been called and uses all model information
         already recorded from that transformation to revert.
         if the test length changes in the Forecaster object between the time the transformation is called
         and when models are called, you will get this error when reverting: 
         ValueError: All arrays must be of the same length.
+
+        Args:
+            exclude_models (list-like): models to not revert. this is useful if you are transforming
+                and reverting an object over and over.
         
         Returns:
             (Forecaster): a Forecaster object with the reverted attributes.
@@ -275,6 +295,8 @@ class SeriesTransformer:
         }
 
         for m, h in self.f.history.items():
+            if m in exclude_models:
+                continue
             for k,v in fvs.items():
                 h[k] = [i + fvs for i, fvs in zip(h[k],v)]
 
@@ -305,13 +327,13 @@ class SeriesTransformer:
         """
         return self.Transform(np.log)
 
-    def LogRevert(self, full=True):
+    def LogRevert(self, **kwargs):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes a natural log transformation has already been called.
 
         Args:
-            full (bool): whether to revert all attributes, or just the level attributes.
-                if False, all non-level results will remain unchanged.
+            **kwargs: passed to Transformer.Revert() - 
+                args `full` and `exclude_models` accepted here.
 
         Returns:
             (Forecaster): a Forecaster object with the reverted attributes.
@@ -323,7 +345,7 @@ class SeriesTransformer:
         >>> f = transformer.LogTransform()
         >>> f = transformer.LogRevert()
         """
-        return self.Revert(np.exp, full=full)
+        return self.Revert(np.exp, **kwargs)
 
     def SqrtTransform(self):
         """ transforms the y attribute in the Forecaster object using a square-root transformation.
@@ -339,13 +361,13 @@ class SeriesTransformer:
         """
         return self.Transform(np.sqrt)
 
-    def SqrtRevert(self, full=True):
+    def SqrtRevert(self, **kwargs):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes a square-root transformation has already been called.
 
         Args:
-            full (bool): whether to revert all attributes, or just the level attributes.
-                if False, all non-level results will remain unchanged.
+            **kwargs: passed to Transformer.Revert() - 
+                args `full` and `exclude_models` accepted here.
 
         Returns:
             (Forecaster): a Forecaster object with the reverted attributes.
@@ -388,14 +410,14 @@ class SeriesTransformer:
 
         return self.Transform(func, mean=self.orig_mean, std=self.orig_std)
 
-    def ScaleRevert(self, full=True):
+    def ScaleRevert(self, **kwargs):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes the scale transformation has been called on the object at some point.
         reversion function: array.std()*array[i]+array.mean().
 
         Args:
-            full (bool): whether to revert all attributes, or just the level attributes.
-                if False, all non-level results will remain unchanged.
+            **kwargs: passed to Transformer.Revert() - 
+                args `full` and `exclude_models` accepted here.
 
         Returns:
             (Forecaster): a Forecaster object with the reverted attributes.
@@ -413,7 +435,7 @@ class SeriesTransformer:
             return [std * i + mean for i in x]
 
         try:
-            f = self.Revert(func, mean=self.orig_mean, std=self.orig_std, full=full,)
+            f = self.Revert(func, mean=self.orig_mean, std=self.orig_std, **kwargs)
             delattr(self, "orig_mean")
             delattr(self, "orig_std")
             return f
@@ -449,14 +471,14 @@ class SeriesTransformer:
 
         return self.Transform(func, amin=self.orig_min, amax=self.orig_max,)
 
-    def MinMaxRevert(self, full=True):
+    def MinMaxRevert(self, **kwargs):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         assumes the min-max scale transformation has been called on the object at some point.
         reversion function: array[i]*(array.max() - array.min()) + array.min().
 
         Args:
-            full (bool): whether to revert all attributes, or just the level attributes.
-                if False, all non-level results will remain unchanged.
+            **kwargs: passed to Transformer.Revert() - 
+                args `full` and `exclude_models` accepted here.
 
         Returns:
             (Forecaster): a Forecaster object with the reverted attributes.
@@ -474,14 +496,14 @@ class SeriesTransformer:
             return [i * (amax - amin) + amin for i in x]
 
         try:
-            f = self.Revert(func, amin=self.orig_min, amax=self.orig_max, full=full,)
+            f = self.Revert(func, amin=self.orig_min, amax=self.orig_max, full=full, **kwargs)
             delattr(self, "orig_min")
             delattr(self, "orig_max")
             return f
         except AttributeError:
             raise ValueError("cannot revert a series that was never scaled.")
 
-    def DiffTransform(self, m):
+    def DiffTransform(self, m=1):
         """ takes differences or seasonal differences in the Forecaster object's y attribute.
         if using this transformation, call `Forecaster.add_diffed_terms()` and 
         `Forecaster.add_lagged_terms()` if you want to use those before calling this function.
@@ -490,7 +512,7 @@ class SeriesTransformer:
         if using this to take series differences, do not also use the native `Forecaster.diff()` function.
 
         Args:
-            m (int): the seasonal difference to take.
+            m (int): default 1. the seasonal difference to take.
                 1 will difference once. 
                 12 will take a seasonal difference assuming 12 periods makes a season (monthly data).
                 any int available.
@@ -526,14 +548,14 @@ class SeriesTransformer:
         f.keep_smaller_history(len(f.y) - m)
         return f
 
-    def DiffRevert(self, m):
+    def DiffRevert(self, m=1, exclude_models = []):
         """ reverts the y attribute in the Forecaster object, along with all model results.
         calling this makes so that AR values become unusable and have to be re-added to the object.
         unlike other revert functions, there is no option for full = False. 
         if using this to revert differences, you should not also use the native Forecaster.diff() function.
 
         Args:
-            m (int): the seasonal difference to take.
+            m (int): default 1. the seasonal difference to revert.
                 1 will undifference once. 
                 12 will undifference seasonally 12 periods (monthly data).
                 any int available. use the same values to revert as you used
@@ -575,7 +597,9 @@ class SeriesTransformer:
         self.f.levely = self.f.y.to_list()
         self.f.current_dates = pd.Series(dates_orig)
 
-        for _, h in self.f.history.items():
+        for mod, h in self.f.history.items():
+            if mod in exclude_models:
+                continue
             h["Forecast"] = list(seasrevert(h["Forecast"], self.f.y[-m:], m))[m:]
             h["TestSetPredictions"] = list(
                 seasrevert(
@@ -607,4 +631,4 @@ class SeriesTransformer:
         delattr(self, f"orig_y_{m}_{n}")
         delattr(self, f"orig_dates_{m}_{n}")
 
-        return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
+        return self.Revert(lambda x: x, exclude_models = exclude_models)  # call here to assign correct test-set metrics

@@ -47,3 +47,5 @@ All other transformation and reversion functions work well and there is not any 
 
 .. autoclass:: src.scalecast.SeriesTransformer.SeriesTransformer
    :members:
+
+   .. automethod:: __init__
