@@ -2395,7 +2395,7 @@ class Forecaster:
             must_keep (list-like): default []. the names of any regressors that must be kept in the object.
                 all regressors here must already be added to the Forecaster object before calling the function.
                 this is ignored if test_already_added is False since it becomes redundant.
-            monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
+            monitor (str): one of _determine_best_by_. default 'ValidationMetricValue'.
                 the metric to be monitored when making reduction decisions. 
             cross_validate (bool): default False.
                 whether to tune the model with cross validation. 
