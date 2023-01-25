@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.15.15] - 2023-01-25
+### Added
+- added `ax` argument to all forecast plotting functions.
+### Changed
+### Fixed
+- removed `tensorflow` from the list of requirements and added it and `tensorflow-macos` to the optional add-on list (#31)
+
 ## [0.15.14] - 2022-01-23
 ### Added
 - added a str representation for the `SeriesTransformer` object

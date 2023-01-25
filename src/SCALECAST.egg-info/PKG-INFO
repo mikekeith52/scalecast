@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.15.14
+Version: 0.15.15
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -168,6 +168,7 @@ Description: # Scalecast
         - Only the base package is needed to get started:  
           - `pip install --upgrade scalecast`  
         - Optional add-ons:  
+          - `pip install tensorflow` (for RNN/LSTM on Windows) or `pip install tensorflow-macos` (for MAC/M1)
           - `pip install darts`  
           - `pip install prophet`  
           - `pip install greykite`  

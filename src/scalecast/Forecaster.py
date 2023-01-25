@@ -4744,7 +4744,8 @@ class Forecaster:
         order_by=None, 
         level=False, 
         print_attr=[], 
-        ci=False, 
+        ci=False,
+        ax = None,
         figsize=(12,6),
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
@@ -4765,7 +4766,8 @@ class Forecaster:
                 if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
             ci (bool): default False.
                 whether to display the confidence intervals.
-            figsize (tuple): default (12,6). size of the resulting figure.
+            ax (Axis): optional. the existing exis to write the resulting figure to.
+            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
 
         Returns:
             (Axis): the figure's axis.
@@ -4780,7 +4782,8 @@ class Forecaster:
         except (ValueError, TypeError):
             models = None
 
-        _, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
 
         if models is None:
             sns.lineplot(
@@ -4887,7 +4890,8 @@ class Forecaster:
             ci (bool): default False.
                 whether to display the confidence intervals.
                 default is 100 boostrapped samples and a 95% confidence interval.
-            figsize (tuple): default (12,6). size of the resulting figure.
+            ax (Axis): optional. the existing exis to write the resulting figure to.
+            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
 
         Returns:
             (Axis): the figure's axis.
@@ -4897,7 +4901,8 @@ class Forecaster:
         >>> f.plot(order_by='LevelTestSetMAPE') # plots all test-set results
         >>> plt.show()
         """
-        _, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -4983,7 +4988,8 @@ class Forecaster:
         Args:
             model (str): the model nickname to plot the backtest values for. must have called f.backtest(model)
                 previously.
-            figsize (tuple): default (12,6). size of the resulting figure.
+            ax (Axis): optional. the existing exis to write the resulting figure to.
+            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
         
         Returns:
             (Axis): the figure's axis.
@@ -4994,7 +5000,8 @@ class Forecaster:
         >>> f.plot_backtest_values('elasticnet') # plots all backtest values
         >>> plt.show()
         """
-        _, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
         values = self.export_backtest_values(model)
         y = self.levely[:]
         dates = self.current_dates.to_list()
@@ -5041,7 +5048,8 @@ class Forecaster:
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
                 if False and there are a mix of models passed with different integrations, will default to True.
-            figsize (tuple): default (12,6). size of the resulting figure.
+            ax (Axis): optional. the existing exis to write the resulting figure to.
+            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
 
         Returns:
             (Axis): the figure's axis.
@@ -5051,7 +5059,8 @@ class Forecaster:
         >>> f.plot_fitted(order_by='LevelTestSetMAPE') # plots all fitted values
         >>> plt.show()
         """
-        _, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]

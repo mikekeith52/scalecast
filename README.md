@@ -157,6 +157,7 @@ The library interfaces nicely with interactive notebook applications.
 - Only the base package is needed to get started:  
   - `pip install --upgrade scalecast`  
 - Optional add-ons:  
+  - `pip install tensorflow` (for RNN/LSTM on Windows) or `pip install tensorflow-macos` (for MAC/M1)
   - `pip install darts`  
   - `pip install prophet`  
   - `pip install greykite`  

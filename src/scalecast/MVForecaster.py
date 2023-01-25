@@ -1787,6 +1787,7 @@ class MVForecaster:
         put_best_on_top=False, 
         level=False, 
         ci=False, 
+        ax=None,
         figsize=(12,6),
     ):
         """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
@@ -1807,7 +1808,9 @@ class MVForecaster:
                 if False and there are a mix of models passed with different integrations, will default to True.
             ci (bool): default False.
                 whether to display the confidence intervals.
-            figsize (tuple): default (12,6). size of the resulting figure.
+            ax (Axis): optional. the existing exis to write the resulting figure to.
+            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+
 
         Returns:
             (Axis): the figure's axis.
@@ -1819,7 +1822,8 @@ class MVForecaster:
         models = self._parse_models(models, put_best_on_top)
         integration = [v for s, v in self.integration.items() if s in series]
         level = True if len(set(integration)) > 1 else level
-        _, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
 
         k = 0
         for i, s in enumerate(series):
@@ -1875,6 +1879,7 @@ class MVForecaster:
         include_train=True,
         level=False,
         ci=False,
+        ax=None,
         figsize=(12,6),
     ):
         """  plots all test-set predictions with the actuals.
@@ -1900,7 +1905,9 @@ class MVForecaster:
                 if False and there are a mix of models passed with different integrations, will default to True.
             ci (bool): default False.
                 whether to display the confidence intervals.
-            figsize (tuple): default (12,6). size of the resulting figure.
+            ax (Axis): optional. the existing exis to write the resulting figure to.
+            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+
 
         Returns:
             (Axis): the figure's axis.
@@ -1919,7 +1926,8 @@ class MVForecaster:
             if include_train is False
             else include_train
         )
-        _, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
 
         k = 0
         for i, s in enumerate(series):
@@ -1975,6 +1983,7 @@ class MVForecaster:
         models="all", 
         series="all", 
         level=False,
+        ax=None,
         figsize=(12,6),
     ):
         """ plots fitted values with the actuals.
@@ -1990,7 +1999,9 @@ class MVForecaster:
             level (bool): default False.
                 if True, will always plot level forecasts.
                 if False, will plot the forecasts at whatever level they were called on.
-            figsize (tuple): default (12,6). size of the resulting figure.
+            ax (Axis): optional. the existing exis to write the resulting figure to.
+            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+
 
         Returns:
             (Axis): the figure's axis.
@@ -2000,7 +2011,8 @@ class MVForecaster:
         """
         series, labels = self._parse_series(series)
         models = self._parse_models(models, False)
-        _, ax = plt.subplots(figsize=figsize)
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
         k = 0
         for i, s in enumerate(series):
             act = (
