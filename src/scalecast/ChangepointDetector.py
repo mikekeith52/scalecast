@@ -15,13 +15,14 @@ class ChangepointDetector:
         self.ts = TimeSeriesData(df)
 
     def DetectCPCUSUM(self, **kwargs):
-        """ detects changepoints using the `CUSUMDetector.detector()` function from kats.
-        this function assumes there is at most one increase change point and at most one decrease change point in the series.
-        use `DetectCPCUSUM_sliding()` or `DetectCPBOCPD()` to find multiple of each kind of changepoint.
-        saves output in the changepoints attribute.
-        https://facebookresearch.github.io/Kats/api/kats.detectors.cusum_detection.html
+        """ Detects changepoints using the `CUSUMDetector.detector()` function from kats.
+        This function assumes there is at most one increase change point and at most one decrease change point in the series.
+        Use `DetectCPCUSUM_sliding()` or `DetectCPBOCPD()` to find multiple of each kind of changepoint.
+        Saves output in the changepoints attribute.
+        See https://facebookresearch.github.io/Kats/api/kats.detectors.cusum_detection.html.
 
-        **kwargs passed to the referenced kats function.
+        Args:
+            **kwargs: Passed to the referenced kats function.
 
         Returns:
             (list) A list of tuple of TimeSeriesChangePoint and CUSUMMetadata.
@@ -44,15 +45,15 @@ class ChangepointDetector:
     def DetectCPCUSUM_sliding(
         self, historical_window, scan_window, step, **kwargs,
     ):
-        """ detects multiple changepoints using the `CUSUMDetector.detector()` function from kats over a sliding window.
-        this idea is taken from the kats example:
-        https://github.com/facebookresearch/Kats/blob/main/tutorials/kats_202_detection.ipynb
+        """ Detects multiple changepoints using the `CUSUMDetector.detector()` function from kats over a sliding window.
+        This idea is taken from the kats example:
+        https://github.com/facebookresearch/Kats/blob/main/tutorials/kats_202_detection.ipynb.
 
         Args:
-            historical_window (int): the number of periods to begin the initial search.
-            scan_window (int): how far into the future to scan for changepoints after each step.
-            step (int): how far to step forward after a scan.
-            **kwargs: passed to the `CUSUMDetector.detector()` function. `interest_window` passed
+            historical_window (int): The number of periods to begin the initial search.
+            scan_window (int): How far into the future to scan for changepoints after each step.
+            step (int): How far to step forward after a scan.
+            **kwargs: Passed to the `CUSUMDetector.detector()` function. `interest_window` passed
                 automatically based on the values passed to the other arguments in this function.
 
         Returns:
@@ -81,12 +82,12 @@ class ChangepointDetector:
         return self.changepoints
 
     def DetectCPBOCPD(self, **kwargs):
-        """ detects changepoints using the `BOCDPDetector.detector()` function from kats.
-        docs: https://facebookresearch.github.io/Kats/api/kats.detectors.bocpd_model.html
-        tutorial: https://github.com/facebookresearch/Kats/blob/main/tutorials/kats_202_detection.ipynb
+        """ Detects changepoints using the `BOCDPDetector.detector()` function from kats.
+        Docs: https://facebookresearch.github.io/Kats/api/kats.detectors.bocpd_model.html.
+        Tutorial: https://github.com/facebookresearch/Kats/blob/main/tutorials/kats_202_detection.ipynb.
 
         Args:
-            **kwargs: passed to the function referenced above
+            **kwargs: Passed to the function referenced above
 
         Returns:
             (list) A list of tuple of TimeSeriesChangePoint and CUSUMMetadata.
@@ -106,7 +107,7 @@ class ChangepointDetector:
         return self.changepoints
 
     def plot(self):
-        """ plots identified changepoints.
+        """ Plots identified changepoints.
 
         >>> from scalecast.ChangepointDetector import ChangepointDetector
         >>> from scalecast.Forecaster import Forecaster
@@ -122,26 +123,26 @@ class ChangepointDetector:
         self.detector.plot(self.changepoints)
 
     def WriteCPtoXvars(self, f=None, future_dates=None, end=None):
-        """ writes identified changepoints as variables to a Forecaster object.
+        """ Writes identified changepoints as variables to a Forecaster object.
 
         Args:
-            f (Forecaster): optional. if you pass an object here,
-                that object will receive the Xvars. otherwise,
+            f (Forecaster): Optional. If you pass an object here,
+                that object will receive the Xvars. Otherwise,
                 it will pass to the copy of the object stored in
                 the AnomalyDetector object when it was initialized.
-                this Forecaster object is stored in the f attribute.
-            future_dates (int): optional. if you pass a future dates
+                This Forecaster object is stored in the f attribute.
+            future_dates (int): Optional. If you pass a future dates
                 length here, it will write that many dates to the
                 Forecaster object and future anomaly variables will be
                 passed as arrays of 1s so that any algorithm you train
                 will be able to use them into a future horizon.
-            end (None or 'auto'): default None.
-                if None, will use '2999-12-31' as the end date for each identified changepoint.
-                if "auto", will use whatever changepoint end date identified by kats, but since
+            end (None or 'auto'): Default None.
+                If None, will use '2999-12-31' as the end date for each identified changepoint.
+                If "auto", will use whatever changepoint end date identified by kats, but since
                 this is usually the same value as the start date, the default behavior in this
                 object is to use an indefinite end date ('2999-12-31').
         Returns:
-            (Forecaster) an object with the Xvars written.
+            (Forecaster) An object with the Xvars written.
 
         >>> from scalecast.ChangepointDetector import ChangepointDetector
         >>> from scalecast.Forecaster import Forecaster

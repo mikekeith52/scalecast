@@ -10,6 +10,7 @@ from collections import Counter
 import logging
 from scipy import stats
 import importlib
+import copy
 
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
 logging.captureWarnings(True)
@@ -26,28 +27,10 @@ from scalecast.Forecaster import (
     _normalizer_,
     _determine_best_by_,
     _colors_,
+    _return_na_if_len_zero,
+    _set_ci_step,
     ForecastError,
 )
-import copy
-
-_series_colors_ = [
-    "#0000FF",
-    "#00FFFF",
-    "#7393B3",
-    "#088F8F",
-    "#0096FF",
-    "#F0FFFF",
-    "#00FFFF",
-    "#5D3FD3",
-    "#191970",
-    "#9FE2BF",
-] * 100
-
-_optimizer_funcs_ = {
-    "mean": np.mean,
-    "min": np.min,
-    "max": np.max,
-}
 
 
 class MVForecaster:
@@ -57,29 +40,34 @@ class MVForecaster:
         not_same_len_action="trim",
         merge_Xvars="union",
         merge_future_dates="longest",
+        test_length = 1,
         names=None,
         **kwargs,
     ):
         """ 
         Args:
             *fs (Forecaster): Forecaster objects
-            not_same_len_action (str): one of 'trim', 'fail'. default 'trim'.
-                what to do with series that are different lengths.
+            not_same_len_action (str): One of 'trim', 'fail'. default 'trim'.
+                What to do with series that are different lengths.
                 'trim' will trim based on the most recent first date in each series.
                 if the various series have different end dates, this option will still fail the initialization.
-            merge_Xvars (str): one of 'union', 'u', 'intersection', 'i'. default 'union'.
-                how to combine Xvars in each object.
+            merge_Xvars (str): One of 'union', 'u', 'intersection', 'i'. default 'union'.
+                How to combine Xvars in each object.
                 'union' or 'u' combines all regressors from each object.
                 'intersection' or 'i' combines only regressors that all objects have in common.
-            merge_future_dates (str): one of 'longest', 'shortest'. default 'longest'.
-                which future dates to use in the various series.
-            names (list-like): optional. an array with the same number of elements as *fs that can be used to map to each series.
-                ex. names = ['UTUR','UNRATE']: can now refer to series1 and series2 with the user-selected names later. 
-                if specific names are not supplied, refer to the series with series1 and series2 or y1 and y2.
+            merge_future_dates (str): One of 'longest', 'shortest'. default 'longest'.
+                Which future dates to use in the various series.
+            test_length (int): Default 1. The test length that all models will use to test all models out of sample.
+                Change to 0 to skip testing models. In a future version of scalecast, the default value will be changed to 0, but it
+                is left 1 for now to maintain the behavior of MVForecaster objects. Before version 0.16.0, skipping model
+                testing was impossible.
+            names (list-like): Optional. An array with the same number of elements as *fs that can be used to map to each series.
+                Ex. if names == ['UTUR','UNRATE'], the user can now refer to series1 and series2 with the user-selected names later. 
+                If specific names are not supplied, refer to the series with series1 and series2 or y1 and y2.
                 'series...' and 'y...' notation to refer to series are used interchangeably throughout the object.
-                series can always be referred to with 'series...' and 'y...' notation, even if user-selected names are provided.
-                the order the series are supplied will be maintained.
-            **kwargs: become attributes.
+                Series can always be referred to with 'series...' and 'y...' notation, even if user-selected names are provided.
+                The order the series are supplied will be maintained.
+            **kwargs: Become attributes.
         """
         for f in fs:
             f.typ_set()
@@ -113,7 +101,7 @@ class MVForecaster:
         self.current_xreg = {}
         self.future_xreg = {}
         self.history = {}
-        self.test_length = 1
+        self.test_length = test_length
         self.validation_length = 1
         self.validation_metric = "rmse"
         self.cilevel = 0.95
@@ -255,25 +243,25 @@ class MVForecaster:
         return obj
 
     def copy(self):
-        """ creates an object copy.
+        """ Creates an object copy.
         """
         return self.__copy__()
 
     def deepcopy(self):
-        """ creates an object deepcopy.
+        """ Creates an object deepcopy.
         """
         return self.__deepcopy__()
 
     def add_sklearn_estimator(self, imported_module, called):
-        """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
-        be careful to choose regression models only.
+        """ Adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
+        Only regression models supported.
         
         Args:
             imported_module (sklearn regression model):
-                the model from sklearn to add. must have already been imported locally.
-                supports models from sklearn and sklearn APIs.
+                The model from sklearn to add. must have already been imported locally.
+                Supports models from sklearn and sklearn APIs.
             called (str):
-                the name of the estimator that can be called using set_estimator().
+                The name of the estimator that can be called using set_estimator().
 
         Returns:
             None
@@ -289,12 +277,13 @@ class MVForecaster:
         _sklearn_estimators_.sort()
 
     def set_test_length(self, n=1):
-        """ sets the length of the test set.
+        """ Sets the length of the test set.
 
         Args:
-            n (int or float): default 1.
-                the length of the resulting test set.
-                fractional splits are supported by passing a float less than 1 and greater than 0.
+            n (int or float): Default 1.
+                The length of the resulting test set.
+                Fractional splits are supported by passing a float less than 1 and greater than 0.
+                Pass 0 to skip testing models.
 
         Returns:
             None
@@ -302,29 +291,26 @@ class MVForecaster:
         >>> mvf.set_test_length(12) # test set of 12
         >>> mvf.set_test_length(.2) # 20% test split
         """
-        float(n)
-        if n >= 1:
+        if n == 0:
+            self.test_length = 0
+            return
+        elif n >= 1:
             n = int(n)
-            descriptive_assert(
-                isinstance(n, int),
-                ValueError,
-                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n} of type {type(n)}",
-            )
             self.test_length = n
-        else:
-            descriptive_assert(
-                n > 0,
-                ValueError,
-                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n} of type {type(n)}",
-            )
+            return
+        elif n < 1:
+            n = float(n)
             self.test_length = int(len(self.current_dates) * n)
+            return
+        else:
+            raise ValueError(f"n must be an int of at least 0 or float greater than 0 and less than 1, got {n} of type {type(n)}")
 
     def set_validation_length(self, n=1):
-        """ sets the length of the validation set.
+        """ Sets the length of the validation set. This will only matter when tuning a model.
 
         Args:
-            n (int): default 1.
-                the length of the resulting validation set.
+            n (int): Default 1.
+                The length of the resulting validation set.
 
         Returns:
             None
@@ -340,10 +326,10 @@ class MVForecaster:
         self.validation_length = n
 
     def set_estimator(self, estimator):
-        """ sets the estimator to forecast with.
+        """ Sets the estimator to forecast with.
 
         Args:
-            estimator (str): one of _sklearn_estimators_
+            estimator (str): One of _sklearn_estimators_.
 
         Returns:
             None
@@ -370,12 +356,12 @@ class MVForecaster:
             self.estimator = estimator
 
     def ingest_grid(self, grid):
-        """ ingests a grid to tune the estimator.
+        """ Ingests a grid to tune the estimator.
 
         Args:
             grid (dict or str):
-                if dict, must be a user-created grid.
-                if str, must match the name of a dict grid stored in a grids file.
+                If dict, must be a user-created grid.
+                If str, must match the name of a dict grid stored in a grids file.
 
         Returns:
             None
@@ -406,11 +392,11 @@ class MVForecaster:
         self.grid = grid
 
     def set_validation_metric(self, metric="rmse"):
-        """ sets the metric that will be used to tune all subsequent models.
+        """ Sets the metric that will be used to tune all subsequent models.
 
         Args:
-            metric: one of _metrics_, default 'rmse'.
-                the metric to optimize the models with using the validation set.
+            metric: One of _metrics_. Default 'rmse'.
+                The metric to optimize the models with using the validation set.
 
         Returns:
             None
@@ -427,14 +413,14 @@ class MVForecaster:
         self.validation_metric = metric
 
     def limit_grid_size(self, n, random_seed=None):
-        """ makes a grid smaller randomly.
+        """ Makes a grid smaller randomly.
 
         Args:
             n (int or float):
-                if int, randomly selects that many parameter combinations.
-                if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.
-            random_seed (int): optional.
-                set a seed to make results consistent.
+                If int, randomly selects that many parameter combinations.
+                If float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.
+            random_seed (int): Optional.
+                Set a seed to make results consistent.
 
         Returns:
             None
@@ -459,12 +445,12 @@ class MVForecaster:
             raise ValueError(f"argment passed to n not usable: {n}")
 
     def add_optimizer_func(self, func, called):
-        """ add an optimizer function that can be used to determine the best-performing model.
-        this is in addition to the 'mean', 'min', and 'max' functions that are available by default.
+        """ Add an optimizer function that can be used to determine the best-performing model.
+        This is in addition to the 'mean', 'min', and 'max' functions that are available by default.
 
         Args:
-            func (Function): the function to add.
-            called (str): how to refer to the function when calling `optimize_on()`.
+            func (Function): The function to add.
+            called (str): How to refer to the function when calling `optimize_on()`.
 
         Returns:
             None
@@ -478,14 +464,15 @@ class MVForecaster:
         _optimizer_funcs_[called] = func
 
     def set_grids_file(self,name='MVGrids'):
-        """ sets the name of the file where the object will look automatically for grids when calling `tune()`, `tune_test_forecast()`, or similar function.
-        if the grids file does not exist in the working directory, the error will only be raised once tuning is called.
+        """ Sets the name of the file where the object will look automatically for grids when calling 
+        `tune()`, `cross_validate()`, `tune_test_forecast()`, or similar function.
+        If the grids file does not exist in the working directory, the error will only be raised once tuning is called.
         
         Args:
-            name (str): default 'MVGrids.'
-                the name of the file to look for.
-                this file must exist in the working directory.
-                the default will look for a file called "MVGrids.py".
+            name (str): Default 'MVGrids.'
+                The name of the file to look for.
+                This file must exist in the working directory.
+                The default will look for a file called "MVGrids.py".
 
         >>> mvf.set_grids_file('ModGrids') # expects to find a file called ModGrids.py in working directory.
         """
@@ -493,19 +480,18 @@ class MVForecaster:
         self.grids_file = name
 
     def tune(self, dynamic_tuning=False, cv=False):
-        """ tunes the specified estimator using an ingested grid (ingests a grid from a grids file with same name as the estimator by default).
-        any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
-        the chosen parameters are stored in the best_params attribute.
-        the full validation grid is stored in grid_evaluated.
+        """ Tunes the specified estimator using an ingested grid (ingests a grid from a grids file with same name as the estimator by default).
+        Any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
+        The chosen parameters are stored in the best_params attribute.
+        The full validation grid is stored in grid_evaluated.
 
         Args:
-            dynamic_tuning (bool): default False.
-                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, metrics effectively become an average of one-step forecasts.
-            cv (bool): default False.
-                whether the tune is part of a larger cross-validation process.
-                this does not need to specified by the user and should be kept False when calling `tune()`.
+            dynamic_tuning (bool): Default False.
+                Whether to dynamically/recursively tune the forecast using the series lags.
+                Setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform more than 1 period out.
+            cv (bool): Default False.
+                Whether the tune is part of a larger cross-validation process.
+                This does not need to specified by the user and should be kept False when calling `tune()`.
 
         Returns:
             None
@@ -570,22 +556,22 @@ class MVForecaster:
             self._find_best_params(self.grid_evaluated)
 
     def cross_validate(self, k=5, rolling=False, dynamic_tuning=False):
-        """ tunes a model's hyperparameters using time-series cross validation. 
-        monitors the metric specified in the valiation_metric attribute. 
-        set an estimator before calling. this is an alternative method to tune().
-        reads a grid for the estimator from a grids file unless a grid is ingested manually. 
-        each fold size is equal to one another and is determined such that the last fold's 
-        training and validation sizes are the same (or close to the same). with rolling = True, 
-        all train sizes will be the same for each fold. 
-        the chosen parameters are stored in the best_params attribute.
-        the full validation grid is stored in grid_evaluated.
-        normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
-        rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
+        """ Tunes a model's hyperparameters using time-series cross validation. 
+        Monitors the metric specified in the valiation_metric attribute. 
+        Set an estimator before calling. This is an alternative method to tune().
+        Reads a grid for the estimator from a grids file unless a grid is ingested manually. 
+        Each fold size is equal to one another and is determined such that the last fold's 
+        training and validation sizes are the same (or close to the same). With `rolling` = True, 
+        All train sizes will be the same for each fold. 
+        The chosen parameters are stored in the best_params attribute.
+        The full validation grid is stored in grid_evaluated.
+        Normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
+        Rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
 
         Args:
-            k (int): default 5. the number of folds. must be at least 2.
-            rolling (bool): default False. whether to use a rolling method.
-            dynamic_tuning (bool): default False.
+            k (int): Default 5. The number of folds. Must be at least 2.
+            rolling (bool): Default False. Whether to use a rolling method.
+            dynamic_tuning (bool): Default False.
 
         Returns:
             None
@@ -730,23 +716,23 @@ class MVForecaster:
     def auto_forecast(
         self, call_me=None, dynamic_testing=True, probabilistic=False, n_iter=20
     ):
-        """ auto forecasts with the best parameters indicated from the tuning process.
+        """ Auto forecasts with the best parameters indicated from the tuning process.
 
         Args:
-            call_me (str): optional.
-                what to call the model when storing it in the object's history dictionary.
-                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                duplicated names will be overwritten with the most recently called model.
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history dictionary.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            probabilistic (bool): default False.
-                whether to use a probabilistic forecasting process to set confidence intervals.
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+            probabilistic (bool): Default False.
+                Whether to use a probabilistic forecasting process to set confidence intervals.
             n_iter (int): default 20.
-                how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
+                How many iterations to use in probabilistic forecasting. Ignored if probabilistic = False.
 
         Returns:
             None
@@ -773,21 +759,21 @@ class MVForecaster:
             )
 
     def manual_forecast(self, call_me=None, dynamic_testing=True, **kwargs):
-        """ manually forecasts with the hyperparameters, normalizer, and lag selections passed as keywords.
+        """ Manually forecasts with the hyperparameters, normalizer, and lag selections passed as keywords.
 
         Args:
-            call_me (str): optional.
-                what to call the model when storing it in the object's history dictionary.
-                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                duplicated names will be overwritten with the most recently called model.
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history dictionary.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            **kwargs: passed to the _forecast_{estimator}() method.
-                can include lags and normalizer in addition to any given model's specific hyperparameters.
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+            **kwargs: Passed to the _forecast_{estimator}() method.
+                Can include lags and normalizer in addition to any given model's specific hyperparameters.
 
         Returns:
             None
@@ -812,27 +798,27 @@ class MVForecaster:
         self._bank_history(**kwargs)
 
     def proba_forecast(self, call_me=None, dynamic_testing=True, n_iter=20, **kwargs):
-        """ forecast with a probabilistic process where the final point estimate is an average of
-        several forecast calls. confidence intervals are overwritten through this process with a probabilistic technique.
-        level and difference confidence intervals are then possible to display. if the model in question is fundamentally
+        """ Forecasts with a probabilistic process where the final point estimate is an average of
+        several forecast calls. Confidence intervals are overwritten through this process with a probabilistic technique.
+        Level and difference confidence intervals are then possible to display. If the model in question is fundamentally
         deterministic, this approach will just waste resources.
 
         Args:
-            call_me (str): optional.
-                what to call the model when storing it in the object's history dictionary.
-                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                duplicated names will be overwritten with the most recently called model.
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history dictionary.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            n_iter (int): default 20.
-                the number of forecast calls to use when creating the final point estimate and confidence intervals.
-                increasing this gives more sound results but costs resources.
-            **kwargs: passed to the _forecast_{estimator}() method.
-                can include lags and normalizer in addition to any given model's specific hyperparameters.
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+            n_iter (int): Default 20.
+                The number of forecast calls to use when creating the final point estimate and confidence intervals.
+                Increasing this gives more sound results but costs resources.
+            **kwargs: Passed to the _forecast_{estimator}() method.
+                Can include lags and normalizer in addition to any given model's specific hyperparameters.
 
         Returns:
             None
@@ -840,10 +826,6 @@ class MVForecaster:
         >>> mvf.set_estimator('mlp')
         >>> mvf.proba_forecast(hidden_layer_sizes=(25,25,25))
         """
-
-        def set_ci_step(s):
-            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
-
         estimator = self.estimator
         call_me = self.estimator if call_me is None else call_me
         mvf = self.__deepcopy__()
@@ -915,7 +897,7 @@ class MVForecaster:
                 fcsts = fcst_attr_map[kv[1]]
                 self.history[call_me][kv[0]] = {
                     s: [
-                        fcst_step + set_ci_step(fcsts[s].std(axis=0)[idx],)
+                        fcst_step + _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
                         for idx, fcst_step in enumerate(self.history[call_me][kv[1]][s])
                     ]
                     for s in fcsts.keys()
@@ -923,34 +905,36 @@ class MVForecaster:
             else:
                 self.history[call_me][kv[0]] = {
                     s: [
-                        fcst_step - set_ci_step(fcsts[s].std(axis=0)[idx],)
+                        fcst_step - _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
                         for idx, fcst_step in enumerate(self.history[call_me][kv[1]][s])
                     ]
                     for s in fcsts.keys()
                 }
 
     def reeval_cis(self, method = 'naive', models='all', n_iter=10, jump_back=1):
-        """ generates a dynamic confidence interval for passed models.
+        """ Generates a dynamic confidence interval for passed models.
 
         Args:
-            method (str): one of "naive", "backtest". default "naive".
-                if "naive", calculates confidence intervals by determining the standard deviation of each point of
+            method (str): One of "naive", "backtest". Default "naive".
+                If "naive", calculates confidence intervals by determining the standard deviation of each point of
                 every evaluated model passed to the function. time-steps that all models estimated closer together will receive smaller
                 intervals and steps where the models diverge significantly receive larger intervals.
-                this is a computationally cheap method but if all models perform similarly poorly, it can generate tight intervals, which is 
+                This is a computationally cheap method but if all models perform similarly poorly, it can generate tight intervals, which is 
                 a downside. it is recommended to use at least 3 models with this method.
-                if "backtest", calculates confidence intervals by backtesting each model and determining the standard deviation of the out-of-sample
+                If "backtest", calculates confidence intervals by backtesting each model and determining the standard deviation of the out-of-sample
                 residual of each forecast step for both test-set predictions and actuals.
-                this is a generalizable way to obtain trustworthy confidence intervals for all models, but it is more computationally expensive.
-                it is recommended to set n_iter to at least 3 with this method.
-                see https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.backtest.
-            models (str or list-like): default 'all'. the models to regenerate cis for. 
-                recommended to have at least three for method = 'naive'.
-            n_iter (int) - default 10. the number of iterations to backtest. recommended to be at least 3 for method = 'backtest'. 
-                models will iteratively train on all data before the fcst_length worth of values. 
-                each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
-                off the end to redo the cast until all of n_iter is exhausted. ignored when method == 'naive'.
-            jump_back (int) - default 1. the number of time steps between two consecutive training sets. ignored when method == 'naive'.
+                This is a generalizable way to obtain trustworthy confidence intervals for all models, but it is more computationally expensive.
+                It is recommended to set n_iter to at least 3 with this method.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.backtest.
+            models (str or list-like): Default 'all'. The models to regenerate cis for. 
+                Recommended to have at least three for method = 'naive'.
+            n_iter (int): Default 10. 
+                The number of iterations to backtest. Recommended to be at least 3 for method = 'backtest'. 
+                Models will iteratively train on all data before the fcst_length worth of values. 
+                Each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
+                off the end to redo the cast until all of n_iter is exhausted. Ignored when method == 'naive'.
+            jump_back (int): Default 1. The number of time steps between two consecutive training sets. ignored when method == 'naive'.
+        
         Returns:
             None
 
@@ -977,8 +961,6 @@ class MVForecaster:
         >>> mvf.tune_test_forecast(models)
         >>> mvf.reeval_cis() # creates expanding cis
         """
-        def set_ci_step(s):
-            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
 
         models = self._parse_models(models,put_best_on_top=False)
         series, labels = self._parse_series("all")
@@ -992,7 +974,7 @@ class MVForecaster:
         fcst_attr_map = {
             attr: {
                 s: np.array(
-                    [self.history[m][attr][s] for m in models]
+                    [self.history[m][attr][s] for m in models if s in self.history[m][attr]]
                 )
                 for s in series
             }
@@ -1019,18 +1001,18 @@ class MVForecaster:
                         fcsts = fcst_attr_map[kv[1]]
                         self.history[m][kv[0]] = {
                             s: [
-                                fcst_step + set_ci_step(fcsts[s].std(axis=0)[idx],)
+                                fcst_step + _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
                                 for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
                             ]
-                            for s in fcsts.keys()
+                            for s in fcsts.keys() if len(fcsts[s] > 0)
                         }
                     else:
                         self.history[m][kv[0]] = {
                             s: [
-                                fcst_step - set_ci_step(fcsts[s].std(axis=0)[idx],)
+                                fcst_step - _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
                                 for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
                             ]
-                            for s in fcsts.keys()
+                            for s in fcsts.keys() if len(fcsts[s] > 0)
                         }
         elif method == 'backtest':
             for j, m in enumerate(models):
@@ -1057,21 +1039,23 @@ class MVForecaster:
                 for i, kv in enumerate(ci_attr_map.items()):
                     if i % 2 == 0:
                         fcsts = fcst_attr_map[kv[1]]
-                        self.history[m][kv[0]] = {
-                            s:[
-                                fcsts[s][j][idx] + set_ci_step(val)
-                                for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
-                            ]
-                            for s in series
-                        }
+                        if len(fcsts[s]) > 0:
+                            self.history[m][kv[0]] = {
+                                s:[
+                                    fcsts[s][j][idx] + _set_ci_step(f=self,s=val)
+                                    for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
+                                ]
+                                for s in series
+                            }
                     else:
-                        self.history[m][kv[0]] = {
-                            s:[
-                                fcsts[s][j][idx] - set_ci_step(val)
-                                for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
-                            ]
-                            for s in series
-                        }
+                        if len(fcsts[s]) > 0:
+                            self.history[m][kv[0]] = {
+                                s:[
+                                    fcsts[s][j][idx] - _set_ci_step(f=self,s=val)
+                                    for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
+                                ]
+                                for s in series
+                            }
             self.history[m]['CIPlusMinus'] = None
         else:
             raise ValueError(f'method expected one of "naive", "backtest", got {method}')
@@ -1089,37 +1073,36 @@ class MVForecaster:
         error='raise',
         **cvkwargs,
     ):
-        """ iterates through a list of models, tunes them using grids in a grids file, and forecasts them.
+        """ Iterates through a list of models, tunes them using grids in a grids file, and forecasts them.
 
         Args:
-            models (list-like): the models to iterate through.
-            cross_validate (bool): default False
-                whether to tune the model with cross validation. 
-                if False, uses the validation slice of data to tune.
-            dynamic_tuning (bool): default False.
-                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, metrics effectively become an average of one-step forecasts.
-            dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            probabilistic (bool, str, or list-like): default False.
-                if bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
-                if str, the name of a single model to apply a probabilistic process to.
-                if list-like, a list of models to apply a probabilistic process to.
-            n_iter (int): default 20.
-                how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
-            limit_grid_size (int or float): optional. pass an argument here to limit each of the grids being read.
-                see https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.limit_grid_size
-            suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
-                later. if unspecified, each model can be called by its estimator name.
-            error (str): one of 'ignore','raise','warn'; default 'raise'.
-                what to do with the error if a given model fails.
+            models (list-like): The models to iterate through.
+            cross_validate (bool): Default False.
+                Whether to tune the model with cross validation. 
+                If False, uses the validation slice of data to tune.
+            dynamic_tuning (bool): Default False.
+                Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
+            dynamic_testing (bool or int): Default True.
+                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            probabilistic (bool, str, or list-like): Default False.
+                If bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
+                If str, the name of a single model to apply a probabilistic process to.
+                If list-like, a list of models to apply a probabilistic process to.
+            n_iter (int): Default 20.
+                How many iterations to use in probabilistic forecasting. Ignored if probabilistic = False.
+            limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.limit_grid_size.
+            suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called later. 
+                If unspecified, each model can be called by its estimator name.
+            error (str): One of 'ignore','raise','warn'. Default 'raise'.
+                What to do with the error if a given model fails.
                 'warn' logs a warning that the model could not be evaluated.
-            **cvkwargs: passed to the cross_validate() method.
+            **cvkwargs: Passed to the cross_validate() method.
 
         Returns:
             None
@@ -1155,7 +1138,7 @@ class MVForecaster:
                 elif error == 'warn':
                     warnings.warn(
                         f"{m} model could not be evaluated. "
-                        f"here's the error: {e}."
+                        f"Here's the error: {e}."
                     )
                     continue
                 elif error == 'ignore':
@@ -1164,14 +1147,14 @@ class MVForecaster:
                     raise ValueError(f'value passed to error arg not recognized: {error}')
 
     def set_optimize_on(self, how):
-        """ choose how to determine best models by choosing which series should be optimized.
-        this is the decision that will be used for tuning models as well.
+        """ Choose how to determine best models by choosing which series should be optimized.
+        This is the decision that will be used for tuning models as well.
 
         Args:
-            how (str): one of _optimizer_funcs_, 'series{n}', 'y{n}', or the series name.
-                if in _optimizer_funcs_, will optimize based on that metric.
-                if 'series{n}', 'y{n}', or the series name, will choose the model that performs best on that series.
-                by default, opitmize_on is set to 'mean' when the object is initiated.
+            how (str): One of _optimizer_funcs_, 'series{n}', 'y{n}', or the series name.
+                If in _optimizer_funcs_, will optimize based on that metric.
+                If 'series{n}', 'y{n}', or the series name, will choose the model that performs best on that series.
+                By default, optimize_on is set to 'mean' when the object is initiated.
         """
         if how in _optimizer_funcs_:
             self.optimize_on = how
@@ -1182,22 +1165,24 @@ class MVForecaster:
     def _forecast(
         self, fcster, dynamic_testing, tune=False, normalizer="minmax", lags=1, **kwargs
     ):
-        """ runs the vector multi-variate forecast start-to-finish. all Xvars used always. all sklearn estimators supported.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html
+        """ Runs the vector multivariate forecast start-to-finish. All Xvars stored in the object are used always. All sklearn estimators supported.
+        See example: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html.
 
         Args:
-            fcster (str): one of _sklearn_estimators_. reads the estimator set to `set_estimator()` method.
+            fcster (str): One of _sklearn_estimators_. Reads the estimator set to `set_estimator()` method.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            tune (bool): default False.
-                whether the model is being tuned.
-                does not need to be specified by user.
-            normalizer (str): one of _normalizer_. default 'minmax'.
-                if not None, normalizer fit on the training data only to not leak.
+                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            tune (bool): Default False.
+                Whether the model is being tuned.
+                It does not need to be specified by the user.
+            normalizer (str): The scaling technique to apply to the data. One of _normalizer_. 
+                Default 'minmax'.
+                If not None and a test length is specified greater than 0, the normalizer is fit on the training data only.
             lags (int | list[int] | dict[str,(int | list[int])]): default 1.
                 the lags to add from each series to forecast with.
                 needs to use at least one lag for any sklearn model.
@@ -1303,13 +1288,17 @@ class MVForecaster:
             Returns:
                 (ndarray): The scaled x values.
             """
-            if not scaler is None and lags:
+            if scaler is not None:
                 return scaler.transform(X if not hasattr(X,'values') else X.values)
             else:
                 return X.values if hasattr(X, "values") else X
 
-        def train(X, y, normalizer, **kwargs):
-            self.scaler = self._parse_normalizer(X, normalizer)
+        def train(X, y, normalizer, true_forecast = False, **kwargs):
+            if not true_forecast or self.test_length == 0:
+                self.scaler = self._parse_normalizer(
+                    X, 
+                    normalizer,
+                ) # only fit normalizer on training data or on full dataset if not testing
             X = scale(self.scaler, X)
             regr = _sklearn_imports_[fcster](**kwargs)
             # below added for vecm model -- could be expanded for others as well
@@ -1337,7 +1326,6 @@ class MVForecaster:
                 future = scale(self.scaler, future)
                 for series, regr in trained_models.items():
                     preds[series] = list(regr.predict(future))
-            
             else:
                 preds = {series: [] for series in trained_models.keys()}
                 for i in range(len(future)):
@@ -1362,61 +1350,65 @@ class MVForecaster:
             isinstance(dynamic_testing, bool)
             | isinstance(dynamic_testing, int) & (dynamic_testing > -1),
             ValueError,
-            f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}",
+            f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}.",
         )
         dynamic_testing = (
             False
             if type(dynamic_testing) == int and dynamic_testing == 1
             else dynamic_testing
-        )  # 1-step dynamic testing is same as no dynamic testing
-        test_length = self.test_length + (self.validation_length if tune else 0)
-        validation_length = self.validation_length
+        )  # 1-step dynamic testing is same as no dynamic testing and no dynamic testing is more efficient
         observed, future = prepare_data(lags)
 
-        # test the model
-        if lags is None or not lags:
-            trained = train(
-                X=observed.values[:-test_length].copy(),
-                y=None,
-                normalizer=normalizer,
-                **kwargs,
-            )
-        else:
-            trained = {}
-            for i in range(self.n_series):
-                trained[f"y{i+1}"] = train(
+        if tune or self.test_length > 0:
+            test_length = self.test_length + (self.validation_length if tune else 0)
+            validation_length = self.validation_length
+            if lags is None or not lags:
+                trained = train(
                     X=observed.values[:-test_length].copy(),
-                    y=getattr(self, f"series{i+1}")["y"]
-                    .values[-observed.shape[0] : -test_length]
-                    .copy(),
-                    normalizer=normalizer,
+                    y=None,
+                    normalizer=None,
+                    true_forecast=False,
                     **kwargs,
                 )
-
-        preds = evaluate(
-            trained,
-            observed.iloc[-(test_length + validation_length) : -validation_length, :]
-            if tune
-            else observed.iloc[-test_length:],
-            dynamic_testing,
-        )
-
-        if tune:
-            return (
-                preds.copy(),
-                {
-                    f"y{i+1}": getattr(self, f"series{i+1}")["y"]
-                    .values[-(test_length + validation_length) : -validation_length]
-                    .copy()
-                    for i in range(self.n_series)
-                },
+            else:
+                trained = {}
+                for i in range(self.n_series):
+                    trained[f"y{i+1}"] = train(
+                        X=observed.values[:-test_length].copy(),
+                        y=getattr(self, f"series{i+1}")["y"]
+                        .values[-observed.shape[0] : -test_length]
+                        .copy(),
+                        normalizer=normalizer,
+                        true_forecast=False,
+                        **kwargs,
+                    )
+            preds = evaluate(
+                trained,
+                observed.iloc[-(test_length + validation_length) : -validation_length, :]
+                if tune
+                else observed.iloc[-test_length:],
+                dynamic_testing,
             )
-
+            if tune:
+                return (
+                    preds.copy(),
+                    {
+                        f"y{i+1}": getattr(self, f"series{i+1}")["y"]
+                        .values[-(test_length + validation_length) : -validation_length]
+                        .copy()
+                        for i in range(self.n_series)
+                    },
+                )
+            self.test_set_pred = preds.copy()
+        else:
+            self.test_set_pred = {}
+        
         if lags is None or not lags:
             trained_full = train(
                 X=observed.copy(),
                 y=None,
-                normalizer=normalizer,
+                normalizer=None,
+                true_forecast = True,
                 **kwargs,
             )
         else:
@@ -1428,14 +1420,21 @@ class MVForecaster:
                     .values[-observed.shape[0] :]
                     .copy(),
                     normalizer=normalizer,
+                    true_forecast = True,
                     **kwargs,
                 )
-
         self.dynamic_testing = dynamic_testing
-        self.test_set_pred = preds.copy()
         self.trained_models = trained_full # does not go to history
-        self.fitted_values = evaluate(trained_full, observed.copy(), False)
-        return evaluate(trained_full, future.copy(), True)
+        self.fitted_values = evaluate(
+            trained_models=trained_full, 
+            future=observed.copy(), 
+            dynamic_testing=False
+        )
+        return evaluate(
+            trained_models=trained_full, 
+            future=future.copy(), 
+            dynamic_testing=True
+        )
 
     def _parse_normalizer(self, X_train, normalizer):
         """ fits an appropriate scaler to training data that will then be applied to test and future data
@@ -1473,7 +1472,7 @@ class MVForecaster:
             except ValueError:
                 from sklearn.preprocessing import StandardScaler as Scaler
                 logging.warning(
-                    f"the pt normalizer did not work for the {self.estimator} model, defaulting to a StandardScaler"
+                    f"The pt normalizer did not work for the {self.estimator} model, defaulting to a StandardScaler."
                 )
                 normalizer = "scale"
         else:
@@ -1502,9 +1501,7 @@ class MVForecaster:
                 series: np.std(r) for series, r in bootstrapped_resids.items()
             }
             return {
-                series: stats.norm.ppf(1 - (1 - self.cilevel) / 2)
-                * bootstrap_std[series]
-                + bootstrap_mean[series]
+                series: _set_ci_step(f=self,s=bootstrap_std[series]) + bootstrap_mean[series]
                 for series in resids.keys()
             }
 
@@ -1542,7 +1539,7 @@ class MVForecaster:
             return preds, test_set_actuals
 
         test_set_preds = self.test_set_pred.copy()
-        test_set_actuals = {
+        test_set_actuals = {} if self.test_length == 0 else {
             f"y{i+1}": (
                 getattr(self, f"series{i+1}")["y"].to_list()[-self.test_length :]
             ) for i in range(self.n_series)
@@ -1594,19 +1591,19 @@ class MVForecaster:
             "TestSetPredictions": test_set_preds,
             "TestSetActuals": test_set_actuals,
             "TestSetRMSE": {
-                series: rmse(a, test_set_preds[series])
+                series: _return_na_if_len_zero(a, test_set_preds[series], rmse)
                 for series, a in test_set_actuals.items()
             },
             "TestSetMAPE": {
-                series: mape(a, test_set_preds[series])
+                series: _return_na_if_len_zero(a, test_set_preds[series], mape)
                 for series, a in test_set_actuals.items()
             },
             "TestSetMAE": {
-                series: mae(a, test_set_preds[series])
+                series: _return_na_if_len_zero(a, test_set_preds[series], mae)
                 for series, a in test_set_actuals.items()
             },
             "TestSetR2": {
-                series: r2(a, test_set_preds[series])
+                series: _return_na_if_len_zero(a, test_set_preds[series], r2)
                 for series, a in test_set_actuals.items()
             },
             "TestSetUpperCI": {
@@ -1616,19 +1613,19 @@ class MVForecaster:
                 series: p - cis[series] for series, p in test_set_preds.items()
             },
             "InSampleRMSE": {
-                series: rmse(a, fitted_vals[series])
+                series: _return_na_if_len_zero(a, fitted_vals[series],rmse)
                 for series, a in fitted_val_actuals.items()
             },
             "InSampleMAPE": {
-                series: mape(a, fitted_vals[series])
+                series: _return_na_if_len_zero(a, fitted_vals[series], mape)
                 for series, a in fitted_val_actuals.items()
             },
             "InSampleMAE": {
-                series: mae(a, fitted_vals[series])
+                series: _return_na_if_len_zero(a, fitted_vals[series], mae)
                 for series, a in fitted_val_actuals.items()
             },
             "InSampleR2": {
-                series: r2(a, fitted_vals[series])
+                series: _return_na_if_len_zero(a, fitted_vals[series], r2)
                 for series, a in fitted_val_actuals.items()
             },
             "CILevel": self.cilevel,
@@ -1641,29 +1638,29 @@ class MVForecaster:
             "LevelTestSetPreds": lvl_tsp,
             "LevelTestSetActuals": lvl_tsa,
             "LevelTestSetRMSE": {
-                series: rmse(a, lvl_tsp[series]) for series, a in lvl_tsa.items()
+                series: _return_na_if_len_zero(a, lvl_tsp[series], rmse) for series, a in lvl_tsa.items()
             },
             "LevelTestSetMAPE": {
-                series: mape(a, lvl_tsp[series]) for series, a in lvl_tsa.items()
+                series: _return_na_if_len_zero(a, lvl_tsp[series], mape) for series, a in lvl_tsa.items()
             },
             "LevelTestSetMAE": {
-                series: mae(a, lvl_tsp[series]) for series, a in lvl_tsa.items()
+                series: _return_na_if_len_zero(a, lvl_tsp[series], mae) for series, a in lvl_tsa.items()
             },
             "LevelTestSetR2": {
-                series: r2(a, lvl_tsp[series]) for series, a in lvl_tsa.items()
+                series: _return_na_if_len_zero(a, lvl_tsp[series], r2) for series, a in lvl_tsa.items()
             },
             "LevelFittedVals": lvl_fv,
             "LevelInSampleRMSE": {
-                series: rmse(a, lvl_fv[series]) for series, a in lvl_fva.items()
+                series: _return_na_if_len_zero(a, lvl_fv[series], rmse) for series, a in lvl_fva.items()
             },
             "LevelInSampleMAPE": {
-                series: mape(a, lvl_fv[series]) for series, a in lvl_fva.items()
+                series: _return_na_if_len_zero(a, lvl_fv[series], mape) for series, a in lvl_fva.items()
             },
             "LevelInSampleMAE": {
-                series: mae(a, lvl_fv[series]) for series, a in lvl_fva.items()
+                series: _return_na_if_len_zero(a, lvl_fv[series], mae) for series, a in lvl_fva.items()
             },
             "LevelInSampleR2": {
-                series: r2(a, lvl_fv[series]) for series, a in lvl_fva.items()
+                series: _return_na_if_len_zero(a, lvl_fv[series], r2) for series, a in lvl_fva.items()
             },
             "LevelUpperCI": {
                 series: p + lvl_cis[series] for series, p in lvl_fcst.items()
@@ -1691,14 +1688,14 @@ class MVForecaster:
             self.history[self.call_me]["grid_evaluated"] = self.grid_evaluated
 
     def set_best_model(self, model=None, determine_best_by=None):
-        """ sets the best model to be referenced as "best".
-        one of model or determine_best_by parameters must be specified.
+        """ Sets the best model to be referenced as "best".
+        One of model or determine_best_by parameters must be specified.
 
         Args:
-            model (str): the model to set as the best.
-                must match the estimator name or call_me if that was used when evaluating the model.
-            determine_best_by (str): one of _determine_best_by_.
-                if model is specified, this will be ignored.
+            model (str): The model to set as the best.
+                Must match the estimator name or call_me if that was used when evaluating the model.
+            determine_best_by (str): One of _determine_best_by_.
+                If model is specified, this will be ignored.
 
         Returns:
             None
@@ -1707,16 +1704,16 @@ class MVForecaster:
             if model in self.history.keys():
                 self.best_model = model
             else:
-                raise ValueError(f"cannot find {model} in history")
+                raise ValueError(f"Cannot find {model} in history.")
         else:
             descriptive_assert(
                 determine_best_by in _determine_best_by_,
                 ValueError,
-                f"determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}",
+                f"determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}.",
             )
             models_metrics = {m: v[determine_best_by] for m, v in self.history.items()}
 
-            if self.optimize_on in _optimizer_funcs_:
+            if self.optimize_on in _optimizer_funcs_ and determine_best_by != 'ValidationMetricValue':
                 models_metrics = {
                     m: _optimizer_funcs_[self.optimize_on](list(v.values()))
                     for m, v in models_metrics.items()
@@ -1790,40 +1787,41 @@ class MVForecaster:
         ax=None,
         figsize=(12,6),
     ):
-        """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
+        """ Plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
 
         Args:
-            models (list-like or str): default 'all'.
-               the forecasted models to plot.
-               name of the model, 'all', or list-like of model names.
+            models (list-like or str): Default 'all'.
+               The forecasted models to plot.
+               Name of the model, 'all', or list-like of model names.
                'top_' and None not supported.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
-            put_best_on_top (bool): only set to True if you have previously called set_best_model().
-                if False, ignored.
-            level (bool): default False.
-                if True, will always plot level forecasts.
-                if False, will plot the forecasts at whatever level they were called on.
-                if False and there are a mix of models passed with different integrations, will default to True.
-            ci (bool): default False.
-                whether to display the confidence intervals.
-            ax (Axis): optional. the existing exis to write the resulting figure to.
-            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+            series (list-like or str): Default 'all'.
+               The series to plot.
+               Name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
+            put_best_on_top (bool): Only set to True if you have previously called set_best_model().
+                If False, ignored.
+            level (bool): Default False.
+                If True, will always plot level forecasts.
+                If False, will plot the forecasts at whatever level they were called on.
+                If False and there are a mix of models passed with different integrations, will default to True.
+            ci (bool): Default False.
+                Whether to display the confidence intervals.
+            ax (Axis): Optional. The existing axis to write the resulting figure to.
+            figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
 
 
         Returns:
-            (Axis): the figure's axis.
+            (Axis): The figure's axis.
 
         >>> mvf.plot() # plots all forecasts and all series
         >>> plt.show()
         """
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
+
         series, labels = self._parse_series(series)
         models = self._parse_models(models, put_best_on_top)
         integration = [v for s, v in self.integration.items() if s in series]
         level = True if len(set(integration)) > 1 else level
-        if ax is None:
-            _, ax = plt.subplots(figsize=figsize)
 
         k = 0
         for i, s in enumerate(series):
@@ -1882,39 +1880,48 @@ class MVForecaster:
         ax=None,
         figsize=(12,6),
     ):
-        """  plots all test-set predictions with the actuals.
+        """  Plots all test-set predictions with the actuals.
 
         Args:
-            models (list-like or str): default 'all'.
-               the forecasted models to plot.
-               name of the model, 'all', or list-like of model names.
+            models (list-like or str): Default 'all'.
+               The forecasted models to plot.
+               Name of the model, 'all', or list-like of model names.
                'top_' and None not supported.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
-            put_best_on_top (bool): only set to True if you have previously called set_best_model().
-                if False, ignored.
-            include_train (bool or int): default True.
-                use to zoom into training resultsl
-                if True, plots the test results with the entire history in y.
-                if False, matches y history to test results and only plots this.
-                if int, plots that length of y to match to test results.
-            level (bool): default False.
-                if True, will always plot level forecasts.
-                if False, will plot the forecasts at whatever level they were called on.
-                if False and there are a mix of models passed with different integrations, will default to True.
-            ci (bool): default False.
-                whether to display the confidence intervals.
-            ax (Axis): optional. the existing exis to write the resulting figure to.
-            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+            series (list-like or str): Default 'all'.
+               The series to plot.
+               Name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
+            put_best_on_top (bool): Only set to True if you have previously called set_best_model().
+                If False, ignored.
+            include_train (bool or int): Default True.
+                Use to zoom into training results.
+                If True, plots the test results with the entire history in y.
+                If False, matches y history to test results and only plots this.
+                If int, plots that length of y to match to test results.
+            level (bool): Default False.
+                If True, will always plot level forecasts.
+                If False, will plot the forecasts at whatever level they were called on.
+                If False and there are a mix of models passed with different integrations, will default to True.
+            ci (bool): Default False.
+                Whether to display the confidence intervals.
+            ax (Axis): Optional. The existing axis to write the resulting figure to.
+            figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
 
 
         Returns:
-            (Axis): the figure's axis.
+            (Axis): The figure's axis.
 
         >>> mvf.plot_test_set() # plots all test set predictions on all series
         >>> plt.show()
         """
+        descriptive_assert(
+            self.test_length > 0,
+            ForecastError,
+            'plot_test_set() does not work when models were not tested (test_length set to 0).',
+        )
+
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
+        
         series, labels = self._parse_series(series)
         models = self._parse_models(models, put_best_on_top)
         integration = [v for s, v in self.integration.items() if s in series]
@@ -1926,8 +1933,6 @@ class MVForecaster:
             if include_train is False
             else include_train
         )
-        if ax is None:
-            _, ax = plt.subplots(figsize=figsize)
 
         k = 0
         for i, s in enumerate(series):
@@ -1986,25 +1991,25 @@ class MVForecaster:
         ax=None,
         figsize=(12,6),
     ):
-        """ plots fitted values with the actuals.
+        """ Plots fitted values with the actuals.
 
         Args:
-            models (list-like or str): default 'all'.
-               the forecasted models to plot.
-               name of the model, 'all', or list-like of model names.
+            models (list-like or str): Default 'all'.
+               The forecasted models to plot.
+               Name of the model, 'all', or list-like of model names.
                'top_' and None not supported.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
-            level (bool): default False.
-                if True, will always plot level forecasts.
-                if False, will plot the forecasts at whatever level they were called on.
-            ax (Axis): optional. the existing exis to write the resulting figure to.
-            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+            series (list-like or str): Default 'all'.
+               The series to plot.
+               Name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
+            level (bool): Default False.
+                If True, will always plot level forecasts.
+                If False, will plot the forecasts at whatever level they were called on.
+            ax (Axis): Optional. The existing axis to write the resulting figure to.
+            figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
 
 
         Returns:
-            (Axis): the figure's axis.
+            (Axis): The figure's axis.
 
         >>> mvf.plot_fitted() # plots all fitted values on all series
         >>> plt.show()
@@ -2060,37 +2065,40 @@ class MVForecaster:
         out_path="./",
         excel_name="results.xlsx",
     ):
-        """ exports 1-all of 5 pandas dataframes, can write to excel with each dataframe on a separate sheet.
-        will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
+        """ Exports 1-all of 5 pandas dataframes. Can write to excel with each dataframe on a separate sheet.
+        Will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
         Args:
-            dfs (list-like or str): default 
+            dfs (list-like or str): Default 
                 ['all_fcsts','model_summaries','test_set_predictions','lvl_test_set_predictions','lvl_fcsts'].
-                a list or name of the specific dataframe(s) you want returned and/or written to excel.
-                must be one of or multiple of default.
-            models (list-like or str): default 'all'.
-               the forecasted models to plot.
-               name of the model, 'all', or list-like of model names.
+                A list or name of the specific dataframe(s) you want returned and/or written to excel.
+                Must be one of or multiple of default.
+            models (list-like or str): Default 'all'.
+               The forecasted models to plot.
+               Name of the model, 'all', or list-like of model names.
                'top_' and None not supported.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
-            to_excel (bool): default False.
-                whether to save to excel.
-            cis (bool): default False.
-                whether to export confidence intervals for models in 
+            series (list-like or str): Default 'all'.
+               The series to plot.
+               Name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
+            to_excel (bool): Default False.
+                Whether to save to excel.
+            cis (bool): Default False.
+                Whether to export confidence intervals for models in 
                 "all_fcsts", "test_set_predictions", "lvl_test_set_predictions", "lvl_fcsts"
                 dataframes.
-            out_path (str): default './'.
-                the path to save the excel file to (ignored when `to_excel=False`).
-            excel_name (str): default 'results.xlsx'.
-                the name to call the excel file (ignored when `to_excel=False`).
+            out_path (str): Default './'.
+                The path to save the excel file to (ignored when `to_excel=False`).
+            excel_name (str): Default 'results.xlsx'.
+                The name to call the excel file (ignored when `to_excel=False`).
 
         Returns:
-            (DataFrame or Dict[str,DataFrame]): either a single pandas dataframe if one element passed to dfs 
+            (DataFrame or Dict[str,DataFrame]): Either a single pandas dataframe if one element passed to dfs 
             or a dictionary where the keys match what was passed to dfs and the values are dataframes. 
 
-        >>> f.export(dfs=['model_summaries','lvl_fcsts'],to_excel=True)
+        >>> results = mvf.export(dfs=['model_summaries','lvl_fcsts'],to_excel=True) # returns a dict
+        >>> model_summaries = results['model_summaries'] # returns a dataframe
+        >>> lvl_fcsts = results['lvl_fcsts'] # returns a dataframe
+        >>> ts_preds = mvf.export('test_set_predictions') # returns a dataframe
         """
         descriptive_assert(
             isinstance(cis, bool),
@@ -2284,19 +2292,19 @@ class MVForecaster:
             return output
 
     def export_fitted_vals(self, series="all", models="all", level=False):
-        """ exports a dataframe of fitted values and actuals
+        """ Exports a dataframe of fitted values and actuals.
 
         Args:
-            models (list-like or str): default 'all'.
-               name of the model, 'all', or list-like of model names.
-            series (list-like or str): default 'all'.
-               the series to plot.
-               name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
-            level (bool): default False.
-                whether to export level fitted values
+            models (list-like or str): Default 'all'.
+               Name of the model, 'all', or list-like of model names.
+            series (list-like or str): Default 'all'.
+               The series to plot.
+               Name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
+            level (bool): Default False.
+                Whether to export level fitted values
 
         Returns:
-            (DataFrame): the fitted values for all selected series and models.
+            (DataFrame): The fitted values for all selected series and models.
         """
         series, labels = self._parse_series(series)
         models = self._parse_models(models, False)
@@ -2320,38 +2328,38 @@ class MVForecaster:
         return pd.DataFrame({c: v[-length:] for c, v in dfd.items()})
 
     def export_validation_grid(self, model):
-        """ exports a validation grid for a selected model.
+        """ Exports a validation grid for a selected model.
 
         Args:
-            model (str): the model to export the validation grid for.
+            model (str): The model to export the validation grid for.
 
         Returns:
-            (DataFrame): the validation grid
+            (DataFrame): The validation grid.
         """
         return self.history[model]["grid_evaluated"].copy()
 
     def backtest(self, model, fcst_length="auto", n_iter=10, jump_back=1):
-        """ runs a backtest of a selected evaluated model over a certain 
+        """ Runs a backtest of a selected evaluated model over a certain 
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
-        all scoring is dynamic to give a true out-of-sample result.
-        all metrics are specific to level data.
-        two results are extracted: a dataframe of actuals and predictions across each iteration and
+        All scoring is dynamic to give a true out-of-sample result.
+        All metrics are specific to level data.
+        Two results are extracted: a dataframe of actuals and predictions across each iteration and
         a dataframe of test-set metrics across each iteration with a mean total as the last column.
-        these results are stored in the Forecaster object's history and can be extracted by calling 
+        These results are stored in the Forecaster object's history and can be extracted by calling 
         `export_backtest_metrics()` and `export_backtest_values()`.
 
         Args:
-            model (str): the model to run the backtest for. use the model nickname.
-            fcst_length (int or str): default 'auto'. 
-                if 'auto', uses the same forecast length as the number of future dates saved in the object currently.
-                if int, uses that as the forecast length.
-            n_iter (int): default 10. the number of iterations to backtest.
-                models will iteratively train on all data before the fcst_length worth of values.
-                each iteration takes observations (this number is determined by the value passed to the jump_back arg)
+            model (str): The model to run the backtest for. Use the model nickname.
+            fcst_length (int or str): Default 'auto'. 
+                If 'auto', uses the same forecast length as the number of future dates saved in the object currently.
+                If int, uses that as the forecast length.
+            n_iter (int): Default 10. The number of iterations to backtest.
+                Models will iteratively train on all data before the fcst_length worth of values.
+                Each iteration takes observations (this number is determined by the value passed to the jump_back arg)
                 off the end to redo the cast until all of n_iter is exhausted.
-            jump_back (int): default 1. 
-                the number of time steps between two consecutive training sets.
+            jump_back (int): Default 1. 
+                The number of time steps between two consecutive training sets.
 
         Returns:
             None
@@ -2420,44 +2428,44 @@ class MVForecaster:
         self.history[model]["BacktestValues"] = value_results
 
     def export_backtest_metrics(self, model):
-        """ extracts the backtest metrics for a given model.
-        only works if `backtest()` has been called.
+        """ Extracts the backtest metrics for a given model.
+        Only works if `backtest()` has been called.
 
         Args:
-            model (str): the model nickname to extract metrics for.
+            model (str): The model nickname to extract metrics for.
 
         Returns:
-            (DataFrame): a copy of the backtest metrics.
+            (DataFrame): A copy of the backtest metrics.
         """
         return self.history[model]["BacktestMetrics"].copy()
 
     def export_backtest_values(self, model):
-        """ extracts the backtest values for a given model.
-        only works if `backtest()` has been called.
+        """ Extracts the backtest values for a given model.
+        Only works if `backtest()` has been called.
 
         Args:
-            model (str): the model nickname to extract values for.
+            model (str): The model nickname to extract values for.
 
         Returns:
-            (DataFrame): a copy of the backtest values.
+            (DataFrame): A copy of the backtest values.
         """
         return self.history[model]["BacktestValues"].copy()
 
     def corr(self, train_only=False, disp="matrix", df=None, **kwargs):
-        """ displays pearson correlation between all stored series in object, at whatever level they are stored.
+        """ Displays pearson correlation between all stored series in object, at whatever level they are stored.
 
         Args:
-            train_only (bool): default False.
-                whether to only include the training set (to avoid leakage).
-            disp (str): one of {'matrix','heatmap'}, default 'matrix'.
-                how to display results.
-            df (DataFrame): optional. a dataframe to display correlation for.
-                if specified, a dataframe will be created using all series with no lags.
-                this argument exists to make the corr_lags() method work and it is not recommended to use it manually.
-            **kwargs: passed to seaborn.heatmap() function and are ignored if disp == 'matrix'.
+            train_only (bool): Default False.
+                Whether to only include the training set (to avoid leakage).
+            disp (str): One of {'matrix','heatmap'}. Default 'matrix'.
+                How to display results.
+            df (DataFrame): Optional. A dataframe to display correlation for.
+                If specified, a dataframe will be created using all series with no lags.
+                This argument exists to make the corr_lags() method work and it is not recommended to use it manually.
+            **kwargs: Passed to seaborn.heatmap() function and are ignored if disp == 'matrix'.
 
         Returns:
-            (DataFrame or Figure): the created dataframe if disp == 'matrix' else the heatmap fig.
+            (DataFrame or Figure): The created dataframe if disp == 'matrix' else the heatmap fig.
         """
         if df is None:
             series, labels = self._parse_series("all")
@@ -2485,18 +2493,18 @@ class MVForecaster:
             raise ValueError(f'disp must be one of "matrix","heatmap", got {disp}')
 
     def corr_lags(self, y="series1", x="series2", lags=1, **kwargs):
-        """ displays pearson correlation between one series and another series' lags.
+        """ Displays pearson correlation between one series and another series' lags.
 
         Args:
-            y (str): default 'series1'. the series to display as the dependent series.
-                can use 'series{n}', 'y{n}' or user-selected name.
-            x (str): default 'series2'. the series to display as the independent series.
-                can use 'series{n}', 'y{n}' or user-selected name.
-            lags (int): default 1. the number of lags to display in the independent series.
-            **kwargs: passed to the MVForecaster.corr() method. will not pass the df arg.
+            y (str): Default 'series1'. The series to display as the dependent series.
+                Can use 'series{n}', 'y{n}' or user-selected name.
+            x (str): Default 'series2'. The series to display as the independent series.
+                Can use 'series{n}', 'y{n}' or user-selected name.
+            lags (int): Default 1. The number of lags to display in the independent series.
+            **kwargs: Passed to the MVForecaster.corr() method. Will not pass the df arg.
 
         Returns:
-            (DataFrame or Figure): the created dataframe if disp == 'matrix' else the heatmap fig.
+            (DataFrame or Figure): The created dataframe if disp == 'matrix' else the heatmap fig.
         """
         series1, label1 = self._parse_series(y)
         series2, label2 = self._parse_series(x)
@@ -2513,3 +2521,22 @@ class MVForecaster:
 
         df = df.dropna()
         return self.corr(df=df, **kwargs)
+
+_series_colors_ = [
+    "#0000FF",
+    "#00FFFF",
+    "#7393B3",
+    "#088F8F",
+    "#0096FF",
+    "#F0FFFF",
+    "#00FFFF",
+    "#5D3FD3",
+    "#191970",
+    "#9FE2BF",
+] * 100
+
+_optimizer_funcs_ = {
+    "mean": np.mean,
+    "min": np.min,
+    "max": np.max,
+}

@@ -27,14 +27,14 @@ def _convert_m(m,freq):
 
 class metrics:
     def mape(a,f):
-        """ mean absolute percentage error (MAPE).
+        """ Mean absolute percentage error (MAPE).
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            f (list-like): the predictions over the forecast horizon.
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
 
         Returns:
-            (float): the derived MAPE.
+            (float): The derived MAPE.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -44,14 +44,14 @@ class metrics:
         return Forecaster.mape(a,f)
 
     def r2(a,f):
-        """ r-squared (R2).
+        """ R-squared (R2).
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            f (list-like): the predictions over the forecast horizon.
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
 
         Returns:
-            (float): the derived R2.
+            (float): The derived R2.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -61,14 +61,14 @@ class metrics:
         return Forecaster.r2(a,f)
 
     def mse(a,f):
-        """ mean squared error (MSE).
+        """ Mean squared error (MSE).
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            f (list-like): the predictions over the forecast horizon.
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
 
         Returns:
-            (float): the derived MSE.
+            (float): The derived MSE.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -78,14 +78,14 @@ class metrics:
         return Forecaster.rmse(a,f)**2
 
     def rmse(a,f):
-        """ root mean squared error (RMSE).
+        """ Root mean squared error (RMSE).
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            f (list-like): the predictions over the forecast horizon.
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
 
         Returns:
-            (float): the derived RMSE.
+            (float): The derived RMSE.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -95,14 +95,14 @@ class metrics:
         return Forecaster.rmse(a,f)
 
     def mae(a,f):
-        """ mean absolute error (MAE).
+        """ Mean absolute error (MAE).
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            f (list-like): the predictions over the forecast horizon.
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
 
         Returns:
-            (float): the derived MAE.
+            (float): The derived MAE.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -112,17 +112,17 @@ class metrics:
         return Forecaster.mae(a,f)
 
     def smape(a,f):
-        """ symmetric mean absolute percentage error (sMAPE).
-        uses the same definition as used in the M4 competition.
-        does not multiply by 100.
-        see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
+        """ Symmetric mean absolute percentage error (sMAPE).
+        Uses the same definition as used in the M4 competition.
+        Does not multiply by 100.
+        See https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            f (list-like): the predictions over the forecast horizon.
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
 
         Returns:
-            (float): the derived sMAPE.
+            (float): The derived sMAPE.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -141,18 +141,18 @@ class metrics:
         )
 
     def mase(a,f,obs,m):
-        """ mean absolute scaled error (MASE).
-        uses the same definition as used in the M4 competition.
-        see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
+        """ Mean absolute scaled error (MASE).
+        Uses the same definition as used in the M4 competition.
+        See https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            f (list-like): the predictions over the forecast horizon.
-            obs (list-like): the actual observations used to create the forecast.
-            m (int): the seasonal period.
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
+            obs (list-like): The actual observations used to create the forecast.
+            m (int): The seasonal period.
 
         Returns:
-            (float): the derived MASE.
+            (float): The derived MASE.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -173,21 +173,21 @@ class metrics:
         return avger * (num / (davger * denom))
 
     def msis(a,uf,lf,obs,m,alpha=0.05):
-        """ mean scaled interval score (MSIS) for evaluating confidence intervals.
-        uses the same definition as used in the M4 competition.
-        lower values are better.
+        """ Mean scaled interval score (MSIS) for evaluating confidence intervals.
+        Uses the same definition as used in the M4 competition.
+        Lower values are better.
         see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
         Args:
-            a (list-like): the actuals over the forecast horizon.
-            uf (list-like): the upper-forecast bound according to the confidence interval.
-            lf (list-like): the lower-forecast bound according to the confidence interval.
-            obs (list-like): the actual observations used to create the forecast.
-            m (int): the seasonal period.
-            alpha (float): default 0.05. 0.05 for 95% confidence intervals, etc.
+            a (list-like): The actuals over the forecast horizon.
+            uf (list-like): The upper-forecast bound according to the confidence interval.
+            lf (list-like): The lower-forecast bound according to the confidence interval.
+            obs (list-like): The actual observations used to create the forecast.
+            m (int): The seasonal period.
+            alpha (float): Default 0.05. 0.05 for 95% confidence intervals, etc.
 
         Returns:
-            (float): the derived MSIS.
+            (float): The derived MSIS.
 
         >>> from scalecast.util import metrics
         >>> a = [1,2,3,4,5]
@@ -223,41 +223,41 @@ def pdr_load(
     MVForecaster_kwargs={},
     **kwargs
 ):
-    """ gets data using `pandas_datareader.DataReader()` and loads the series into a Forecaster or MVForecaster object.
-    this functions works well when the src arg is its default ('fred'), but there are some issues with other sources.
+    """ Gets data using `pandas_datareader.DataReader()` and loads the series into a Forecaster or MVForecaster object.
+    This functions works well when the src arg is its default ('fred'), but there are some issues with other sources.
 
     Args:
-        sym (str or list-like): the name of the series to extract.
-            if str (one series), returns a Forecaster object.
-            if list-like, returns an MVForecaster object. 
-            series of higher frequencies will having missing values filled using a forward fill.
-        start (str or datetime): the start date to extract data.
-        end (str or datetime): the end date to extract data.
-        src (str): the source of the API pull.
+        sym (str or list-like): The name of the series to extract.
+            If str (one series), returns a Forecaster object.
+            If a collection, returns an MVForecaster object. 
+            Series of higher frequencies will having missing values filled using a forward fill.
+        start (str or datetime): The start date to extract data.
+        end (str or datetime): The end date to extract data.
+        src (str): The source of the API pull.
             supported values: 'fred', 'yahoo', 'alphavantage', 'enigma', 
             'famafrench','moex', 'quandl', 'stooq', 'tiingo'.
-        require_future_dates (bool): default True.
-            if False, none of the models from the resulting Forecaster object 
+        require_future_dates (bool): Default True.
+            If False, none of the models from the resulting Forecaster object 
             will forecast into future periods by default.
-            if True, all models will forecast into future periods, 
+            If True, all models will forecast into future periods, 
             unless run with test_only = True, and when adding regressors, they will automatically
             be added into future periods.
-            will be ignored if sym is list-like.
-        future_dates (int): optional. the future dates to add to the model upon initialization.
-            if not added when object is initialized, can be added later.
-        integrate (bool): default False. whether to take first differences in extraced data if it is found to be non-stationary.
-        diff (bool): default False. whether to take first differences in extracted data 
+            Always set to True if sym is list-like (MVForecaster doesn't do test only).
+        future_dates (int): Optional. The future dates to add to the model upon initialization.
+            If not added when object is initialized, can be added later.
+        integrate (bool): Default False. Whether to take first differences in extraced data if it is found to be non-stationary.
+        diff (bool): Default False. Whether to take first differences in extracted data 
             without running the ADF test to check stationarity.
-        MVForecaster_kwargs (dict): default {}. if sym is list-like, 
+        MVForecaster_kwargs (dict): Default {}. If sym is list-like, 
             these arguments will be passed to the `MVForecaster()` init function.
-            if 'names' is not found in the dict, names are automatically added so that the
+            If 'names' is not found in the dict, names are automatically added so that the
             MVForecaster keeps the names of the extracted symbols.
-            to keep no names, pass `MVForecaster_kwargs = {'names':None,...}`.
-        **kwargs: passed to pdr.DataReader() function. 
-            see https://pandas-datareader.readthedocs.io/en/latest/remote_data.html.
+            To keep no names, pass `MVForecaster_kwargs = {'names':None,...}`.
+        **kwargs: Passed to pdr.DataReader() function. 
+            See https://pandas-datareader.readthedocs.io/en/latest/remote_data.html.
 
     Returns:
-        (Forecaster or MVForecaster): an object with the dates and y-values loaded.
+        (Forecaster or MVForecaster): An object with the dates and y-values loaded.
     """
     df = pdr.DataReader(sym,data_source=src,start=start,end=end,**kwargs)
     if isinstance(sym,str):
@@ -293,19 +293,22 @@ def pdr_load(
             **MVForecaster_kwargs,
         )
 
-def plot_reduction_errors(f):
-    """ plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
+def plot_reduction_errors(f, ax = None, figsize=(12,6)):
+    """ Plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
     with method = 'pfi'.
     
     Args:
-        f (Forecaster): an object that has called the `reduce_Xvars()` method with method = 'pfi'.
+        f (Forecaster): An object that has called the `reduce_Xvars()` method with method = 'pfi'.
+        ax (Axis): Optional. The existing axis to write the resulting figure to.
+        figsize (tuple): Default (12,6). The size of the resulting figure. Ignored when ax is not None.
         
     Returns:
-        (Axis) the figure's axis.
+        (Axis) The figure's axis.
     """
     dropped = f.pfi_dropped_vars
     errors = f.pfi_error_values
-    _, ax = plt.subplots()
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
     sns.lineplot(
         x=np.arange(0, len(dropped) + 1, 1), y=errors,
     )
@@ -315,13 +318,13 @@ def plot_reduction_errors(f):
 
 
 def break_mv_forecaster(mvf):
-    """ breaks apart an MVForecaster object and returns as many Foreaster objects as series loaded into the object.
+    """ Breaks apart an MVForecaster object and returns as many Foreaster objects as series loaded into the object.
 
     Args:
-        mvf (MVForecaster): the object to break apart.
+        mvf (MVForecaster): The object to break apart.
 
     Returns:
-        (tuple): a sequence of at least two Forecaster objects
+        (tuple): A sequence of at least two Forecaster objects
     """
 
     def convert_mv_hist(f, mvhist: dict, series_num: int):
@@ -334,7 +337,10 @@ def break_mv_forecaster(mvf):
                 elif not isinstance(v2, dict) or k2 == "HyperParams":
                     hist[k][k2] = v2
                 elif isinstance(v2, dict):
-                    hist[k][k2] = list(v2.values())[series_num]
+                    hist[k][k2] = (
+                        np.nan if series_num not in list(v2.values()) 
+                        else list(v2.values())[series_num]
+                    )
             hist[k]["TestOnly"] = False
             hist[k]["LevelY"] = f.levely
         return hist
@@ -366,17 +372,17 @@ def break_mv_forecaster(mvf):
     return tuple(to_return)
 
 def find_optimal_lag_order(mvf,train_only=False,**kwargs):
-    """ returns the otpimal lag order for a mutlivariate process using the statsmodels function:
+    """ Returns the otpimal lag order for a mutlivariate process using the statsmodels function:
     https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.var_model.VAR.select_order.html.
-    the exogenous regressors are set based on Xvars loaded in the `MVForecaster` object.
+    The exogenous regressors are set based on Xvars loaded in the `MVForecaster` object.
 
     Args:
-        mvf (MVForecaster): the MVForecaster object with series loaded to find the optimal order for
-        train_only (bool): default False. whether to use the training data only in the test.
-        **kwargs: passed to the referenced statsmodels function
+        mvf (MVForecaster): The MVForecaster object with series loaded to find the optimal order for
+        train_only (bool): Default False. Whether to use the training data only in the test.
+        **kwargs: Passed to the referenced statsmodels function
 
     Returns:
-        (LagOrderResults): lag selections.
+        (LagOrderResults): Lag selections.
     """
     from statsmodels.tsa.vector_ar.var_model import VAR
     data = np.array(
@@ -400,16 +406,16 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
     )
 
 def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
-    """ returns the optimal cointigration rank for a multivariate process using the function from statsmodels: 
+    """ Returns the optimal cointigration rank for a multivariate process using the function from statsmodels: 
     https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.select_coint_rank.html
 
     Args:
-       mvf (MVForecaster): the MVForecaster object with series loaded to find the optimal rank for
-       train_only (bool): default False. whether to use the training data only in the test.
-        **kwargs: passed to the referenced statsmodels function
+       mvf (MVForecaster): The MVForecaster object with series loaded to find the optimal rank for.
+       train_only (bool): Default False. Whether to use the training data only in the test.
+        **kwargs: Passed to the referenced statsmodels function.
 
     Returns:
-        (CointRankResults): object containing the cointegration rank suggested by the test and allowing a summary to be printed.
+        (CointRankResults): Object containing the cointegration rank suggested by the test and allowing a summary to be printed.
     """
     from statsmodels.tsa.vector_ar.vecm import select_coint_rank
     data = np.array(
@@ -435,28 +441,28 @@ def find_statistical_transformation(
     adf_kwargs = {},
     **kwargs,
 ):
-    """ finds a set of transformations to achieve stationarity or seasonal adjustment, based on results from statistical tests.
+    """ Finds a set of transformations to achieve stationarity or seasonal adjustment, based on results from statistical tests.
 
     Args:
-        f (Forecaster): the object that stores the series to test.
-        goal (list-like): one or multiple of 'stationary', 'seasonally_adj'. other options may be coming in the future.
-            if more than one goal is passed, will try to satisfy all goals in the order passed.
-            for stationary: uses an Augmented Dickey-Fuller test to determine if the series is stationary.
-            if not stationary, returns a diff transformation and log transformation if log is True.
-            for seasonall_adj: uses seasonal auto_arima to find the optimal seasonal diff.
-        train_only (bool): default False. whether to use train set only in all statistical tests.
-        log (bool): default True. whether to log and diff the series if it is found to be non-stationary or just diff.
-        critical_pval (float): default 0.05. the cutoff p-value to use to determine statistical signficance in the 
+        f (Forecaster): The object that stores the series to test.
+        goal (list-like): One or multiple of 'stationary', 'seasonally_adj'. Other options may be coming in the future.
+            If more than one goal is passed, will try to satisfy all goals in the order passed.
+            For stationary: uses an Augmented Dickey-Fuller test to determine if the series is stationary.
+            If not stationary, returns a diff transformation and log transformation if log is True.
+            For seasonall_adj: uses seasonal auto_arima to find the optimal seasonal diff.
+        train_only (bool): Default False. Whether to use train set only in all statistical tests.
+        log (bool): Default True. Whether to log and diff the series if it is found to be non-stationary or just diff.
+        critical_pval (float): Default 0.05. The cutoff p-value to use to determine statistical signficance in the 
             Augmented Dickey-Fuller test and to run the auto_arima selection (substitutes for `alpha` arg).
-        m (str or int): default 'auto': the number of observations that counts one seasonal step.
-            when 'auto', uses the M4 competition values: 
+        m (str or int): Default 'auto': The number of observations that counts one seasonal step.
+            When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
             so pass your own values for other frequencies.
-        adf_kwargs (dict): default {}. keyword args to pass to the Augmented Dickey-Fuller test function. 
-        **kwargs: passed to the auto_arima() function when searching for optimal seasonal diff.
+        adf_kwargs (dict): Default {}. Keyword args to pass to the Augmented Dickey-Fuller test function. 
+        **kwargs: Passed to the auto_arima() function when searching for optimal seasonal diff.
 
     Returns:
-        (Transformer, Reverter): a `Transformer` object with the identified transforming functions and
+        (Transformer, Reverter): A `Transformer` object with the identified transforming functions and
         the `Reverter` object with the `Transformer` counterpart functions.
     """
     def make_stationary(f,train_only,critical_pval,log,adf_kwargs,**kwargs):
@@ -536,45 +542,46 @@ def find_optimal_transformation(
     m='auto',
     **kwargs,
 ):
-    """ finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
-    works by comparing each transformation individually and stacking the set of transformations that leads to the best
-    performance. the estimator only uses series lags as inputs.
+    """ Finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
+    Works by comparing each transformation individually and stacking the set of transformations that leads to the best
+    performance. The estimator only uses series lags as inputs.
 
     Args:
-        f (Forecaster): the Forecaster object that contains the series that will be transformed.
-        estimator (str): one of _can_be_tuned_. default 'mlr'. the estimator to use to choose the best 
+        f (Forecaster): The Forecaster object that contains the series that will be transformed.
+        estimator (str): One of _can_be_tuned_. Default 'mlr'. The estimator to use to choose the best 
             transformations with.
-        monitor (str): one of _determine_best_by_ except 'ValidationMetricValue'. default 'TestSetRMSE'.
-            because 'ValidationMetricValue' changes in scale based on the transformation taken, 
+        monitor (str): One of _determine_best_by_ except 'ValidationMetricValue'. Default 'TestSetRMSE'.
+            Because 'ValidationMetricValue' changes in scale based on the transformation taken, 
             the metrics to monitor are limited to level in-sample and level out-of-sample metrics.
             'TestSetRMSE' and 'LevelTestSetRMSE' are the same in this function, same with all level and non-level counterparts.
-        lags (str or int): default 'auto'. the number of lags that will be used as inputs for the estimator.
-            if 'auto', uses the value passed or assigned to m (one seasonal cycle). if multiple values passed to m, uses the first.
-        try_order (list-like): default ['detrend','boxcox','first_diff','first_seasonal_diff','scale'].
-            the transformations to try and also the order to try them in.
-            changing the order here can change the final transformations derived, since level will 
+        lags (str or int): Default 'auto'. The number of lags that will be used as inputs for the estimator.
+            If 'auto', uses the value passed or assigned to m (one seasonal cycle). 
+            If multiple values passed to m, uses the first.
+        try_order (list-like): Default ['detrend','boxcox','first_diff','first_seasonal_diff','scale'].
+            The transformations to try and also the order to try them in.
+            Changing the order here can change the final transformations derived, since level will 
             be compared to the first transformation and if it is found to be better than level, it will
             carry over to be tried in conjunction with the next transformation and so forth.
-            the default list contains all possible transformations for this function.
-        boxcox_lambdas (list-like): default [-0.5,0,0.5].
-            the lambda values to try for a boxcox transformation.
-            0 means natural log. only up to one boxcox transformation will be selected.
-        detrend_kwargs (list-like[dict]): default [{'poly_order':1},{'poly_order':2}].
-            the types of detrending to try. only up to one one detrender will be selected.
-        scale_type (list-like): default ['Scale','MinMax']. the type of scaling to try.
-            only up to one scaler will be selected.
-            must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
-        scale_on_train_only (bool): default False. whether to call the scaler on the training set only.
-        m (str, int, list[int]): default 'auto': the number of observations that counts one seasonal step.
-            when 'auto', uses the M4 competition values: 
+            The default list contains all possible transformations for this function.
+        boxcox_lambdas (list-like): Default [-0.5,0,0.5].
+            The lambda values to try for a boxcox transformation.
+            0 means natural log. Only up to one boxcox transformation will be selected.
+        detrend_kwargs (list-like[dict]): Default [{'poly_order':1},{'poly_order':2}].
+            The types of detrending to try. Only up to one one detrender will be selected.
+        scale_type (list-like): Default ['Scale','MinMax']. The type of scaling to try.
+            Only up to one scaler will be selected.
+            Must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
+        scale_on_train_only (bool): Default False. Whether to call the scaler on the training set only.
+        m (str, int, list[int]): Default 'auto': the number of observations that counts one seasonal step.
+            When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
             so pass your own values for other frequencies. if m == 1, no first seasonal difference will be tried.
-            if list, multiple seasonal differences can be tried and up to that many seasonal differences can be selected.
-        **kwargs: passed to the `Forecaster.manual_forecast()` function and possible values change based on which
+            If list, multiple seasonal differences can be tried and up to that many seasonal differences can be selected.
+        **kwargs: Passed to the `Forecaster.manual_forecast()` function and possible values change based on which
             estimator is used.
 
     Returns:
-        (Transformer, Reverter): a `Transformer` object with the identified transforming functions and
+        (Transformer, Reverter): A `Transformer` object with the identified transforming functions and
         the `Reverter` object with the `Transformer` counterpart functions.
     """
     def forecaster(f):

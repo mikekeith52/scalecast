@@ -1,7 +1,18 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.15.15] - 2023-01-25
+## [0.16.0]
+### Added
+### Changed
+- It is now possible to skip model testing by setting test_length = 0 in `Forecaster` and `MVForecaster`.
+- Got rid of LastTestSetPrediction and LastTestSetActuals columns from model summary df.
+- Got rid of `best_fcst` DataFrame.
+- Gave documentation a once-over.
+- Refactored code to be slightly more efficient.
+### Fixed
+- The scaler in `MVForecaster` was not just being applied to the test-set inputs and was being called twice per model train.
+
+## [0.15.16] - 2023-01-25
 ### Added
 - added `ax` argument to all forecast plotting functions.
 ### Changed

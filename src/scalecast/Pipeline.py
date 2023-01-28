@@ -5,19 +5,19 @@ import typing
 
 class Transformer:
     def __init__(self,transformers: List[Tuple]):
-        """ initiates the transformer pipeline.
+        """ Initiates the transformer pipeline.
 
         Args:
-            transformers (list[tuple]): a list of transformations to apply to the time series stored in a Forecaster object.
-                the tuple's first element should match the name of a transform function from the SeriesTransformer object: 
+            transformers (list[tuple]): A list of transformations to apply to the time series stored in a Forecaster object.
+                The tuple's first element should match the name of a transform function from the SeriesTransformer object: 
                 https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html.
-                positional and keyword arguments can be passed to these functions.
-                if a given tuple is more than 1 in length, the `fit_transform()` method will parse
-                elements after index 0 as positional arguments.
-                keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
-                therefore, if the last argument in the tuple is a dict type,
-                this is assumed to contain the keyword arguments. 
-                if the last positional argument you wish to pass happens to be dict type,
+                Positional and keyword arguments can be passed to these functions.
+                If a given tuple is more than 1 in length, the `fit_transform()` method will parse
+                Elements after index 0 as positional arguments.
+                Keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
+                Therefore, if the last argument in the tuple is a dict type,
+                This is assumed to contain the keyword arguments. 
+                If the last positional argument you wish to pass happens to be dict type,
                 you can eaither pass it as a keyword argument or place an additional (empty) dictionary at the end of the tuple.
 
         >>> from scalecast.Pipeline import Transformer
@@ -51,13 +51,13 @@ class Transformer:
         return self.__repr__()
 
     def fit_transform(self,f: Forecaster) -> Forecaster:
-        """ applies the transformation to the series stored in the Forecaster object.
+        """ Applies the transformation to the series stored in the Forecaster object.
 
         Args:
-            f (Forecaster): the Forecaster object that stores the series that will be transformed.
+            f (Forecaster): The Forecaster object that stores the series that will be transformed.
 
         Returns:
-            (Forecaster): a Forecaster object with the transformed series.
+            (Forecaster): A Forecaster object with the transformed series.
 
         >>> from scalecast.Pipeline import Transformer
         >>> transformer = Transformer(
@@ -89,22 +89,22 @@ class Reverter:
         reverters: List[Tuple],
         base_transformer: Union[Transformer,SeriesTransformer]
     ):
-        """ initiates the reverter pipeline.
+        """ Initiates the reverter pipeline.
 
         Args:
-            reverters (list[tuple]): a list of revert funcs to apply to the time series stored in a Forecaster object.
-                the tuple's first element should match the name of a revert function from the SeriesTransformer object: 
+            reverters (list[tuple]): A list of revert funcs to apply to the time series stored in a Forecaster object.
+                The tuple's first element should match the name of a revert function from the SeriesTransformer object: 
                 https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html.
-                positional and keyword arguments can be passed to these functions.
-                if a given tuple is more than 1 in length, the `fit_transform()` method will parse
+                Positional and keyword arguments can be passed to these functions.
+                If a given tuple is more than 1 in length, the `fit_transform()` method will parse
                 elements after index 0 as positional arguments.
-                keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
-                therefore, if the last argument in the tuple is a dict type,
+                Keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
+                Therefore, if the last argument in the tuple is a dict type,
                 this is assumed to contain the keyword arguments. 
-                if the last positional argument you wish to pass happens to be dict type,
-                you can eaither pass it as a keyword argument or place an additional (empty) dictionary at the end of the tuple.
-            base_transformer (Transformer|SeriesTransformer): the object that was used to make the original transformations.
-                these objects contain the key information to undifference and unscale the stored data 
+                If the last positional argument you wish to pass happens to be dict type,
+                You can eaither pass it as a keyword argument or place an additional (empty) dictionary at the end of the tuple.
+            base_transformer (Transformer|SeriesTransformer): The object that was used to make the original transformations.
+                These objects contain the key information to undifference and unscale the stored data 
                 and therefore this argument is required.
 
         >>> from scalecast.Pipeline import Reverter
@@ -144,13 +144,13 @@ class Reverter:
         return self.__repr__()
 
     def fit_transform(self,f: Forecaster) -> Forecaster:
-        """ applies the revert function to the series stored in the Forecaster object.
+        """ Applies the revert function to the series stored in the Forecaster object.
 
         Args:
-            f (Forecaster): the Forecaster object that stores the series that will be reverted.
+            f (Forecaster): The Forecaster object that stores the series that will be reverted.
 
         Returns:
-            (Forecaster): a Forecaster object with the reverted series.
+            (Forecaster): A Forecaster object with the reverted series.
 
         >>> from scalecast.Pipeline import Reverter
         >>> reverter = Reverter(
@@ -181,13 +181,13 @@ class Reverter:
 
 class Pipeline:
     def __init__(self,steps: List[Tuple[str,Union[Transformer,Reverter,'function']]]):
-        """ initiates the full pipeline.
+        """ Initiates the full pipeline.
 
         Args:
-            steps (list[tuple]): a list of transform, forecast, and revert funcs to apply
-                to a Forecaster object. the first element of each tuple names the step.
-                the second element should either be a Transformer or Reverter type or a function.
-                if it is a function, the first argument in the function should require a Forecaster object.
+            steps (list[tuple]): A list of transform, forecast, and revert funcs to apply
+                to a Forecaster object. The first element of each tuple names the step.
+                The second element should either be a Transformer or Reverter type or a function.
+                If it is a function, the first argument in the function should require a Forecaster object.
                 functions are checked for as objects that do not contain the `fit_transform()` method,
                 so adding more elements to the Pipeline may be possible if it has a `fit_transform()` method.
 
@@ -256,14 +256,14 @@ class Pipeline:
         return self.__repr__()
 
     def fit_predict(self,f: Forecaster,**kwargs) -> Forecaster:
-        """ applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
+        """ Applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
 
         Args:
-            f (Forecaster): the Forecaster object that stores the series that will be sent through the pipeline.
-            **kwargs: passed to any 'function' types passed in the pipeline.
+            f (Forecaster): The Forecaster object that stores the series that will be sent through the pipeline.
+            **kwargs: Passed to any 'function' types passed in the pipeline.
 
         Returns:
-            (Forecaster): a Forecaster object with the stored results from the pipeline run.
+            (Forecaster): A Forecaster object with the stored results from the pipeline run.
         
         >>> pipeline = Pipeline(
         >>>     steps = [
@@ -288,21 +288,21 @@ class MVPipeline:
         steps: List[Tuple[str,Union[List[Transformer],List[Reverter],'function']]],
         **kwargs,
     ):
-        """ initiates the full pipeline for multivariate forecasting applications.
+        """ Initiates the full pipeline for multivariate forecasting applications.
 
         Args:
-            steps: (list[tuple]): a list of transform, forecast, and revert funcs to apply
-                to multiple Forecaster objects. the first element of each tuple names the step.
-                the second element should be a list of Transformer objects, a list of Reverter objecsts,
-                a list of functions, or a single function. if it is a function or list of functions, 
+            steps: (list[tuple]): A list of transform, forecast, and revert funcs to apply
+                to multiple Forecaster objects. The first element of each tuple names the step.
+                The second element should be a list of Transformer objects, a list of Reverter objects,
+                a list of functions, or a single function. If it is a function or list of functions, 
                 the first argument in the should require a Forecaster or MVForecaster object.
-                if it is a list of functions, Transformer, or Revereter objects,
+                If it is a list of functions, Transformer, or Revereter objects,
                 each one of these will be called on the Forecaster objects in the order they are passed
                 to the `fit_predict()` method.
-                functions are checked for as objects that do not contain the `fit_transform()` method,
+                Functions are checked for as objects that do not contain the `fit_transform()` method,
                 so adding more elements to the Pipeline may be possible if it has a `fit_transform()` method.
-            **kwargs: passed to MVForecaster() 
-                https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.__init__
+            **kwargs: Passed to MVForecaster(). See
+                https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.__init__.
 
         >>> from scalecast.Forecaster import Forecaster
         >>> from scalecast.Pipeline import MVPipeline
@@ -358,16 +358,16 @@ class MVPipeline:
         return self.__repr__()
 
     def fit_predict(self,*fs: Forecaster,**kwargs):
-        """ applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
-        the order of Forecaster passed to *fs is the order all functions in lists will be applied.
+        """ Applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
+        The order of Forecaster passed to *fs is the order all functions in lists will be applied.
 
         Args:
-            *fs (Forecaster): the Forecaster objects that stores the series that will be sent through the pipeline.
-            **kwargs: passed to any 'function' types passed in the pipeline.
+            *fs (Forecaster): The Forecaster objects that stores the series that will be sent through the pipeline.
+            **kwargs: Passed to any 'function' types passed in the pipeline.
 
         Returns:
-            (Tuple[Forecaster] | MVForecaster): if the last element in the pipeline is a list of reverter functions
-            this function returns the individual Forecaster objects. if not, an MVForecaster object is returned.
+            (Tuple[Forecaster] | MVForecaster): If the last element in the pipeline is a list of reverter functions
+            this function returns the individual Forecaster objects. If not, an MVForecaster object is returned.
         
         >>> pipeline = MVPipeline(
         >>>    steps = [

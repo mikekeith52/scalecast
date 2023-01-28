@@ -205,10 +205,10 @@ import os
 
 
 def get_example_grids(overwrite=False):
-    """ saves example grids to working directory as Grids.py (does not overwrite by default).
+    """ Saves example grids to working directory as Grids.py (does not overwrite by default).
 
     Args:
-        overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory.
+        overwrite (bool): Whether to overwrite a Grids.py file if one is already in the working directory.
 
     Returns:
         None
@@ -222,10 +222,10 @@ def get_example_grids(overwrite=False):
 
 
 def get_mv_grids(overwrite=False):
-    """ saves example grids to working directory as MVGrids.py (does not overwrite by default).
+    """ Saves example grids to working directory as MVGrids.py (does not overwrite by default).
 
     Args:
-        overwrite (bool): whether to overwrite a MVGrids.py file if one is already in the working directory.
+        overwrite (bool): Whether to overwrite a MVGrids.py file if one is already in the working directory.
 
     Returns:
         None
@@ -239,10 +239,10 @@ def get_mv_grids(overwrite=False):
 
 
 def get_empty_grids(overwrite=False):
-    """ saves empty grids to working directory as Grids.py (does not overwrite by default).
+    """ Saves empty grids to working directory as Grids.py (does not overwrite by default).
 
     Args:
-        overwrite (bool): whether to overwrite a Grids.py file if one is already in the working directory.
+        overwrite (bool): Whether to overwrite a Grids.py file if one is already in the working directory.
 
     Returns:
         None

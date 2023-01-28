@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.15.15
+Version: 0.16.0
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -19,7 +19,7 @@ Description: # Scalecast
         
         Scalecast is a light-weight time-series forecasting procedure, wrapper, and results container built by and for applied Data Scientists using an ML framework. It offers a streamlined transforming, tuning, reverting, and reporting interface with many model classes, from basic ARIMA and linear models to boosted trees and recurrent neural nets. No matter which models you want to play with, the uniform interface makes it easy and fun to get results quickly.
         
-        All forecasts are validated out-of-sample, usually with a dynamic recursive approach (RNNs use a direct point estimate). You won't ever run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you run a model that's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood, which is easy to fall into, especially for those not specialized in time series. You can't predict the unpredictable, and you won't see such things with scalecast.  
+        All forecasts are validated out-of-sample by default (with the option to skip the testing process), usually with a dynamic recursive approach. Some model classes offer direct forecasting. You won't ever run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you run a model that's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood, which is easy to fall into, especially for those not specialized in time series. You can't predict the unpredictable, and you won't see such things with scalecast.  
         
         ## Starter Code
         

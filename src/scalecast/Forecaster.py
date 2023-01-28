@@ -14,6 +14,9 @@ import random
 from collections import Counter
 from scipy import stats
 import sklearn
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.seasonal import seasonal_decompose
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer
 from sklearn.metrics import (
@@ -22,10 +25,6 @@ from sklearn.metrics import (
     mean_absolute_percentage_error,
     mean_absolute_error,
 )
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.seasonal import seasonal_decompose
-
 import copy
 
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
@@ -45,50 +44,6 @@ from sklearn.svm import SVR as svr_
 from sklearn.neighbors import KNeighborsRegressor as knn_
 from sklearn.linear_model import SGDRegressor as sgd_
 
-# FUNCTIONS
-
-# custom metrics - are what you expect except MAPE, which can return None
-# these are now also in util.metrics, would have been better to put them there from the start but oh well
-def mape(y, pred):
-    return (
-        np.nan if 0 in y else mean_absolute_percentage_error(y, pred)
-    )  # average o(1) worst-case o(n)
-
-
-def rmse(y, pred):
-    return mean_squared_error(y, pred) ** 0.5
-
-
-def mae(y, pred):
-    return mean_absolute_error(y, pred)
-
-
-def r2(y, pred):
-    return r2_score(y, pred)
-
-# this is used across a few different models
-def prepare_data(Xvars, y, current_xreg):
-    if Xvars is None or Xvars == "all":
-        Xvars = [x for x in current_xreg.keys()]
-    elif isinstance(Xvars, str):
-        Xvars = [Xvars]
-
-    y = [i for i in y]
-    X = pd.DataFrame(current_xreg)
-    X = X[Xvars].values
-    return Xvars, y, X
-
-# descriptive assert statement for error catching
-def descriptive_assert(statement, ErrorType, error_message):
-    try:
-        assert statement
-    except AssertionError:
-        raise ErrorType(error_message)
-
-
-# KEY GLOBALS
-
-# to add a new sklearn model, just add to this dict
 _sklearn_imports_ = {
     "mlr": mlr_,
     "mlp": mlp_,
@@ -103,97 +58,37 @@ _sklearn_imports_ = {
     "knn": knn_,
     "sgd": sgd_,
 }
-_sklearn_estimators_ = sorted(_sklearn_imports_.keys())
-
-# to add non-sklearn models, add to the list below
-_non_sklearn_estimators_ = [
-    "arima",
-    "hwes",
-    "prophet",
-    "silverkite",
-    "rnn",
-    "lstm",
-    "theta",
-    "combo",
-]
-_estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
-_cannot_be_tuned_ = ["combo", "rnn", "lstm"]
-_can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
-_metrics_ = ["r2", "rmse", "mape", "mae"]
-_determine_best_by_ = [
-    "TestSetRMSE",
-    "TestSetMAPE",
-    "TestSetMAE",
-    "TestSetR2",
-    "InSampleRMSE",
-    "InSampleMAPE",
-    "InSampleMAE",
-    "InSampleR2",
-    "LevelInSampleRMSE",
-    "LevelInSampleMAPE",
-    "LevelInSampleMAE",
-    "LevelInSampleR2",
-    "ValidationMetricValue",
-    "LevelTestSetRMSE",
-    "LevelTestSetMAPE",
-    "LevelTestSetMAE",
-    "LevelTestSetR2",
-]
-_normalizer_ = ["minmax", "normalize", "scale", None]
-# i do it this way to make mvforecaster work a little better
-_colors_ = [
-    "#FFA500",
-    "#DC143C",
-    "#00FF7F",
-    "#808000",
-    "#BC8F8F",
-    "#A9A9A9",
-    "#8B008B",
-    "#FF1493",
-    "#FFDAB9",
-    "#20B2AA",
-    "#7FFFD4",
-    "#A52A2A",
-    "#DCDCDC",
-    "#E6E6FA",
-    "#BDB76B",
-    "#DEB887",
-] * 10
-# keywords that are passed to _bank_history() that I don't want to be recognized as hyperparams
-_not_hyperparams_ = ["Xvars", "normalizer", "tuned", "plot_loss", "plot_loss_test"]
-
-# descriptive errors
-class ForecastError(Exception):
-    class CannotDiff(Exception):
-        pass
-
-    class CannotUndiff(Exception):
-        pass
-
-    class NoGrid(Exception):
-        pass
-
-    class PlottingError(Exception):
-        pass
-
 
 class Forecaster:
-    def __init__(self, y, current_dates, require_future_dates=True, future_dates=None, **kwargs):
+    def __init__(
+        self, 
+        y, 
+        current_dates, 
+        require_future_dates=True, 
+        future_dates=None,
+        test_length = 1, 
+        **kwargs
+    ):
         """ 
         Args:
-            y (list-like): an array of all observed values.
-            current_dates (list-like): an array of all observed dates.
-                must be same length as y and in the same sequence.
-                can pass any numerical index if dates are unknown; in this case, 
-                it will act as if dates are in nanosecond frequency.
-            require_future_dates (bool): default True.
-                if False, none of the models will forecast into future periods by default.
-                if True, all models will forecast into future periods, 
-                unless run with test_only = True, and when adding regressors, they will automatically
-                be added into future periods.
-            future_dates (int): optional: the future dates to add to the model upon initialization.
+            y (collection): An array of all observed values.
+            current_dates (collection): An array of all observed dates.
+                Must be same length as y and in the same sequence.
+                Can pass any numerical index if dates are unknown; in this case, 
+                It will act as if dates are in nanosecond frequency.
+            require_future_dates (bool): Default True.
+                If False, none of the models will forecast into future periods by default.
+                If True, all models will forecast into future periods, 
+                unless run with test_only = True. 
+                When adding regressors, they will automatically be added into future periods.
+            future_dates (int): Optional. The future dates to add to the model upon initialization.
                 if not added when object is initialized, can be added later.
-            **kwargs: become attributes.
+            test_length (int): Default 1. The test length that all models will use to test all models out of sample.
+                Change to 0 to skip testing models. In a future version of scalecast, the default value will be changed to 0, but it
+                is left 1 for now to maintain the behavior of Forecaster objects. Before version 0.16.0, skipping model
+                testing was impossible.
+            **kwargs: Become attributes. Life hack: specify the `test_length` arg here. 
+                To skip model testing, pass `test_length = 0`.
         """
         self.y = y
         self.current_dates = current_dates
@@ -206,7 +101,7 @@ class Forecaster:
             {}
         )  # values should be lists (to make iterative forecasting work more easily)
         self.history = {}
-        self.test_length = 1
+        self.test_length = test_length
         self.validation_length = 1
         self.validation_metric = "rmse"
         self.integration = 0
@@ -243,12 +138,12 @@ class Forecaster:
         return obj
 
     def copy(self):
-        """ creates an object copy.
+        """ Creates an object copy.
         """
         return self.__copy__()
 
     def deepcopy(self):
-        """ creates an object deepcopy.
+        """ Creates an object deepcopy.
         """
         return self.__deepcopy__()
 
@@ -294,11 +189,8 @@ class Forecaster:
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_length, shuffle=False
         )
-        X_test, y_test = (
-            (X_test, y_test)
-            if not tune
-            else (X_test[: -self.test_length], y_test[: -self.test_length])
-        )
+        if tune and self.test_length > 0:
+            X_test, y_test = (X_test[: -self.test_length], y_test[: -self.test_length])
         return X_train, X_test, y_train, y_test
 
     def _validate_no_test_only(self, models):
@@ -307,6 +199,18 @@ class Forecaster:
             ForecastError,
             "this method does not accept any models run test_only = True or when require_future_dates attr is False",
         )
+
+    # this is used across a few different models
+    def _prepare_model_data(self,Xvars, y, current_xreg):
+        if Xvars is None or Xvars == "all":
+            Xvars = [x for x in current_xreg.keys()]
+        elif isinstance(Xvars, str):
+            Xvars = [Xvars]
+
+        y = [i for i in y]
+        X = pd.DataFrame(current_xreg)
+        X = X[Xvars].values
+        return Xvars, y, X
 
     def _validate_future_dates_exist(self):
         """ makes sure future periods have been specified before adding regressors
@@ -325,9 +229,13 @@ class Forecaster:
         bootstrapped_resids = np.random.choice(resids, size=self.bootstrap_samples)
         bootstrap_mean = np.mean(bootstrapped_resids)
         bootstrap_std = np.std(bootstrapped_resids)
-        return (
-            stats.norm.ppf(1 - (1 - self.cilevel) / 2) * bootstrap_std + bootstrap_mean
-        )
+        return _set_ci_step(
+            f = self,
+            s = bootstrap_std,
+        ) + bootstrap_mean
+        #return (
+        #    stats.norm.ppf(1 - (1 - self.cilevel) / 2) * bootstrap_std + bootstrap_mean
+        #)
 
     def _bank_history(self, **kwargs):
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
@@ -391,10 +299,10 @@ class Forecaster:
                 f - ci_range for f in self.test_set_pred
             ],  # not exactly right, but close enough with caveat
             "TestSetActuals": self.test_set_actuals[:],
-            "InSampleRMSE": rmse(y_use[-len(fvs_use) :], fvs_use),
-            "InSampleMAPE": mape(y_use[-len(fvs_use) :], fvs_use),
-            "InSampleMAE": mae(y_use[-len(fvs_use) :], fvs_use),
-            "InSampleR2": r2(y_use[-len(fvs_use) :], fvs_use),
+            "InSampleRMSE": _return_na_if_len_zero(y_use[-len(fvs_use) :], fvs_use, rmse),
+            "InSampleMAPE": _return_na_if_len_zero(y_use[-len(fvs_use) :], fvs_use, mape),
+            "InSampleMAE": _return_na_if_len_zero(y_use[-len(fvs_use) :], fvs_use, mae),
+            "InSampleR2": _return_na_if_len_zero(y_use[-len(fvs_use) :], fvs_use,r2),
             "CILevel": self.cilevel,
             "CIPlusMinus": ci_range,
         }
@@ -434,29 +342,31 @@ class Forecaster:
             ci_range = self._find_cis(self.levely[-len(fvs) :], fvs)
             self.history[call_me]["LevelForecast"] = fcst[:]
             self.history[call_me]["LevelTestSetPreds"] = pred[:]
-            self.history[call_me]["LevelTestSetRMSE"] = rmse(
-                self.levely[-len(pred) :], pred
+            self.history[call_me]["LevelTestSetRMSE"] = _return_na_if_len_zero(
+                self.levely[-len(pred) :], pred, rmse
             )
-            self.history[call_me]["LevelTestSetMAPE"] = mape(
-                self.levely[-len(pred) :], pred
+            self.history[call_me]["LevelTestSetMAPE"] = _return_na_if_len_zero(
+                self.levely[-len(pred) :], pred, mape
             )
-            self.history[call_me]["LevelTestSetMAE"] = mae(
-                self.levely[-len(pred) :], pred
+            self.history[call_me]["LevelTestSetMAE"] = _return_na_if_len_zero(
+                self.levely[-len(pred) :], pred, mae
             )
-            self.history[call_me]["LevelTestSetR2"] = r2(
-                self.levely[-len(pred) :], pred
+            self.history[call_me]["LevelTestSetR2"] = _return_na_if_len_zero(
+                self.levely[-len(pred) :], pred, r2
             )
             self.history[call_me]["LevelFittedVals"] = fvs[:]
-            self.history[call_me]["LevelInSampleRMSE"] = rmse(
-                self.levely[-len(fvs) :], fvs
+            self.history[call_me]["LevelInSampleRMSE"] = _return_na_if_len_zero(
+                self.levely[-len(fvs) :], fvs, rmse
             )
-            self.history[call_me]["LevelInSampleMAPE"] = mape(
-                self.levely[-len(fvs) :], fvs
+            self.history[call_me]["LevelInSampleMAPE"] = _return_na_if_len_zero(
+                self.levely[-len(fvs) :], fvs, mape
             )
-            self.history[call_me]["LevelInSampleMAE"] = mae(
-                self.levely[-len(fvs) :], fvs
+            self.history[call_me]["LevelInSampleMAE"] = _return_na_if_len_zero(
+                self.levely[-len(fvs) :], fvs, mae
             )
-            self.history[call_me]["LevelInSampleR2"] = r2(self.levely[-len(fvs) :], fvs)
+            self.history[call_me]["LevelInSampleR2"] = _return_na_if_len_zero(
+                self.levely[-len(fvs) :], fvs, r2
+            )
             self.history[call_me]["LevelUpperCI"] = [f + ci_range for f in fcst]
             self.history[call_me]["LevelLowerCI"] = [f - ci_range for f in fcst]
             self.history[call_me]["LevelTSUpperCI"] = [f + ci_range for f in pred]
@@ -525,10 +435,10 @@ class Forecaster:
         """
         self.test_set_actuals = list(y)
         self.test_set_pred = list(pred)
-        self.rmse = rmse(y, pred)
-        self.r2 = r2(y, pred)
-        self.mae = mae(y, pred)
-        self.mape = mape(y, pred)
+        self.rmse = _return_na_if_len_zero(y, pred, rmse)
+        self.r2 = _return_na_if_len_zero(y, pred, r2)
+        self.mae = _return_na_if_len_zero(y, pred, mae)
+        self.mape = _return_na_if_len_zero(y, pred, mape)
 
     def _tune(self):
         """ reads which validation metric to use in _metrics_ and pulls that attribute value to return from function.
@@ -560,6 +470,17 @@ class Forecaster:
             except AttributeError:
                 pass
 
+    def _raise_test_only_error(self):
+        raise ValueError('test_only cannot be True if test_length is 0.')
+
+    def _warn_about_dynamic_testing(self,dynamic_testing,does_not_use_lags=False,uses_direct=False):
+        if dynamic_testing is not True:
+            warning = f'The dynamic_testing arg is always set to True for the {self.estimator} model.'
+            warning += " This model doesn't use lags to make predictions." if does_not_use_lags else ''
+            warrning += " This model uses direct forecasting with lags." if uses_direct else ''
+            warnings.warn(warning)
+            self.dynamic_testing = True
+
     def _forecast_sklearn(
         self,
         fcster,
@@ -570,35 +491,34 @@ class Forecaster:
         test_only=False,
         **kwargs,
     ):
-        """ runs an sklearn forecast start-to-finish.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html
+        """ Runs an sklearn forecast start-to-finish.
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html.
 
         Args:
-            fcster (str): one of _sklearn_estimators_. reads the estimator set to `set_estimator()` method.
+            fcster (str): One of _sklearn_estimators_. Reads the estimator passed to the estimator attribute.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            tune (bool): default False.
-                whether the model is being tuned.
-                does not need to be specified by user.
-            Xvars (list-like, str, or None): the regressors to predict with.
-                be sure to have added them to the Forecaster object first.
-                None means all Xvars added to the Forecaster object will be used.
-            normalizer (str): one of _normalizer_. default 'minmax'.
-                if not None, normalizer fit on the training data only to not leak.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail 
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+            tune (bool): Default False.
+                Whether the model is being tuned.
+                It should not be specified by the user.
+            Xvars (list-like, str, or None): The regressors to predict with.
+                Be sure to have added them to the Forecaster object first.
+                None means all Xvars added to the Forecaster object will be used for sklearn estimators (not so for other estimators).
+            normalizer (str): The scaling technique to apply to the data. One of _normalizer_. 
+                Default 'minmax'.
+                If not None and a test length is specified greater than 0, the normalizer is fit on the training data only.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            **kwargs: treated as model hyperparameters and passed to the applicable sklearn estimator.
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: Treated as model hyperparameters and passed to the applicable sklearn estimator.
         """
-
         def fit_normalizer(X, normalizer):
             descriptive_assert(
                 normalizer in _normalizer_,
@@ -698,130 +618,128 @@ class Forecaster:
         current_xreg = {
             xvar: x.values[obs_to_drop:].copy() for xvar, x in self.current_xreg.items()
         }
-        test_length = (
-            self.test_length if not tune else self.validation_length + self.test_length
-        )
         # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
-        Xvars, y, X = prepare_data(Xvars, y, current_xreg)
-        # split the data
-        X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
-        # fit the normalizer to training data only
-        scaler = fit_normalizer(X_train, normalizer)
-        # get the sklearn regressor
+        Xvars, y, X = self._prepare_model_data(Xvars, y, current_xreg)
         regr = _sklearn_imports_[fcster](**kwargs)
         # train/test the model
-        result = evaluate_model(
-            scaler,
-            regr,
-            X_train,
-            y_train,
-            Xvars,
-            test_length - self.test_length if tune else test_length,  # fcst_horizon
-            {x: current_xreg[x][-test_length:] for x in Xvars},  # for AR processing
-            dynamic_testing,
-            False,
-        )
-        pred = [i for i in result[0]]
-        # set the test-set metrics
-        self._metrics(y_test, pred)
-        if tune:
-            return self._tune()
-        if test_only:
-            # last fitted val has to match last date in current_dates or a bunch of stuff breaks
-            result = (
-                result[0],
-                [i for i in result[1]] + [np.nan] * self.test_length,
-                result[2],
-                result[3],
+        if self.test_length > 0 or tune:
+            test_length = (
+                self.test_length if not tune 
+                else self.validation_length + self.test_length
             )
-            return result
-
-        # run full model
+            X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
+            scaler = fit_normalizer(X_train, normalizer)
+            result = evaluate_model(
+                scaler=scaler,
+                regr=regr,
+                X=X_train,
+                y=y_train,
+                Xvars=Xvars,
+                fcst_horizon=test_length - self.test_length if tune else test_length,  # fcst_horizon
+                future_xreg={x: current_xreg[x][-test_length:] for x in Xvars},  # for AR processing
+                dynamic_testing=dynamic_testing,
+                true_forecast=False,
+            )
+            pred = [i for i in result[0]]
+            # set the test-set metrics
+            self._metrics(y_test, pred)
+            if tune:
+                return self._tune()
+            elif test_only:
+                return (
+                    result[0],
+                    [i for i in result[1]] + [np.nan] * self.test_length,
+                    result[2],
+                    result[3],
+                )
+        elif test_only:
+            self._raise_test_only_error()
+        else:
+            scaler = fit_normalizer(X, normalizer)
+            self._metrics([],[])
         return evaluate_model(
-            scaler,
-            regr,
-            X,
-            y,
-            Xvars,
-            len(self.future_dates),
-            {x: self.future_xreg[x][:] for x in Xvars},
-            True,
-            True,
+            scaler=scaler,
+            regr=regr,
+            X=X,
+            y=y,
+            Xvars=Xvars,
+            fcst_horizon=len(self.future_dates),
+            future_xreg={x: self.future_xreg[x][:] for x in Xvars},
+            dynamic_testing=True,
+            true_forecast=True,
         )
 
     def _forecast_theta(
         self, tune=False, dynamic_testing=True, test_only=False, **kwargs
     ):
-        """ forecasts with Four Theta from darts.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html
+        """ Forecasts with Four Theta from darts.
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html.
 
         Args:
-            tune (bool): default False.
-                whether the model is being tuned.
-                does not need to be specified by user.
-            dynamic_testing (bool): default True.
-                always ignored in theta - it is always dynamic since it doesn't require AR terms.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+            tune (bool): Default False.
+                Whether the model is being tuned.
+                It does not need to be specified by user.
+            dynamic_testing (bool): Default True.
+                Always set to True for theta like all scalecast models that don't use lags.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
+                Will automatically change to True if object was initiated with require_future_dates = False.
             **kwargs: passed to the FourTheta() function from darts.
-                https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html
+                See https://unit8co.github.io/darts/generated_api/darts.models.forecasting.theta.html.
         """
         from darts import TimeSeries
         from darts.models.forecasting.theta import FourTheta
 
-        if not dynamic_testing:
-            logging.warning("dynamic_testing is True always for the theta model")
-        self.dynamic_testing = True
-
-        sns.set_palette("tab10")  # darts changes this
-
-        test_length = (
-            self.test_length if not tune else self.validation_length + self.test_length
+        self._warn_about_dynamic_testing(
+            dynamic_testing=dynamic_testing,
+            does_not_use_lags=True,
+            uses_direct=False,
         )
+        sns.set_palette("tab10")  # darts changes this
 
         y = self.y.to_list()
         d = self.current_dates.to_list()
 
-        y_train = pd.Series(y[:-test_length], index=d[:-test_length])
-        y_test = y[-test_length:]
-        y_test = y_test[: -self.test_length] if tune else y_test
         y = pd.Series(y, index=d)
-
-        ts_train = TimeSeries.from_series(y_train)
         ts = TimeSeries.from_series(y)
 
-        regr = FourTheta(**kwargs)
-        regr.fit(ts_train)
-        pred = regr.predict(len(y_test))
-        pred = [p[0] for p in pred.values()]
-
-        self._metrics(
-            y_test, pred,
-        )
-
-        # tune
-        if tune:
-            return self._tune()
-
-        # test only
-        if test_only:
-            resid = [r[0] for r in regr.residuals(ts_train).values()]
-            actuals = y_train[-len(resid) :]
-            fvs = [r + a for r, a in zip(resid, actuals)]
-            return (
-                pred,
-                fvs + [np.nan] * self.test_length,
-                None,
-                None,
-                # regr, # I would like to include this in the future but it breaks things for now
+        if self.test_length > 0 or tune:
+            test_length = (
+                self.test_length if not tune 
+                else self.validation_length + self.test_length
             )
-
-        # full
+            y_train = pd.Series(
+                y[:-test_length], 
+                index=d[:-test_length],
+            )
+            y_test = y[-test_length:]
+            y_test = y_test[: -self.test_length] if tune and self.test_length > 0 else y_test
+            ts_train = TimeSeries.from_series(y_train)
+            regr = FourTheta(**kwargs)
+            regr.fit(ts_train)
+            pred = regr.predict(len(y_test))
+            pred = [p[0] for p in pred.values()]
+            self._metrics(y_test, pred)
+            if tune:
+                return self._tune()
+            elif test_only:
+                resid = [r[0] for r in regr.residuals(ts_train).values()]
+                actuals = y_train[-len(resid) :]
+                fvs = [r + a for r, a in zip(resid, actuals)]
+                return (
+                    pred,
+                    fvs + [np.nan] * self.test_length,
+                    None,
+                    None,
+                    # regr, # I would like to include this in the future but it breaks things for now
+                )
+        elif test_only:
+            self._raise_test_only_error()
+        else:
+            self._metrics([], [])
         regr = FourTheta(**kwargs)
         regr.fit(ts)
         pred = regr.predict(len(self.future_dates))
@@ -834,71 +752,68 @@ class Forecaster:
     def _forecast_hwes(
         self, tune=False, dynamic_testing=True, test_only=False, **kwargs
     ):
-        """ forecasts with holt-winters exponential smoothing.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html
+        """ Forecasts with Holt-Winters exponential smoothing.
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html.
 
         Args:
-            tune (bool): default False.
-                whether the model is being tuned.
-                does not need to be specified by user.
-            dynamic_testing (bool): default True.
-                always ignored in HWES (for now) - everything is set to be dynamic using statsmodels.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+            tune (bool): Default False.
+                Whether the model is being tuned.
+                It does not need to be specified by the user.
+            dynamic_testing (bool): Default True.
+                Always set to True for HWES like all scalecast models that don't use lags.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to the HWES() function from statsmodels. endog passed automatically.
-                https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: Passed to the HWES() function from statsmodels. `endog` passed automatically.
+                See https://www.statsmodels.org/dev/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html.
         """
         from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
-
-        kwargs = {k:bool(v) if isinstance(v,np.bool_) else v for k, v in kwargs.items()} # issue #19
-
-        if not dynamic_testing:
-            logging.warning("dynamic_testing is True always for hwes model")
-        self.dynamic_testing = True
-
+        self._warn_about_dynamic_testing(
+            dynamic_testing=dynamic_testing,
+            does_not_use_lags=True,
+            uses_direct=False,
+        )
         y = self.y.to_list()
-        test_length = (
-            self.test_length if not tune else self.validation_length + self.test_length
-        )
-
-        y_train = y[:-test_length]
-        y_test = y[-test_length:]
-
-        regr = HWES(
-            y_train,
-            dates=self.current_dates.values[: -self.test_length],
-            freq=self.freq,
-            **kwargs,
-        ).fit(optimized=True, use_brute=True)
-
-        pred = regr.predict(
-            start=len(y_train),
-            end=len(y_train)
-            + (len(y_test) if not tune else len(y_test) - self.test_length)
-            - 1,
-        )
-
-        self._metrics(y_test if not tune else y_test[: -self.test_length], pred)
-
-        # tune
-        if tune:
-            return self._tune()
-
-        # test only
-        if test_only:
-            return (
-                pred,
-                list(regr.fittedvalues) + [np.nan] * self.test_length,
-                None,
-                regr,
+        kwargs = {k:bool(v) if isinstance(v,np.bool_) else v for k, v in kwargs.items()} # issue #19
+        if self.test_length > 0 or tune:
+            test_length = (
+                self.test_length if not tune 
+                else self.validation_length + self.test_length
             )
-
-        # full
+            y_train = y[:-test_length] if self.test_length > 0 else y[:]
+            y_test = y[-test_length:]
+            regr = HWES(
+                y_train,
+                dates=self.current_dates.values[: -test_length],
+                freq=self.freq,
+                **kwargs,
+            ).fit(optimized=True, use_brute=True)
+            pred = regr.predict(
+                start=len(y_train),
+                end=(
+                    len(y_train) + (
+                    len(y_test) if not tune 
+                    else len(y_test) - self.test_length
+                    ) - 1
+                ),
+            )
+            self._metrics(y_test if not tune or self.test_length == 0 else y_test[: -self.test_length], pred)
+            if tune:
+                return self._tune()
+            elif test_only:
+                return (
+                    pred,
+                    list(regr.fittedvalues) + [np.nan] * self.test_length,
+                    None,
+                    regr,
+                )
+        elif test_only:
+            self._raise_test_only_error()
+        else:
+            self._metrics([],[])
         regr = HWES(self.y, dates=self.current_dates, freq=self.freq, **kwargs).fit(
             optimized=True, use_brute=True
         )
@@ -908,36 +823,28 @@ class Forecaster:
     def _forecast_arima(
         self, tune=False, Xvars=None, dynamic_testing=True, test_only=False, **kwargs
     ):
-        """ forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).
-        see example: https://scalecast-examples.readthedocs.io/en/latest/arima/arima.html
+        """ Forecasts with ARIMA (or AR, ARMA, SARIMA, SARIMAX).
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/arima/arima.html.
 
         Args:
-            tune (bool): default False.
-                whether the model is being tuned.
-                does not need to be specified by user.
-            Xvars (list-like, str, or None): the regressors to predict with.
-                be sure to have added them to the Forecaster object first.
+            tune (bool): Default False.
+                Whether the model is being tuned.
+                It does not need to be specified by user.
+            Xvars (list-like, str, or None): Default None. The regressors to predict with.
                 None means no Xvars used (unlike sklearn models).
-            dynamic_testing (bool): default True.
-                always ignored in ARIMA (for now) - everything is set to be dynamic using statsmodels.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+            dynamic_testing (bool): Default True.
+                Always ignored in ARIMA - ARIMA in scalecast dynamically tests all models over the full forecast horizon using statsmodels.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to the ARIMA() function from statsmodels. endog and exog passed automatically. 
-                https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: Passed to the ARIMA() function from statsmodels. `endog` and `exog` are passed automatically. 
+                See https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima.model.ARIMA.html.
         """
         from statsmodels.tsa.arima.model import ARIMA
-        
-        if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument will be ignored for the arima model"
-            )
-        self.dynamic_testing = True
-
+        self._warn_about_dynamic_testing(dynamic_testing=dynamic_testing)
         Xvars = (
             [x for x in self.current_xreg.keys() if not x.startswith("AR")]
             if Xvars == "all"
@@ -946,43 +853,47 @@ class Forecaster:
             else Xvars
         )
         Xvars_orig = None if Xvars is None else None if not Xvars else Xvars
-        test_length = (
-            self.test_length if not tune else self.validation_length + self.test_length
-        )
-        Xvars, y, X = prepare_data(Xvars, self.y, self.current_xreg)
-        if Xvars_orig is None:
-            X, X_train, X_test, Xvars = None, None, None, None
-            y_train = y[:-test_length]
-            y_test = y[-test_length:]
-        else:
-            X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
-        regr = ARIMA(
-            y_train,
-            exog=X_train,
-            dates=self.current_dates.values[:-test_length],
-            freq=self.freq,
-            **kwargs,
-        ).fit()
-        pred = regr.predict(
-            exog=X_test,
-            start=len(y_train),
-            end=len(y_train) + len(y_test) - 1,
-            typ="levels",
-            dynamic=True,
-        )
-        self._metrics(y_test, pred)
-        # tune
-        if tune:
-            return self._tune()
-        # test only
-        if test_only:
-            return (
-                pred,
-                list(regr.fittedvalues) + [np.nan] * self.test_length,
-                Xvars,
-                regr,
+        Xvars, y, X = self._prepare_model_data(Xvars, self.y, self.current_xreg)
+        if self.test_length > 0 or tune:
+            test_length = (
+                self.test_length if not tune else self.validation_length + self.test_length
             )
-        # full
+            if Xvars_orig is None:
+                X_train, X_test = None, None
+                y_train = y[:-test_length]
+                y_test = y[-test_length:]
+            else:
+                X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
+            regr = ARIMA(
+                y_train,
+                exog=X_train,
+                dates=self.current_dates.values[: -test_length],
+                freq=self.freq,
+                **kwargs,
+            ).fit()
+            pred = regr.predict(
+                exog=X_test,
+                start=len(y_train),
+                end=len(y_train) + len(y_test) - 1,
+                typ="levels",
+                dynamic=True,
+            )
+            self._metrics(y_test, pred)
+            if tune:
+                return self._tune()
+            elif test_only:
+                return (
+                    pred,
+                    list(regr.fittedvalues) + [np.nan] * self.test_length,
+                    Xvars,
+                    regr,
+                )
+        elif test_only:
+            self._raise_test_only_error()
+        else:
+            self._metrics([],[])
+        Xvars = None if Xvars_orig is None else Xvars
+        X = None if Xvars_orig is None else X
         regr = ARIMA(
             self.y.to_list(),
             exog=X,
@@ -1014,37 +925,35 @@ class Forecaster:
         test_only=False,
         **kwargs,
     ):
-        """ forecasts with the prophet model from facebook.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html
+        """ Forecasts with the Prophet model from the prophet library.
+        See example: https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html.
 
         Args:
-            tune (bool): default False.
-                whether to tune the forecast.
-                does not need to be specified by user.
-            Xvars (list-like, str, or None): the regressors to predict with.
-                be sure to have added them to the Forecaster object first.
+            tune (bool): Default False.
+                Whether to tune the forecast.
+                Does not need to be specified by user.
+            Xvars (list-like, str, or None): Default None. The regressors to predict with.
                 None means no Xvars used (unlike sklearn models).
-            dynamic_testing (bool): default True.
-                always ignored for Prophet (for now).
-            cap (float): optional.
-                specific to prophet when using logistic growth -- the largest amount the model is allowed to evaluate to.
-            floor (float): optional.
-                specific to prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+            dynamic_testing (bool): Default True.
+                Always set to True for Prophet like all scalecast models that don't use lags.
+            cap (float): Optional.
+                Specific to Prophet when using logistic growth -- the largest amount the model is allowed to evaluate to.
+            floor (float): Optional.
+                Specific to Prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-
-            **kwargs: passed to the Prophet() function from prophet: https://facebook.github.io/prophet/docs/quick_start.html#python-api.
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: Passed to the Prophet() function from prophet. 
+                See https://facebook.github.io/prophet/docs/quick_start.html#python-api.
         """
         from prophet import Prophet
-        if not dynamic_testing:
-            warnings.warn(
-                "dynamic_testing argument is ignored for the prophet model."
-            )
-        self.dynamic_testing = True
+        self._warn_about_dynamic_testing(
+            dynamic_testing=dynamic_testing,
+            does_not_use_lags=True,
+        )
         
         X = pd.DataFrame(
             {k: v for k, v in self.current_xreg.items() if not k.startswith("AR")}
@@ -1073,35 +982,38 @@ class Forecaster:
         model = Prophet(**kwargs)
         for x in Xvars:
             model.add_regressor(x)
-        # tune
         if tune:
             X_train = X.iloc[: -(self.test_length + self.validation_length)]
-            X_test = X.iloc[
-                -(self.test_length + self.validation_length) : -self.test_length
-            ]
-            y_test = X["y"].values[
-                -(self.test_length + self.validation_length) : -self.test_length
-            ]
+            X_test = (
+                X.iloc[-(self.test_length + self.validation_length) : -self.test_length]
+                if self.test_length > 0 else X.iloc[-(self.test_length + self.validation_length) :]
+            )
+            y_test = (
+                X["y"].values[-(self.test_length + self.validation_length) : -self.test_length]
+                if self.test_length > 0 else X["y"].values[-(self.test_length + self.validation_length) :]
+            )
             model.fit(X_train)
             pred = model.predict(X_test)
             self._metrics(y_test, pred["yhat"].to_list())
             return self._tune()
+        elif self.test_length > 0:
+            model.fit(X.iloc[: -self.test_length] if self.test_length > 0 else X)
+            pred = model.predict(X.iloc[-self.test_length :])
+            pred = pred["yhat"].values
+            self._metrics(X["y"].values[-self.test_length :], pred)
 
-        model.fit(X.iloc[: -self.test_length])
-        pred = model.predict(X.iloc[-self.test_length :])
-        self._metrics(X["y"].values[-self.test_length :], pred["yhat"].values)
-
-        # test only
-        if test_only:
-            return (
-                pred["yhat"],
-                model.predict(X.iloc[: -self.test_length])["yhat"].to_list()
-                + [np.nan] * self.test_length,
-                model,
-                Xvars,
-            )
-
-        # full
+            if test_only:
+                return (
+                    pred["yhat"],
+                    model.predict(X.iloc[: -self.test_length])["yhat"].to_list()
+                    + [np.nan] * self.test_length,
+                    model,
+                    Xvars,
+                )
+        elif test_only:
+            self._raise_test_only_error()
+        else:
+            self._metrics([],[])
         regr = Prophet(**kwargs)
         regr.fit(X)
         fcst = regr.predict(p)
@@ -1110,32 +1022,25 @@ class Forecaster:
     def _forecast_silverkite(
         self, tune=False, dynamic_testing=True, Xvars=None, test_only=False, **kwargs
     ):
-        """ forecasts with the silverkite model from LinkedIn greykite library.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html
+        """ Forecasts with the silverkite model from LinkedIn greykite library.
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html.
 
         Args:
-            tune (bool): default False.
-                whether to tune the forecast.
-                does not need to be specified by user.
-            dynamic_testing (bool): default True.
-                always ignored for silverkite (for now).
-            Xvars (list-like, str, or None): the regressors to predict with.
-                be sure to have added them to the Forecaster object first.
+            tune (bool): Default False.
+                Whether to tune the forecast.
+                It does not need to be specified by the user.
+            dynamic_testing (bool): Default True.
+                Always True for silverkite. It can use lags but they are always far enough in the past to allow a direct forecast.
+            Xvars (list-like, str, or None): The regressors to predict with.
                 None means no Xvars used (unlike sklearn models).
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: Passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
         """
-        if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument will be ignored for the silverkite model"
-            )
-        self.dynamic_testing = True
         from greykite.framework.templates.autogen.forecast_config import (
             ForecastConfig,
             MetadataParam,
@@ -1143,7 +1048,12 @@ class Forecaster:
             EvaluationPeriodParam,
         )
         from greykite.framework.templates.forecaster import Forecaster as SKForecaster
-
+        self._warn_about_dynamic_testing(
+            dynamic_testing=dynamic_testing,
+            does_not_use_lags=False,
+            uses_direct=True,
+        )
+        
         Xvars = (
             [x for x in self.current_xreg.keys() if not x.startswith("AR")]
             if Xvars == "all"
@@ -1157,7 +1067,7 @@ class Forecaster:
             validation_length = (
                 validation_length if validation_length > 0 else -(df.shape[0] + 1)
             )
-            pred_df = df.iloc[:-test_length, :].dropna()
+            pred_df = df.iloc[:-test_length, :].dropna() if self.test_length > 0 else df.dropna()
             if validation_length > 0:
                 pred_df.loc[:-validation_length, "y"] = None
             metadata = MetadataParam(time_col="ts", value_col="y", freq=self.freq)
@@ -1194,9 +1104,10 @@ class Forecaster:
         df = pd.concat([ts_df, reg_df], axis=1)
 
         if tune:
-            y_test = self.y.values[
-                -(self.test_length + self.validation_length) : -self.test_length
-            ]
+            y_test = (
+                self.y.values[-(self.test_length + self.validation_length) : -self.test_length]
+                if self.test_length > 0 else self.y.values[-(self.test_length + self.validation_length) :]
+            )
             result = _forecast_sk(
                 df,
                 Xvars,
@@ -1207,15 +1118,19 @@ class Forecaster:
             pred = result[0]
             self._metrics(y_test, pred[-self.validation_length :])
             return self._tune()
-
-        result = _forecast_sk(df, Xvars, self.test_length, 0, self.test_length)
-        Xvars = Xvars if Xvars != [] else None
-        pred = result[0]
-        self._metrics(self.y.values[-self.test_length :], pred[-self.test_length :])
-        if test_only:
-            self.summary_stats = result[1].set_index("Pred_col")
-            return (pred, pred[: -self.test_length], Xvars, None)
-
+        elif self.test_length > 0:
+            result = _forecast_sk(df, Xvars, self.test_length, 0, self.test_length)
+            Xvars = Xvars if Xvars != [] else None
+            pred = result[0]
+            pred = pred[-self.test_length :]
+            self._metrics(self.y.values[-self.test_length :], pred)
+            if test_only:
+                self.summary_stats = result[1].set_index("Pred_col")
+                return (pred, pred[: -self.test_length], Xvars, None)
+        elif test_only:
+            self._raise_test_only_error()
+        else:
+            self._metrics([],[])
         result = _forecast_sk(df, Xvars, 0, 0, fcst_length)
         self.summary_stats = result[1].set_index("Pred_col")
         return (result[0][-fcst_length:], result[0][:-fcst_length], Xvars, None)
@@ -1235,60 +1150,54 @@ class Forecaster:
         test_only=False,
         **kwargs,
     ):
-        """ forecasts with a long-short term memory neural network from TensorFlow.
-        cannot be tuned.
-        only xvar options are the series' own history (specify in lags argument).
-        always uses minmax normalizer.
-        fitted values are the last fcst_length worth of values only.
-        anything this function can do, rnn can also do. 
-        this function is simpler to set up than rnn.
-        the model is saved in the tf_model attribute.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
+        """ Forecasts with a long-short term memory neural network from TensorFlow.
+        Cannot be tuned.
+        Only xvar options are the series' own history (specified in the `lags` argument).
+        Always uses a minmax scaler on the inputs and outputs. The resulting point forecasts are unscaled.
+        Anything this function can do, rnn can also do, 
+        but this function is simpler to set up than rnn.
+        The model is saved in the tf_model attribute and a summary can be called by calling Forecaster.tf_model.summary().
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
             
         Args:
-            dynamic_testing (bool): default True.
-                always ignored for lstm.
-            lags (int): greater than 0, default 1.
-                the number of y-variable lags to train the model with.
-            lstm_layer_sizes (list-like): default (25,).
-                the size of each lstm layer to add.
-                the first element is for the input layer.
-                the size of this array minus 1 will equal the number of hidden layers in the resulting model.
-            dropout (list-like): default (0.0,).
-                the dropout rate for each lstm layer.
-                must be the same size as lstm_layer_sizes.
-            loss (str): default 'mean_absolute_error'.
-                the loss function to minimize.
-                see available options here:
-                  https://www.tensorflow.org/api_docs/python/tf/keras/losses.
-                be sure to choose one that is suitable for regression tasks.
-            activation (str): default "tanh".
-                the activation function to use in each lstm layer.
-                see available values here:
-                  https://www.tensorflow.org/api_docs/python/tf/keras/activations.
+            dynamic_testing (bool): Default True.
+                Always True for lstm. The model uses a direct forecast.
+            lags (int): Must be greater than 0 (otherwise, what are your model inputs?). Default 1.
+                The number of lags to train the model with.
+            lstm_layer_sizes (list-like): Default (8,).
+                The size of each lstm layer to add.
+                The first element is for the input layer.
+                The size of this array minus 1 will equal the number of hidden layers in the resulting model.
+            dropout (list-like): Default (0.0,).
+                The dropout rate for each lstm layer.
+                Must be the same size as lstm_layer_sizes.
+            loss (str): Default 'mean_absolute_error'.
+                The loss function to minimize while traning the model.
+                See available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses.
+                Be sure to choose one that is suitable for regression tasks.
+            activation (str): Default "tanh".
+                The activation function to use in each LSTM layer.
+                See available values here: https://www.tensorflow.org/api_docs/python/tf/keras/activations.
             optimizer (str): default "Adam".
-                the optimizer to use when compiling the model.
-                see available values here:
-                  https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
-            learning_rate (float): default 0.001.
-                the learning rate to use when compiling the model.
-            random_seed (int): optional.
-                set a seed for consistent results.
-                with tensorflow networks, setting seeds does not guarantee consistent results.
-            plot_loss (bool): default False.
-                whether to plot the LSTM loss function stored in history for each epoch.
-                if validation_split passed to kwargs, will plot the validation loss as well.
-                looks better if epochs > 1 passed to **kwargs.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+                The optimizer to use when compiling the model.
+                See available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
+            learning_rate (float): Default 0.001.
+                The learning rate to use when compiling the model.
+            random_seed (int): Optional.
+                Set a seed for consistent results.
+                With tensorflow networks, setting seeds does not guarantee consistent results.
+            plot_loss (bool): Default False.
+                Whether to plot the LSTM loss function stored in history for each epoch.
+                If validation_split is passed to kwargs, it will plot the validation loss as well.
+                The resulting plot looks better if epochs > 1 passed to **kwargs.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: Passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
         """
-
         def convert_lstm_args_to_rnn(**kwargs):
             new_kwargs = {
                 k: v
@@ -1338,62 +1247,59 @@ class Forecaster:
         test_only=False,
         **kwargs,
     ):
-        """ forecasts with a recurrent neural network from TensorFlow, such as lstm or simple recurrent.
-        not all features from tensorflow are available, but it is possible that more features will be added in the future.
-        cannot be tuned.
-        only xvar options are the series' own history (specified in lags argument).
-        always uses minmax normalizer.
-        the model is saved in the tf_model attribute.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
+        """ Forecasts with a recurrent neural network from TensorFlow, such as LSTM or simple recurrent.
+        Not all features from tensorflow are available, but many of the most common ones for time series models are.
+        Cannot be tuned.
+        Only xvar options are the series' own history (specified in the lags argument).
+        Always uses a minmax scaler on the inputs and outputs. The resulting point forecasts are unscaled.
+        The model is saved in the tf_model attribute and a summary can be called by calling Forecaster.tf_model.summary().
+        see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html.
 
         Args:
-            dynamic_testing (bool): default True.
-                always ignored for rnn.
-            lags (int): greater than 0, default 1.
-                the number of y-variable lags to train the model with.
-            layers_struct (list[tuple[str,dict[str,Union[float,str]]]]): default [('SimpleRNN',{'units':8,'activation':'tanh'})].
-                each element in the list is a tuple with two elements.
-                first element of the list is the input layer (input_shape set automatically).
-                first element of the tuple in the list is the type of layer ('SimpleRNN','LSTM', or 'Dense').
-                second element is a dict.
-                in the dict, key is a str representing hyperparameter name: 'units','activation', etc.
-                val is hyperparameter value.
-                see here for options related to SimpleRNN: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN
-                for LSTM: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-                for Dense: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
-            loss (str or tf.keras.losses.Loss): default 'mean_absolute_error'.
-                the loss function to minimize.
-                see available options here: 
-                  https://www.tensorflow.org/api_docs/python/tf/keras/losses.
-                be sure to choose one that is suitable for regression tasks.
-            optimizer (str or tf Optimizer): default "Adam".
-                the optimizer to use when compiling the model.
-                see available values here: 
-                  https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
-                if str, will use the optimizer with default args
-                if type Optimizer, will use the optimizer exactly as specified
-            learning_rate (float): default 0.001.
-                the learning rate to use when compiling the model.
-                ignored if you pass your own optimizer with a learning rate
-            random_seed (int): optional.
-                set a seed for consistent results.
-                with tensorflow networks, setting seeds does not guarantee consistent results.
-            plot_loss_test (bool): default False.
-                whether to plot the loss trend stored in history for each epoch on the test set.
-                if validation_split passed to kwargs, will plot the validation loss as well.
-                looks better if epochs > 1 passed to **kwargs.
+            dynamic_testing (bool): Default True.
+                Always True for rnn. The model uses a direct forecast.
+            lags (int): Must be greater than 0 (otherwise, what are your model inputs?). Default 1.
+                The number of lags to train the model with.
+            layers_struct (list[tuple[str,dict[str,Union[float,str]]]]): Default [('SimpleRNN',{'units':8,'activation':'tanh'})].
+                Each element in the list is a tuple with two elements.
+                First element of the list is the input layer (input_shape set automatically).
+                First element of the tuple in the list is the type of layer ('SimpleRNN','LSTM', or 'Dense').
+                Second element is a dict.
+                In the dict, key is a str representing hyperparameter name: 'units','activation', etc.
+                Val is hyperparameter value.
+                See here for options related to SimpleRNN: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN.
+                For LSTM: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM.
+                For Dense: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense.
+            loss (str or tf.keras.losses.Loss): Default 'mean_absolute_error'.
+                The loss function to minimize.
+                See available options here: https://www.tensorflow.org/api_docs/python/tf/keras/losses.
+                Be sure to choose one that is suitable for regression tasks.
+            optimizer (str or tf Optimizer): Default "Adam".
+                The optimizer to use when compiling the model.
+                See available values here: https://www.tensorflow.org/api_docs/python/tf/keras/optimizers.
+                If str, it will use the optimizer with default args.
+                If type Optimizer, will use the optimizer exactly as specified.
+            learning_rate (float): Default 0.001.
+                The learning rate to use when compiling the model.
+                Ignored if you pass your own optimizer with a learning rate.
+            random_seed (int): Optional.
+                Set a seed for consistent results.
+                With tensorflow networks, setting seeds does not guarantee consistent results.
+            plot_loss_test (bool): Default False.
+                Whether to plot the loss trend stored in history for each epoch on the test set.
+                If validation_split passed to kwargs, will plot the validation loss as well.
+                The resulting plot looks better if epochs > 1 passed to **kwargs.
             plot_loss (bool): default False.
                 whether to plot the loss trend stored in history for each epoch on the full model.
                 if validation_split passed to kwargs, will plot the validation loss as well.
                 looks better if epochs > 1 passed to **kwargs.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: Passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
         """
 
         def get_compiled_model(y):
@@ -1483,42 +1389,73 @@ class Forecaster:
             ValueError,
             f"must pass at least one layer to layers_struct, got {layers_struct}",
         )
-        if not dynamic_testing:
-            logging.warning(
-                "dynamic_testing argument will be ignored for the rnn model"
-            )
-        self.dynamic_testing = None
+        self._warn_about_dynamic_testing(
+            dynamic_testing=dynamic_testing,
+            does_not_use_lags=False,
+            uses_direct=True,
+        )
 
         if random_seed is not None:
             random.seed(random_seed)
 
-        y_train = self.y.values[: -self.test_length].copy()
-        y_test = self.y.values[-self.test_length :].copy()
+        n_features = 1
 
-        ymin = y_train.min()
-        ymax = y_train.max()
+        if self.test_length > 0:
+            y_train = self.y.values[: -self.test_length].copy()
+            y_test = self.y.values[-self.test_length :].copy()
 
-        X_train, y_train_new = prepare_rnn(y_train, lags, self.test_length)
+            ymin = y_train.min()
+            ymax = y_train.max()
+
+            X_train, y_train_new = prepare_rnn(y_train, lags, self.test_length)
+
+            X_test = np.array(
+                [
+                    [
+                        (i - ymin) / (ymax - ymin)
+                        for i in self.y.values[
+                            -(lags + self.test_length) : -self.test_length
+                        ].copy()
+                    ]
+                ]
+            )
+            y_test_new = np.array(
+                [
+                    [
+                        (i - ymin) / (ymax - ymin)
+                        for i in self.y.values[-self.test_length :].copy()
+                    ]
+                ]
+            )
+
+            n_timesteps = X_train.shape[1]
+
+            X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+            X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+            test_model = get_compiled_model(y_train_new)
+            hist = test_model.fit(X_train, y_train_new, **kwargs)
+            pred = test_model.predict(X_test)
+            pred = [p * (ymax - ymin) + ymin for p in pred[0]]  # un-minmax
+            self._metrics(y_test, pred)
+            if plot_loss_test:
+                plot_loss_rnn(hist, "model loss - test")
+            if test_only:
+                fvs = test_model.predict(X_train)
+                fvs = [p[0] * (ymax - ymin) + ymin for p in fvs[1:][::-1]] + [
+                    p * (ymax - ymin) + ymin for p in fvs[0]
+                ]
+                self.tf_model = test_model
+                return (
+                    pred, 
+                    fvs + [np.nan] * self.test_length, 
+                    None, 
+                    None,
+                )
+        elif test_only:
+            self._raise_test_only_error()
+        else:
+            self._metrics([],[])
         X, y_new = prepare_rnn(self.y.values.copy(), lags, len(self.future_dates))
-
-        X_test = np.array(
-            [
-                [
-                    (i - ymin) / (ymax - ymin)
-                    for i in self.y.values[
-                        -(lags + self.test_length) : -self.test_length
-                    ].copy()
-                ]
-            ]
-        )
-        y_test_new = np.array(
-            [
-                [
-                    (i - ymin) / (ymax - ymin)
-                    for i in self.y.values[-self.test_length :].copy()
-                ]
-            ]
-        )
         fut = np.array(
             [
                 [
@@ -1527,33 +1464,9 @@ class Forecaster:
                 ]
             ]
         )
-
-        n_timesteps = X_train.shape[1]
-        n_features = 1
-
-        X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
-        X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+        n_timesteps = X.shape[1]
         X = X.reshape(X.shape[0], X.shape[1], 1)
         fut = fut.reshape(fut.shape[0], fut.shape[1], 1)
-
-        test_model = get_compiled_model(y_train_new)
-        hist = test_model.fit(X_train, y_train_new, **kwargs)
-        pred = test_model.predict(X_test)
-
-        pred = [p * (ymax - ymin) + ymin for p in pred[0]]  # un-minmax
-
-        # set the test-set metrics
-        self._metrics(y_test, pred)
-        if plot_loss_test:
-            plot_loss_rnn(hist, "model loss - test")
-        if test_only:
-            fvs = test_model.predict(X_train)
-            fvs = [p[0] * (ymax - ymin) + ymin for p in fvs[1:][::-1]] + [
-                p * (ymax - ymin) + ymin for p in fvs[0]
-            ]
-            self.tf_model = test_model
-            return (pred, fvs + [np.nan] * self.test_length, None, None)
-
         model = get_compiled_model(y_new)
         hist = model.fit(X, y_new, **kwargs)
         if plot_loss:
@@ -1564,9 +1477,7 @@ class Forecaster:
             p[0] * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[1:][::-1]
         ] + [p * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[0]]
         fcst = [p * (self.y.max() - self.y.min()) + self.y.min() for p in fcst[0]]
-
         self.tf_model = model
-
         return (fcst, fvs, None, None)
 
     def _forecast_combo(
@@ -1580,13 +1491,13 @@ class Forecaster:
         splice_points=None,
         test_only=False,
     ):
-        """ combines at least two previously evaluted forecasts to create a new model.
-        this method cannot be run on models that were run test_only = True.
-        see the following explanation for the weighted-average model:
+        """ Combines at least two previously evaluted forecasts to create a new model.
+        This method cannot be run on models that were run test_only = True.
+        See the following explanation for the weighted-average model:
         The weighted model in scalecast uses a weighted average of all selected models, 
         applying the same weights to the fitted values, test-set metrics, and predictions. 
         A user can supply their own weights or let the algorithm determine optimal weights 
-        based on a passed error metric (such as "TestSetMAPE"). To avoid overfitting, it is 
+        based on a passed error metric (such as "TestSetMAPE"). To avoid leakage, it is 
         recommended to use the default value, "ValidationMetricValue" to determine weights, 
         although this is not possible if the selected models have not all been tuned on the 
         validation set. The weighting uses a MaxMin scaler when an error metric is passed, 
@@ -1596,48 +1507,49 @@ class Forecaster:
         the user can select a factor to add to all scaled values before the rebalancing 
         is applied; by default, this is 0.1. The higher this factor is, the closer the weighted 
         average will be to a simple average and vice-versa.
-        see example: https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html.
 
         Args:
-            how (str): one of {'simple','weighted','splice'}, default 'simple'.
-                the type of combination.
-                if 'simple', uses a simple average.
-                if 'weighted', uses a weighted average.
-                if 'splice', splices several forecasts together at specified splice points.
-            models (list-like or str): default 'all'.
-                which models to combine.
-                can start with top ('top_5').
-            dynamic_testing (bool): default True.
-                always ignored for combo (for now and possibly forever).
-            determine_best_by (str): one of _determine_best_by_, default 'ValidationMetricValue'.
-                if models does not start with 'top_' and how is not 'weighted', this is ignored.
-                if how is 'weighted' and manual weights are specified, this is ignored.
-            rebalance_weights (float): default 0.1.
-                how to rebalance the weights when how = 'weighted'.
-                the higher, the closer the weights will be to each other for each model.
-                if 0, the worst-performing model will be weighted with 0.
-                must be greater than or equal to 0.
-            weights (list-like): optional.
-                only applicable when how='weighted'.
-                manually specifies weights.
-                must be the same size as models.
-                if None and how='weighted', weights are set automatically.
-                if manually passed weights do not add to 1, will rebalance them.
-            splice_points (list-like): optional.
-                only applicable when how='splice'.
-                elements in array must be str in '%Y-%m-%d' or datetime object.
-                must be exactly one less in length than the number of models.
+            how (str): One of {'simple','weighted','splice'}. Default 'simple'.
+                The type of combination.
+                If 'simple', uses a simple average.
+                If 'weighted', uses a weighted average.
+                If 'splice', splices several forecasts together at specified splice points.
+            models (list-like or str): Default 'all'.
+                Which models to combine.
+                Can start with top ('top_5').
+            dynamic_testing (bool): Default True.
+                Always set to True for combo.
+            determine_best_by (str): One of _determine_best_by_, default 'ValidationMetricValue'.
+                If models does not start with 'top_' and how is not 'weighted', this is ignored.
+                If how is 'weighted' and manual weights are specified, this is ignored.
+            rebalance_weights (float): Default 0.1.
+                How to rebalance the weights when how = 'weighted'.
+                The higher, the closer the weights will be to each other for each model.
+                If 0, the worst-performing model will be weighted with 0.
+                Must be greater than or equal to 0.
+            weights (list-like): Optional.
+                Only applicable when how='weighted'.
+                Manually specifies weights.
+                Must be the same size as models.
+                If None and how='weighted', weights are set automatically.
+                If manually passed weights do not add to 1, will rebalance them.
+            splice_points (list-like): Optional.
+                Only applicable when how='splice'.
+                Elements in array must be parsable by pandas' Timestamp function.
+                Must be exactly one less in length than the number of models.
                 models[0] --> :splice_points[0]
                 models[-1] --> splice_points[-1]:
             test_only (bool): default False:
-                always ignored in combo model.
+                Always forced to be False in the combo model.
         """
-        if not dynamic_testing:
-            logging.warning("dynamic_testing argument ignored for the combo model")
-        if test_only:
-            logging.warning("test_only argument ignored for the combo model")
-        self.dynamic_testing = None
+        self._warn_about_dynamic_testing(
+            dynamic_testing=dynamic_testing,
+            does_not_use_lags=True,
+            uses_direct=False,
+        )
         self.test_only = False
+        
         determine_best_by = (
             determine_best_by
             if (weights is None) & ((models[:4] == "top_") | (how == "weighted"))
@@ -1654,7 +1566,6 @@ class Forecaster:
             | (weights is not None)
         )
         models = self._parse_models(models, determine_best_by)
-        self._validate_no_test_only(models)
         descriptive_assert(
             len(models) > 1,
             ForecastError,
@@ -1819,12 +1730,12 @@ class Forecaster:
             self.current_dates.freq = self.freq
 
     def fillna_y(self, how="ffill"):
-        """ fills null values in the y attribute.
+        """ Fills null values in the y attribute.
 
         Args:
-            how (str): one of {'backfill', 'bfill', 'pad', 'ffill', 'midpoint'}.
-                midpoint is unique to this library and only works if there is not more than two missing values sequentially.
-                all other possible arguments are from pandas.DataFrame.fillna() method and will do the same.
+            how (str): One of {'backfill', 'bfill', 'pad', 'ffill', 'midpoint'}.
+                Midpoint is unique to this library and only works if there is not more than two missing values sequentially.
+                All other possible arguments are from pandas.DataFrame.fillna() method and will do the same.
 
         Returns:
             None
@@ -1839,12 +1750,12 @@ class Forecaster:
                     self.y.values[i] = (self.y.values[i - 1] + self.y.values[i + 1]) / 2
 
     def generate_future_dates(self, n):
-        """ generates a certain amount of future dates in same frequency as current_dates.
+        """ Generates a certain amount of future dates in same frequency as current_dates.
 
         Args:
-            n (int): greater than 0.
-                number of future dates to produce.
-                this will also be the forecast length.
+            n (int): Greater than 0.
+                Number of future dates to produce.
+                This will also be the forecast length.
 
         Returns:
             None
@@ -1858,19 +1769,17 @@ class Forecaster:
         )
 
     def set_last_future_date(self, date):
-        """ generates future dates in the same frequency as current_dates that ends on a specified date.
+        """ Generates future dates in the same frequency as current_dates that ends on a specified date.
 
         Args:
             date (datetime.datetime, pd.Timestamp, or str):
-                the date to end on. if str, must be in '%Y-%m-%d' format.
+                The date to end on. Must be parsable by pandas' Timestamp() function.
 
         Returns:
             None
 
         >>> f.set_last_future_date('2021-06-01') # creates future dates up to this one in the expected frequency
         """
-        if isinstance(date, str):
-            date = datetime.datetime.strptime(date, "%Y-%m-%d")
         self.future_dates = pd.Series(
             pd.date_range(
                 start=self.current_dates.values[-1], end=date, freq=self.freq
@@ -1878,8 +1787,8 @@ class Forecaster:
         )
 
     def typ_set(self):
-        """ converts all objects in y, current_dates, future_dates, current_xreg, and future_xreg to appropriate types if possible.
-        automatically gets called when object is initiated.
+        """ Converts all objects in y, current_dates, future_dates, current_xreg, and future_xreg to appropriate types if possible.
+        Automatically gets called when object is initiated to minimize potential errors.
 
         >>> f.typ_set() # sets all arrays to the correct format
         """
@@ -1913,9 +1822,9 @@ class Forecaster:
         self.infer_freq()
 
     def diff(self):
-        """ differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.
-        if series is already differenced, calling this function does nothing.
-        as of 0.14.8, only one-differencing supported. two-differencing and other transformations must use the 
+        """ Differences the y attribute, as well as all AR values stored in current_xreg and future_xreg.
+        If series is already differenced, calling this function does nothing.
+        As of 0.14.8, only one-differencing supported. Two-differencing and other transformations must use the 
         SeriesTransformer object:
         https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html
 
@@ -1935,30 +1844,23 @@ class Forecaster:
                 self.current_xreg[k] = v.diff()
                 self.future_xreg[k] = [self.y.values[-ar]] # just gets one future ar
 
-    def integrate(self, critical_pval=0.05, train_only=False, max_integration=None, **kwargs):
-        """ differences the series up to 1 time based on Augmented Dickey-Fuller test results.
-        if series is already differenced, calling this function does nothing.
+    def integrate(self, critical_pval=0.05, train_only=False, **kwargs):
+        """ Differences the series up to 1 time based on Augmented Dickey-Fuller test results.
+        If series is already differenced, calling this function does nothing.
 
         Args:
-            critical_pval (float): default 0.05.
-                the p-value threshold in the statistical test to accept the alternative hypothesis.
-            train_only (bool): default False.
-                if True, will exclude the test data set from the Augmented Dickey-Fuller test (to avoid leakage).
-            max_integration (None): deprecated. not used since 0.14.8 since two-level differencing no longer supported.
-                this arg will be taken out of the function eventually. 
-            **kwargs: passed to the `adfuller()` function from statsmodels 
-                https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
+            critical_pval (float): Default 0.05.
+                The p-value threshold in the statistical test to accept the alternative hypothesis.
+            train_only (bool): Default False.
+                If True, will exclude the test data set from the Augmented Dickey-Fuller test (to avoid leakage).
+            **kwargs: Passed to the `adfuller()` function from statsmodels.
+                See https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html.
 
         Returns:
             None
 
         >>> f.integrate() # differences y once if it is not stationarity
         """
-        if max_integration is not None:
-            warnings.warn(
-                'max_integation is no longer needed in the `Forecaster.integrate()` method and will be removed eventually.',
-                FutureWarning,
-            )
         if self.integration == 1:
             return
         
@@ -1972,10 +1874,10 @@ class Forecaster:
             self.diff()
 
     def add_ar_terms(self, n):
-        """ adds auto-regressive terms.
+        """ Adds auto-regressive terms.
 
         Args:
-            n (int): the number of terms to add (1 to this number will be added).
+            n (int): The number of lags to add to the object (1 to this number will be added).
 
         Returns:
             None
@@ -1996,10 +1898,10 @@ class Forecaster:
             self.future_xreg[f"AR{i}"] = [self.y.values[-i]]
 
     def add_AR_terms(self, N):
-        """ adds seasonal auto-regressive terms.
+        """ Adds seasonal auto-regressive terms.
             
         Args:
-            N (tuple): first element is the number of terms to add and the second element is the space between terms.
+            N (tuple): First element is the number of lags to add and the second element is the space between lags.
 
         Returns:
             None
@@ -2019,21 +1921,23 @@ class Forecaster:
     def ingest_Xvars_df(
         self, df, date_col="Date", drop_first=False, use_future_dates=False
     ):
-        """ ingests a dataframe of regressors and saves its contents to the Forecaster object.
-        must specify a date column.
-        all non-numeric values will be dummied.
-        any columns in the dataframe that begin with "AR" will be confused with autoregressive terms and could cause errors.
+        """ Ingests a dataframe of regressors and saves its Xvars to the object.
+        The user must specify a date column name in the dataframe being ingested.
+        All non-numeric values are dummied.
+        Any columns in the dataframe that begin with "AR" will be confused with autoregressive terms and could cause errors.
 
         Args:
-            df (DataFrame): the dataframe that is at least the length of len(current_dates) + len(future_dates)
-            date_col (str): default 'Date'.
-                the name of the date column in the dataframe.
-                this column must have the same frequency as the dates in current_dates.
-            drop_first (bool): default False.
-                whether to drop the first observation of any dummied variables.
-                irrelevant if passing all numeric values.
-            use_future_dates (bool): default False.
-                whether to use the future dates in the dataframe as the future_dates attribute in the object.
+            df (DataFrame): The dataframe that is at least the length of the y array stored in the object plus the forecast horizon,
+                except if the object was initiated with require_future_dates = False. Then it just has to be the same length as
+                the y array stored in the object.
+            date_col (str): Default 'Date'.
+                The name of the date column in the dataframe.
+                This column must have the same frequency as the dates stored in the Forecaster object.
+            drop_first (bool): Default False.
+                Whether to drop the first observation of any dummied variables.
+                Irrelevant if passing all numeric values.
+            use_future_dates (bool): Default False.
+                Whether to use the future dates in the dataframe as the resulting future_dates attribute in the Forecaster object.
 
         Returns:
             None
@@ -2052,27 +1956,27 @@ class Forecaster:
             descriptive_assert(
                 future_df.shape[0] > 0,
                 ForecastError,
-                'regressor values must be known into the future unless require_future_dates attr is set to False'
+                'Regressor values must be known into the future unless require_future_dates attr is set to False.'
             )
         else:
             future_df = pd.DataFrame({date_col: self.future_dates.to_list()})
             for c in current_df:
                 if c != date_col:
-                    future_df[c] = 0
-
+                    future_df[c] = 0 # shortcut to make the rest of everything else work better
         descriptive_assert(
             current_df.shape[0] == len(self.y),
             ForecastError,
-            "something went wrong--make sure the dataframe spans the entire daterange as y and is at least one observation to the future"
-            " and specify a date column in date_col parameter",
+            "Could not ingest Xvars dataframe."
+            " Make sure the dataframe spans the entire date range as y and is at least one observation to the future."
+            " Specify the date column name in the `date_col` argument.",
         )
 
         if not use_future_dates:
             descriptive_assert(
                 future_df.shape[0] >= len(self.future_dates),
                 ValueError,
-                "the future dates in the dataframe should be at least the same length as the future dates in the Forecaster object." 
-                " if you desire to use the dataframe to set the future dates for the object, pass True to the use_future_dates argument.",
+                "The future dates in the dataframe should be at least the same length as the future dates in the Forecaster object." 
+                " If you want to use the dataframe to set the future dates for the object, pass True to the use_future_dates argument.",
             )
         else:
             self.future_dates = future_df[date_col]
@@ -2084,9 +1988,9 @@ class Forecaster:
         for x, v in self.future_xreg.items():
             self.future_xreg[x] = v[: len(self.future_dates)]
             if not len(v) == len(self.future_dates):
-                logging.warning(
-                    f"warning: {x} is not the correct length in the future_dates attribute and this can cause errors when forecasting."
-                    " its length is {len(v)} and future_dates length is {len(self.future_dates)}."
+                warnings.warning(
+                    f"{x} is not the correct length in the future_dates attribute and this can cause errors when forecasting."
+                    f" Its length is {len(v)} and future_dates length is {len(self.future_dates)}."
                 )
 
     def reduce_Xvars(
@@ -2104,70 +2008,70 @@ class Forecaster:
         cvkwargs={},
         **kwargs,
     ):
-        """ reduces the regressor variables stored in the object. three methods are available:
+        """ Reduces the regressor variables stored in the object. The following methods are available:
         l1 which uses a simple l1 penalty and Lasso regressor; pfi that stands for 
         permutation feature importance; and shap. pfi and shap offer more flexibility to view how removing
         variables one-at-a-time, according to which variable is evaluated as least helpful to the
         model after each model evaluation, affects a given error metric for any scikit-learn model.
-        after each variable reduction, the model is re-run and pfi re-evaluated. when using pfi, feature scores
+        After each variable reduction, the model is re-run and pfi re-evaluated. When using pfi, feature scores
         are adjusted to account for colinearity, which is a known issue with this method, 
         by sorting by each feature's score and standard deviation, dropping variables first that have both a 
-        low score and low standard deviation. by default, the validation-set error is used to avoid leakage 
+        low score and low standard deviation. By default, the validation-set error is used to avoid leakage 
         and the variable set that most reduced the error is selected.
 
         Args:
-            method (str): one of {'l1','pfi','shap'}, default 'l1'.
-                the reduction method. 
+            method (str): One of {'l1','pfi','shap'}. Default 'l1'.
+                The reduction method. 
                 'l1' uses a lasso regressor and grid searches for the optimal alpha on the validation set
                 unless an alpha value is passed to the hyperparams arg and grid_search arg is False.
                 'pfi' uses permutation feature importance and is more computationally expensive
                 but can use any sklearn estimator.
                 'shap' uses shap feature importance, but it is not available for all sklearn models.
-                method "pfi" or "shap" creates attributes in object called pfi_dropped_vars and pfi_error_values that are two lists
-                that represent the error change with the corresponding dropped var.
-                the pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
-                the first error is the initial error before any variables were dropped.
-            estimator (str): one of _sklearn_estimators_. default 'lasso'.
-                the estimator to use to determine the best set of vars.
-                if method == 'l1', estimator arg is ignored and is always lasso.
-            keep_at_least (str or int): default 1.
-                the fewest number of Xvars to keep if method == 'pfi'.
+                Method "pfi" or "shap" creates attributes in the object called pfi_dropped_vars and pfi_error_values that are lists
+                representing the error change with the corresponding dropped variable.
+                The pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
+                The first error is the initial error before any variables were dropped.
+            estimator (str): One of _sklearn_estimators_. Default 'lasso'.
+                The estimator to use to determine the best set of variables.
+                If method == 'l1', the `estimator` arg is ignored and is always lasso.
+            keep_at_least (str or int): Default 1.
+                The fewest number of Xvars to keep if method == 'pfi'.
                 'sqrt' keeps at least the sqare root of the number of Xvars rounded down.
-                this exists so that the keep_this_many keyword can use 'auto' as an argument.
-            keep_this_many (str or int): default 'auto'.
-                the number of Xvars to keep if method == 'pfi'.
+                This exists so that the keep_this_many keyword can use 'auto' as an argument.
+            keep_this_many (str or int): Default 'auto'.
+                The number of Xvars to keep if method == 'pfi' or 'shap'.
                 "auto" keeps the number of xvars that returned the best error using the 
                 metric passed to monitor, but it is the most computationally expensive.
                 "sqrt" keeps the square root of the total number of observations rounded down.
-            gird_search (bool): default True.
-                whether to run a grid search for optimal hyperparams on the validation set.
-                if use_loaded_grid is False, uses a grids file currently available in the working directory 
+            gird_search (bool): Default True.
+                Whether to run a grid search for optimal hyperparams on the validation set.
+                If use_loaded_grid is False, uses a grids file currently available in the working directory 
                 or creates a new grids file called Grids.py with default values if none available to determine the grid to use.
-                the grid search is only run once and then those hyperparameters are used for
+                The grid search is only run once and then those hyperparameters are used for
                 all subsequent pfi runs when method == 'pfi'.
-                in any utilized grid, do not include 'Xvars' as a key.
-                if you want to access the chosen hyperparams after the fact, they are stored in the reduction_hyperparams
+                In any utilized grid, do not include 'Xvars' as a key.
+                If you want to access the chosen hyperparams after the fact, they are stored in the reduction_hyperparams
                 attribute.
-            use_loaded_grid (bool): default False.
-                whether to use the currently loaded grid in the object instead of using a grid from a file.
-                in any utilized grid, do not include 'Xvars' as a key.
-            dynamic_tuning (bool or int): default False.
-                whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
-            monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
-                ignored when pfi == 'l1'.
-                the metric to be monitored when making reduction decisions. 
-            overwrite (bool): default True.
-                if False, the list of selected Xvars are stored in an attribute called reduced_Xvars.
-                if True, this list of regressors overwrites the current Xvars in the object.
-            cross_validate (bool): default False.
-                whether to tune the model with cross validation. 
-                if False, uses the validation slice of data to tune.
-                if not monitoring ValidationMetricValue, you will want to leave this False.
-            cvkwargs (dict): default {}. passed to the cross_validate() method.
-            **kwargs: passed to manual_forecast() method and can include arguments related to 
+            use_loaded_grid (bool): Default False.
+                Whether to use the currently loaded grid in the object instead of using a grid from a file.
+                In any utilized grid, do not include 'Xvars' as a key.
+            dynamic_tuning (bool or int): Default False.
+                Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
+            monitor (str): One of _determine_best_by_. Default 'ValidationSetMetric'.
+                Ignored when pfi == 'l1'.
+                The metric to be monitored when making reduction decisions. 
+            overwrite (bool): Default True.
+                If False, the list of selected Xvars are stored in an attribute called reduced_Xvars.
+                If True, this list of regressors overwrites the current Xvars in the object.
+            cross_validate (bool): Default False.
+                Whether to tune the model with cross validation. 
+                If False, uses the validation slice of data to tune.
+                IIf not monitoring ValidationMetricValue, you will want to leave this False.
+            cvkwargs (dict): Default {}. Passed to the `cross_validate()` method.
+            **kwargs: Passed to the `manual_forecast()` method and can include arguments related to 
                 a given model's hyperparameters or dynamic_testing.
-                do not pass hyperparameters if grid_search is True.
-                do not pass Xvars.
+                Do not pass hyperparameters if grid_search is True.
+                Do not pass Xvars.
 
         Returns:
             None
@@ -2194,14 +2098,21 @@ class Forecaster:
         descriptive_assert(
             method in ("l1", "pfi", "shap"),
             ValueError,
-            f'method must be one of "pfi", "l1", "shap", got {method}',
+            f'method must be one of "pfi", "l1", "shap", got {method}.',
         )
         f = self.__deepcopy__()
         descriptive_assert(
             estimator in _sklearn_estimators_,
             ValueError,
-            f"estimator must be one of {_sklearn_estimators_}, got {estimator}",
+            f"estimator must be one of {_sklearn_estimators_}, got {estimator}.",
         )
+        if self.test_length == 0:
+            warnings.warn(
+                'Test set length is 0. ' 
+                'When calling reduce_Xvars, '
+                'a copy of the object is taken and its test set length is set to 1.'
+            )
+            f.set_test_length(1)
         f.set_estimator(estimator if method in ("pfi", "shap") else "lasso")
         if grid_search:
             if not use_loaded_grid:
@@ -2213,7 +2124,7 @@ class Forecaster:
                 descriptive_assert(
                     hasattr(f, "grid"),
                     ForecastError,
-                    "grid not loaded, try setting use_loaded_grid to False",
+                    "Grid not loaded, try setting use_loaded_grid to False.",
                 )
         else:
             f.ingest_grid({k: [v] for k, v in kwargs.items()})
@@ -2310,6 +2221,31 @@ class Forecaster:
                 x: v for x, v in self.future_xreg.items() if x in self.reduced_Xvars
             }
 
+    def _Xvar_select_forecast(
+        self,
+        f,
+        estimator,
+        monitor,
+        cross_validate,
+        dynamic_tuning,
+        cvkwargs,
+        kwargs,
+        Xvars = 'all',
+    ):
+        f.set_estimator(estimator)
+        if monitor == 'ValidationMetricValue':
+            grid = {k:[v] for k, v in kwargs.items()}
+            grid['Xvars'] = [Xvars]
+            f.ingest_grid(grid)
+            if not cross_validate:
+                f.tune(dynamic_tuning=dynamic_tuning)
+            else:
+                f.cross_validate(**cvkwargs,dynamic_tuning=dynamic_tuning)
+            return f.validation_metric_value
+        else:
+            f.manual_forecast(**kwargs,Xvars=Xvars)
+            return f.history[estimator][monitor]
+
     def auto_Xvar_select(
         self,
         estimator = 'mlr',
@@ -2333,83 +2269,84 @@ class Forecaster:
         cvkwargs={},
         **kwargs,
     ):
-        """ attempts to find the ideal trend, seasonality, and look-back representations for the stored series by systematically adding regressors to the object and monintoring a passed metric value.
-        searches for trend first, then seasonalities, then optimal lag order, then the best combination of all of the above, along with irregular cycles (if specified) and any 
-        regressors already added to the object.
-        the function offers flexibility around setting Xvars it must add to the object by letting the user add these regressors before calling the function, 
+        """ Attempts to find the ideal trend, seasonality, and look-back representations for the stored series by 
+        systematically adding regressors to the object and monintoring a passed metric value.
+        Searches for trend first, then seasonalities, then optimal lag order, then the best 
+        combination of all of the above, along with irregular cycles (if specified) and any regressors already added to the object.
+        The function offers flexibility around setting Xvars it must add to the object by letting the user add these regressors before calling the function, 
         telling the function not to re-search for them, and telling the function not to drop them when considering the optimal combination of regressors.
-        the final optimal combination of regressors is determined by grouping all extracted regressors into trends, seasonalities, irregular cycles, ar terms, and regressors already added,
-        and tying all combinations of all these groups.
-        see the example: https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html
+        The final optimal combination of regressors is determined by grouping all extracted regressors into trends, seasonalities, irregular cycles, 
+        ar terms, and regressors already added, and tying all combinations of all these groups.
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html.
         
         Args:
-            estimator (str): one of _sklearn_estimators_. default 'mlr'.
-                the estimator to use to determine the best seasonal and lag regressors.
-            try_trend (bool): default True.
-                whether to search for trend representations of the series.
-            trend_estimator (str): one of _sklearn_estimators_. default 'mlr'.
-                ignored if try_trend is False.
-                the estimator to use to determine the best trend representation.
-            trend_estimator_kwargs (dict): default {}. the model parameters to pass to the trend_estimator model.
-            decomp_trend (bool): default True. whether to decompose the series to estimate the trend.
-                ignored if try_trend is False.
-                the idea is there can be many seasonalities represented by scalecast, but only one trend,
+            estimator (str): One of _sklearn_estimators_. Default 'mlr'.
+                The estimator to use to determine the best seasonal and lag regressors.
+            try_trend (bool): Default True.
+                Whether to search for trend representations of the series.
+            trend_estimator (str): One of _sklearn_estimators_. Default 'mlr'.
+                Ignored if try_trend is False.
+                The estimator to use to determine the best trend representation.
+            trend_estimator_kwargs (dict): Default {}. The model parameters to pass to the trend_estimator model.
+            decomp_trend (bool): Default True. Whether to decompose the series to estimate the trend.
+                Ignored if try_trend is False.
+                The idea is there can be many seasonalities represented by scalecast, but only one trend,
                 so using a decomposition method for trend could lead to finding a better trend representation.
-            decomp_method (str): one of 'additive','multiplicative'. default 'additive'.
-                ignored if try_trend is False. ignored if decomp_trend is False.
-                the decomp method used to represent the trend.
-            try_ln_trend (bool): default True.
-                ignored if try_trend is False.
-                whether to search logged trend representations.
-            max_trend_poly_order (int): default 2.
-                the highest order trend representation that will be searched.
-            try_seasonalities (bool): default True.
-                whether to search for seasonal representations.
-                this function uses a hierachical approach from secondly --> quarterly representations.
-                secondly will search all seasonal representations up to quarterly to find the best hierarchy of seasonalities.
-                anything lower than second and higher than quarter will not receive a seasonality with this method.
-                day seasonality and lower will try, 'day', 'dayofweek', and 'dayofyear' seasonalities.
-                everything else will try cycles that reset yearly, so to search for intermitent seasonal fluctuations, 
+            decomp_method (str): One of 'additive','multiplicative'. Default 'additive'.
+                The decomp method used to represent the trend.
+                Ignored if try_trend is False. Ignored if decomp_trend is False.
+            try_ln_trend (bool): Default True.
+                Ignored if try_trend is False.
+                Whether to search logged trend representations using a natural log.
+            max_trend_poly_order (int): Default 2.
+                The highest order trend representation that will be searched.
+            try_seasonalities (bool): Default True.
+                Whether to search for seasonal representations.
+                This function uses a hierachical approach from secondly --> quarterly representations.
+                Secondly will search all seasonal representations up to quarterly to find the best hierarchy of seasonalities.
+                Anything lower than second and higher than quarter will not receive a seasonality with this method.
+                Day seasonality and lower will try, 'day' (of month), 'dayofweek', and 'dayofyear' seasonalities.
+                Everything else will try cycles that reset yearly, so to search for intermitent seasonal fluctuations, 
                 use the irr_cycles argument.
-            seasonality_repr (list or dict[str,list]): default ['sincos'].
-                ignored if try_seasonalities is False.
-                how to represent the extracted seasonalties. the default will use fourier representations only.
-                other elements to add to the list: 'dummy','raw','drop_first'. can add multiple or one of these.
-                if dict, the key needs to be the seasonal representation ('quarter' for quarterly, 'month' for monthly)
-                and the value a list. if a seasonal representation is not found in this dictionary, it will default to
-                ['sincos'], i.e. a fourier representation. 'drop_first' ignored when 'dummy' is also not present.
-            exclude_seasonalities (list): default []. 
-                ignored if try_seasonalities is False.
-                add in this list any seasonal representations to skip searching.
-                if you have day frequency and you only want to search dayofweek, you should specify this as:
+            seasonality_repr (list or dict[str,list]): Default ['sincos'].
+                How to represent the extracted seasonalties. the default will use fourier representations only.
+                Ignored if try_seasonalities is False.
+                Other elements to add to the list: 'dummy','raw','drop_first'. Can add multiple or one of these.
+                If dict, the key needs to be the seasonal representation ('quarter' for quarterly, 'month' for monthly)
+                and the value a list. If a seasonal representation is not found in this dictionary, it will default to
+                ['sincos'], i.e. a fourier representation. 'drop_first' ignored when 'dummy' is not present.
+            exclude_seasonalities (list): Default []. 
+                Ignored if try_seasonalities is False.
+                Add in this list any seasonal representations to skip searching.
+                If you have day frequency and you only want to search dayofweek, you should specify this as:
                 ['dayofweek','week','month','quarter'].
-            irr_cycles (list[int]): optional. 
-                add any irregular cycles to a list as integers to search for irregular cycles using this method.
-            max_ar ('auto' or int): the highest lag order to search for.
-                if 'auto', will use the test-set length as the lag order.
-                set to 0 to skip searching for lag terms.
-            test_already_added (bool): default True.
-                if there are already regressors added to the series, you can either always keep them in the object
+            irr_cycles (list[int]): Optional. 
+                Add any irregular cycle lengths to a list as integers to search for using this method.
+            max_ar ('auto' or int): The highest lag order to search for.
+                If 'auto', will use the test-set length as the lag order.
+                Set to 0 to skip searching for lag terms.
+            test_already_added (bool): Default True.
+                If there are already regressors added to the series, you can either always keep them in the object
                 by setting this to False, or by default, it is possible they will be dropped when looking for the
                 optimal combination of regressors in the object.
-            must_keep (list-like): default []. the names of any regressors that must be kept in the object.
-                all regressors here must already be added to the Forecaster object before calling the function.
-                this is ignored if test_already_added is False since it becomes redundant.
-            monitor (str): one of _determine_best_by_. default 'ValidationMetricValue'.
-                the metric to be monitored when making reduction decisions. 
-            cross_validate (bool): default False.
-                whether to tune the model with cross validation. 
-                if False, uses the validation slice of data to tune.
-                if not monitoring ValidationMetricValue, you will want to leave this False.
-            dynamic_tuning (bool or int): default False.
-                whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
-            cvkwargs (dict): default {}. passed to the cross_validate() method.
-            **kwargs: passed to manual_forecast() method and can include arguments related to 
+            must_keep (list-like): Default []. The names of any regressors that must be kept in the object.
+                All regressors here must already be added to the Forecaster object before calling the function.
+                This is ignored if test_already_added is False since it becomes redundant.
+            monitor (str): One of _determine_best_by_. Default 'ValidationMetricValue'.
+                The metric to be monitored when making reduction decisions. 
+            cross_validate (bool): Default False.
+                Whether to tune the model with cross validation. 
+                If False, uses the validation slice of data to tune.
+                If not monitoring ValidationMetricValue, you will want to leave this False.
+            dynamic_tuning (bool or int): Default False.
+                Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
+            cvkwargs (dict): Default {}. Passed to the cross_validate() method.
+            **kwargs: {assed to manual_forecast() method and can include arguments related to 
                 a given model's hyperparameters or dynamic_testing.
-                do not pass Xvars.
+                Do not pass Xvars.
 
         Returns:
-            (dict[tuple[float]]): a dictionary where each key is a tuple of variable combinations 
+            (dict[tuple[float]]): A dictionary where each key is a tuple of variable combinations 
             and the value is the derived metric (based on value passed to monitor argument).
 
         >>> import pandas as pd
@@ -2423,26 +2360,6 @@ class Forecaster:
         >>> f.set_validation_length(12)
         >>> f.auto_Xvar_select()
         """
-        def Xvar_select_forecast(
-            f,
-            estimator,
-            kwargs,
-            Xvars = 'all',
-        ):
-            f.set_estimator(estimator)
-            if monitor == 'ValidationMetricValue':
-                grid = {k:[v] for k, v in kwargs.items()}
-                grid['Xvars'] = [Xvars]
-                f.ingest_grid(grid)
-                if not cross_validate:
-                    f.tune(dynamic_tuning=dynamic_tuning)
-                else:
-                    f.cross_validate(**cvkwargs,dynamic_tuning=dynamic_tuning)
-                f.history[estimator] = {monitor: f.validation_metric_value}
-            else:
-                f.manual_forecast(**kwargs,Xvars=Xvars)
-            return f.history[estimator][monitor]
-
         def parse_best_metrics(metrics):
             x = [m[0] for m in Counter(metrics).most_common() if not np.isnan(m[1])]
             return None if not x else x[0] if using_r2 else x[-1]
@@ -2592,8 +2509,8 @@ class Forecaster:
                     )
                 except Exception as e:
                     warnings.warn(
-                        f'trend decomposition did not work and raised this error: {e} '
-                        'switching to non-decomp method'
+                        f'Trend decomposition did not work and raised this error: {e} '
+                        'Switching to the non-decomp method'
                     )
                     decomp_trend = False
             if not decomp_trend:
@@ -2603,28 +2520,50 @@ class Forecaster:
             ft.set_test_length(f.test_length)
             ft.set_validation_length(f.validation_length)
             f1 = ft.deepcopy()
-            Xvar_select_forecast(f1,trend_estimator,trend_estimator_kwargs)
-            trend_metrics['t'] = f1.history[trend_estimator][monitor]
+            trend_metrics['t'] = self._Xvar_select_forecast(
+                f=f1,
+                estimator=trend_estimator,
+                monitor=monitor,
+                cross_validate=cross_validate,
+                dynamic_tuning=dynamic_tuning,
+                cvkwargs=cvkwargs,
+                kwargs=trend_estimator_kwargs,
+            )
             if max_trend_poly_order > 1:
                 for i in range(2,max_trend_poly_order+1):
                     f1.add_poly_terms('t',pwr=i)
-                    trend_metrics['t' + str(i)] = Xvar_select_forecast(
-                        f1,
-                        trend_estimator,
-                        trend_estimator_kwargs,
+                    trend_metrics['t' + str(i)] = self._Xvar_select_forecast(
+                        f=f1,
+                        estimator=trend_estimator,
+                        monitor=monitor,
+                        cross_validate=cross_validate,
+                        dynamic_tuning=dynamic_tuning,
+                        cvkwargs=cvkwargs,
+                        kwargs=trend_estimator_kwargs,
                     )
             if try_ln_trend:
                 f2 = ft.deepcopy()
                 f2.add_logged_terms('t',drop=True)
-                Xvar_select_forecast(f2,trend_estimator,trend_estimator_kwargs)
-                trend_metrics['lnt'] = f2.history[trend_estimator][monitor]
+                trend_metrics['lnt'] = self._Xvar_select_forecast(
+                    f=f2,
+                    estimator=trend_estimator,
+                    monitor=monitor,
+                    cross_validate=cross_validate,
+                    dynamic_tuning=dynamic_tuning,
+                    cvkwargs=cvkwargs,
+                    kwargs=trend_estimator_kwargs,
+                )
                 if max_trend_poly_order > 1:
                     for i in range(2,max_trend_poly_order+1):
                         f2.add_poly_terms('lnt',pwr=i)
-                        trend_metrics['lnt' + str(i)] = Xvar_select_forecast(
-                            f2,
-                            trend_estimator,
-                            trend_estimator_kwargs,
+                        trend_metrics['lnt' + str(i)] = self._Xvar_select_forecast(
+                            f=f2,
+                            estimator=trend_estimator,
+                            monitor=monitor,
+                            cross_validate=cross_validate,
+                            dynamic_tuning=dynamic_tuning,
+                            cvkwargs=cvkwargs,
+                            kwargs=trend_estimator_kwargs,
                         )
         best_trend = parse_best_metrics(trend_metrics)
         
@@ -2700,7 +2639,7 @@ class Forecaster:
                     i+=1
                     break
             if not i:
-                warnings.warn(f'no seasonalities are currently associated with the {f.freq} frequency')
+                warnings.warn(f'No seasonalities are currently associated with the {f.freq} frequency.')
             else:
                 seas_to_try.reverse() # lowest to highest order seasonality
                 for i,s in enumerate(seas_to_try):
@@ -2733,7 +2672,15 @@ class Forecaster:
                                 )
                     else:
                         raise TypeError(f'seasonality_repr must be list or dict type, got {type(seasonality_repr)}')
-                    seasonality_metrics[s] = Xvar_select_forecast(f1,estimator,kwargs)
+                    seasonality_metrics[s] = self._Xvar_select_forecast(
+                        f=f1,
+                        estimator=estimator,
+                        monitor=monitor,
+                        cross_validate=cross_validate,
+                        dynamic_tuning=dynamic_tuning,
+                        cvkwargs=cvkwargs,
+                        kwargs=kwargs,
+                    )
         best_seasonality = parse_best_metrics(seasonality_metrics)
         
         if max_ar == 'auto' or max_ar > 0:
@@ -2742,13 +2689,21 @@ class Forecaster:
                 try:
                     f1 = f.deepcopy()
                     f1.add_ar_terms(i)
-                    ar_metrics[i] = Xvar_select_forecast(f1,estimator,kwargs)
+                    ar_metrics[i] = self._Xvar_select_forecast(
+                        f=f1,
+                        estimator=estimator,
+                        monitor=monitor,
+                        cross_validate=cross_validate,
+                        dynamic_tuning=dynamic_tuning,
+                        cvkwargs=cvkwargs,
+                        kwargs=kwargs,
+                    )
                     if np.isnan(ar_metrics[i]):
-                        warnings.warn(f'cannot estimate {estimator} model with {i} AR terms')
+                        warnings.warn(f'Cannot estimate {estimator} model with {i} AR terms.')
                         ar_metrics.pop(i)
                         break
                 except (IndexError,AttributeError,ForecastError):
-                    warnings.warn(f'cannot estimate {estimator} model with {i} AR terms')
+                    warnings.warn(f'Cannot estimate {estimator} model with {i} AR terms.')
                     break
         
         best_ar_order = parse_best_metrics(ar_metrics)
@@ -2764,10 +2719,14 @@ class Forecaster:
             seas_to_try,
         )
         for xvar_set in Xvars:
-            final_metrics[tuple(xvar_set)] =  Xvar_select_forecast(
-                f,
-                estimator,
-                kwargs,
+            final_metrics[tuple(xvar_set)] =  self._Xvar_select_forecast(
+                f=f,
+                estimator=estimator,
+                monitor=monitor,
+                cross_validate=cross_validate,
+                dynamic_tuning=dynamic_tuning,
+                cvkwargs=cvkwargs,
+                kwargs=kwargs,
                 Xvars=xvar_set,
             )
         best_combo = parse_best_metrics(final_metrics)
@@ -2790,37 +2749,37 @@ class Forecaster:
         chop = True,
         **kwargs,
     ):
-        """ attempts to find the optimal length for the series to produce accurate forecasts by systematically shortening the series, running estimations, and monitoring a passed metric value.
-        in time series, since there are structural breaks and drifts, shorter can be better.
-        this should be run after Xvars have already been added to the object.
-        do not run this when using the `SeriesTransform.DiffRevert()` process. 
-        there is no danger in running this with the `Forecaster.diff()` function. 
+        """ Attempts to find the optimal length for the series to produce accurate forecasts by systematically shortening the series, 
+        running estimations, and monitoring a passed metric value.
+        This should be run after Xvars have already been added to the object and all Xvars will be used in the iterative estimations.
+        Do not run this when using the `SeriesTransform.DiffRevert()` process. 
+        There is no danger in running this with the `Forecaster.diff()` function. 
 
         Args:
-            estimator (str): one of _estimators_. default 'mlr'.
-                the estimator to use to determine the best series length.
-            min_obs (int): default 100.
-                the shortest representation of the series to search.
-            max_obs (int): optional.
-                the longest representation of the series to search.
-                by default, the last estimation will be run on all available observations.
-            step (int): default 25.
-                how big a step to take between iterations.
-            monitor (str): one of _determine_best_by_. default 'ValidationSetMetric'.
-                the metric to be monitored when making reduction decisions. 
-            cross_validate (bool): default False.
-                whether to tune the model with cross validation. 
-                if False, uses the validation slice of data to tune.
-                if not monitoring ValidationMetricValue, you will want to leave this False.
-            dynamic_tuning (bool or int): default False.
-                whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
-            cvkwargs (dict): default {}. passed to the cross_validate() method.
-            chop (bool): default True. whether to shorten the series if a shorter length is found to be best.
-            **kwargs: passed to manual_forecast() method and can include arguments related to 
+            estimator (str): One of _estimators_. Default 'mlr'.
+                The estimator to use to determine the best series length.
+            min_obs (int): Default 100.
+                The shortest representation of the series to search.
+            max_obs (int): Optional.
+                The longest representation of the series to search.
+                By default, the last estimation will be run on all available observations.
+            step (int): Default 25.
+                How big a step to take between iterations.
+            monitor (str): One of _determine_best_by_. Default 'ValidationSetMetric'.
+                The metric to be monitored when making reduction decisions. 
+            cross_validate (bool): Default False.
+                Whether to tune the model with cross validation. 
+                If False, uses the validation slice of data to tune.
+                If not monitoring ValidationMetricValue, you will want to leave this False.
+            dynamic_tuning (bool or int): Default False.
+                Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
+            cvkwargs (dict): Default {}. Passed to the cross_validate() method.
+            chop (bool): Default True. Whether to shorten the series if a shorter length is found to be best.
+            **kwargs: Passed to manual_forecast() method and can include arguments related to 
                 a given model's hyperparameters, dynamic_testing, or Xvars.
 
         Returns:
-            (dict[int[float]]): a dictionary where each key is a series length and the value is the derived metric 
+            (dict[int[float]]): A dictionary where each key is a series length and the value is the derived metric 
             (based on what was passed to the monitor argument).
 
         >>> import pandas as pd
@@ -2835,23 +2794,6 @@ class Forecaster:
         >>> f.auto_Xvar_select()
         >>> f.determine_best_series_length()
         """
-        def Xvar_select_forecast(
-            f,
-            estimator,
-        ):
-            f.set_estimator(estimator)
-            if monitor == 'ValidationMetricValue':
-                grid = {k:[v] for k, v in kwargs.items()}
-                f.ingest_grid(grid)
-                if not cross_validate:
-                    f.tune(dynamic_tuning=dynamic_tuning)
-                else:
-                    f.cross_validate(**cvkwargs,dynamic_tuning=dynamic_tuning)
-                f.history[estimator] = {monitor: f.validation_metric_value}
-            else:
-                f.manual_forecast(**kwargs)
-            return f.history[estimator][monitor]
-
         def parse_best_metrics(metrics):
             x = [m[0] for m in Counter(metrics).most_common()]
             return None if not x else x[0] if using_r2 else x[-1]
@@ -2866,10 +2808,26 @@ class Forecaster:
         for i in np.arange(min_obs,max_obs,step):
             f = self.deepcopy()
             f.keep_smaller_history(i)
-            history_metrics[i] = Xvar_select_forecast(f,estimator)
+            history_metrics[i] = self._Xvar_select_forecast(
+                f=f,
+                estimator=estimator,
+                monitor=monitor,
+                dynamic_tuning=dynamic_tuning,
+                cross_validate=cross_validate,
+                cvkwargs=cvkwargs,
+                kwargs=kwargs,
+            )
         if i < max_obs:
             f = self.deepcopy()
-            history_metrics[max_obs] = Xvar_select_forecast(f,estimator)
+            history_metrics[max_obs] = self._Xvar_select_forecast(
+                f=f,
+                estimator=estimator,
+                monitor=monitor,
+                dynamic_tuning=dynamic_tuning,
+                cross_validate=cross_validate,
+                cvkwargs=cvkwargs,
+                kwargs=kwargs,
+            )
         best_history_to_keep = parse_best_metrics(history_metrics)
 
         if chop:
@@ -2878,12 +2836,13 @@ class Forecaster:
         return history_metrics
 
     def set_test_length(self, n=1):
-        """ sets the length of the test set.
+        """ Sets the length of the test set. As of version 0.16.0, 0-length test sets are supported.
 
         Args:
-            n (int or float): default 1.
-                the length of the resulting test set.
-                fractional splits are supported by passing a float less than 1 and greater than 0.
+            n (int or float): Default 1.
+                The length of the resulting test set.
+                Pass 0 to skip testing models.
+                Fractional splits are supported by passing a float less than 1 and greater than 0.
 
         Returns:
             None
@@ -2892,28 +2851,30 @@ class Forecaster:
         >>> f.set_test_length(.2) # 20% test split
         """
         float(n)
+        if n == 0:
+            self.test_length = 0
         if n >= 1:
             n = int(n)
             descriptive_assert(
                 isinstance(n, int),
                 ValueError,
-                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n} of type {type(n)}",
+                f"n must be an int of at least 0 or float greater than 0 and less than 1, got {n} of type {type(n)}",
             )
             self.test_length = n
         else:
             descriptive_assert(
-                n > 0,
+                n >= 0,
                 ValueError,
-                f"n must be an int of at least 1 or float greater than 0 and less than 1, got {n} of type {type(n)}",
+                f"n must be an int of at least 0 or float greater than 0 and less than 1, got {n} of type {type(n)}",
             )
             self.test_length = int(len(self.y) * n)
 
     def set_validation_length(self, n=1):
-        """ sets the length of the validation set.
+        """ Sets the length of the validation set. This will never matter for models that are not tuned.
 
         Args:
-            n (int): default 1.
-                the length of the resulting validation set.
+            n (int): Default 1.
+                The length of the resulting validation set.
 
         Returns:
             None
@@ -2929,10 +2890,10 @@ class Forecaster:
         self.validation_length = n
 
     def set_cilevel(self, n):
-        """ sets the level for the resulting confidence intervals (95% default).
+        """ Sets the level for the resulting confidence intervals (95% default).
 
         Args:
-            n (float): greater than 0 and less than 1.
+            n (float): Greater than 0 and less than 1.
 
         Returns:
             None
@@ -2945,12 +2906,12 @@ class Forecaster:
         self.cilevel = n
 
     def set_bootstrap_samples(self, n):
-        """ sets the number of bootstrap samples to set confidence intervals for each model (100 default).
+        """ Sets the number of bootstrap samples to set confidence intervals for each model (100 default).
 
         Args:
-            n (int): greater than or equal to 30.
+            n (int): Greater than or equal to 30.
                 30 because you need around there to satisfy central limit theorem.
-                the lower this number, the faster the performance, but the less confident in the resulting intervals you should be.
+                The lower this number, the faster the performance, but the less confident in the resulting intervals you should be.
 
         Returns:
             None
@@ -2961,27 +2922,26 @@ class Forecaster:
         self.bootstrap_samples = n
 
     def adf_test(
-        self, critical_pval=0.05, quiet=True, full_res=True, train_only=False, **kwargs
+        self, critical_pval=0.05, full_res=True, train_only=False, **kwargs
     ):
-        """ tests the stationarity of the y series using augmented dickey fuller.
-        ports from statsmodels: https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
+        """ Tests the stationarity of the y series using augmented dickey fuller.
+        Ports from statsmodels: https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html.
 
         Args:
-            critical_pval (float): default 0.05.
-                the p-value threshold in the statistical test to accept the alternative hypothesis.
-            quiet (bool): default True.
-                if False, prints whether the tests suggests stationary or non-stationary data.
-            full_res (bool): default True.
-                if True, returns a dictionary with the pvalue, evaluated statistic, and other statistical information (returns what the adfuller() function from statsmodels does).
-                if False, returns a bool that matches whether the test indicates stationarity.
-            train_only (bool): default False.
-                if True, will exclude the test set from the test (to avoid leakage).
-            **kwargs: passed to the `adfuller()` function from statsmodels 
-                https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html
+            critical_pval (float): Default 0.05.
+                The p-value threshold in the statistical test to accept the alternative hypothesis.
+            full_res (bool): Default True.
+                If True, returns a dictionary with the pvalue, evaluated statistic, 
+                and other statistical information (returns what the `adfuller()` function from statsmodels does).
+                If False, returns a bool that matches whether the test indicates stationarity.
+            train_only (bool): Default False.
+                If True, will exclude the test set from the test (to avoid leakage).
+            **kwargs: Passed to the `adfuller()` function from statsmodels. See
+                https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html.
 
         Returns:
-            (bool or tuple): if bool (full_res = False), returns whether the test suggests stationarity.
-            otherwise, returns the full results (stat, pval, etc.) of the test.
+            (bool or tuple): If bool (full_res = False), returns whether the test suggests stationarity.
+            Otherwise, returns the full results (stat, pval, etc.) of the test.
 
         >>> stat, pval, _, _, _, _ = f.adf_test(full_res=True)
         """
@@ -2994,45 +2954,35 @@ class Forecaster:
             else self.y.dropna().values[: -self.test_length],
             **kwargs,
         )
-        if not full_res:
-            if res[1] <= critical_pval:
-                if not quiet:
-                    print("series appears to be stationary")
-                return True
-            else:
-                if not quiet:
-                    print("series might not be stationary")
-                return False
-        else:
-            return res
+        return res if full_res else True if res[1] < critical_pval else False
+            
 
     def normality_test(self, train_only=False):
-        """ runs D'Agostino and Pearson's test for normality
+        """ Runs D'Agostino and Pearson's test for normality
         ported from scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html.
-        holds the null hypothesis that the series is normally distributed.
+        Holds the null hypothesis that the series is normally distributed.
 
         Args:
-            train_only (bool): default False.
-                if True, will exclude the test set from the test (to avoid leakage).
+            train_only (bool): Default False.
+                If True, will exclude the test set from the test (to avoid leakage).
 
         Returns: 
-            (float, float): the derived statistic and pvalue.
+            (float, float): The derived statistic and pvalue.
         """
         y = self.y.dropna().values if not train_only else self.y.dropna().values[: -self.test_length]
         return stats.normaltest(y)
 
     def plot_acf(self, diffy=False, train_only=False, **kwargs):
-        """ plots an autocorrelation function of the y values.
+        """ Plots an autocorrelation function of the y values.
 
         Args:
-            diffy (bool or int): one of {True,False,0,1,2}. default False.
-                whether to difference the data and how many times before passing the values to the function.
-                if False or 0, does not difference.
-                if True or 1, differences 1 time.
-                if 2, differences 2 times.
-            train_only (bool): default False.
-                if True, will exclude the test set from the test (a measure added to avoid leakage).
-            **kwargs: passed to plot_acf() function from statsmodels.
+            diffy (bool or int): One of {True,False,0,1}. default False.
+                Whether to difference the data before passing the values to the function.
+                If False or 0, does not difference.
+                If True or 1, differences 1 time.
+            train_only (bool): Default False.
+                If True, will exclude the test set from the test (a measure added to avoid leakage).
+            **kwargs: Passed to plot_acf() function from statsmodels.
 
         Returns:
             (Figure): If ax is None, the created figure. Otherwise the figure to which ax is connected.
@@ -3049,17 +2999,16 @@ class Forecaster:
         return plot_acf(y, **kwargs)
 
     def plot_pacf(self, diffy=False, train_only=False, **kwargs):
-        """ plots a partial autocorrelation function of the y values
+        """ Plots a partial autocorrelation function of the y values.
 
         Args:
-            diffy (bool or int): one of {True,False,0,1,2}. default False.
-                whether to difference the data and how many times before passing the values to the function.
-                if False or 0, does not difference.
-                if True or 1, differences 1 time.
-                if 2, differences 2 times.
-            train_only (bool): default False.
-                if True, will exclude the test set from the test (a measure added to avoid leakage).
-            **kwargs: passed to plot_pacf() function from statsmodels.
+            diffy (bool or int): One of {True,False,0,1}. Default False.
+                Whether to difference the data before passing the values to the function.
+                If False or 0, does not difference.
+                If True or 1, differences 1 time.
+            train_only (bool): Default False.
+                If True, will exclude the test set from the test (a measure added to avoid leakage).
+            **kwargs: Passed to plot_pacf() function from statsmodels.
 
         Returns:
             (Figure): If ax is None, the created figure. Otherwise the figure to which ax is connected.
@@ -3076,16 +3025,15 @@ class Forecaster:
         return plot_pacf(y, **kwargs)
 
     def plot_periodogram(self, diffy=False, train_only=False):
-        """ plots a periodogram of the y values (comes from scipy.signal).
+        """ Plots a periodogram of the y values (comes from scipy.signal).
 
         Args:
-            diffy (bool or int): one of {True,False,0,1,2}. default False.
-                whether to difference the data and how many times before passing the values to the function.
-                if False or 0, does not difference.
-                if True or 1, differences 1 time.
-                if 2, differences 2 times.
-            train_only (bool): default False.
-                if True, will exclude the test set from the test (a measure added to avoid leakage).
+            diffy (bool or int): One of {True,False,0,1}. Default False.
+                Whether to difference the data before passing the values to the function.
+                If False or 0, does not difference.
+                If True or 1, differences 1 time.
+            train_only (bool): Default False.
+                If True, will exclude the test set from the test (a measure added to avoid leakage).
 
         Returns:
             (ndarray,ndarray): Element 1: Array of sample frequencies. Element 2: Power spectral density or power spectrum of x.
@@ -3105,18 +3053,18 @@ class Forecaster:
         return periodogram(y)
 
     def seasonal_decompose(self, diffy=False, train_only=False, **kwargs):
-        """ plots a signal/seasonal decomposition of the y values.
+        """ Plots a signal/seasonal decomposition of the y values.
 
         Args:
-            diffy (bool or int): one of {True,False,0,1,2}. default False.
-                whether to difference the data and how many times before passing the values to the function.
-                if False or 0, does not difference.
-                if True or 1, differences 1 time.
-                if 2, differences 2 times.
-            train_only (bool): default False.
+            diffy (bool or int): One of {True,False,0,1}. Default False.
+                Whether to difference the data before passing the values to the function.
+                If False or 0, does not difference.
+                If True or 1, differences 1 time.
+                If 2, differences 2 times.
+            train_only (bool): Default False.
                 If True, will exclude the test set from the test (a measure added to avoid leakage).
-            **kwargs: passed to seasonal_decompose() function from statsmodels.
-                see https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.seasonal_decompose.html
+            **kwargs: Passed to seasonal_decompose() function from statsmodels.
+                See https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.seasonal_decompose.html.
 
         Returns:
             (DecomposeResult): An object with seasonal, trend, and resid attributes.
@@ -3148,27 +3096,26 @@ class Forecaster:
         drop_first=False,
         cycle_lens=None,
     ):
-        """ adds seasonal regressors. 
-        can be in the form of Fourier transformed values, dummy values, or ordered integer values.
+        """ Adds seasonal regressors. 
+        Can be in the form of Fourier transformed, dummy, or integer values.
 
         Args:
-            *args: each of str type.
-                values that return a series of int type from pandas.dt and pandas.dt.isocalendar().
-                see https://pandas.pydata.org/docs/reference/api/pandas.Series.dt.year.html.
-            raw (bool): default True.
-                whether to use the raw integer values.
-            sincos (bool): default False.
-                whether to use a Fourier transformation of the raw integer values.
-                    the length of the cycle is derived from the max observed value.
-            dummy (bool): default False.
-                whether to use dummy variables from the raw int values.
-            drop_first (bool): default False.
-                whether to drop the first observed dummy level.
-                not relevant when dummy = False.
-            cycle_lens (dict): optional. a dictionary that specifies a cycle length for each selected seasonality.
-                if this is not specified or a selected seasonality is not added to the dictionary as a key, the
+            *args (str): Values that return a series of int type from pandas.dt or pandas.dt.isocalendar().
+                See https://pandas.pydata.org/docs/reference/api/pandas.Series.dt.year.html.
+            raw (bool): Default True.
+                Whether to use the raw integer values.
+            sincos (bool): Default False.
+                Whether to use a Fourier transformation of the raw integer values.
+                The length of the cycle is derived from the max observed value unless cycle_lens is specified.
+            dummy (bool): Default False.
+                Whether to use dummy variables from the raw int values.
+            drop_first (bool): Default False.
+                Whether to drop the first observed dummy level.
+                Not relevant when dummy = False.
+            cycle_lens (dict): Optional. A dictionary that specifies a cycle length for each selected seasonality.
+                If this is not specified or a selected seasonality is not added to the dictionary as a key, the
                 cycle length will be selected automatically as the maximum value observed for the given seasonality.
-                not relevant when sincos = False.
+                Not relevant when sincos = False.
 
         Returns:
             None
@@ -3249,11 +3196,11 @@ class Forecaster:
                     self.future_xreg[c] = [0] * len(self.future_dates)
 
     def add_time_trend(self, called="t"):
-        """ adds a time trend from 1 to len(current_dates) + len(future_dates) in current_xreg and future_xreg.
+        """ Adds a time trend from 1 to length of the series + the forecast horizon as a current and future Xvar.
 
         Args:
-            called (str): default 't'.
-                what to call the resulting variable
+            Called (str): Default 't'.
+                What to call the resulting variable
 
         Returns:
             None
@@ -3267,16 +3214,16 @@ class Forecaster:
         )
 
     def add_cycle(self, cycle_length, called=None):
-        """ adds a regressor that acts as a seasonal cycle.
-        use this function to capture non-normal seasonality.
+        """ Adds a regressor that acts as a seasonal cycle.
+        Use this function to capture non-normal seasonality.
 
         Args:
-            cycle_length (int): how many time steps make one complete cycle.
-            called (str): optional. what to call the resulting variable.
-                two variables will be created--one for a sin transformation and the other for cos
+            cycle_length (int): How many time steps make one complete cycle.
+            called (str): Optional. What to call the resulting variable.
+                Two variables will be created--one for a sin transformation and the other for cos
                 resulting variable names will have "sin" or "cos" at the end.
-                example, called = 'cycle5' will become 'cycle5sin', 'cycle5cos'.
-                if left unspecified, 'cycle{cycle_length}' will be used as the name.
+                Example, called = 'cycle5' will become 'cycle5sin', 'cycle5cos'.
+                If left unspecified, 'cycle{cycle_length}' will be used as the name.
 
         Returns:
             None
@@ -3298,15 +3245,15 @@ class Forecaster:
         self.future_xreg[called + "cos"] = list(full_cos.values[len(self.y) :])
 
     def add_other_regressor(self, called, start, end):
-        """ adds dummy variable that is 1 during the specified time period, 0 otherwise.
+        """ Adds a dummy variable that is 1 during the specified time period, 0 otherwise.
 
         Args:
             called (str):
-                what to call the resulting variable.
-            start (str, datetime.datetime, or pd.Timestamp): start date.
-                use format '%Y-%m-%d' when passing strings.
-            end (str, datetime.datetime, or pd.Timestamp): end date.
-                use format '%Y-%m-%d' when passing strings.
+                What to call the resulting variable.
+            start (str, datetime.datetime, or pd.Timestamp): Start date.
+                Must be parsable by pandas' Timestamp function.
+            end (str, datetime.datetime, or pd.Timestamp): End date.
+                Must be parsable by pandas' Timestamp function.
 
         Returns:
             None
@@ -3314,15 +3261,11 @@ class Forecaster:
         >>> f.add_other_regressor('january_2021','2021-01-01','2021-01-31')
         """
         self._validate_future_dates_exist()
-        if isinstance(start, str):
-            start = datetime.datetime.strptime(start, "%Y-%m-%d")
-        if isinstance(end, str):
-            end = datetime.datetime.strptime(end, "%Y-%m-%d")
         self.current_xreg[called] = pd.Series(
-            [1 if (x >= start) & (x <= end) else 0 for x in self.current_dates]
+            [1 if (x >= pd.Timstamp(start)) & (x <= pd.Timstamp(end)) else 0 for x in self.current_dates]
         )
         self.future_xreg[called] = [
-            1 if (x >= start) & (x <= end) else 0 for x in self.future_dates
+            1 if (x >= pd.Timstamp(start)) & (x <= pd.Timstamp(end)) else 0 for x in self.future_dates
         ]
 
     def add_covid19_regressor(
@@ -3331,18 +3274,18 @@ class Forecaster:
         start=datetime.datetime(2020, 3, 15),
         end=datetime.datetime(2021, 5, 13),
     ):
-        """ adds dummy variable that is 1 during the time period that covid19 effects are present for the series, 0 otherwise.
-        the default dates are selected to be optimized for the time-span where the economy was most impacted by COVID.
+        """ Adds a dummy variable that is 1 during the time period that COVID19 effects are present for the series, 0 otherwise.
+        The default dates are selected to be optimized for the time-span where the economy was most impacted by COVID.
 
         Args:
-            called (str): default 'COVID19'.
-               what to call the resulting variable.
-            start (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2020,3,15).
-                the start date (default is day Walt Disney World closed in the U.S.).
-                use format '%Y-%m-%d' when passing strings.
-            end: (str, datetime.datetime, or pd.Timestamp): default datetime.datetime(2021,5,13).
-               the end date (default is day the U.S. CDC dropped mask mandate/recommendation for vaccinated people).
-               use format '%Y-%m-%d' when passing strings.
+            called (str): Default 'COVID19'.
+               What to call the resulting variable.
+            start (str, datetime.datetime, or pd.Timestamp): Default datetime.datetime(2020,3,15).
+                The start date (default is day Walt Disney World closed in the U.S.).
+                Must be parsable by pandas' Timestamp function.
+            end: (str, datetime.datetime, or pd.Timestamp): Default datetime.datetime(2021,5,13).
+               The end date (default is day the U.S. CDC first dropped the mask mandate/recommendation for vaccinated people).
+               Must be parsable by pandas' Timestamp function.
 
         Returns:
             None
@@ -3351,12 +3294,12 @@ class Forecaster:
         self.add_other_regressor(called=called, start=start, end=end)
 
     def add_combo_regressors(self, *args, sep="_"):
-        """ combines all passed variables by multiplying their values together.
+        """ Combines all passed variables by multiplying their values together.
 
         Args:
-            *args (str): names of Xvars that aleady exist in the object.
-            sep (str): default '_'.
-                the separator between each term in arg to create the final variable name.
+            *args (str): Names of Xvars that aleady exist in the object.
+            sep (str): Default '_'.
+                The separator between each term in arg to create the final variable name.
 
         Returns:
             None
@@ -3399,11 +3342,11 @@ class Forecaster:
         """ raises all passed variables (no AR terms) to exponential powers (ints only).
 
         Args:
-            *args (str): names of Xvars that aleady exist in the object
-            pwr (int): default 2.
-                the max power to add to each term in args (2 to this number will be added).
+            *args (str): Names of Xvars that aleady exist in the object
+            pwr (int): Default 2.
+                The max power to add to each term in args (2 to this number will be added).
             sep (str): default '^'.
-                the separator between each term in arg to create the final variable name.
+                The separator between each term in arg to create the final variable name.
 
         Returns:
             None
@@ -3422,20 +3365,20 @@ class Forecaster:
                 self.future_xreg[f"{a}{sep}{i}"] = [x ** i for x in self.future_xreg[a]]
 
     def add_exp_terms(self, *args, pwr, sep="^", cutoff=2, drop=False):
-        """ raises all passed variables (no AR terms) to exponential powers (ints or floats).
+        """ Raises all passed variables (no AR terms) to exponential powers (ints or floats).
 
         Args:
-            *args (str): names of Xvars that aleady exist in the object.
+            *args (str): Names of Xvars that aleady exist in the object.
             pwr (float): 
-                the power to raise each term to in args.
-                can use values like 0.5 to perform square roots, etc.
+                The power to raise each term to in args.
+                Can use values like 0.5 to perform square roots, etc.
             sep (str): default '^'.
-                the separator between each term in arg to create the final variable name.
+                The separator between each term in arg to create the final variable name.
             cutoff (int): default 2.
-                the resulting variable name will be rounded to this number based on the passed pwr.
-                for instance, if pwr = 0.33333333333 and 't' is passed as an arg to *args, the resulting name will be t^0.33 by default.
-            drop (bool): default False.
-                whether to drop the regressors passed to *args.
+                The resulting variable name will be rounded to this number based on the passed pwr.
+                For instance, if pwr = 0.33333333333 and 't' is passed as an arg to *args, the resulting name will be t^0.33 by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -3461,17 +3404,17 @@ class Forecaster:
             self.drop_Xvars(*args)
 
     def add_logged_terms(self, *args, base=math.e, sep="", drop=False):
-        """ logs all passed variables (no AR terms).
+        """ Logs all passed variables (no AR terms).
 
         Args:
-            *args (str): names of Xvars that aleady exist in the object.
-            base (float): default math.e. the log base.
-                must be math.e or int greater than 1.
-            sep (str): default ''.
-                the separator between each term in arg to create the final variable name.
-                resulting variable names will be like "log2t" or "lnt" by default
-            drop (bool): default False.
-                whether to drop the regressors passed to *args.
+            *args (str): Names of Xvars that aleady exist in the object.
+            base (float): Default math.e (natural log). The log base.
+                Must be math.e or int greater than 1.
+            sep (str): Default ''.
+                The separator between each term in arg to create the final variable name.
+                Resulting variable names will be like "log2t" or "lnt" by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -3508,20 +3451,20 @@ class Forecaster:
             self.drop_Xvars(*args)
 
     def add_pt_terms(self, *args, method="box-cox", sep="_", drop=False):
-        """ applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).
+        """ Applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).
 
         Args:
-            *args (str): names of Xvars that aleady exist in the object
-            method (str): one of {'box-cox','yeo-johnson'}, default 'box-cox'.
-                the type of transformation.
+            *args (str): Names of Xvars that aleady exist in the object.
+            method (str): One of {'box-cox','yeo-johnson'}, default 'box-cox'.
+                The type of transformation.
                 box-cox works for positive values only.
                 yeo-johnson is like a box-cox but can be used with 0s or negatives.
                 https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html.
-            sep (str): default ''.
-                the separator between each term in arg to create the final variable name.
-                resulting variable names will be like "box-cox_t" or "yeo-johnson_t" by default.
-            drop (bool): default False.
-                whether to drop the regressors passed to *args.
+            sep (str): Default ''.
+                The separator between each term in arg to create the final variable name.
+                Resulting variable names will be like "box-cox_t" or "yeo-johnson_t" by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -3550,17 +3493,17 @@ class Forecaster:
             self.drop_Xvars(*args)
 
     def add_diffed_terms(self, *args, diff=1, sep="_", drop=False):
-        """ differences all passed variables (no AR terms) up to 2 times.
+        """ Differences all passed variables (no AR terms) up to 2 times.
 
         Args:
-            *args (str): names of Xvars that aleady exist in the object.
-            diff (int): one of {1,2}, default 1.
-                the number of times to difference each variable passed to args.
-            sep (str): default '_'.
-                the separator between each term in arg to create the final variable name.
-                resulting variable names will be like "tdiff_1" or "tdiff_2" by default.
-            drop (bool): default False.
-                whether to drop the regressors passed to *args.
+            *args (str): Names of Xvars that aleady exist in the object.
+            diff (int): One of {1,2}. Default 1.
+                The number of times to difference each variable passed to args.
+            sep (str): Default '_'.
+                The separator between each term in arg to create the final variable name.
+                Resulting variable names will be like "tdiff_1" or "tdiff_2" by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
 
         Returns:
             None
@@ -3595,19 +3538,19 @@ class Forecaster:
             self.drop_Xvars(*args)
 
     def add_lagged_terms(self, *args, lags=1, upto=True, sep="_"):
-        """ lags all passed variables (no AR terms) 1 or more times.
+        """ Lags all passed variables (no AR terms) 1 or more times.
 
         Args:
-            *args (str): names of Xvars that aleady exist in the object.
-            lags (int): greater than 0, default 1.
-                the number of times to lag each passed variable.
-            upto (bool): default True.
-                whether to add all lags up to the number passed to lags.
-                if you pass 6 to lags and upto is True, lags 1, 2, 3, 4, 5, 6 will all be added.
-                if you pass 6 to lags and upto is False, lag 6 only will be added.
-            sep (str): default '_'.
-                the separator between each term in arg to create the final variable name.
-                resulting variable names will be like "tlag_1" or "tlag_2" by default.
+            *args (str): Names of Xvars that aleady exist in the object.
+            lags (int): Greater than 0, default 1.
+                The number of times to lag each passed variable.
+            upto (bool): Default True.
+                Whether to add all lags up to the number passed to lags.
+                If you pass 6 to lags and upto is True, lags 1, 2, 3, 4, 5, 6 will all be added.
+                If you pass 6 to lags and upto is False, lag 6 only will be added.
+            sep (str): Default '_'.
+                The separator between each term in arg to create the final variable name.
+                Resulting variable names will be like "tlag_1" or "tlag_2" by default.
 
         Returns:
             None
@@ -3652,17 +3595,11 @@ class Forecaster:
         self.keep_smaller_history(obs_to_keep)
 
     def undiff(self):
-        """ undifferences y to original level and drops all regressors (such as AR terms).
-        if y was never differenced, calling this does nothing.
+        """ Undifferences y to original level and drops all regressors (such as AR terms).
+        If y was never differenced, calling this does nothing.
 
-        Args:
-            suppress_error (bool): default False.
-                whether to suppress an error that gets raised if the series was never differenced.
-
-        Returns:
-            None
-
-        >>> f.undiff()
+        >>> f.diff() # differences the series
+        >>> f.undiff() # undifferences the series and drops any added Xvars
         """
         self.typ_set()
         if self.integration == 0:
@@ -3677,7 +3614,7 @@ class Forecaster:
         self.integration = 0
 
     def restore_series_length(self):
-        """ restores the series to its original size, undifferences, and drops all Xvars.
+        """ Restores the series to its original size, undifferences, and drops all Xvars.
         """
         self.current_xreg = {}
         self.future_xreg = {}
@@ -3688,15 +3625,16 @@ class Forecaster:
         self.integration = 0
 
     def set_estimator(self, estimator):
-        """ sets the estimator to forecast with.
+        """ Sets the estimator to forecast with.
 
         Args:
-            estimator (str): one of _estimators_
+            estimator (str): One of _estimators_.
 
         Returns:
             None
 
-        >>> f.set_estimator('mlr')
+        >>> f.set_estimator('lasso')
+        >>> f.manual_forecast(alpha = .5)
         """
         descriptive_assert(
             estimator in _estimators_,
@@ -3720,14 +3658,15 @@ class Forecaster:
             self.estimator = estimator
 
     def set_grids_file(self,name='Grids'):
-        """ sets the name of the file where the object will look automatically for grids when calling `tune()`, `tune_test_forecast()`, or similar function.
-        if the grids file does not exist in the working directory, the error will only be raised once tuning is called.
+        """ Sets the name of the file where the object will look automatically for grids when calling 
+        `tune()`, `cross_validate()`, `tune_test_forecast()`, or similar function.
+        If the grids file does not exist in the working directory, the error will only be raised once tuning is called.
         
         Args:
-            name (str): default 'Grids'.
-                the name of the file to look for.
-                this file must exist in the working directory.
-                the default will look for a file called "Grids.py".
+            name (str): Default 'Grids'.
+                The name of the file to look for.
+                This file must exist in the working directory.
+                The default will look for a file called "Grids.py".
 
         >>> f.set_grids_file('ModGrids') # expects to find a file called ModGrids.py in working directory.
         """
@@ -3735,12 +3674,12 @@ class Forecaster:
         self.grids_file = name
 
     def ingest_grid(self, grid):
-        """ ingests a grid to tune the estimator.
+        """ Ingests a grid to tune the estimator.
 
         Args:
             grid (dict or str):
-                if dict, must be a user-created grid.
-                if str, must match the name of a dict grid stored in a grids file.
+                If dict, must be a user-created grid.
+                If str, must match the name of a dict grid stored in a grids file.
 
         Returns:
             None
@@ -3761,7 +3700,7 @@ class Forecaster:
         except SyntaxError:
             raise
         except:
-            raise ForecastError.NoGrid(
+            raise ForecastError(
                 f"tried to load a grid called {self.estimator} from {self.grids_file}.py, "
                 "but either the file could not be found in the current directory, "
                 "there is no grid with that name, or the dictionary values are not list-like. "
@@ -3771,14 +3710,14 @@ class Forecaster:
         self.grid = grid
 
     def limit_grid_size(self, n, random_seed=None):
-        """ makes a grid smaller randomly.
+        """ Makes a grid smaller randomly.
 
         Args:
             n (int or float):
-                if int, randomly selects that many parameter combinations.
-                if float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.
-            random_seed (int): optional.
-                set a seed to make results consistent.
+                If int, randomly selects that many parameter combinations.
+                If float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.
+            random_seed (int): Optional.
+                Set a seed to make results consistent.
 
         Returns:
             None
@@ -3803,11 +3742,11 @@ class Forecaster:
             raise ValueError(f"argment passed to n not usable: {n}")
 
     def set_validation_metric(self, metric="rmse"):
-        """ sets the metric that will be used to tune all subsequent models.
+        """ Sets the metric that will be used to tune all subsequent models.
 
         Args:
-            metric: one of _metrics_, default 'rmse'.
-                the metric to optimize the models with using the validation set.
+            metric: One of _metrics_. Default 'rmse'.
+                The metric to optimize the models with using the validation set.
 
         Returns:
             None
@@ -3826,17 +3765,20 @@ class Forecaster:
         self.validation_metric = metric
 
     def tune(self, dynamic_tuning=False, cv=False):
-        """ tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
+        """ Tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
         the estimator by default).
-        any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
-        the chosen parameters are stored in the best_params attribute.
-        the full validation grid is stored in grid_evaluated.
+        Any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
+        The chosen parameters are stored in the best_params attribute.
+        The full validation grid is stored in grid_evaluated.
 
         Args:
-            dynamic_tuning (bool): default False.
-                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
-                setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform out x amount of periods.
-                when False, metrics effectively become an average of one-step forecasts.
+            dynamic_tuning (bool or int):
+                Whether to dynamically/recursively test the forecast during the tuning process 
+                (meaning AR terms will be propogated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
             cv (bool): default False.
                 whether the tune is part of a larger cross-validation process.
                 this does not need to specified by the user and should be kept False when calling `tune()`.
@@ -3877,6 +3819,7 @@ class Forecaster:
             except TypeError:
                 raise
             except Exception as e:
+                #raise # good to uncomment when debugging
                 self.grid.drop(i, axis=0, inplace=True)
                 logging.warning(f"could not evaluate the paramaters: {hp}. error: {e}")
 
@@ -3892,22 +3835,30 @@ class Forecaster:
             self._find_best_params(self.grid_evaluated)
 
     def cross_validate(self, k=5, rolling=False, dynamic_tuning=False):
-        """ tunes a model's hyperparameters using time-series cross validation. 
-        monitors the metric specified in the valiation_metric attribute. 
-        set an estimator before calling. 
-        reads a grid for the estimator from a grids file unless a grid is ingested manually. 
-        each fold size is equal to one another and is determined such that the last fold's 
+        """ Tunes a model's hyperparameters using time-series cross validation. 
+        Monitors the metric specified in the valiation_metric attribute. 
+        Set an estimator before calling. 
+        Reads a grid for the estimator from a grids file unless a grid is ingested manually. 
+        Each fold size is equal to one another and is determined such that the last fold's 
         training and validation sizes are the same (or close to the same). with rolling = True, 
         all train sizes will be the same for each fold. 
-        the chosen parameters are stored in the best_params attribute.
-        the full validation grid is stored in grid_evaluated.
-        normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
-        rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
+        The chosen parameters are stored in the best_params attribute.
+        The full validation grid is stored in grid_evaluated.
+        Normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
+        Rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
 
         Args:
-            k (int): default 5. the number of folds. must be at least 2.
-            rolling (bool): default False. whether to use a rolling method.
-            dynamic_tuning (bool): default False.
+            k (int): Default 5. 
+                The number of folds. 
+                Must be at least 2.
+            rolling (bool): Default False. Whether to use a rolling method.
+            dynamic_tuning (bool or int):
+                Whether to dynamically/recursively test the forecast during the tuning process 
+                (meaning AR terms will be propogated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
 
         Returns:
             None
@@ -4037,37 +3988,39 @@ class Forecaster:
     def manual_forecast(
         self, call_me=None, dynamic_testing=True, test_only=False, **kwargs
     ):
-        """ manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
+        """ Manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
+        See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
 
         Args:
-            call_me (str): optional.
-                what to call the model when storing it in the object's history dictionary.
-                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                duplicated names will be overwritten with the most recently called model.
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, normalizer, cap, and floor, in addition to any given model's specific hyperparameters
-                for sklearn models, can inlcude normalizer and Xvars.
-                for ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer.
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, 
+                normalizer, cap, and floor, in addition to any given model's specific hyperparameters.
+                For sklearn models, can inlcude normalizer and Xvars.
+                For ARIMA, Prophet and Silverkite models, can include Xvars but not normalizer.
                 LSTM and RNN models have their own sets of possible keywords.
-                see https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
 
         Returns:
             None
 
-        >>> f.set_estimator('mlr')
-        >>> f.manual_forecast(normalizer='pt')
+        >>> f.set_estimator('lasso')
+        >>> f.manual_forecast(alpha=.5)
         """
         descriptive_assert(
             isinstance(call_me, str) | (call_me is None),
@@ -4119,30 +4072,30 @@ class Forecaster:
         probabilistic=False,
         n_iter=20,
     ):
-        """ auto forecasts with the best parameters indicated from the tuning process.
+        """ Auto forecasts with the best parameters indicated from the tuning process.
 
         Args:
-            call_me (str): optional.
-                what to call the model when storing it in the object's history dictionary.
-                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                duplicated names will be overwritten with the most recently called model.
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history dictionary.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            probabilistic (bool): default False.
-                whether to use a probabilistic forecasting process to set confidence intervals.
-            n_iter (int): default 20.
-                how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            probabilistic (bool): Default False.
+                Whether to use a probabilistic forecasting process to set confidence intervals.
+            n_iter (int): Default 20.
+                How many iterations to use in probabilistic forecasting. Ignored if probabilistic = False.
 
         Returns:
             None
@@ -4175,32 +4128,32 @@ class Forecaster:
     def proba_forecast(
         self, call_me=None, dynamic_testing=True, test_only=False, n_iter=20, **kwargs
     ):
-        """ forecast with a probabilistic process where the final point estimate is an average of
-        several forecast calls. confidence intervals are overwritten through this process with a probabilistic technique.
-        level and difference confidence intervals are then possible to display. if the model in question is fundamentally
+        """ Forecast with a probabilistic process where the final point estimate is an average of
+        several forecast calls. Confidence intervals are overwritten through this process with a probabilistic technique.
+        Level and difference confidence intervals are then possible to display. if the model in question is fundamentally
         deterministic, this approach will just waste resources.
 
         Args:
-            call_me (str): optional.
-                what to call the model when storing it in the object's history dictionary.
-                if not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                duplicated names will be overwritten with the most recently called model.
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history dictionary.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning lags will be propogated with predicted values).
-                if True, evaluates dynamically over the entire out-of-sample slice of data.
-                if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            test_only (bool): default False:
-                whether to stop your model after the testing process.
-                all forecasts in history will be equivalent to test-set predictions.
-                when forecasting to future periods, there is no way to skip the training process.
-                any plot or export of forecasts into a future horizon will fail for this model
+                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            test_only (bool): Default False.
+                Whether to stop the model after the testing process and not forecast into future periods.
+                The forecast info stored in the object's history will be equivalent to test-set predictions.
+                When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
-                changed to True always if object initiated with require_future_dates = False.
-            n_iter (int): default 20.
-                the number of forecast calls to use when creating the final point estimate and confidence intervals.
-                increasing this gives more sound results but costs resources.
+                Will automatically change to True if object was initiated with require_future_dates = False.
+            n_iter (int): Default 20.
+                The number of forecast calls to use when creating the final point estimate and confidence intervals.
+                Increasing this gives more sound results but costs resources.
             **kwargs: passed to the _forecast_{estimator}() method.
                 can include lags and normalizer in addition to any given model's specific hyperparameters.
 
@@ -4210,10 +4163,6 @@ class Forecaster:
         >>> f.set_estimator('mlp')
         >>> f.proba_forecast(hidden_layer_sizes=(25,25,25))
         """
-
-        def set_ci_step(s):
-            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
-
         estimator = self.estimator
         call_me = self.estimator if call_me is None else call_me
         f = self.__deepcopy__()
@@ -4270,39 +4219,40 @@ class Forecaster:
                     [f.history[f"{estimator}{i}"][kv[1]] for i in range(n_iter)]
                 )
                 self.history[call_me][kv[0]] = [
-                    fcst_step + set_ci_step(fcsts.std(axis=0)[idx],)
+                    fcst_step + _set_ci_step(f=self,s=fcsts.std(axis=0)[idx],)
                     for idx, fcst_step in enumerate(fcsts.mean(axis=0))
                 ]
             else:
                 self.history[call_me][kv[0]] = [
-                    fcst_step - set_ci_step(fcsts.std(axis=0)[idx],)
+                    fcst_step - _set_ci_step(f=self,s=fcsts.std(axis=0)[idx],)
                     for idx, fcst_step in enumerate(fcsts.mean(axis=0))
                 ]
         self.history[call_me]['CIPlusMinus'] = None
 
     def reeval_cis(self, method = 'naive', models='all', n_iter=10, jump_back=1):
-        """ generates a dynamic confidence interval for passed models.
+        """ Generates a dynamic confidence interval for passed models.
+        See https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html.
 
         Args:
-            method (str): one of "naive", "backtest". default "naive".
-                if "naive", calculates confidence intervals by determining the standard deviation of each point of
-                every evaluated model passed to the function. time-steps that all models estimated closer together will receive smaller
+            method (str): One of "naive", "backtest". Default "naive".
+                If "naive", calculates confidence intervals by determining the standard deviation of each point of
+                every evaluated model passed to the function. 
+                Time-steps that all models estimated closer together will receive smaller
                 intervals and steps where the models diverge significantly receive larger intervals.
-                this is a computationally cheap method but if all models perform similarly poorly, it can generate tight intervals, which is 
-                a downside. it is recommended to use at least 3 models with this method.
-                if "backtest", calculates confidence intervals by backtesting each model and determining the standard deviation of the out-of-sample
-                residual of each forecast step for both test-set predictions and actuals.
-                this is a generalizable way to obtain trustworthy confidence intervals for all models, but it is more computationally expensive,
-                it does not work for objects that were transformed and then reverted. it also does not work for combo models.
-                it is recommended to set n_iter to at least 3 with this method.
-                see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest.
-            models (str or list-like): default 'all'. the models to regenerate cis for. 
-                recommended to have at least three for method = 'naive'.
-            n_iter (int) - default 10. the number of iterations to backtest. recommended to be at least 3 for method = 'backtest'. 
-                models will iteratively train on all data before the fcst_length worth of values. 
-                each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
-                off the end to redo the cast until all of n_iter is exhausted. ignored when method == 'naive'.
-            jump_back (int) - default 1. the number of time steps between two consecutive training sets. ignored when method == 'naive'.
+                This is a computationally cheap method but if all models perform similarly poorly, it can generate tight intervals, which is 
+                a downside. It is recommended to use at least 3 models with this method.
+                If "backtest", calculates confidence intervals by backtesting each model and determining the standard deviation of the out-of-sample
+                Residual of each forecast step for both test-set predictions and actuals.
+                This is a generalizable way to obtain trustworthy confidence intervals for all models, but it is more computationally expensive,
+                It does not work for objects that were transformed and then reverted. it also does not work for combo models.
+                It is recommended to set n_iter to at least 3 with this method.
+            models (str or list-like): Default 'all'. The models to regenerate cis for. 
+                Recommended to have at least three for method = 'naive'.
+            n_iter (int): Default 10. The number of iterations to backtest. Recommended to be at least 3 for method = 'backtest'. 
+                Models will iteratively train on all data before the fcst_length worth of values. 
+                Each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
+                off the end to redo the cast until all of n_iter is exhausted. Ignored when method == 'naive'.
+            jump_back (int): Default 1. The number of time steps between two consecutive training sets. ignored when method == 'naive'.
         Returns:
             None
 
@@ -4319,11 +4269,8 @@ class Forecaster:
         >>> f.add_ar_terms(6)
         >>> models = ('elasticnet','mlp','arima')
         >>> f.tune_test_forecast(models)
-        >>> f.reeval_cis() # creates cis based on the results from each model
+        >>> f.reeval_cis(method = 'backtest') # creates cis based on the results from each model
         """
-        def set_ci_step(s):
-            return stats.norm.ppf(1 - (1 - self.cilevel) / 2) * s
-
         models = self._parse_models(models,None)
 
         attr_set_map = {
@@ -4347,12 +4294,12 @@ class Forecaster:
                             [self.history[m][kv[1]] for m in models]
                         )
                         self.history[m][kv[0]] = [
-                            self.history[m][kv[1]][idx] + set_ci_step(fcsts.std(axis=0)[idx],)
+                            self.history[m][kv[1]][idx] + _set_ci_step(f=self,s=fcsts.std(axis=0)[idx],)
                             for idx, fcst_step in enumerate(fcsts.mean(axis=0))
                         ]
                     else:
                         self.history[m][kv[0]] = [
-                            self.history[m][kv[1]][idx] - set_ci_step(fcsts.std(axis=0)[idx],)
+                            self.history[m][kv[1]][idx] - _set_ci_step(f=self,s=fcsts.std(axis=0)[idx],)
                             for idx, fcst_step in enumerate(fcsts.mean(axis=0))
                         ]
         elif method == 'backtest':
@@ -4386,12 +4333,12 @@ class Forecaster:
                     resids_tmp = resids_std.iloc[:len(vals)]
                     if i % 2 == 0:
                         self.history[m][kv[0]] = [
-                            vals[idx] + set_ci_step(val)
+                            vals[idx] + _set_ci_step(f=self,s=val)
                             for idx, val in enumerate(resids_tmp)
                         ]
                     else:
                         self.history[m][kv[0]] = [
-                            vals[idx] - set_ci_step(val)
+                            vals[idx] - _set_ci_step(f=self,s=val)
                             for idx, val in enumerate(resids_tmp)
                         ]
             self.history[m]['CIPlusMinus'] = None
@@ -4399,15 +4346,15 @@ class Forecaster:
             raise ValueError(f'method expected one of "naive", "backtest", got {method}')
 
     def add_sklearn_estimator(self, imported_module, called):
-        """ adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
-        be careful to choose regression models only.
+        """ Adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
+        Only regression models are accepted.
         
         Args:
             imported_module (sklearn regression model):
-                the model from sklearn to add. must have already been imported locally.
-                supports models from sklearn and sklearn APIs.
+                The model from sklearn to add. must have already been imported locally.
+                Supports models from sklearn and sklearn APIs.
             called (str):
-                the name of the estimator that can be called using set_estimator().
+                The name of the estimator that can be called using set_estimator().
 
         Returns:
             None
@@ -4442,14 +4389,14 @@ class Forecaster:
         error='raise',
         **cvkwargs,
     ):
-        """ iterates through a list of models, tunes them using grids in a grids file, forecasts them, and can save feature information.
+        """ Iterates through a list of models, tunes them using grids in a grids file, forecasts them, and can save feature information.
 
         Args:
             models (list-like):
-                each element must be in _can_be_tuned_.
-            cross_validate (bool): default False
-                whether to tune the model with cross validation. 
-                if False, uses the validation slice of data to tune.
+                Each element must be in _can_be_tuned_.
+            cross_validate (bool): Default False.
+                Whether to tune the model with cross validation. 
+                If False, uses the validation slice of data to tune.
             dynamic_tuning (bool or int): default False.
                 whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
                 if True, evaluates dynamically over the entire out-of-sample slice of data.
@@ -4462,27 +4409,27 @@ class Forecaster:
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            probabilistic (bool, str, or list-like): default False.
-                if bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
-                if str, the name of a single model to apply a probabilistic process to.
-                if list-like, a list of models to apply a probabilistic process to.
-            n_iter (int): default 20.
-                how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
-            summary_stats (bool): default False.
-                whether to save summary stats for the models that offer those.
-            feature_importance (bool): default False.
-                whether to save permutation feature importance information for the models that offer those.
-            fi_method (str): one of {'pfi','shap'}, default 'pfi'.
-                the type of feature importance to save for the models that support it.
-                ignored if feature_importance is False.
-            limit_grid_size (int or float): optional. pass an argument here to limit each of the grids being read.
-                see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size
-            suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
-                later. if unspecified, each model can be called by its estimator name.
-            error (str): one of 'ignore','raise','warn'; default 'raise'.
-                what to do with the error if a given model fails.
+            probabilistic (bool, str, or list-like): Default False.
+                If bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
+                If str, the name of a single model to apply a probabilistic process to.
+                If list-like, a list of models to apply a probabilistic process to.
+            n_iter (int): Default 20.
+                How many iterations to use in probabilistic forecasting. Ignored if probabilistic = False.
+            summary_stats (bool): Default False.
+                Whether to save summary stats for the models that offer those.
+            feature_importance (bool): Default False.
+                Whether to save permutation feature importance information for the models that offer those.
+            fi_method (str): One of {'pfi','shap'}. Default 'pfi'.
+                The type of feature importance to save for the models that support it.
+                Ignored if feature_importance is False.
+            limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
+            suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called
+                later. If unspecified, each model can be called by its estimator name.
+            error (str): One of 'ignore','raise','warn'; default 'raise'.
+                What to do with the error if a given model fails.
                 'warn' logs a warning that the model could not be evaluated.
-            **cvkwargs: passed to the cross_validate() method.
+            **cvkwargs: Passed to the cross_validate() method.
 
         Returns:
             None
@@ -4523,14 +4470,14 @@ class Forecaster:
                     raise
                 elif error == 'warn':
                     warnings.warn(
-                        f"{m} model could not be evaluated. "
-                        f"here's the error: {e}."
+                        f"{m} Model could not be evaluated. "
+                        f"Here's the error: {e}."
                     )
                     continue
                 elif error == 'ignore':
                     continue
                 else:
-                    raise ValueError(f'value passed to error arg not recognized: {error}')
+                    raise ValueError(f'Value passed to error arg not recognized: {error}')
 
             if summary_stats:
                 self.save_summary_stats()
@@ -4538,21 +4485,20 @@ class Forecaster:
                 self.save_feature_importance(fi_method)
 
     def save_feature_importance(self, method="pfi", on_error="warn"):
-        """ saves feature info for models that offer it (sklearn models).
-        call after evaluating the model you want it for and before changing the estimator.
-        this method saves a dataframe listing the feature as the index its score (labeled "weight" in
-        the dataframe) and its score's standard deviation ("std"). this dataframe can be recalled using
-        the `export_feature_importance()` method. scores for the pfi method are the average decrease in accuracy
-        over 10 permutations for each feature. for shap, it is determined as the average score applied to each
+        """ Saves feature info for models that offer it (sklearn models).
+        Call after evaluating the model you want it for and before changing the estimator.
+        This method saves a dataframe listing the feature as the index and its score. This dataframe can be recalled using
+        the `export_feature_importance()` method. Scores for the pfi method are the average decrease in accuracy
+        over 10 permutations for each feature. For shap, it is determined as the average score applied to each
         feature in each observation.
 
         Args:
-            method (str): one of {'pfi','shap'}.
-                the type of feature importance to set.
-                pfi supported for all sklearn model types. 
-                shap for xgboost, lightgbm and some others.
-            on_error (str): one of {'warn','raise'}. default 'warn'.
-                if the last model called doesn't support feature importance,
+            method (str): One of {'pfi','shap'}.
+                The type of feature importance to set.
+                'pfi' supported for all sklearn model types. 
+                'shap' for xgboost, lightgbm and some others.
+            on_error (str): One of {'warn','raise'}. Default 'warn'.
+                If the last model called doesn't support feature importance,
                 'warn' will log a warning. 'raise' will raise an error.
 
         >>> f.set_estimator('mlr')
@@ -4618,8 +4564,8 @@ class Forecaster:
         self._bank_fi_to_history()
 
     def save_summary_stats(self):
-        """ saves summary stats for models that offer it and will not raise errors if not available.
-        call after evaluating the model you want it for and before changing the estimator.
+        """ Saves summary stats for models that offer it and will not raise errors if not available.
+        Call after evaluating the model you want it for and before changing the estimator.
 
         >>> f.set_estimator('arima')
         >>> f.manual_forecast(order=(1,1,1))
@@ -4631,13 +4577,13 @@ class Forecaster:
         self._bank_summary_stats_to_history()
 
     def keep_smaller_history(self, n):
-        """ cuts the amount of y observations in the object.
+        """ Cuts the amount of y observations in the object.
 
         Args:
             n (int, str, or datetime.datetime):
-                if int, the number of observations to keep.
-                otherwise, the last observation to keep.
-                if str, must be '%Y-%m-%d' format.
+                If int, the number of observations to keep.
+                Otherwise, the last observation to keep.
+                Must be parsable by pandas' Timestamp function.
 
         Returns:
             None
@@ -4645,20 +4591,19 @@ class Forecaster:
         >>> f.keep_smaller_history(500) # keeps last 500 observations
         >>> f.keep_smaller_history('2020-01-01') # keeps only observations on or later than 1/1/2020
         """
-        if isinstance(n, str):
-            n = datetime.datetime.strptime(n, "%Y-%m-%d")
-        if (type(n) is datetime.datetime) or (type(n) is pd.Timestamp):
-            n = len([i for i in self.current_dates if i >= n])
+        if (type(n) is datetime.datetime) or (type(n) is pd.Timestamp) or isinstance(n,str):
+            n = len([i for i in self.current_dates if i >= pd.Timestamp(n)])
+        
         n = int(n)
         descriptive_assert(
             isinstance(n, int),
             ValueError,
-            "n must be an int, datetime object, or str in '%Y-%m-%d' format and there must be more than 2 observations to keep",
+            "n must be an int, datetime object, or str and there must be more than 2 observations to keep.",
         )
         descriptive_assert(
             n > 2,
             ValueError,
-            "n must be an int, datetime object, or str in '%Y-%m-%d' format and there must be more than 2 observations to keep",
+            "n must be an int, datetime object, or str and there must be more than 2 observations to keep.",
         )
         self.y = self.y[-n:]
         self.current_dates = self.current_dates[-n:]
@@ -4666,12 +4611,12 @@ class Forecaster:
             self.current_xreg[k] = v[-n:]
 
     def order_fcsts(self, models, determine_best_by="TestSetRMSE"):
-        """ gets estimated forecasts ordered from best-to-worst.
+        """ Gets estimated forecasts ordered from best-to-worst.
         
         Args:
             models (list-like):
-                each element must match an evaluated model's nickname (which is the same as its estimator name by default).
-            determine_best_by (str): default 'TestSetRMSE'. one of _determine_best_by_.
+                Each element must match an evaluated model's nickname (which is the same as its estimator name by default).
+            determine_best_by (str): Default 'TestSetRMSE'. One of _determine_best_by_.
 
         Returns:
             (list): The ordered models.
@@ -4683,7 +4628,7 @@ class Forecaster:
         descriptive_assert(
             determine_best_by in _determine_best_by_,
             ValueError,
-            f"determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}",
+            f"determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}.",
         )
         models_metrics = {m: self.history[m][determine_best_by] for m in models}
         x = [h[0] for h in Counter(models_metrics).most_common()]
@@ -4698,7 +4643,7 @@ class Forecaster:
         )
 
     def get_regressor_names(self):
-        """ gets the regressor names stored in the object.
+        """ Gets the regressor names stored in the object.
 
         Args:
             None
@@ -4712,7 +4657,7 @@ class Forecaster:
         return [k for k in self.current_xreg.keys()]
 
     def get_freq(self):
-        """ gets the pandas inferred date frequency
+        """ Gets the pandas inferred date frequency.
         
         Returns:
             (str): The inferred frequency of the current_dates array.
@@ -4722,8 +4667,8 @@ class Forecaster:
         return self.freq
 
     def validate_regressor_names(self):
-        """ validates that all regressor names exist in both current_xregs and future_xregs.
-        raises an error if this is not the case.
+        """ Validates that all regressor names exist in both current_xregs and future_xregs.
+        Raises an error if this is not the case.
         """
         try:
             assert sorted(self.current_xreg.keys()) == sorted(self.future_xreg.keys())
@@ -4748,29 +4693,30 @@ class Forecaster:
         ax = None,
         figsize=(12,6),
     ):
-        """ plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
-        if any models passed to models were run test_only=True, will raise an error.
+        """ Plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
+        If any models passed to models were run test_only=True, will raise an error.
 
         Args:
-            models (list-like, str, or None): default 'all'.
-               the forecasted models to plot.
-               can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
-               if None or models/order_by combo invalid, will plot only actual values.
-            order_by (str): one of _determine_best_by_. optional.
-            level (bool): default False.
-                if True, will always plot level forecasts.
-                if False, will plot the forecasts at whatever level they were called on.
-                if False and there are a mix of models passed with different integrations, will default to True.
-            print_attr (list-like): default [].
-                attributes from history to print to console.
-                if the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
-            ci (bool): default False.
-                whether to display the confidence intervals.
-            ax (Axis): optional. the existing exis to write the resulting figure to.
-            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+            models (list-like, str, or None): Default 'all'.
+               The forecasted models to plot.
+               Can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
+               If None or models/order_by combo invalid, will plot only actual values.
+            order_by (str): Optional. One of _determine_best_by_.  
+                How to order the display of forecasts on the plots (from best-to-worst according to the selected metric).
+            level (bool): Default False.
+                If True, will always plot level forecasts.
+                If False, will plot the forecasts at whatever level they were called on.
+                If False and there are a mix of models passed with different integrations, will default to True.
+            print_attr (list-like): Default [].
+                Attributes from history to print to console.
+                If the attribute doesn't exist for a passed model, will not raise error, will just skip that element.
+            ci (bool): Default False.
+                Whether to display the confidence intervals.
+            ax (Axis): Optional. The existing axis to write the resulting figure to.
+            figsize (tuple): Default (12,6). The size of the resulting figure. Ignored when ax is not None.
 
         Returns:
-            (Axis): the figure's axis.
+            (Axis): The figure's axis.
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
@@ -4869,38 +4815,46 @@ class Forecaster:
         include_train=True, 
         level=False, 
         ci=False,
+        ax = None,
         figsize=(12,6),
     ):
-        """ plots all test-set predictions with the actuals.
+        """ Plots all test-set predictions with the actuals.
 
         Args:
-            models (list-like or str): default 'all'.
-               the forecated models to plot.
-               can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
-            order_by (str): one of _determine_best_by_, optional.
-            include_train (bool or int): default True.
-                use to zoom into training resultsl
-                if True, plots the test results with the entire history in y.
-                if False, matches y history to test results and only plots this.
-                if int, plots that length of y to match to test results.
-            level (bool): default False.
-                if True, will always plot level forecasts.
-                if False, will plot the forecasts at whatever level they were called on.
-                if False and there are a mix of models passed with different integrations, will default to True.
-            ci (bool): default False.
-                whether to display the confidence intervals.
-                default is 100 boostrapped samples and a 95% confidence interval.
-            ax (Axis): optional. the existing exis to write the resulting figure to.
-            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+            models (list-like or str): Default 'all'.
+               The forecated models to plot.
+               Can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
+            order_by (str): Optional. One of _determine_best_by_.
+                How to order the display of forecasts on the plots (from best-to-worst according to the selected metric).
+            include_train (bool or int): Default True.
+                Use to zoom into testing results.
+                If True, plots the test results with the entire history in y.
+                If False, matches y history to test results and only plots this.
+                If int, plots that length of y to match to test results.
+            level (bool): Default False.
+                If True, always plots level forecasts.
+                If False, will plot the forecasts at whatever level they were called on.
+                If False and there are a mix of models passed with different integrations, will default to True.
+            ci (bool): Default False.
+                Whether to display the confidence intervals.
+                Default is 100 boostrapped samples and a 95% confidence interval.
+            ax (Axis): Optional. The existing axis to write the resulting figure to.
+            figsize (tuple): Default (12,6). Size of the resulting figure. 
+                Ignored when ax is not None.
 
         Returns:
-            (Axis): the figure's axis.
+            (Axis): The figure's axis.
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
         >>> f.plot(order_by='LevelTestSetMAPE') # plots all test-set results
         >>> plt.show()
         """
+        descriptive_assert(
+            self.test_length > 0,
+            ForecastError,
+            'plot_test_set() does not work when models were not tested (test_length set to 0).',
+        )
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
         models = self._parse_models(models, order_by)
@@ -4982,17 +4936,17 @@ class Forecaster:
         plt.ylabel("Values")
         return ax
 
-    def plot_backtest_values(self,model,figsize=(12,6)):
-        """ plots all backtest values over every iteration. only plots one model at a time.
+    def plot_backtest_values(self,model,ax=None,figsize=(12,6)):
+        """ Plots all backtest values over every iteration. Can only plot one model at a time.
 
         Args:
-            model (str): the model nickname to plot the backtest values for. must have called f.backtest(model)
-                previously.
-            ax (Axis): optional. the existing exis to write the resulting figure to.
-            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+            model (str): The model nickname to plot the backtest values for. Must have called 
+                Forecaster.backtest(model) previously.
+            ax (Axis): Optional. The existing axis to write the resulting figure to.
+            figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
         
         Returns:
-            (Axis): the figure's axis.
+            (Axis): The figure's axis.
 
         >>> f.set_estimator('elasticnet')
         >>> f.manual_forecast(alpha=.2)
@@ -5035,24 +4989,26 @@ class Forecaster:
         models="all", 
         order_by=None, 
         level=False,
+        ax = None,
         figsize=(12,6),
     ):
-        """ plots all fitted values with the actuals. does not support level fitted values (for now).
+        """ Plots all fitted values with the actuals. Does not support level fitted values (for now).
 
         Args:
-            models (list-like,str): default 'all'.
-               the forecated models to plot.
-               can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
-            order_by (str): one of _determine_best_by_, default None.
-            level (bool): default False.
-                if True, will always plot level forecasts.
-                if False, will plot the forecasts at whatever level they were called on.
-                if False and there are a mix of models passed with different integrations, will default to True.
-            ax (Axis): optional. the existing exis to write the resulting figure to.
-            figsize (tuple): default (12,6). size of the resulting figure. ignored when ax is None.
+            models (list-like,str): Default 'all'.
+               The forecated models to plot.
+               Can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
+            order_by (str): Optional. One of _determine_best_by_.
+                How to order the display of forecasts on the plots (from best-to-worst according to the selected metric).
+            level (bool): Default False.
+                If True, always plots level forecasts.
+                If False, plots the forecasts at whatever level they were called on.
+                If False and there are a mix of models passed with different integrations, defaults to True.
+            ax (Axis): Optional. The existing axis to write the resulting figure to.
+            figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
 
         Returns:
-            (Axis): the figure's axis.
+            (Axis): The figure's axis.
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
@@ -5099,12 +5055,12 @@ class Forecaster:
         return ax
 
     def drop_regressors(self, *args, error = 'raise'):
-        """ drops regressors.
+        """ Drops regressors.
 
         Args:
-            *args (str): the names of regressors to drop.
-            error (str): one of 'ignore','raise', default 'raise'.
-                what to do with the error if the xvar is not found in the object.
+            *args (str): The names of regressors to drop.
+            error (str): One of 'ignore','raise'. Default 'raise'.
+                What to do with the error if the Xvar is not found in the object.
 
         Returns:
             None
@@ -5124,11 +5080,13 @@ class Forecaster:
             self.current_xreg.pop(a)
             self.future_xreg.pop(a)
 
-    def drop_Xvars(self, *args):
-        """ drops regressors.
+    def drop_Xvars(self, *args, error = 'raise'):
+        """ Drops regressors.
 
         Args:
-            *args (str): the names of regressors to drop.
+            *args (str): The names of regressors to drop.
+            error (str): One of 'ignore','raise'. Default 'raise'.
+                What to do with the error if the Xvar is not found in the object.
 
         Returns:
             None
@@ -5145,12 +5103,10 @@ class Forecaster:
         self.drop_Xvars(*self.get_regressor_names())
 
     def pop(self, *args):
-        """ deletes evaluated forecasts from the object's memory.
+        """ Deletes evaluated forecasts from the object's memory.
 
         Args:
-            *args (str): names of models matching what was passed to call_me.
-            default for call_me in a given model is the same as the estimator name.
-
+            *args (str): Names of models matching what was passed to call_me when model was evaluated.
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
@@ -5160,15 +5116,15 @@ class Forecaster:
             self.history.pop(a)
 
     def pop_using_criterion(self, metric, evaluated_as, threshold, delete_all=True):
-        """ deletes all forecasts from history that meet a given criterion.
+        """ Deletes all forecasts from history that meet a given criterion.
 
         Args:
-            metric (str): one of _determine_best_by_ + ['AnyPrediction','AnyLevelPrediction'].
-            evaluated_as (str): one of {"<","<=",">",">=","=="}.
-            threshold (float): the threshold to compare the metric and operator to.
-            delete_all (bool): default True.
-                if the passed criterion deletes all forecasts, whether to actually delete all forecasts.
-                if False and all forecasts meet criterion, will keep them all.
+            metric (str): One of _determine_best_by_ + ['AnyPrediction','AnyLevelPrediction'].
+            evaluated_as (str): One of {"<","<=",">",">=","=="}.
+            threshold (float): The threshold to compare the metric and operator to.
+            delete_all (bool): Default True.
+                If the passed criterion deletes all forecasts, whether to actually delete all forecasts.
+                If False and all forecasts meet criterion, will keep them all.
 
         Returns:
             None
@@ -5224,7 +5180,6 @@ class Forecaster:
         self,
         dfs=[
             "model_summaries",
-            "best_fcst",
             "all_fcsts",
             "test_set_predictions",
             "lvl_test_set_predictions",
@@ -5238,37 +5193,40 @@ class Forecaster:
         out_path="./",
         excel_name="results.xlsx",
     ) -> Union[Dict[str, pd.DataFrame], pd.DataFrame]:
-        """ exports 1-all of 6 pandas dataframes, can write to excel with each dataframe on a separate sheet.
-        will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
+        """ Exports 1-all of 5 pandas dataframes. Can write to excel with each dataframe on a separate sheet.
+        Will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
         Args:
-            dfs (list-like or str): default 
+            dfs (list-like or str): Default 
                 ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_test_set_predictions','lvl_fcsts'].
-                a list or name of the specific dataframe(s) you want returned and/or written to excel.
-                must be one of or multiple of default.
-            models (list-like or str): default 'all'.
-                the models to write information for.
-                can start with "top_" and the metric specified in `determine_best_by` will be used to order the models appropriately.
-            best_model (str): default 'auto'.
-                the name of the best model, if "auto", will determine this by the metric in determine_best_by.
-                if not "auto", must match a model nickname of an already-evaluated model.
-            determine_best_by (str): one of _determine_best_by_, default 'TestSetRMSE'.
-            to_excel (bool): default False.
-                whether to save to excel.
-            out_path (str): default './'.
-                the path to save the excel file to (ignored when `to_excel=False`).
-            cis (bool): default False.
-                whether to export confidence intervals for models in 
+                A list or name of the specific dataframe(s) you want returned and/or written to excel.
+                Must be one of or multiple of the elements in default.
+            models (list-like or str): Default 'all'.
+                The models to write information for.
+                Can start with "top_" and the metric specified in `determine_best_by` will be used to order the models appropriately.
+            best_model (str): Default 'auto'.
+                The name of the best model, if "auto", will determine this by the metric in determine_best_by.
+                If not "auto", must match a model nickname of an already-evaluated model.
+            determine_best_by (str): One of _determine_best_by_. Default 'TestSetRMSE'.
+            to_excel (bool): Default False.
+                Whether to save to excel.
+            out_path (str): Default './'.
+                The path to save the excel file to (ignored when `to_excel=False`).
+            cis (bool): Default False.
+                Whether to export confidence intervals for models in 
                 "all_fcsts", "test_set_predictions", "lvl_test_set_predictions", "lvl_fcsts"
                 dataframes.
-            excel_name (str): default 'results.xlsx'.
-                the name to call the excel file (ignored when `to_excel=False`).
+            excel_name (str): Default 'results.xlsx'.
+                The name to call the excel file (ignored when `to_excel=False`).
 
         Returns:
             (DataFrame or Dict[str,DataFrame]): either a single pandas dataframe if one element passed to dfs 
             or a dictionary where the keys match what was passed to dfs and the values are dataframes. 
 
-        >>> f.export(dfs=['model_summaries','lvl_fcsts'],to_excel=True)
+        >>> results = f.export(dfs=['model_summaries','lvl_fcsts'],to_excel=True) # returns a dict
+        >>> model_summaries = results['model_summaries'] # returns a dataframe
+        >>> lvl_fcsts = results['lvl_fcsts'] # returns a dataframe
+        >>> ts_preds = f.export('test_set_predictions') # returns a dataframe
         """
         descriptive_assert(
             isinstance(cis, bool),
@@ -5286,7 +5244,6 @@ class Forecaster:
         _dfs_ = [
             "all_fcsts",
             "model_summaries",
-            "best_fcst",
             "test_set_predictions",
             "lvl_test_set_predictions",
             "lvl_fcsts",
@@ -5319,8 +5276,6 @@ class Forecaster:
                 "TestSetMAPE",
                 "TestSetMAE",
                 "TestSetR2",
-                "LastTestSetPrediction",
-                "LastTestSetActual",
                 "CILevel",
                 "CIPlusMinus",
                 "InSampleRMSE",
@@ -5356,28 +5311,12 @@ class Forecaster:
                         model_summary_m[c] = [
                             self.history[m][c] if c in self.history[m].keys() else None
                         ]
-                    elif c == "LastTestSetPrediction":
-                        model_summary_m[c] = [self.history[m]["TestSetPredictions"][-1]]
-                    elif c == "LastTestSetActual":
-                        model_summary_m[c] = [self.history[m]["TestSetActuals"][-1]]
                     elif c == "best_model":
                         model_summary_m[c] = m == best_fcst_name
                 model_summaries = pd.concat(
                     [model_summaries, model_summary_m], ignore_index=True
                 )
             output["model_summaries"] = model_summaries
-        if "best_fcst" in dfs:
-            self._validate_no_test_only(models)
-            best_fcst = pd.DataFrame(
-                {"DATE": self.current_dates.to_list() + self.future_dates.to_list()}
-            )
-            best_fcst["VALUES"] = (
-                self.y.to_list() + self.history[best_fcst_name]["Forecast"]
-            )
-            best_fcst["MODEL"] = ["actual"] * len(self.current_dates) + [
-                best_fcst_name
-            ] * len(self.future_dates)
-            output["best_fcst"] = best_fcst
         if "all_fcsts" in dfs:
             all_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
             for m in self.history.keys():
@@ -5387,20 +5326,23 @@ class Forecaster:
                     all_fcsts[m + "_lowerci"] = self.history[m]["LowerCI"]
             output["all_fcsts"] = all_fcsts
         if "test_set_predictions" in dfs:
-            test_set_predictions = pd.DataFrame(
-                {"DATE": self.current_dates[-self.test_length :]}
-            )
-            test_set_predictions["actual"] = self.y.to_list()[-self.test_length :]
-            for m in models:
-                test_set_predictions[m] = self.history[m]["TestSetPredictions"]
-                if cis:
-                    test_set_predictions[m + "_upperci"] = self.history[m][
-                        "TestSetUpperCI"
-                    ]
-                    test_set_predictions[m + "_lowerci"] = self.history[m][
-                        "TestSetLowerCI"
-                    ]
-            output["test_set_predictions"] = test_set_predictions
+            if self.test_length == 0:
+                output["test_set_predictions"] = pd.DataFrame()
+            else:
+                test_set_predictions = pd.DataFrame(
+                    {"DATE": self.current_dates[-self.test_length :]}
+                )
+                test_set_predictions["actual"] = self.y.to_list()[-self.test_length :]
+                for m in models:
+                    test_set_predictions[m] = self.history[m]["TestSetPredictions"]
+                    if cis:
+                        test_set_predictions[m + "_upperci"] = self.history[m][
+                            "TestSetUpperCI"
+                        ]
+                        test_set_predictions[m + "_lowerci"] = self.history[m][
+                            "TestSetLowerCI"
+                        ]
+                output["test_set_predictions"] = test_set_predictions
         if "lvl_fcsts" in dfs:
             self._validate_no_test_only(models)
             lvl_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
@@ -5413,20 +5355,23 @@ class Forecaster:
             if lvl_fcsts.shape[1] > 1:
                 output["lvl_fcsts"] = lvl_fcsts
         if "lvl_test_set_predictions" in dfs:
-            test_set_predictions = pd.DataFrame(
-                {"DATE": self.current_dates[-self.test_length :]}
-            )
-            test_set_predictions["actual"] = self.levely[-self.test_length :]
-            for m in models:
-                test_set_predictions[m] = self.history[m]["LevelTestSetPreds"]
-                if cis and "LevelTSUpperCI" in self.history[m].keys():
-                    test_set_predictions[m + "_upperci"] = self.history[m][
-                        "LevelTSUpperCI"
-                    ]
-                    test_set_predictions[m + "_lowerci"] = self.history[m][
-                        "LevelTSLowerCI"
-                    ]
-            output["lvl_test_set_predictions"] = test_set_predictions
+            if self.test_length == 0:
+                output["lvl_test_set_predictions"] = pd.DataFrame()
+            else:
+                test_set_predictions = pd.DataFrame(
+                    {"DATE": self.current_dates[-self.test_length :]}
+                )
+                test_set_predictions["actual"] = self.levely[-self.test_length :]
+                for m in models:
+                    test_set_predictions[m] = self.history[m]["LevelTestSetPreds"]
+                    if cis and "LevelTSUpperCI" in self.history[m].keys():
+                        test_set_predictions[m + "_upperci"] = self.history[m][
+                            "LevelTSUpperCI"
+                        ]
+                        test_set_predictions[m + "_lowerci"] = self.history[m][
+                            "LevelTSLowerCI"
+                        ]
+                output["lvl_test_set_predictions"] = test_set_predictions
 
         if to_excel:
             with pd.ExcelWriter(
@@ -5441,13 +5386,13 @@ class Forecaster:
             return output
 
     def export_summary_stats(self, model) -> pd.DataFrame:
-        """ exports the summary stats from a model.
-        raises an error if you never saved the model's summary stats.
+        """ Exports the summary stats from a model.
+        Raises an error if you never saved the model's summary stats.
 
         Args:
             model (str):
-                the name of them model to export for.
-                matches what was passed to call_me when calling the forecast (default is estimator name)
+                The name of them model to export for.
+                Matches what was passed to call_me when evaluating the model.
 
         Returns:
             (DataFrame): The resulting summary stats of the evaluated model passed to model arg.
@@ -5457,13 +5402,13 @@ class Forecaster:
         return self.history[model]["summary_stats"]
 
     def export_feature_importance(self, model) -> pd.DataFrame:
-        """ exports the feature importance from a model.
-        raises an error if you never saved the model's feature importance.
+        """ Exports the feature importance from a model.
+        Raises an error if you never saved the model's feature importance.
 
         Args:
             model (str):
-                the name of them model to export for.
-                matches what was passed to call_me when calling the forecast (default is estimator name)
+                The name of them model to export for.
+                Matches what was passed to call_me when evaluating the model.
 
         Returns:
             (DataFrame): The resulting feature importances of the evaluated model passed to model arg.
@@ -5473,29 +5418,28 @@ class Forecaster:
         return self.history[model]["feature_importance"]
 
     def export_validation_grid(self, model) -> pd.DataFrame:
-        """ exports the validation grid from a model.
-        raises an error if the model was not tuned.
+        """ Exports the validation grid from a model.
+        Raises an error if the model was not tuned.
 
         Args:
             model (str):
-                the name of them model to export for.
-                matches what was passed to call_me when calling the forecast.
-
+                The name of them model to export for.
+                Matches what was passed to call_me when evaluating the model.
         Returns:
             (DataFrame): The resulting validation grid of the evaluated model passed to model arg.
         """
         return self.history[model]["grid_evaluated"]
 
     def all_feature_info_to_excel(self, out_path="./", excel_name="feature_info.xlsx"):
-        """ saves all feature importance and summary stats to excel.
-        each model where such info is available for gets its own tab.
-        be sure to have called save_summary_stats() and/or save_feature_importance() before using this function.
+        """ Saves all feature importance and summary stats to excel.
+        Each model where such info is available for gets its own tab.
+        Be sure to have called save_summary_stats() and/or save_feature_importance() before using this function.
 
         Args:
-            out_path (str): default './'
-                the path to export to
-            excel_name (str): default 'feature_info.xlsx'
-                the name of the resulting excel file
+            out_path (str): Default './'.
+                The path to export to.
+            excel_name (str): Default 'feature_info.xlsx'.
+                The name of the resulting excel file.
 
         Returns:
             None
@@ -5525,20 +5469,20 @@ class Forecaster:
         sort_by_metric_value=False,
         ascending=True,
     ):
-        """ saves all validation grids to excel.
-        each model where such info is available for gets its own tab.
-        be sure to have tuned at least model before calling this.
+        """ Saves all validation grids to excel.
+        Each model where such info is available for gets its own tab.
+        Be sure to have tuned at least model before calling this.
 
         Args:
-            out_path (str): default './'.
-                the path to export to.
-            excel_name (str): default 'feature_info.xlsx'.
-                the name of the resulting excel file.
-            sort_by_metric_value (bool): default False.
-                whether to sort the output by performance on validation set
-            ascending (bool): default True.
-                whether to sort least-to-greatest.
-                ignored if sort_by_metric_value is False.
+            out_path (str): Default './'.
+                The path to export to.
+            excel_name (str): Default 'feature_info.xlsx'.
+                The name of the resulting excel file.
+            sort_by_metric_value (bool): Default False.
+                Whether to sort the output by performance on validation set.
+            ascending (bool): Default True.
+                Whether to sort least-to-greatest.
+                Ignored if sort_by_metric_value is False.
 
         Returns:
             None
@@ -5561,10 +5505,10 @@ class Forecaster:
             raise ForecastError("no validation grids could be found")
 
     def reset(self):
-        """ returns an object equivalent to the original state when initiated.
+        """ Returns an object equivalent to the original state when initiated.
 
         Returns:
-            (Forecaster): the original object.
+            (Forecaster): The original object.
 
         >>> f = Forecaster()
         >>> f.add_time_trend()
@@ -5573,11 +5517,11 @@ class Forecaster:
         return f_init_
 
     def export_Xvars_df(self, dropna=False):
-        """ gets all utilized regressors and values.
+        """ Gets all utilized regressors and values.
             
         Args:
-            dropna (bool): default False.
-                whether to drop null values from the resulting dataframe
+            dropna (bool): Default False.
+                Whether to drop null values from the resulting dataframe
 
         Returns:
             (DataFrame): A dataframe of Xvars and names/values stored in the object.
@@ -5613,13 +5557,13 @@ class Forecaster:
         return df.dropna() if dropna else df
 
     def export_fitted_vals(self, model, level=False):
-        """ exports a single dataframe with dates, fitted values, actuals, and residuals.
+        """ Exports a single dataframe with dates, fitted values, actuals, and residuals for one model.
 
         Args:
             model (str):
-                the model nickname.
-            level (bool): default False.
-                whether to extract level fitted values
+                The model nickname.
+            level (bool): Default False.
+                Whether to extract level fitted values
 
         Returns:
             (DataFrame): A dataframe with dates, fitted values, actuals, and residuals.
@@ -5652,28 +5596,30 @@ class Forecaster:
         return df
 
     def backtest(self, model, fcst_length="auto", n_iter=10, jump_back=1):
-        """ runs a backtest of a selected evaluated model over a certain 
+        """ Runs a backtest of a selected evaluated model over a certain 
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
-        all scoring is dynamic to give a true out-of-sample result.
-        all metrics are specific to level data.
-        two results are extracted: a dataframe of actuals and predictions across each iteration and
+        All scoring is dynamic to give a true out-of-sample result.
+        All metrics are specific to level data.
+        Two results are extracted: a dataframe of actuals and predictions across each iteration and
         a dataframe of test-set metrics across each iteration with a mean total as the last column.
-        these results are stored in the Forecaster object's history and can be extracted by calling 
+        These results are stored in the Forecaster object's history and can be extracted by calling 
         `f.export_backtest_metrics()` and `f.export_backtest_values()`.
         combo models cannot be backtest and will raise an error if you attempt to do so.
+        Do not backtest a model after the series has been transformed/reverted 
+        after the model you want to backtest was evaluated.
 
         Args:
-            model (str): the model to run the backtest for. use the model nickname.
-            fcst_length (int or str): default 'auto'. 
-                if 'auto', uses the same forecast length as the number of future dates saved in the object currently.
-                if int, uses that as the forecast length.
-            n_iter (int): default 10. the number of iterations to backtest.
-                models will iteratively train on all data before the fcst_length worth of values.
-                each iteration takes observations (this number is determined by the value passed to the jump_back arg)
+            model (str): The model to run the backtest for. Use the model nickname.
+            fcst_length (int or str): Default 'auto'. 
+                If 'auto', uses the same forecast length as the number of future dates saved in the object currently.
+                If int, uses that as the forecast length.
+            n_iter (int): Default 10. The number of iterations to backtest.
+                Models will iteratively train on all data before the fcst_length worth of values.
+                Each iteration takes observations (this number is determined by the value passed to the jump_back arg)
                 off the end to redo the cast until all of n_iter is exhausted.
-            jump_back (int): default 1. 
-                the number of time steps between two consecutive training sets.
+            jump_back (int): Default 1. 
+                The number of time steps between two consecutive training sets.
 
         Returns:
             None
@@ -5738,27 +5684,121 @@ class Forecaster:
         self.history[model]["BacktestValues"] = value_results
 
     def export_backtest_metrics(self, model):
-        """ extracts the backtest metrics for a given model.
-        only works if `backtest()` has been called.
+        """ Extracts the backtest metrics for a given model.
+        Only works if `backtest()` has been called.
 
         Args:
-            model (str): the model nickname to extract metrics for.
+            model (str): The model nickname to extract metrics for.
 
         Returns:
-            (DataFrame): a copy of the backtest metrics.
+            (DataFrame): A copy of the backtest metrics.
         """
         return self.history[model]["BacktestMetrics"].copy()
 
     def export_backtest_values(self, model):
-        """ extracts the backtest values for a given model.
-        only works if `backtest()` has been called.
-        the DataFrame will return columns for the date (first), actuals (second), and predictions (third)
+        """ Extracts the backtest values for a given model.
+        Only works if `backtest()` has been called.
+        The DataFrame will return columns for the date (first), actuals (second), and predictions (third)
         across every backtest iteration (10 by default).
 
         Args:
-            model (str): the model nickname to extract values for.
+            model (str): The model nickname to extract values for.
 
         Returns:
-            (DataFrame): a copy of the backtest values.
+            (DataFrame): A copy of the backtest values.
         """
         return self.history[model]["BacktestValues"].copy()
+
+# Other Globals
+def mape(y, pred):
+    return (
+        np.nan if np.abs(y).min() == 0 
+        else mean_absolute_percentage_error(y, pred)
+    )
+
+def rmse(y, pred):
+    return mean_squared_error(y, pred) ** 0.5
+
+
+def mae(y, pred):
+    return mean_absolute_error(y, pred)
+
+
+def r2(y, pred):
+    return r2_score(y, pred)
+
+# descriptive assert statement for error catching
+def descriptive_assert(statement, ErrorType, error_message):
+    try:
+        assert statement
+    except AssertionError:
+        raise ErrorType(error_message)
+
+def _return_na_if_len_zero(y,pred,func):
+    return np.nan if len(pred) == 0 else func(y,pred)
+
+def _set_ci_step(f,s):
+    return stats.norm.ppf(1 - (1 - f.cilevel) / 2) * s
+
+# estimators
+_sklearn_estimators_ = sorted(_sklearn_imports_.keys())
+# to add non-sklearn models, add to the list below
+# sklearn estimators go to the _sklearn_imports_ dict at the top
+_non_sklearn_estimators_ = [
+    "arima",
+    "hwes",
+    "prophet",
+    "silverkite",
+    "rnn",
+    "lstm",
+    "theta",
+    "combo",
+]
+_estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
+_cannot_be_tuned_ = ["combo", "rnn", "lstm"]
+_can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
+_metrics_ = ["r2", "rmse", "mape", "mae"]
+_determine_best_by_ = [
+    "TestSetRMSE",
+    "TestSetMAPE",
+    "TestSetMAE",
+    "TestSetR2",
+    "InSampleRMSE",
+    "InSampleMAPE",
+    "InSampleMAE",
+    "InSampleR2",
+    "LevelInSampleRMSE",
+    "LevelInSampleMAPE",
+    "LevelInSampleMAE",
+    "LevelInSampleR2",
+    "ValidationMetricValue",
+    "LevelTestSetRMSE",
+    "LevelTestSetMAPE",
+    "LevelTestSetMAE",
+    "LevelTestSetR2",
+]
+_normalizer_ = ["minmax", "normalize", "scale", None]
+# i do it this way to make mvforecaster work a little better
+_colors_ = [
+    "#FFA500",
+    "#DC143C",
+    "#00FF7F",
+    "#808000",
+    "#BC8F8F",
+    "#A9A9A9",
+    "#8B008B",
+    "#FF1493",
+    "#FFDAB9",
+    "#20B2AA",
+    "#7FFFD4",
+    "#A52A2A",
+    "#DCDCDC",
+    "#E6E6FA",
+    "#BDB76B",
+    "#DEB887",
+] * 10
+# keywords that are passed to _bank_history() that I don't want to be recognized as hyperparams
+_not_hyperparams_ = ["Xvars", "normalizer", "tuned", "plot_loss", "plot_loss_test"]
+# descriptive errors
+class ForecastError(Exception):
+    pass
