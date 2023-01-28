@@ -204,6 +204,11 @@ The library interfaces nicely with interactive notebook applications.
   - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
   - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
   - [Confidence Intervals](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
+
+### Transforming and Reverting
+- [Time Series Transformations (and Reverting) Made Easy](https://medium.com/towards-data-science/time-series-transformations-and-reverting-made-easy-f4f768c18f63)
+- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/transforming/series_transformer.html)
+- [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/transforming/medium_code.ipynb)
   
 ### The importance of dynamic validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
