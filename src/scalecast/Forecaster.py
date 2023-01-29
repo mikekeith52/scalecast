@@ -14,7 +14,6 @@ import random
 from collections import Counter
 from scipy import stats
 import sklearn
-from scalecast.util import _convert_m
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -5766,6 +5765,21 @@ def _return_na_if_len_zero(y,pred,func):
 
 def _set_ci_step(f,s):
     return stats.norm.ppf(1 - (1 - f.cilevel) / 2) * s
+
+def _convert_m(m,freq):
+    if m == 'auto':
+        if freq is not None:
+            if freq.startswith('M'):
+                return 12
+            elif freq.startswith('Q'):
+                return 4
+            elif freq.startswith('H'):
+                return 24
+            else:
+                return 1
+        else:
+            return 1
+    return m
 
 # estimators
 _sklearn_estimators_ = sorted(_sklearn_imports_.keys())

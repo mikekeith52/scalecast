@@ -9,6 +9,7 @@ from scalecast.Forecaster import (
     mae,
     r2,
     _return_na_if_len_zero,
+    _convert_m,
 )
 
 class SeriesTransformer:
@@ -183,7 +184,6 @@ class SeriesTransformer:
         >>> f = transformer.DetrendTransform(ln_trend=True)
         """
         import statsmodels.api as sm 
-        from scalecast.util import _convert_m
         
         self.detrend_origy = self.f.y.copy()
         self.detrend_origlevely = self.f.levely.copy()

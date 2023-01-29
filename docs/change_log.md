@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.16.1] - 2023-01-29
+## [0.16.3] - 2023-01-29
 ### Added
 - Added a naive/seasonal naive estimator to `Forecaster`.
 ### Changed

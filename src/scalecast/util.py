@@ -10,21 +10,6 @@ import numpy as np
 import pandas as pd
 import warnings
 
-def _convert_m(m,freq):
-    if m == 'auto':
-        if freq is not None:
-            if freq.startswith('M'):
-                return 12
-            elif freq.startswith('Q'):
-                return 4
-            elif freq.startswith('H'):
-                return 24
-            else:
-                return 1
-        else:
-            return 1
-    return m
-
 class metrics:
     def mape(a,f):
         """ Mean absolute percentage error (MAPE).
@@ -494,7 +479,7 @@ def find_statistical_transformation(
     f = f.deepcopy()
     transformer = SeriesTransformer.SeriesTransformer(f)
 
-    m = _convert_m(m,f.freq)
+    m = Forecaster._convert_m(m,f.freq)
 
     possible_args = {
         'stationary':make_stationary,
@@ -605,7 +590,7 @@ def find_optimal_transformation(
     f.drop_all_Xvars()
     f.history = {}
 
-    m = _convert_m(m,f.freq)
+    m = Forecaster._convert_m(m,f.freq)
     lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[1] if lags == 'auto' else lags
     forecaster(f)
     
