@@ -57,7 +57,7 @@ See also `vecm <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.
 >>> mvf.set_estimator('xgboost')
 >>> mvf.proba_forecast() # probabilistic forecasting
 
-naive
+naive 
 --------------
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_naive
     :members:
