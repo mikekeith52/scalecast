@@ -59,7 +59,7 @@ See also `vecm <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.
 
 naive
 --------------
-.. automodule:: src.scalecast.MVForecaster.Forecaster._forecast_naive
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_naive
     :members:
     :undoc-members:
     :show-inheritance:
