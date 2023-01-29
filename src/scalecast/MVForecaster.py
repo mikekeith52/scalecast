@@ -724,7 +724,7 @@ class MVForecaster:
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -767,7 +767,7 @@ class MVForecaster:
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -809,7 +809,7 @@ class MVForecaster:
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -1083,7 +1083,7 @@ class MVForecaster:
             dynamic_tuning (bool): Default False.
                 Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
             dynamic_testing (bool or int): Default True.
-                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -1171,7 +1171,7 @@ class MVForecaster:
         Args:
             fcster (str): One of _sklearn_estimators_. Reads the estimator set to `set_estimator()` method.
             dynamic_testing (bool or int):
-                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -1183,14 +1183,14 @@ class MVForecaster:
             normalizer (str): The scaling technique to apply to the data. One of _normalizer_. 
                 Default 'minmax'.
                 If not None and a test length is specified greater than 0, the normalizer is fit on the training data only.
-            lags (int | list[int] | dict[str,(int | list[int])]): default 1.
-                the lags to add from each series to forecast with.
-                needs to use at least one lag for any sklearn model.
-                some models in the `scalecast.auxmodels` module require you to pass None or 0 to lags.
-                if int, that many lags will be added for all series
-                if list, each element must be int types, and only those lags will be added for each series.
-                if dict, the key must be the user-selected series name, 'series{n}' or 'y{n}' and key is list or int.
-            **kwargs: treated as model hyperparameters and passed to the applicable sklearn or other type of estimator.
+            lags (int | list[int] | dict[str,(int | list[int])]): Default 1.
+                The lags to add from each series to forecast with.
+                Needs to use at least one lag for any sklearn model.
+                Some models in the `scalecast.auxmodels` module require you to pass None or 0 to lags.
+                If int, that many lags will be added for all series.
+                If list, each element must be int types, and only those lags will be added for each series.
+                If dict, the key must be the user-selected series name, 'series{n}' or 'y{n}', and key is list or int.
+            **kwargs: Treated as model hyperparameters and passed to the applicable sklearn or other type of estimator.
 
         >>> mvf.set_estimator('gbt')
         >>> mvf.manual_forecast(lags=3) # adds three lags for each series
@@ -1445,7 +1445,6 @@ class MVForecaster:
                 if 'minmax', uses the MinMaxScaler from sklearn.preprocessing.
                 if 'scale', uses the StandardScaler from sklearn.preprocessing.
                 if 'normalize', uses the Normalizer from sklearn.preprocessing.
-                if 'pt', uses the PowerTransformer from sklearn.preprocessing.
                 if None, returns None.
 
         Returns:
@@ -1463,18 +1462,6 @@ class MVForecaster:
             from sklearn.preprocessing import Normalizer as Scaler
         elif normalizer == "scale":
             from sklearn.preprocessing import StandardScaler as Scaler
-        elif normalizer == "pt":
-            try:
-                from sklearn.preprocessing import PowerTransformer as Scaler
-                scaler = Scaler()
-                scaler.fit(X_train)
-                return scaler
-            except ValueError:
-                from sklearn.preprocessing import StandardScaler as Scaler
-                logging.warning(
-                    f"The pt normalizer did not work for the {self.estimator} model, defaulting to a StandardScaler."
-                )
-                normalizer = "scale"
         else:
             return None
 

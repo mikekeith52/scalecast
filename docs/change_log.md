@@ -1,7 +1,15 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.16.0]
+## [0.16.1] - 2023-01-29
+### Added
+- Added a naive/seasonal naive estimator to `Forecaster`.
+### Changed
+- `Forecaster.add_diffed_terms` no longer supports second differencing.
+### Fixed
+- Fixed the warning that gets passed for the RNN and Silverkite models when `dynamic_testing` is passed as `False`.
+
+## [0.16.0] - 2023-01-28
 ### Added
 ### Changed
 - It is now possible to skip model testing by setting test_length = 0 in `Forecaster` and `MVForecaster`.

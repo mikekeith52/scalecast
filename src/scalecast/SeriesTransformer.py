@@ -8,7 +8,7 @@ from scalecast.Forecaster import (
     mape,
     mae,
     r2,
-    #_return_na_if_len_zero,
+    _return_na_if_len_zero,
 )
 
 class SeriesTransformer:
@@ -633,6 +633,3 @@ class SeriesTransformer:
         delattr(self, f"orig_dates_{m}_{n}")
 
         return self.Revert(lambda x: x, exclude_models = exclude_models)  # call here to assign correct test-set metrics
-
-def _return_na_if_len_zero(y,pred,func):
-    return np.nan if len(pred) == 0 else func(y,pred)

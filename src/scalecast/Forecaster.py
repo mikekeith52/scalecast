@@ -14,6 +14,7 @@ import random
 from collections import Counter
 from scipy import stats
 import sklearn
+from scalecast.util import _convert_m
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -477,7 +478,7 @@ class Forecaster:
         if dynamic_testing is not True:
             warning = f'The dynamic_testing arg is always set to True for the {self.estimator} model.'
             warning += " This model doesn't use lags to make predictions." if does_not_use_lags else ''
-            warrning += " This model uses direct forecasting with lags." if uses_direct else ''
+            warning += " This model uses direct forecasting with lags." if uses_direct else ''
             warnings.warn(warning)
             self.dynamic_testing = True
 
@@ -497,7 +498,7 @@ class Forecaster:
         Args:
             fcster (str): One of _sklearn_estimators_. Reads the estimator passed to the estimator attribute.
             dynamic_testing (bool or int):
-                Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -557,7 +558,7 @@ class Forecaster:
                 p = pd.DataFrame(future_xreg).values[:fcst_horizon]
                 p = scale(scaler, p)
                 return (regr.predict(p),regr.predict(X),Xvars,regr)
-            # otherwise, use a dynamic process to propogate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
+            # otherwise, use a dynamic process to propagate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
             actuals = {k:list(v)[:] for k, v in future_xreg.items() if k.startswith('AR')}
             for i in range(fcst_horizon):
@@ -595,13 +596,13 @@ class Forecaster:
         descriptive_assert(
             len(self.current_xreg.keys()) > 0,
             ForecastError,
-            f"need at least 1 Xvar to forecast with the {self.estimator} model",
+            f"Need at least 1 Xvar to forecast with the {self.estimator} model.",
         )
         descriptive_assert(
             isinstance(dynamic_testing, bool)
             | isinstance(dynamic_testing, int) & (dynamic_testing > -1),
             ValueError,
-            f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}",
+            f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}.",
         )
         dynamic_testing = (
             False
@@ -1480,6 +1481,38 @@ class Forecaster:
         self.tf_model = model
         return (fcst, fvs, None, None)
 
+    def _forecast_naive(
+            self,
+            seasonal=False,
+            m='auto',
+            **kwargs,
+        ):
+            """ Forecasts with a naive estimator, meaning the last observed value is propagated forward for non-seasonal models
+            or the last m-periods are propagated forward where m is the length of the seasonal cycle.
+
+            Args:
+                seasonal (bool): Default False. Whether to use a seasonal naive model.
+                m (str or int): Default 'auto'. Ignored when seasonal is False.
+                    The number of observations that counts one seasonal step.
+                    When 'auto', uses the M4 competition values: 
+                    for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
+                    so pass your own values for other frequencies.
+                **kwargs: Not used but added to the model so it doesn't fail.
+            """
+            self.dynamic_testing = True
+            self.test_only = False
+
+            m = _convert_m(m,self.freq) if seasonal else 1
+            obs = self.y.values.copy()
+            train_obs = self.y.values[:-self.test_length].copy()
+            test_obs = self.y.values[-self.test_length:].copy()
+            pred = (pd.Series(train_obs).to_list()[-m:] * int(np.ceil(self.test_length/m)))[:self.test_length]
+            fcst = (pd.Series(obs).to_list()[-m:] * int(np.ceil(len(self.future_dates)/m)))[:len(self.future_dates)]
+            fvs = pd.Series(obs).shift(m).dropna().values
+
+            self._metrics(test_obs,pred)
+            return(fcst, fvs, None, None)
+
     def _forecast_combo(
         self,
         how="simple",
@@ -1543,11 +1576,7 @@ class Forecaster:
             test_only (bool): default False:
                 Always forced to be False in the combo model.
         """
-        self._warn_about_dynamic_testing(
-            dynamic_testing=dynamic_testing,
-            does_not_use_lags=True,
-            uses_direct=False,
-        )
+        self.dynamic_testing = True
         self.test_only = False
         
         determine_best_by = (
@@ -1588,12 +1617,12 @@ class Forecaster:
                 descriptive_assert(
                     len(weights) == len(models),
                     ForecastError,
-                    "must pass as many weights as models",
+                    "Must pass as many weights as models.",
                 )
                 descriptive_assert(
                     not isinstance(weights, str),
                     TypeError,
-                    f"weights argument not recognized: {weights}",
+                    f"weights argument not recognized: {weights}.",
                 )
                 weights = pd.DataFrame(zip(models, weights)).set_index(0).transpose()
                 if weights.sum(axis=1).values[0] == 1:
@@ -1603,7 +1632,7 @@ class Forecaster:
                 descriptive_assert(
                     rebalance_weights >= 0,
                     ValueError,
-                    "when using a weighted average, rebalance_weights must be numeric and at least 0 in value",
+                    "When using a weighted average, rebalance_weights must be numeric and at least 0 in value.",
                 )
                 if scale:
                     if minmax:
@@ -1632,14 +1661,14 @@ class Forecaster:
                 descriptive_assert(
                     len(models) == len(splice_points) + 1,
                     ForecastError,
-                    "must have exactly 1 more model passed to models as splice points",
+                    "Must have exactly 1 more model passed to models as splice points.",
                 )
                 splice_points = pd.to_datetime(sorted(splice_points)).to_list()
                 future_dates = self.future_dates.to_list()
                 descriptive_assert(
                     np.array([p in future_dates for p in splice_points]).all(),
                     TypeError,
-                    "all elements in splice_points must be datetime objects or str in '%Y-%m-%d' format and must be present in future_dates attribute",
+                    "All elements in splice_points must be parsable by pandas' Timestamp function and be present in the future_dates attribute.",
                 )
                 fcst = [None] * len(future_dates)
                 start = 0
@@ -1672,7 +1701,7 @@ class Forecaster:
         if determine_best_by is None:
             if models[:4] == "top_":
                 raise ValueError(
-                    'cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified'
+                    'Cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified.'
                 )
             elif models == "all":
                 models = list(self.history.keys())
@@ -1682,7 +1711,7 @@ class Forecaster:
                 models = list(models)
             if len(models) == 0:
                 raise ValueError(
-                    f"models argument with determine_best_by={determine_best_by} returns no evaluated forecasts"
+                    f"models argument with determine_best_by={determine_best_by} returns no evaluated forecasts."
                 )
         else:
             all_models = [
@@ -1703,19 +1732,18 @@ class Forecaster:
         """ parses the argument fed to a diffy parameter
 
         Args:
-            n (bool or int): one of {True,False,0,1,2}.
+            n (bool or int): one of {True,False,0,1}.
                 If False or 0, does not difference.
                 If True or 1, differences 1 time.
-                If 2, differences 2 times.
 
         Returns:
             (Series): The differenced array.
         """
         n = int(n)
         descriptive_assert(
-            (n <= 2) & (n >= 0),
+            (n <= 1) & (n >= 0),
             ValueError,
-            "diffy cannot be less than 0 or greater than 2",
+            "diffy cannot be less than 0 or greater than 1.",
         )
         y = self.y.copy()
         for i in range(n):
@@ -1882,7 +1910,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_ar_terms(4) # adds four lags of y to predict with
+        >>> f.add_ar_terms(4) # adds four lags of y (called 'AR1' - 'AR4') to predict with
         """
         self._validate_future_dates_exist()
         n = int(n)
@@ -1906,7 +1934,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_AR_terms((2,12)) # adds 12th and 24th lags
+        >>> f.add_AR_terms((2,12)) # adds 12th and 24th lags called 'AR12', 'AR24'
         """
         self._validate_future_dates_exist()
         descriptive_assert(
@@ -3205,7 +3233,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_time_trend()
+        >>> f.add_time_trend() # adds time trend called 't'
         """
         self._validate_future_dates_exist()
         self.current_xreg[called] = pd.Series(range(1, len(self.y) + 1))
@@ -3228,7 +3256,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations
+        >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations callec 'cycle13'
         """
         self._validate_future_dates_exist()
         if called is None:
@@ -3304,8 +3332,8 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_combo_regressors('t','monthsin') # multiplies these two together
-        >>> f.add_combo_regressors('t','monthcos') # multiplies these two together
+        >>> f.add_combo_regressors('t','monthsin') # multiplies these two together (called 't_monthsin')
+        >>> f.add_combo_regressors('t','monthcos') # multiplies these two together (called 't_monthcos')
         """
         self._validate_future_dates_exist()
         descriptive_assert(
@@ -3351,7 +3379,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_poly_terms('t','year',pwr=3) ### raises t and year to 2nd and 3rd powers
+        >>> f.add_poly_terms('t','year',pwr=3) # raises t and year to 2nd and 3rd powers (called 't^2', 't^3', 'year^2', 'year^3')
         """
         self._validate_future_dates_exist()
         for a in args:
@@ -3383,7 +3411,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_exp_terms('t',pwr=.5) # adds square root t
+        >>> f.add_exp_terms('t',pwr=.5) # adds square root t called 't^0.5'
         """
         self._validate_future_dates_exist()
         pwr = float(pwr)
@@ -3419,7 +3447,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_logged_terms('t') # adds natural log t
+        >>> f.add_logged_terms('t') # adds natural log t callend 'lnt'
         """
         self._validate_future_dates_exist()
         for a in args:
@@ -3469,7 +3497,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_pt_terms('t') # adds box cox of t
+        >>> f.add_pt_terms('t') # adds box cox of t called 'box-cox_t'
         """
         self._validate_future_dates_exist()
         pt = PowerTransformer(method=method, standardize=False)
@@ -3508,7 +3536,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> add_diffed_terms('t') # adds first difference of t as regressor
+        >>> add_diffed_terms('t') # adds first difference of t as regressor called 't_diff1'
         """
         self._validate_future_dates_exist()
         descriptive_assert(
@@ -3520,13 +3548,12 @@ class Forecaster:
                 ForecastError,
                 "AR terms can only be differenced by using diff() method",
             )
-            for i in range(1, diff + 1):
-                cx = self.current_xreg[a].diff()
-                fx = (
-                    pd.Series(self.current_xreg[a].to_list() + self.future_xreg[a])
-                    .diff()
-                    .to_list()
-                )
+            cx = self.current_xreg[a].diff()
+            fx = (
+                pd.Series(self.current_xreg[a].to_list() + self.future_xreg[a])
+                .diff()
+                .to_list()
+            )
 
             self.current_xreg[f"{a}diff{sep}{diff}"] = cx
             self.future_xreg[f"{a}diff{sep}{diff}"] = fx[-len(self.future_dates) :]
@@ -3555,8 +3582,8 @@ class Forecaster:
         Returns:
             None
 
-        >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t
-        >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only
+        >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t called 't_lag1' - 't_lag3'
+        >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only called 't_lag6'
         """
         self._validate_future_dates_exist()
         lags = int(lags)
@@ -3774,7 +3801,7 @@ class Forecaster:
         Args:
             dynamic_tuning (bool or int):
                 Whether to dynamically/recursively test the forecast during the tuning process 
-                (meaning AR terms will be propogated with predicted values).
+                (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -3854,7 +3881,7 @@ class Forecaster:
             rolling (bool): Default False. Whether to use a rolling method.
             dynamic_tuning (bool or int):
                 Whether to dynamically/recursively test the forecast during the tuning process 
-                (meaning AR terms will be propogated with predicted values).
+                (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -3997,7 +4024,7 @@ class Forecaster:
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -4080,7 +4107,7 @@ class Forecaster:
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -4139,7 +4166,7 @@ class Forecaster:
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
             dynamic_testing (bool or int):
-                Whether dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
@@ -4398,13 +4425,13 @@ class Forecaster:
                 Whether to tune the model with cross validation. 
                 If False, uses the validation slice of data to tune.
             dynamic_tuning (bool or int): default False.
-                whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
+                whether to dynamically tune the forecast (meaning AR terms will be propagated with predicted values).
                 if True, evaluates dynamically over the entire out-of-sample slice of data.
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
             dynamic_testing (bool or int):
-                whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
+                whether to dynamically test the forecast (meaning AR terms will be propagated with predicted values).
                 if True, evaluates dynamically over the entire out-of-sample slice of data.
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
@@ -5751,11 +5778,12 @@ _non_sklearn_estimators_ = [
     "silverkite",
     "rnn",
     "lstm",
+    'naive',
     "theta",
     "combo",
 ]
 _estimators_ = sorted(_sklearn_estimators_ + _non_sklearn_estimators_)
-_cannot_be_tuned_ = ["combo", "rnn", "lstm"]
+_cannot_be_tuned_ = ["combo", "rnn", "lstm", "naive"]
 _can_be_tuned_ = [m for m in _estimators_ if m not in _cannot_be_tuned_]
 _metrics_ = ["r2", "rmse", "mape", "mae"]
 _determine_best_by_ = [
