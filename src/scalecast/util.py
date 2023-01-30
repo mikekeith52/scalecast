@@ -556,7 +556,7 @@ def find_optimal_transformation(
         scale_type (list-like): Default ['Scale','MinMax']. The type of scaling to try.
             Only up to one scaler will be selected.
             Must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
-        scale_on_train_only (bool): Default False. Whether to call the scaler on the training set only.
+        scale_on_train_only (bool): Default False. Whether to fit the scaler on the training set only.
         m (str, int, list[int]): Default 'auto': the number of observations that counts one seasonal step.
             When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
