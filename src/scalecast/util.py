@@ -560,7 +560,7 @@ def find_optimal_transformation(
         m (str, int, list[int]): Default 'auto': the number of observations that counts one seasonal step.
             When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
-            so pass your own values for other frequencies. if m == 1, no first seasonal difference will be tried.
+            so pass your own values for other frequencies. If m == 1, no first seasonal difference will be tried.
             If list, multiple seasonal differences can be tried and up to that many seasonal differences can be selected.
         **kwargs: Passed to the `Forecaster.manual_forecast()` function and possible values change based on which
             estimator is used.
