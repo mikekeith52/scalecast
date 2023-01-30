@@ -533,7 +533,7 @@ def find_optimal_transformation(
 
     Args:
         f (Forecaster): The Forecaster object that contains the series that will be transformed.
-        estimator (str): One of _can_be_tuned_. Default 'mlr'. The estimator to use to choose the best 
+        estimator (str): One of _estimators_. Default 'mlr'. The estimator to use to choose the best 
             transformations with.
         monitor (str): One of _determine_best_by_ except 'ValidationMetricValue'. Default 'TestSetRMSE'.
             Because 'ValidationMetricValue' changes in scale based on the transformation taken, 
