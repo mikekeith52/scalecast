@@ -486,7 +486,7 @@ class MVForecaster:
         The full validation grid is stored in grid_evaluated.
 
         Args:
-            dynamic_tuning (bool): Default False.
+            dynamic_tuning (bool or int): Default False.
                 Whether to dynamically/recursively tune the forecast using the series lags.
                 Setting this to False means faster performance, but gives a less-good indication of how well the forecast will perform more than 1 period out.
             cv (bool): Default False.
@@ -564,14 +564,15 @@ class MVForecaster:
         training and validation sizes are the same (or close to the same). With `rolling` = True, 
         All train sizes will be the same for each fold. 
         The chosen parameters are stored in the best_params attribute.
-        The full validation grid is stored in grid_evaluated.
-        Normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
-        Rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
+        The full validation grid is stored in the grid_evaluated attribute.
+        Normal CV diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
+        Rolling CV diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
 
         Args:
             k (int): Default 5. The number of folds. Must be at least 2.
             rolling (bool): Default False. Whether to use a rolling method.
-            dynamic_tuning (bool): Default False.
+            dynamic_tuning (bool or int): Default False.
+                Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
 
         Returns:
             None
@@ -723,7 +724,7 @@ class MVForecaster:
                 What to call the model when storing it in the object's history dictionary.
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool or int):
+            dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
@@ -766,7 +767,7 @@ class MVForecaster:
                 What to call the model when storing it in the object's history dictionary.
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool or int):
+            dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
@@ -808,7 +809,7 @@ class MVForecaster:
                 What to call the model when storing it in the object's history dictionary.
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool or int):
+            dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
@@ -1056,7 +1057,6 @@ class MVForecaster:
                                 ]
                                 for s in series
                             }
-            self.history[m]['CIPlusMinus'] = None
         else:
             raise ValueError(f'method expected one of "naive", "backtest", got {method}')
 
@@ -1080,7 +1080,7 @@ class MVForecaster:
             cross_validate (bool): Default False.
                 Whether to tune the model with cross validation. 
                 If False, uses the validation slice of data to tune.
-            dynamic_tuning (bool): Default False.
+            dynamic_tuning (bool or int): Default False.
                 Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
             dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
@@ -1170,7 +1170,7 @@ class MVForecaster:
 
         Args:
             fcster (str): One of _sklearn_estimators_. Reads the estimator set to `set_estimator()` method.
-            dynamic_testing (bool or int):
+            dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
                 If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
@@ -1616,7 +1616,6 @@ class MVForecaster:
                 for series, a in fitted_val_actuals.items()
             },
             "CILevel": self.cilevel,
-            "CIPlusMinus": cis,
             "ValidationSetLength": None,
             "ValidationMetric": None,
             "ValidationMetricValue": None,
@@ -2135,7 +2134,6 @@ class MVForecaster:
                 "LastTestSetPrediction",
                 "LastTestSetActual",
                 "CILevel",
-                "CIPlusMinus",
                 "InSampleRMSE",
                 "InSampleMAPE",
                 "InSampleMAE",

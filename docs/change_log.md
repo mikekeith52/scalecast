@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.16.4]
+### Added
+- Added mapie as a requirement.
+### Changed
+- `Forecaster.proba_forecast()` now uses conformal prediction to create confidence intervals and is much more efficient. This will be also implemented in `MVForecaster` soon.
+- Took out 'CIPlusMinus' as a history key in `Forecaster` and `MVForecaster`.
+### Fixed
+
 ## [0.16.3] - 2023-01-29
 ### Added
 - Added a naive/seasonal naive estimator to `Forecaster`.

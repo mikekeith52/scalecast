@@ -142,7 +142,7 @@ The library interfaces nicely with interactive notebook applications.
   - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
   - [Grid search using time series cross validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
   - [Backtest](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest)
-- [Probabilistic Forecasting](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.proba_forecast) and [other confidence interval types](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html) (future: [awesome conformal prediction](https://github.com/valeman/awesome-conformal-prediction))
+- [Probabilistic forecasting with conformal prediction](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.proba_forecast) and [other confidence interval types](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)
 - Model input analysis
   - [Feature importance scoring](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance)
     - [SHAP](https://shap.readthedocs.io/en/latest/index.html)
