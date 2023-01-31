@@ -116,13 +116,14 @@ class AnomalyDetector:
 
         if future_dates is None and not f1.future_dates.to_list():
             f1.generate_future_dates(1)  # because we have to have at least 1
-        else:
+        elif future_dates is not None:
             f1.generate_future_dates(future_dates)
         f1.set_estimator(estimator)
         f1.set_cilevel(cilevel)
         f1.manual_forecast(**kwargs)
         fvs = f1.export_fitted_vals(call_me).set_index("DATE")
-        fvs["range"] = f1.history[call_me]["CIPlusMinus"]
+        #fvs["range"] = f1.history[call_me]["CIPlusMinus"]
+        fvs["range"] = f1._find_cis(f1.y.values[-len(f1.fitted_values):], f1.fitted_values)
         fvs["labeled_anom"] = fvs[["Actuals", "FittedVals", "range"]].apply(
             lambda x: 1 if (x[1] > (x[0] + x[2])) | (x[1] < (x[0] - x[2])) else 0,
             axis=1,

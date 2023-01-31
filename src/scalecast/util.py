@@ -322,10 +322,10 @@ def break_mv_forecaster(mvf):
                 elif not isinstance(v2, dict) or k2 == "HyperParams":
                     hist[k][k2] = v2
                 elif isinstance(v2, dict):
-                    hist[k][k2] = (
-                        np.nan if series_num not in list(v2.values()) 
-                        else list(v2.values())[series_num]
-                    )
+                    try:
+                        hist[k][k2] = list(v2.values())[series_num]
+                    except IndexError:
+                        hist[k][k2] = np.nan
             hist[k]["TestOnly"] = False
             hist[k]["LevelY"] = f.levely
         return hist
@@ -626,7 +626,7 @@ def find_optimal_transformation(
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
                 except exception_types as e:
-                    warnings.warn(f'lambda value of {lmbda} cannot be evaluated. error: {e}')
+                    warnings.warn(f'Lambda value of {lmbda} cannot be evaluated. error: {e}')
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
             level_met = met
@@ -649,7 +649,7 @@ def find_optimal_transformation(
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
                 except exception_types as e:
-                    warnings.warn(f'detrend_kwargs {kw} cannot be evaluated. error: {e}')
+                    warnings.warn(f'Detrend_kwargs {kw} cannot be evaluated. error: {e}')
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
             level_met = met
@@ -670,7 +670,7 @@ def find_optimal_transformation(
                     best_transformer = transformer[:]
                     best_reverter = reverter[:]
             except exception_types as e:
-                warnings.warn(f'series first difference could not be evaluated. error: {e}')
+                warnings.warn(f'Series first difference could not be evaluated. error: {e}')
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
             level_met = met
@@ -695,12 +695,12 @@ def find_optimal_transformation(
                             best_transformer = transformer[:]
                             best_reverter = reverter[:]
                     except exception_types as e:
-                        warnings.warn(f'series first seasonal difference could not be evaluated. error: {e}')
+                        warnings.warn(f'Series first seasonal difference could not be evaluated. error: {e}')
                     final_transformer = best_transformer[:]
                     final_reverter = best_reverter[:]
                     level_met = met
                 else:
-                    warnings.warn('series first seasonal difference cannot be evaluated when m = 1.')
+                    warnings.warn('Series first seasonal difference cannot be evaluated when m = 1.')
         elif tr == 'scale':
             for i, s in enumerate(scale_type):
                 transformer = final_transformer[:]
@@ -725,7 +725,7 @@ def find_optimal_transformation(
             final_reverter = best_reverter[:]
             level_met = met
         else:
-            warnings.warn(f'value: {tr} found in the try_order list cannot be used and will be skipped.')
+            warnings.warn(f'Value: {tr} found in the try_order list cannot be used and will be skipped.')
     
     final_transformer = Pipeline.Transformer(transformers = final_transformer)
     final_reverter = Pipeline.Reverter(reverters = final_reverter,base_transformer = final_transformer)

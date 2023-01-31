@@ -122,10 +122,7 @@ class SeriesTransformer:
                     "TestSetActuals",
                     "FittedVals",
                 ):
-                    try:
-                        h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
-                    except TypeError:
-                        h[k] = revert_func([h[k]], **kwargs)[0]
+                    h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
 
                 for i, preds in enumerate(("TestSetPredictions","FittedVals")):
                     pred = h[preds]

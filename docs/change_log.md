@@ -1,11 +1,18 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.16.4]
+## [0.16.5] - 2023-01-31
+### Added
+### Changed
+### Fixed
+- Fixed an error that can arise from the `util.break_mv_forecaster()` function.
+- Fixed the `AnomalyDetector.EstimatorDetect()` function.
+
+## [0.16.4] - 2023-01-31
 ### Added
 - Added mapie as a requirement.
 ### Changed
-- `Forecaster.proba_forecast()` now uses conformal prediction to create confidence intervals and is much more efficient. This will be also implemented in `MVForecaster` soon.
+- `Forecaster.proba_forecast()` now uses conformal prediction from the mapie package to create confidence intervals and is much more efficient. This will be also implemented in `MVForecaster` soon.
 - Took out 'CIPlusMinus' as a history key in `Forecaster` and `MVForecaster`.
 ### Fixed
 

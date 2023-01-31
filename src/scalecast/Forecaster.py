@@ -380,10 +380,10 @@ class Forecaster:
             self.history[call_me]["LevelInSampleR2"] = r2(
                 self.levely[-len(level_['fv']) :], level_['fv']
             )
-            self.history[call_me]["LevelUpperCI"] = (level_['uf'])
-            self.history[call_me]["LevelLowerCI"] = (level_['lf'])
-            self.history[call_me]["LevelTSUpperCI"] = (level_['tuf'])
-            self.history[call_me]["LevelTSLowerCI"] = (level_['tlf'])
+            self.history[call_me]["LevelUpperCI"] = level_['uf']
+            self.history[call_me]["LevelLowerCI"] = level_['lf']
+            self.history[call_me]["LevelTSUpperCI"] = level_['tuf']
+            self.history[call_me]["LevelTSLowerCI"] = level_['tlf']
         else:  # better to have these attributes populated for all series
             self.history[call_me]["LevelForecast"] = self.forecast[:]
             self.history[call_me]["LevelTestSetPreds"] = self.test_set_pred[:]
@@ -1442,7 +1442,6 @@ class Forecaster:
                     ]
                 ]
             )
-
             n_timesteps = X_train.shape[1]
 
             X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)

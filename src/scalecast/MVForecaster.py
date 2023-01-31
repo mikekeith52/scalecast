@@ -1566,8 +1566,8 @@ class MVForecaster:
             else "minmax",
             "Integration": self.integration,
             "Forecast": fcst,
-            "UpperCI": {series: p + cis[series] for series, p in fcst.items()},
-            "LowerCI": {series: p - cis[series] for series, p in fcst.items()},
+            "UpperCI": {series: list(p + cis[series]) for series, p in fcst.items()},
+            "LowerCI": {series: list(p - cis[series]) for series, p in fcst.items()},
             "Observations": len(self.current_dates),
             "FittedVals": fitted_vals,
             "Resids": resids,
@@ -1594,10 +1594,10 @@ class MVForecaster:
                 for series, a in test_set_actuals.items()
             },
             "TestSetUpperCI": {
-                series: p + cis[series] for series, p in test_set_preds.items()
+                series: list(p + cis[series]) for series, p in test_set_preds.items()
             },
             "TestSetLowerCI": {
-                series: p - cis[series] for series, p in test_set_preds.items()
+                series: list(p - cis[series]) for series, p in test_set_preds.items()
             },
             "InSampleRMSE": {
                 series: _return_na_if_len_zero(a, fitted_vals[series],rmse)
@@ -1649,16 +1649,16 @@ class MVForecaster:
                 series: _return_na_if_len_zero(a, lvl_fv[series], r2) for series, a in lvl_fva.items()
             },
             "LevelUpperCI": {
-                series: p + lvl_cis[series] for series, p in lvl_fcst.items()
+                series: list(p + np.array(lvl_cis[series])) for series, p in lvl_fcst.items()
             },
             "LevelLowerCI": {
-                series: p - lvl_cis[series] for series, p in lvl_fcst.items()
+                series: list(p - np.array(lvl_cis[series])) for series, p in lvl_fcst.items()
             },
             "LevelTSUpperCI": {
-                series: p + lvl_cis[series] for series, p in lvl_tsp.items()
+                series: list(p + np.array(lvl_cis[series])) for series, p in lvl_tsp.items()
             },
             "LevelTSLowerCI": {
-                series: p - lvl_cis[series] for series, p in lvl_tsp.items()
+                series: list(p - np.array(lvl_cis[series])) for series, p in lvl_tsp.items()
             },
         }
         if hasattr(self, "best_params"):
