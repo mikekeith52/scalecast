@@ -2030,7 +2030,7 @@ class Forecaster:
         for x, v in self.future_xreg.items():
             self.future_xreg[x] = v[: len(self.future_dates)]
             if not len(v) == len(self.future_dates):
-                warnings.warning(
+                warnings.warn(
                     f"{x} is not the correct length in the future_dates attribute and this can cause errors when forecasting."
                     f" Its length is {len(v)} and future_dates length is {len(self.future_dates)}."
                 )

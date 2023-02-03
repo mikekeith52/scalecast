@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.16.6] - 2023-02-03
+### Added
+### Changed
+### Fixed
+- Fixed the warning in `Forecaster.ingest_Xvars_df()`.
+
 ## [0.16.5] - 2023-01-31
 ### Added
 ### Changed
