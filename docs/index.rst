@@ -44,7 +44,7 @@ Forecasting with Python has never been easier.
 Dynamic Recursive Forecasting
 --------------------------------
 
-Scalecast allows you to use a series' lags (autoregressive, or AR, terms) as inputs by employng a dynamic recursive forecasting method to generate predictions and validate all models out-of-sample.
+Scalecast allows you to use a series' lags (autoregressive, or AR, terms) as inputs by employing a dynamic recursive forecasting method to generate predictions and validate all models out-of-sample.
 
 .. image:: _static/RecurisveForecasting.png
  :alt: Recursive Forecasting
