@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.17.0]
+## [0.17.0] - 2023-02-06
 ### Added
 - Added the `cis` argument to `Forecaster__init__()` and `MVForecaster.__init__()`.
 ### Changed
