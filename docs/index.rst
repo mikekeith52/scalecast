@@ -30,14 +30,16 @@ Forecasting with Python has never been easier.
       y = data['values'],
       current_dates = data['date'],
       future_dates = 24, # forecast horizon
+      test_length = 0, # set a test set length or fraction to validate all models if desired
+      cis = False, # choose whether or not to evaluate confidence intervals for all models
    )
    f.set_estimator('xgboost')
 
-   f.auto_Xvar_select()
-   f.cross_validate(k=3)
-   f.auto_forecast()
+   f.auto_Xvar_select() # find best look-back, trend, and seasonality for your series
+   f.cross_validate(k=3) # tune model hyperparams using time series cross validation
+   f.auto_forecast() # automatically forecast with the chosen Xvars and hyperparams
 
-   results = f.export(['lvl_fcsts','model_summaries'])
+   results = f.export(['lvl_fcsts','model_summaries']) # extract results
 
 Dynamic Recursive Forecasting
 --------------------------------
