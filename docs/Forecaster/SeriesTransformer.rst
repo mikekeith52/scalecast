@@ -1,7 +1,7 @@
 SeriesTransformer
 =================================================
 
-This object can be used to perform more complex transformations on your `Forecaster` object. It can be used to transform the dependent variable to adjust for trends, seasonality, and more, and every transformation is revertible. Revert functions must be called in opposite order as the applied transformation functions. This object is new as of dist 0.12.3.
+This object can be used to perform more complex transformations on your `Forecaster` object. It can be used to transform the dependent variable to adjust for trends, seasonality, and more, and every transformation is revertible. Revert functions must be called in opposite order as the applied transformation functions.
 
 .. code:: python
 

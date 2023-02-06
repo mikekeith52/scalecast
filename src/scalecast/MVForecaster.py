@@ -7,19 +7,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter
+import warnings
 import logging
+from functools import wraps
 from scipy import stats
 import importlib
 import copy
 
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-logging.captureWarnings(True)
+#logging.captureWarnings(True)
 
 from scalecast.Forecaster import (
     mape,
     rmse,
     mae,
     r2,
+    log_warnings,
     _sklearn_imports_,
     _sklearn_estimators_,
     _metrics_,
@@ -29,9 +32,9 @@ from scalecast.Forecaster import (
     _colors_,
     _return_na_if_len_zero,
     _set_ci_step,
+    _warn_about_not_finding_cis,
     ForecastError,
 )
-
 
 class MVForecaster:
     def __init__(
@@ -40,7 +43,8 @@ class MVForecaster:
         not_same_len_action="trim",
         merge_Xvars="union",
         merge_future_dates="longest",
-        test_length = 1,
+        test_length = 0,
+        cis = False,
         names=None,
         **kwargs,
     ):
@@ -50,17 +54,19 @@ class MVForecaster:
             not_same_len_action (str): One of 'trim', 'fail'. default 'trim'.
                 What to do with series that are different lengths.
                 'trim' will trim based on the most recent first date in each series.
-                if the various series have different end dates, this option will still fail the initialization.
+                If the various series have different end dates, this option will still fail the initialization.
             merge_Xvars (str): One of 'union', 'u', 'intersection', 'i'. default 'union'.
                 How to combine Xvars in each object.
                 'union' or 'u' combines all regressors from each object.
                 'intersection' or 'i' combines only regressors that all objects have in common.
-            merge_future_dates (str): One of 'longest', 'shortest'. default 'longest'.
+            merge_future_dates (str): One of 'longest', 'shortest'. Default 'longest'.
                 Which future dates to use in the various series.
-            test_length (int): Default 1. The test length that all models will use to test all models out of sample.
-                Change to 0 to skip testing models. In a future version of scalecast, the default value will be changed to 0, but it
-                is left 1 for now to maintain the behavior of MVForecaster objects. Before version 0.16.0, skipping model
-                testing was impossible.
+            test_length (int or float): Default 0. The test length that all models will use to test all models out of sample.
+                If float, must be between 0 and 1 and will be treated as a fractional split.
+                By default, models will not be tested.
+            cis (bool): Default False. Whether to evaluate probabilistic confidence intervals for every model evaluated.
+                If setting to True, ensure you also set a test_length of at least 20 observations for 95% confidence intervals.
+                See eval_cis() and set_cilevel() methods and docstrings for more information.
             names (list-like): Optional. An array with the same number of elements as *fs that can be used to map to each series.
                 Ex. if names == ['UTUR','UNRATE'], the user can now refer to series1 and series2 with the user-selected names later. 
                 If specific names are not supplied, refer to the series with series1 and series2 or y1 and y2.
@@ -78,32 +84,32 @@ class MVForecaster:
             descriptive_assert(
                 len(set([max(f.current_dates) for f in fs])) == 1,
                 ForecastError,
-                "series cannot have different end dates",
+                "Series cannot have different end dates.",
             )
             if not_same_len_action == "fail":
-                raise ValueError("all series must be same length")
+                raise ValueError("All series must be same length.")
             elif not_same_len_action == "trim":
                 from scalecast.multiseries import keep_smallest_first_date
                 keep_smallest_first_date(*fs)
             else:
                 raise ValueError(
-                    f'not_same_len_action must be one of ("trim","fail"), got {not_same_len_action}'
+                    f'not_same_len_action must be one of ("trim","fail"), got {not_same_len_action}.'
                 )
         if len(set([min(f.current_dates) for f in fs])) > 1:
-            raise ValueError("all obs must begin in same time period")
+            raise ValueError("All obs must begin in same time period.")
         if len(set([f.freq for f in fs])) > 1:
-            raise ValueError("all date frequencies must be equal")
+            raise ValueError("All date frequencies must be equal.")
         if len(fs) < 2:
-            raise ValueError("must pass at least two series")
+            raise ValueError("Must pass at least two series.")
 
         self.optimize_on = "mean"
         self.estimator = "mlr"
         self.current_xreg = {}
         self.future_xreg = {}
         self.history = {}
-        self.test_length = test_length
         self.validation_length = 1
         self.validation_metric = "rmse"
+        self.cis = cis
         self.cilevel = 0.95
         self.bootstrap_samples = 100
         self.grids_file = 'MVGrids'
@@ -175,6 +181,7 @@ class MVForecaster:
             f"y{i+1}": getattr(self, f"series{i+1}")["integration"]
             for i in range(self.n_series)
         }
+        self.set_test_length(test_length)
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -224,7 +231,7 @@ class MVForecaster:
             self.validation_length,
             self.validation_metric,
             list(self.history.keys()),
-            self.cilevel,
+            self.cilevel if self.cis is True else None,
             self.bootstrap_samples,
             self.estimator,
             self.optimize_on,
@@ -535,7 +542,7 @@ class MVForecaster:
                 raise
             except Exception as e:
                 self.grid.drop(i, axis=0, inplace=True)
-                logging.warning(f"could not evaluate the paramaters: {hp}. error: {e}")
+                logging.warning(f"Could not evaluate the paramaters: {hp}. error: {e}")
         metrics = pd.DataFrame(metrics)
         if metrics.shape[0] > 0:
             self.dynamic_tuning = dynamic_tuning
@@ -709,13 +716,14 @@ class MVForecaster:
                 best_params_idx, "optimized_metric"
             ]
         else:
-            logging.warning(
-                f"none of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model"
+            warnings.warn(
+                f"None of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model.",
+                category=Warning,
             )
             self.best_params = {}
 
     def auto_forecast(
-        self, call_me=None, dynamic_testing=True, probabilistic=False, n_iter=20
+        self, call_me=None, dynamic_testing=True,
     ):
         """ Auto forecasts with the best parameters indicated from the tuning process.
 
@@ -730,10 +738,6 @@ class MVForecaster:
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
-            probabilistic (bool): Default False.
-                Whether to use a probabilistic forecasting process to set confidence intervals.
-            n_iter (int): default 20.
-                How many iterations to use in probabilistic forecasting. Ignored if probabilistic = False.
 
         Returns:
             None
@@ -743,21 +747,14 @@ class MVForecaster:
         >>> mvf.auto_forecast()
         """
         if not hasattr(self, "best_params"):
-            logging.warning(
-                f"since tune() has not been called, {self.estimator} model will be run with default hyperparameters"
+            warnings.warn(
+                f"Since tune() or cross_validate() has not been called, {self.estimator} model will be run with default hyperparameters.",
+                category=Warning,
             )
             self.best_params = {}
-        if not probabilistic:
-            self.manual_forecast(
-                call_me=call_me, dynamic_testing=dynamic_testing, **self.best_params
-            )
-        else:
-            self.proba_forecast(
-                call_me=call_me,
-                dynamic_testing=dynamic_testing,
-                n_iter=n_iter,
-                **self.best_params,
-            )
+        self.manual_forecast(
+            call_me=call_me, dynamic_testing=dynamic_testing, **self.best_params
+        )
 
     def manual_forecast(self, call_me=None, dynamic_testing=True, **kwargs):
         """ Manually forecasts with the hyperparameters, normalizer, and lag selections passed as keywords.
@@ -790,7 +787,10 @@ class MVForecaster:
 
         if "tune" in kwargs.keys():
             kwargs.pop("tune")
-            logging.warning("tune argument will be ignored")
+            warnings.warn(
+                "tune argument will be ignored.",
+                category=Warning,
+            )
 
         self.call_me = self.estimator if call_me is None else call_me
         self.forecast = self._forecast(
@@ -798,276 +798,12 @@ class MVForecaster:
         )
         self._bank_history(**kwargs)
 
-    def proba_forecast(self, call_me=None, dynamic_testing=True, n_iter=20, **kwargs):
-        """ Forecasts with a probabilistic process where the final point estimate is an average of
-        several forecast calls. Confidence intervals are overwritten through this process with a probabilistic technique.
-        Level and difference confidence intervals are then possible to display. If the model in question is fundamentally
-        deterministic, this approach will just waste resources.
-
-        Args:
-            call_me (str): Optional.
-                What to call the model when storing it in the object's history dictionary.
-                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                Duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool or int): Default True.
-                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
-                If True, evaluates recursively over the entire out-of-sample slice of data.
-                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
-                Setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform more than one period out.
-            n_iter (int): Default 20.
-                The number of forecast calls to use when creating the final point estimate and confidence intervals.
-                Increasing this gives more sound results but costs resources.
-            **kwargs: Passed to the _forecast_{estimator}() method.
-                Can include lags and normalizer in addition to any given model's specific hyperparameters.
-
-        Returns:
-            None
-
-        >>> mvf.set_estimator('mlp')
-        >>> mvf.proba_forecast(hidden_layer_sizes=(25,25,25))
-        """
-        estimator = self.estimator
-        call_me = self.estimator if call_me is None else call_me
-        mvf = self.__deepcopy__()
-        for i in range(n_iter):
-            mvf.manual_forecast(
-                call_me=f"{estimator}{i}", dynamic_testing=dynamic_testing, **kwargs,
-            )
-
-        # set history
-        # most everything we need is going to be equal to the last estimator called
-        self.history[call_me] = mvf.history[f"{estimator}{i}"]
-
-        # these will be averages from the underlying estimations
-        fcst_attr = (
-            "Forecast",
-            "TestSetPredictions",
-            "LevelForecast",
-            "LevelTestSetPreds",
-        )
-        fcst_attr_map = {
-            attr: {
-                s: np.array(
-                    [mvf.history[f"{estimator}{i}"][attr][s] for i in range(n_iter)]
-                )
-                for s in mvf.history[f"{estimator}0"][attr].keys()
-            }
-            for attr in fcst_attr
-        }
-
-        for attr, p in fcst_attr_map.items():
-            self.history[call_me][attr] = {
-                s: list(v.mean(axis=0)) for s, v in p.items()
-            }
-
-        # metrics
-        metrics_attr_func_map = {
-            "TestSetRMSE": ["TestSetActuals", "TestSetPredictions", rmse],
-            "TestSetMAPE": ["TestSetActuals", "TestSetPredictions", mape],
-            "TestSetMAE": ["TestSetActuals", "TestSetPredictions", mae],
-            "TestSetR2": ["TestSetActuals", "TestSetPredictions", r2],
-            "LevelTestSetRMSE": ["LevelTestSetActuals", "LevelTestSetPreds", rmse],
-            "LevelTestSetMAPE": ["LevelTestSetActuals", "LevelTestSetPreds", mape],
-            "LevelTestSetMAE": ["LevelTestSetActuals", "LevelTestSetPreds", mae],
-            "LevelTestSetR2": ["LevelTestSetActuals", "LevelTestSetPreds", r2],
-        }
-
-        for met, apf in metrics_attr_func_map.items():
-            self.history[call_me][met] = {
-                s: apf[2](
-                    self.history[call_me][apf[0]][s], self.history[call_me][apf[1]][s],
-                )
-                for s in mvf.history[f"{estimator}0"][attr].keys()
-            }
-
-        # confidence intervals
-        ci_attr_map = {
-            "UpperCI": "Forecast",
-            "LowerCI": "Forecast",
-            "TestSetUpperCI": "TestSetPredictions",
-            "TestSetLowerCI": "TestSetPredictions",
-            "LevelUpperCI": "LevelForecast",
-            "LevelLowerCI": "LevelForecast",
-            "LevelTSUpperCI": "LevelTestSetPreds",
-            "LevelTSLowerCI": "LevelTestSetPreds",
-        }
-
-        for i, kv in enumerate(ci_attr_map.items()):
-            if i % 2 == 0:
-                fcsts = fcst_attr_map[kv[1]]
-                self.history[call_me][kv[0]] = {
-                    s: [
-                        fcst_step + _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
-                        for idx, fcst_step in enumerate(self.history[call_me][kv[1]][s])
-                    ]
-                    for s in fcsts.keys()
-                }
-            else:
-                self.history[call_me][kv[0]] = {
-                    s: [
-                        fcst_step - _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
-                        for idx, fcst_step in enumerate(self.history[call_me][kv[1]][s])
-                    ]
-                    for s in fcsts.keys()
-                }
-
-    def reeval_cis(self, method = 'naive', models='all', n_iter=10, jump_back=1):
-        """ Generates a dynamic confidence interval for passed models.
-
-        Args:
-            method (str): One of "naive", "backtest". Default "naive".
-                If "naive", calculates confidence intervals by determining the standard deviation of each point of
-                every evaluated model passed to the function. time-steps that all models estimated closer together will receive smaller
-                intervals and steps where the models diverge significantly receive larger intervals.
-                This is a computationally cheap method but if all models perform similarly poorly, it can generate tight intervals, which is 
-                a downside. it is recommended to use at least 3 models with this method.
-                If "backtest", calculates confidence intervals by backtesting each model and determining the standard deviation of the out-of-sample
-                residual of each forecast step for both test-set predictions and actuals.
-                This is a generalizable way to obtain trustworthy confidence intervals for all models, but it is more computationally expensive.
-                It is recommended to set n_iter to at least 3 with this method.
-                See https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.backtest.
-            models (str or list-like): Default 'all'. The models to regenerate cis for. 
-                Recommended to have at least three for method = 'naive'.
-            n_iter (int): Default 10. 
-                The number of iterations to backtest. Recommended to be at least 3 for method = 'backtest'. 
-                Models will iteratively train on all data before the fcst_length worth of values. 
-                Each iteration takes observations (this number is determined by the value passed to the jump_back arg) 
-                off the end to redo the cast until all of n_iter is exhausted. Ignored when method == 'naive'.
-            jump_back (int): Default 1. The number of time steps between two consecutive training sets. ignored when method == 'naive'.
-        
-        Returns:
-            None
-
-        >>> from scalecast.MVForecaster import MVForecaster
-        >>> from scalecast.util import pdr_load
-        >>> from scalecast import GridGenerator
-        >>> f1 = pdr_load(
-        >>>    'UNRATE',
-        >>>    start='2000-01-01',
-        >>>    end='2022-07-01',
-        >>>    src='fred',
-        >>>    future_dates = 24,
-        >>> )
-        >>> f2 = pdr_load(
-        >>>    'UTUR',
-        >>>    start='2000-01-01',
-        >>>    end='2022-07-01',
-        >>>    src='fred',
-        >>>    future_dates = 24,
-        >>> )
-        >>> GridGenerator.get_mv_grids()
-        >>> mvf = MVForecaster(f1,f2,names=['UNRATE','UTUR'])
-        >>> models = ('elasticnet','mlp','arima')
-        >>> mvf.tune_test_forecast(models)
-        >>> mvf.reeval_cis() # creates expanding cis
-        """
-
-        models = self._parse_models(models,put_best_on_top=False)
-        series, labels = self._parse_series("all")
-
-        fcst_attr = (
-            "Forecast",
-            "TestSetPredictions",
-            "LevelForecast",
-            "LevelTestSetPreds",
-        )
-        fcst_attr_map = {
-            attr: {
-                s: np.array(
-                    [self.history[m][attr][s] for m in models if s in self.history[m][attr]]
-                )
-                for s in series
-            }
-            for attr in fcst_attr
-        }
-
-        ci_attr_map = {
-            "UpperCI": "Forecast",
-            "LowerCI": "Forecast",
-            "TestSetUpperCI": "TestSetPredictions",
-            "TestSetLowerCI": "TestSetPredictions",
-            "LevelUpperCI": "LevelForecast",
-            "LevelLowerCI": "LevelForecast",
-            "LevelTSUpperCI": "LevelTestSetPreds",
-            "LevelTSLowerCI": "LevelTestSetPreds",
-        }
-
-        if method == 'naive':
-            if len(models) < 3:
-                warnings.warn('reeval_cis(method="naive") does not work well with fewer than three models.')
-            for m in models:
-                for i, kv in enumerate(ci_attr_map.items()):
-                    if i % 2 == 0:
-                        fcsts = fcst_attr_map[kv[1]]
-                        self.history[m][kv[0]] = {
-                            s: [
-                                fcst_step + _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
-                                for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
-                            ]
-                            for s in fcsts.keys() if len(fcsts[s] > 0)
-                        }
-                    else:
-                        self.history[m][kv[0]] = {
-                            s: [
-                                fcst_step - _set_ci_step(f=self,s=fcsts[s].std(axis=0)[idx],)
-                                for idx, fcst_step in enumerate(self.history[m][kv[1]][s])
-                            ]
-                            for s in fcsts.keys() if len(fcsts[s] > 0)
-                        }
-        elif method == 'backtest':
-            for j, m in enumerate(models):
-                bt_length = max(len(self.history[m]['Forecast']['y1']),self.history[m]['TestSetLength'])
-                self.backtest(model=m, fcst_length=bt_length, n_iter=n_iter, jump_back=jump_back)
-                results = self.export_backtest_values(m)
-                resids = {s:pd.DataFrame(columns = ['resids','stepnum']) for s in series}
-                for lab, s in zip(labels,series):
-                    results_s = results[[c for c in results if c.startswith(lab)]]
-                    for i, col in enumerate(results_s):
-                        if i%3 == 0:
-                            resids[s] = pd.concat(
-                                [
-                                    resids[s],
-                                    pd.DataFrame(
-                                        {
-                                            'resids':(results_s.iloc[:,i+1] - results_s.iloc[:,i+2]).values,
-                                            'stepnum':np.arange(results_s.shape[0])
-                                        }
-                                    )
-                                ]
-                            )
-                    resids[s] = resids[s].groupby('stepnum')['resids'].std()
-                for i, kv in enumerate(ci_attr_map.items()):
-                    if i % 2 == 0:
-                        fcsts = fcst_attr_map[kv[1]]
-                        if len(fcsts[s]) > 0:
-                            self.history[m][kv[0]] = {
-                                s:[
-                                    fcsts[s][j][idx] + _set_ci_step(f=self,s=val)
-                                    for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
-                                ]
-                                for s in series
-                            }
-                    else:
-                        if len(fcsts[s]) > 0:
-                            self.history[m][kv[0]] = {
-                                s:[
-                                    fcsts[s][j][idx] - _set_ci_step(f=self,s=val)
-                                    for idx, val in enumerate(resids[s].iloc[:len(fcsts[s][j])])
-                                ]
-                                for s in series
-                            }
-        else:
-            raise ValueError(f'method expected one of "naive", "backtest", got {method}')
-
     def tune_test_forecast(
         self,
         models,
         cross_validate=False,
         dynamic_tuning=False,
         dynamic_testing=True,
-        probabilistic=False,
-        n_iter=20,
         limit_grid_size=None,
         suffix=None,
         error='raise',
@@ -1089,12 +825,6 @@ class MVForecaster:
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
                 The model will skip testing if the test_length attribute is set to 0.
-            probabilistic (bool, str, or list-like): Default False.
-                If bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
-                If str, the name of a single model to apply a probabilistic process to.
-                If list-like, a list of models to apply a probabilistic process to.
-            n_iter (int): Default 20.
-                How many iterations to use in probabilistic forecasting. Ignored if probabilistic = False.
             limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.limit_grid_size.
             suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called later. 
@@ -1111,11 +841,6 @@ class MVForecaster:
         >>> mvf.tune_test_forecast(models,dynamic_testing=False)
         """
         for m in models:
-            m_prob = (
-                probabilistic if isinstance(probabilistic,bool) 
-                else m == probabilistic if isinstance(probabilistic,str) 
-                else m in probabilistic
-            )
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
             if limit_grid_size is not None:
@@ -1129,8 +854,6 @@ class MVForecaster:
                 self.auto_forecast(
                     dynamic_testing=dynamic_testing,
                     call_me=call_me,
-                    probabilistic=m_prob,
-                    n_iter=n_iter,
                 )
             except Exception as e:
                 if error == 'raise':
@@ -1138,7 +861,8 @@ class MVForecaster:
                 elif error == 'warn':
                     warnings.warn(
                         f"{m} model could not be evaluated. "
-                        f"Here's the error: {e}."
+                        f"Here's the error: {e}",
+                        category=Warning,
                     )
                     continue
                 elif error == 'ignore':
@@ -1161,7 +885,8 @@ class MVForecaster:
         else:
             series, labels = self._parse_series(how)
             self.optimize_on = labels[0]
-
+    
+    @log_warnings
     def _forecast(
         self, fcster, dynamic_testing, tune=False, normalizer="minmax", lags=1, **kwargs
     ):
@@ -1469,29 +1194,19 @@ class MVForecaster:
         scaler.fit(X_train)
         return scaler
 
+    def _set_cis(self,*attrs,m,ci_range,forecast,tspreds):
+        for i, attr in enumerate(attrs):
+            self.history[m][attr] = {
+                k:p + (ci_range[k] if i%2 == 0 else (ci_range[k]*-1))
+                for k,p in (
+                    forecast.items() if i <= 1 else tspreds.items()
+                )
+            }
+
     def _bank_history(self, **kwargs):
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
             **kwargs: passed from each model, depending on how that model uses Xvars, normalizer, and other args
         """
-
-        def find_cis(resids):
-            random.seed(20)
-            bootstrapped_resids = {
-                series: (
-                    np.random.choice(r, size=self.bootstrap_samples)
-                ) for series, r in resids.items()
-            }
-            bootstrap_mean = {
-                series: np.mean(r) for series, r in bootstrapped_resids.items()
-            }
-            bootstrap_std = {
-                series: np.std(r) for series, r in bootstrapped_resids.items()
-            }
-            return {
-                series: _set_ci_step(f=self,s=bootstrap_std[series]) + bootstrap_mean[series]
-                for series in resids.keys()
-            }
-
         def undiff(preds_orig, test=False):
             # self.seriesx['levely']
             # self.seriesx['integration']
@@ -1525,6 +1240,7 @@ class MVForecaster:
                 preds[series] = list(np.cumsum(preds[series]))[1:]
             return preds, test_set_actuals
 
+        call_me = self.call_me
         test_set_preds = self.test_set_pred.copy()
         test_set_actuals = {} if self.test_length == 0 else {
             f"y{i+1}": (
@@ -1544,7 +1260,6 @@ class MVForecaster:
                 [fv - ac for fv, ac in zip(fitted_vals[series], act)]
             ) for series, act in fitted_val_actuals.items()
         }
-        cis = find_cis(resids)
         fcst = self.forecast.copy()
         lvl_fcst, _ = undiff(fcst.copy())
         lvl_tsp, lvl_tsa = undiff(test_set_preds, test=True)
@@ -1553,8 +1268,7 @@ class MVForecaster:
             series: [fv - ac for fv, ac in zip(lvl_fv[series], act)]
             for series, act in lvl_fva.items()
         }
-        lvl_cis = find_cis(lvl_resids)
-        self.history[self.call_me] = {
+        self.history[call_me] = {
             "Estimator": self.estimator,
             "Xvars": list(self.current_xreg.keys()),
             "HyperParams": {
@@ -1566,8 +1280,6 @@ class MVForecaster:
             else "minmax",
             "Integration": self.integration,
             "Forecast": fcst,
-            "UpperCI": {series: list(p + cis[series]) for series, p in fcst.items()},
-            "LowerCI": {series: list(p - cis[series]) for series, p in fcst.items()},
             "Observations": len(self.current_dates),
             "FittedVals": fitted_vals,
             "Resids": resids,
@@ -1592,12 +1304,6 @@ class MVForecaster:
             "TestSetR2": {
                 series: _return_na_if_len_zero(a, test_set_preds[series], r2)
                 for series, a in test_set_actuals.items()
-            },
-            "TestSetUpperCI": {
-                series: list(p + cis[series]) for series, p in test_set_preds.items()
-            },
-            "TestSetLowerCI": {
-                series: list(p - cis[series]) for series, p in test_set_preds.items()
             },
             "InSampleRMSE": {
                 series: _return_na_if_len_zero(a, fitted_vals[series],rmse)
@@ -1648,30 +1354,103 @@ class MVForecaster:
             "LevelInSampleR2": {
                 series: _return_na_if_len_zero(a, lvl_fv[series], r2) for series, a in lvl_fva.items()
             },
-            "LevelUpperCI": {
-                series: list(p + np.array(lvl_cis[series])) for series, p in lvl_fcst.items()
-            },
-            "LevelLowerCI": {
-                series: list(p - np.array(lvl_cis[series])) for series, p in lvl_fcst.items()
-            },
-            "LevelTSUpperCI": {
-                series: list(p + np.array(lvl_cis[series])) for series, p in lvl_tsp.items()
-            },
-            "LevelTSLowerCI": {
-                series: list(p - np.array(lvl_cis[series])) for series, p in lvl_tsp.items()
-            },
         }
         if hasattr(self, "best_params"):
-            self.history[self.call_me]["Tuned"] = True
-            self.history[self.call_me]["CrossValidated"] = self.cross_validated
-            self.history[self.call_me]["ValidationSetLength"] = (
+            self.history[call_me]["Tuned"] = True
+            self.history[call_me]["CrossValidated"] = self.cross_validated
+            self.history[call_me]["ValidationSetLength"] = (
                 self.validation_length if not self.cross_validated else np.nan
             )
-            self.history[self.call_me]["ValidationMetric"] = self.validation_metric
-            self.history[self.call_me][
+            self.history[call_me]["ValidationMetric"] = self.validation_metric
+            self.history[call_me][
                 "ValidationMetricValue"
             ] = self.validation_metric_value
-            self.history[self.call_me]["grid_evaluated"] = self.grid_evaluated
+            self.history[call_me]["grid_evaluated"] = self.grid_evaluated
+
+        if self.cis is True:
+            self._check_right_test_length_for_cis(self.cilevel)
+            fcst = self.history[call_me]['Forecast']
+            test_preds = self.history[call_me]['TestSetPredictions']
+            test_actuals = self.history[call_me]['TestSetActuals']
+            test_resids = {k:np.abs(np.array(p) - np.array(test_actuals[k])) for k, p in test_preds.items()}
+            ci_range = {k:np.percentile(r, 100 * self.cilevel) for k,r in test_resids.items()}
+            self._set_cis(
+                "UpperCI",
+                "LowerCI",
+                "TestSetUpperCI",
+                "TestSetLowerCI",
+                m = call_me,
+                ci_range = ci_range,
+                forecast = fcst,
+                tspreds = test_preds,
+            )
+            if self.integration == 1:
+                fcst = self.history[call_me]['LevelForecast']
+                test_preds = self.history[call_me]['LevelTestSetPreds']
+                test_actuals = {
+                    k: getattr(
+                        self,
+                        'series{i}'
+                    )['levely'][
+                        -self.test_length:
+                    ] for i, k in enumerate(test_preds.keys())
+                }
+                test_resids = {k:np.abs(np.array(p) - np.array(test_actuals[k])) for k, p in test_preds.items()}
+                ci_range = {k:np.percentile(r, 100 * self.cilevel) for k,r in test_resids.items()}
+            self._set_cis(
+                "LevelUpperCI",
+                "LevelLowerCI",
+                "LevelTSUpperCI",
+                "LevelTSLowerCI",
+                m = call_me,
+                ci_range = ci_range,
+                forecast = fcst,
+                tspreds = test_preds,
+            )
+
+    def _check_right_test_length_for_cis(self,cilevel):
+        min_test_length = np.ceil(1/(1-cilevel))
+        if self.test_length < min_test_length:
+            raise ValueError(
+                'Cannot evaluate confidence intervals at the '
+                '{:.0%} level when test_length is set to less than {} observations. '
+                'The test length must be at least 1/(1-cilevel) in length for conformal intervals to work.'.format(
+                    cilevel,
+                    int(min_test_length),
+                )
+            )
+
+    def eval_cis(self,mode=True,cilevel=.95):
+        """ Call this function to change whether or not the Forecaster sets confidence intervals on all evaluated models.
+        Beginning 0.17.0, only conformal confidence intervals are supported. Conformal intervals need a test set to be configured soundly.
+        Confidence intervals cannot be evaluated when there aren't at least 1/(1-cilevel) observations in the test set.
+
+        Args:
+            mode (bool): Default True. Whether to set confidence intervals on or off for models.
+            cilevel (float): Default .95. Must be greater than 0, less than 1. The confidence level
+                to use to set intervals.
+        """
+        if mode is True:
+            self._check_right_test_length_for_cis(cilevel)
+        
+        self.cis=mode
+        self.set_cilevel(cilevel)
+
+    def set_cilevel(self, n):
+        """ Sets the level for the resulting confidence intervals (95% default).
+
+        Args:
+            n (float): Greater than 0 and less than 1.
+
+        Returns:
+            None
+
+        >>> f.set_cilevel(.80) # next forecast will get 80% confidence intervals
+        """
+        descriptive_assert(
+            n < 1 and n > 0, ValueError, "n must be a float greater than 0 and less than 1."
+        )
+        self.cilevel = n
 
     def set_best_model(self, model=None, determine_best_by=None):
         """ Sets the best model to be referenced as "best".
@@ -1763,6 +1542,12 @@ class MVForecaster:
             ]
         return models
 
+    def _warn_about_not_finding_cis(self,m):
+        warnings.warn(
+            f'Confidence intervals not found for {m}.',
+            category=Warning,
+        )
+
     def plot(
         self, 
         models="all", 
@@ -1834,20 +1619,23 @@ class MVForecaster:
                 )
 
                 if ci:
-                    plt.fill_between(
-                        x=self.future_dates.to_list(),
-                        y1=self.history[m]["UpperCI"][s]
-                        if not level
-                        else self.history[m]["LevelUpperCI"][s],
-                        y2=self.history[m]["LowerCI"][s]
-                        if not level
-                        else self.history[m]["LevelLowerCI"][s],
-                        alpha=0.2,
-                        color=_colors_[k],
-                        label="{} {} {:.0%} CI".format(
-                            labels[i], m, self.history[m]["CILevel"]
-                        ),
-                    )
+                    try:
+                        plt.fill_between(
+                            x=self.future_dates.to_list(),
+                            y1=self.history[m]["UpperCI"][s]
+                            if not level
+                            else self.history[m]["LevelUpperCI"][s],
+                            y2=self.history[m]["LowerCI"][s]
+                            if not level
+                            else self.history[m]["LevelLowerCI"][s],
+                            alpha=0.2,
+                            color=_colors_[k],
+                            label="{} {} {:.0%} CI".format(
+                                labels[i], m, self.history[m]["CILevel"]
+                            ),
+                        )
+                    except KeyError:
+                        _warn_about_not_finding_cis(m)
                 k += 1
 
         plt.legend()
@@ -1948,20 +1736,23 @@ class MVForecaster:
                 )
 
                 if ci:
-                    plt.fill_between(
-                        x=self.current_dates.to_list()[-self.test_length :],
-                        y1=self.history[m]["TestSetUpperCI"][s]
-                        if not level
-                        else self.history[m]["LevelTSUpperCI"][s],
-                        y2=self.history[m]["TestSetLowerCI"][s]
-                        if not level
-                        else self.history[m]["LevelTSLowerCI"][s],
-                        alpha=0.2,
-                        color=_colors_[k],
-                        label="{} {} {:.0%} CI".format(
-                            labels[i], m, self.history[m]["CILevel"]
-                        ),
-                    )
+                    try:
+                        plt.fill_between(
+                            x=self.current_dates.to_list()[-self.test_length :],
+                            y1=self.history[m]["TestSetUpperCI"][s]
+                            if not level
+                            else self.history[m]["LevelTSUpperCI"][s],
+                            y2=self.history[m]["TestSetLowerCI"][s]
+                            if not level
+                            else self.history[m]["LevelTSLowerCI"][s],
+                            alpha=0.2,
+                            color=_colors_[k],
+                            label="{} {} {:.0%} CI".format(
+                                labels[i], m, self.history[m]["CILevel"]
+                            ),
+                        )
+                    except KeyError:
+                        _warn_about_not_finding_cis(m)
                 k += 1
 
         plt.legend()
@@ -2206,8 +1997,11 @@ class MVForecaster:
                 for m in models:
                     df[f"{l}_{m}_fcst"] = self.history[m]["Forecast"][s][:]
                     if cis:
-                        df[f"{l}_{m}_fcst_upper"] = self.history[m]["UpperCI"][s][:]
-                        df[f"{l}_{m}_fcst_lower"] = self.history[m]["LowerCI"][s][:]
+                        try:
+                            df[f"{l}_{m}_fcst_upper"] = self.history[m]["UpperCI"][s][:]
+                            df[f"{l}_{m}_fcst_lower"] = self.history[m]["LowerCI"][s][:]
+                        except KeyError:
+                            _warn_about_not_finding_cis(m)
             output["all_fcsts"] = df
         if "test_set_predictions" in dfs:
             df = pd.DataFrame(
@@ -2223,12 +2017,15 @@ class MVForecaster:
                         s
                     ][:]
                     if cis:
-                        df[f"{l}_{m}_test_preds_upper"] = self.history[m][
-                            "TestSetUpperCI"
-                        ][s][:]
-                        df[f"{l}_{m}_test_preds_lower"] = self.history[m][
-                            "TestSetLowerCI"
-                        ][s][:]
+                        try:
+                            df[f"{l}_{m}_test_preds_upper"] = self.history[m][
+                                "TestSetUpperCI"
+                            ][s][:]
+                            df[f"{l}_{m}_test_preds_lower"] = self.history[m][
+                                "TestSetLowerCI"
+                            ][s][:]
+                        except KeyError:
+                            _warn_about_not_finding_cis(m)
                 i += 1
             output["test_set_predictions"] = df
         if "lvl_fcsts" in dfs:
@@ -2236,13 +2033,16 @@ class MVForecaster:
             for l, s in zip(labels, series):
                 for m in models:
                     df[f"{l}_{m}_lvl_fcst"] = self.history[m]["LevelForecast"][s][:]
-                    if cis and "LevelUpperCI" in self.history[m].keys():
-                        df[f"{l}_{m}_lvl_fcst_upper"] = self.history[m]["LevelUpperCI"][
-                            s
-                        ][:]
-                        df[f"{l}_{m}_lvl_fcst_lower"] = self.history[m]["LevelLowerCI"][
-                            s
-                        ][:]
+                    if cis:
+                        try:
+                            df[f"{l}_{m}_lvl_fcst_upper"] = self.history[m]["LevelUpperCI"][
+                                s
+                            ][:]
+                            df[f"{l}_{m}_lvl_fcst_lower"] = self.history[m]["LevelLowerCI"][
+                                s
+                            ][:]
+                        except KeyError:
+                            _warn_about_not_finding_cis(m)
             output["lvl_fcsts"] = df
         if "lvl_test_set_predictions" in dfs:
             df = pd.DataFrame(
@@ -2255,13 +2055,16 @@ class MVForecaster:
                 ]
                 for m in models:
                     df[f"{l}_{m}_lvl_ts"] = self.history[m]["LevelTestSetPreds"][s][:]
-                    if cis and "LevelTSUpperCI" in self.history[m].keys():
-                        df[f"{l}_{m}_lvl_ts_upper"] = self.history[m]["LevelTSUpperCI"][
-                            s
-                        ][:]
-                        df[f"{l}_{m}_lvl_ts_lower"] = self.history[m]["LevelTSLowerCI"][
-                            s
-                        ][:]
+                    if cis:
+                        try:
+                            df[f"{l}_{m}_lvl_ts_upper"] = self.history[m]["LevelTSUpperCI"][
+                                s
+                            ][:]
+                            df[f"{l}_{m}_lvl_ts_lower"] = self.history[m]["LevelTSLowerCI"][
+                                s
+                            ][:]
+                        except KeyError:
+                            _warn_about_not_finding_cis(m)
                 i += 1
             output["lvl_test_set_predictions"] = df
         if to_excel:
@@ -2371,8 +2174,10 @@ class MVForecaster:
             columns=[f"iter{i}" for i in range(1, n_iter + 1)], index=index
         )
         value_results = pd.DataFrame()
+        f1 = self.deepcopy()
+        f1.eval_cis(False)
         for i in range(n_iter):
-            f = self.__deepcopy__()
+            f = f1.deepcopy()
             if i > 0:
                 f.current_xreg = {
                     k: pd.Series(v.values[: -i * jump_back])
@@ -2466,7 +2271,7 @@ class MVForecaster:
 
         corr = df.corr()
         if disp == "matrix":
-            logging.warning(f"{kwargs} ignored")
+            warnings.warn(f"{kwargs} ignored.",category=Warning)
             return corr
 
         elif disp == "heatmap":

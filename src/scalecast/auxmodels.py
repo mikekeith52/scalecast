@@ -1,13 +1,8 @@
-from sklearn.neural_network import MLPRegressor
-from sklearn.ensemble import BaggingRegressor
-from sklearn.ensemble import StackingRegressor
 from statsmodels.tsa.vector_ar.vecm import VECM
-from scalecast.Forecaster import _sklearn_imports_
 
 class vecm:
     def __init__(
         self,
-        exog_coint=None,
         k_ar_diff=1, # always 0
         coint_rank=1,
         deterministic="n",
@@ -20,8 +15,7 @@ class vecm:
         See it used with scalecast: https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html.
 
         Args:
-            exog_coint (ndarray): Default None. Deterministic terms inside the cointegration relation.
-            k_ar_diff (int): Default 1. Number of lagged differences in the model.
+            k_ar_diff (int): The number of lags from each series to use in the model.
             coint_rank (int): Cointegration rank.
             deterministic (str): One of {"n", "co", "ci", "lo", "li"}. Default "n".
                 "n" - no deterministic terms.
@@ -39,7 +33,6 @@ class vecm:
                 A pandas offset or 'B', 'D', 'W', 'M', 'A', or 'Q'.
         """
         self.k_ar_diff = k_ar_diff
-        self.exog_coint = exog_coint
         self.coint_rank = coint_rank
         self.deterministic = deterministic
         self.seasons = seasons
@@ -68,7 +61,6 @@ class vecm:
             X,
             exog=exog,
             k_ar_diff=self.k_ar_diff,
-            exog_coint=self.exog_coint,
             coint_rank=self.coint_rank,
             deterministic=self.deterministic,
             seasons=self.seasons,
@@ -148,7 +140,6 @@ def mlp_stack(
     hidden_layer_sizes=(100,100,100),
     solver='lbfgs',
     call_me='mlp_stack',
-    probabilistic=False,
     **kwargs,
 ):
     """ Applies a stacking model using a bagged MLP regressor as the final estimator and adds it to a `Forecaster` or `MVForecaster` object.
@@ -177,7 +168,6 @@ def mlp_stack(
         solver (str): Default 'lbfgs'.
             The mlp solver.
         call_me (str): Default 'mlp_stack'. The name of the resulting model.
-        probabilistic (bool): Default False. Whether to use probabilistic modeling.
         **kwargs: Passed to the `manual_forecast()` or `proba_forecast()` method.
 
     Returns:
@@ -200,6 +190,10 @@ def mlp_stack(
     >>> mlp_stack(f,model_nicknames=models) # saves a model called mlp_stack
     >>> f.export('model_summaries',models='mlp_stack')
     """
+    from sklearn.neural_network import MLPRegressor
+    from sklearn.ensemble import BaggingRegressor
+    from sklearn.ensemble import StackingRegressor
+    from scalecast.Forecaster import _sklearn_imports_
     results = f.export('model_summaries')
     
     estimators = [
@@ -231,17 +225,9 @@ def mlp_stack(
 
     f.add_sklearn_estimator(StackingRegressor,'stacking')
     f.set_estimator('stacking')
-    if not probabilistic:
-        f.manual_forecast(
-            estimators=estimators,
-            final_estimator=final_estimator,
-            call_me=call_me,
-            **kwargs,
-        )
-    else:
-        f.proba_forecast(
-            estimators=estimators,
-            final_estimator=final_estimator,
-            call_me=call_me,
-            **kwargs,
-        )
+    f.manual_forecast(
+        estimators=estimators,
+        final_estimator=final_estimator,
+        call_me=call_me,
+        **kwargs,
+    )

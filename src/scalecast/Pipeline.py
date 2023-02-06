@@ -122,7 +122,7 @@ class Reverter:
             if isinstance(reverter,str):
                 reverters[i] = (reverter,)
             elif not isinstance(reverter,tuple):
-                raise TypeError(f'expected elements of reverter list to be tuple type, got {type(reverter)}')
+                raise TypeError(f'Expected elements of reverter list to be tuple type, got {type(reverter)}.')
         
         self.reverters = reverters
         self.base_transformer = base_transformer
@@ -239,7 +239,7 @@ class Pipeline:
         # validate we have tuples
         for step in steps:
             if not isinstance(step,tuple):
-                raise TypeError(f'expected elements of pipeline steps list to be tuple type, got {type(step)}')
+                raise TypeError(f'Expected elements of pipeline steps list to be tuple type, got {type(step)}.')
         
         self.steps = steps
 
@@ -340,7 +340,7 @@ class MVPipeline:
         """
         for step in steps:
             if not isinstance(step,tuple):
-                raise TypeError(f'expected elements of pipeline steps list to be tuple type, got {type(step)}')
+                raise TypeError(f'Expected elements of pipeline steps list to be tuple type, got {type(step)}.')
         
         self.steps = steps
         self.kwargs = kwargs
@@ -396,7 +396,7 @@ class MVPipeline:
             func_list = step[1]
             if hasattr(func_list,'__len__'):
                 if len(fs) != len(func_list):
-                    raise ValueError('must pass as many functions as there are Forecaster objects.')
+                    raise ValueError('Must pass as many functions as there are Forecaster objects.')
                 if hasattr(func_list[0],'fit_transform'):
                     if i == 1:
                         fs = list(break_mv_forecaster(mvf))

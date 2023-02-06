@@ -94,7 +94,10 @@ class SeriesTransformer:
                 "LevelUpperCI",
                 "LevelTSUpperCI",
             ):
-                h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
+                try:
+                    h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
+                except KeyError:
+                    pass
             h['LevelY'] = self.f.levely
 
             for i, preds in enumerate(('LevelTestSetPreds','LevelFittedVals')):
@@ -122,7 +125,10 @@ class SeriesTransformer:
                     "TestSetActuals",
                     "FittedVals",
                 ):
-                    h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
+                    try:
+                        h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
+                    except KeyError:
+                        pass
 
                 for i, preds in enumerate(("TestSetPredictions","FittedVals")):
                     pred = h[preds]
@@ -237,7 +243,7 @@ class SeriesTransformer:
         try: 
             self.f.typ_set(); 
         except: 
-            warnings.warn('type seting the Forecaster object did not work in the trend transform, continuing as is.')
+            warnings.warn('Type seting the Forecaster object did not work in the trend transform, continuing as is.')
 
         self.detrend_model = ols_mod
         self.detrend_fvs = fvs
@@ -272,7 +278,7 @@ class SeriesTransformer:
             self.f.y = self.detrend_origy
             self.f.current_dates = self.detrend_origdates
         except AttributeError:
-            raise ForecastError('before reverting a trend, make sure DetrendTransform has already been called.')
+            raise ForecastError('Before reverting a trend, make sure DetrendTransform has already been called.')
 
         fvs = {
             "LevelTestSetPreds":self.detrend_fvs_test,
@@ -295,7 +301,10 @@ class SeriesTransformer:
             if m in exclude_models:
                 continue
             for k,v in fvs.items():
-                h[k] = [i + fvs for i, fvs in zip(h[k],v)]
+                try:
+                    h[k] = [i + fvs for i, fvs in zip(h[k],v)]
+                except KeyError:
+                    pass
 
         for a in (
             'detrend_origy',
@@ -614,16 +623,34 @@ class SeriesTransformer:
                 seasrevert(h['FittedVals'],self.f.y.values[-len(h['FittedVals'])-m:], m)
             )[m:]
             h['LevelFittedVals'] = h['FittedVals'][:]
-            for k in ("LevelUpperCI","UpperCI","LevelLowerCI","LowerCI"):
-                h[k] = list(seasrevert(h[k], self.f.y[-m:], m))[m:]
-            for k in ("TestSetUpperCI","LevelTSUpperCI","TestSetLowerCI","LevelTSLowerCI"):
-                h[k] = list(
-                    seasrevert(
-                        h[k],
-                        self.f.y.to_list()[-(m + self.f.test_length) : -self.f.test_length],
-                        m,
-                    )
-                )[m:]
+            if "LevelUpperCI" not in self.f.history[mod].keys():
+                continue
+            # undifference cis
+            fcst = h["Forecast"]
+            test_preds = h["TestSetPredictions"]
+            test_actuals = h["TestSetActuals"]
+            test_resids = np.abs([p - a for p, a in zip(test_preds,test_actuals)])
+            ci_range = np.percentile(test_resids, 100 * self.f.cilevel)
+            self.f._set_cis(
+                "UpperCI",
+                "LowerCI",
+                "TestSetUpperCI",
+                "TestSetLowerCI",
+                m = mod,
+                ci_range = ci_range,
+                forecast = fcst,
+                tspreds = test_preds,
+            )
+            self.f._set_cis(
+                "LevelUpperCI",
+                "LevelLowerCI",
+                "LevelTSUpperCI",
+                "LevelTSLowerCI",
+                m = mod,
+                ci_range = ci_range,
+                forecast = fcst,
+                tspreds = test_preds,
+            )
         delattr(self, f"orig_y_{m}_{n}")
         delattr(self, f"orig_dates_{m}_{n}")
 

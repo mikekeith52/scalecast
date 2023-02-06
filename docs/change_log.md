@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.0]
+### Added
+- Added the `cis` argument to `Forecaster__init__()` and `MVForecaster.__init__()`.
+### Changed
+- Only conformal intervals now supported in `Forecaster` and `MVForecaster`. By default, these will not be generated and can only be generated if there is a test set and it is specified to a sufficient length.
+- Removed `Forecaster.proba_forecast()` and `MVForecaster.proba_forecast()` and all probabilistic arguments in functions.
+- Default `test_length` argument in `Forecaster.__init__()` and `MVForecaster.__init__()` is now 0.
+- Took out the `exog_coint` argument from `vecm.__init__()` since it's not actually usable.
+- Only model-specific and hyperparameter optimization warnings will be logged in warnings.log and other warnings will be printed.
+- Changed many categories of warnings from `UserWarning` to `Warning`.
+### Fixed
+- Added `staticmethod` decorators to `util.metrics` methods. This doesn't change functionality, just the documentation.
+
 ## [0.16.6] - 2023-02-03
 ### Added
 ### Changed

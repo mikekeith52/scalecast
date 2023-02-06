@@ -1,8 +1,8 @@
 from scalecast import Forecaster
 from scalecast import MVForecaster
 from scalecast import SeriesTransformer
-from scalecast.auxmodels import auto_arima
 from scalecast import Pipeline
+from scalecast.Forecaster import log_warnings
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -11,6 +11,7 @@ import pandas as pd
 import warnings
 
 class metrics:
+    @staticmethod
     def mape(a,f):
         """ Mean absolute percentage error (MAPE).
 
@@ -28,6 +29,7 @@ class metrics:
         """
         return Forecaster.mape(a,f)
 
+    @staticmethod
     def r2(a,f):
         """ R-squared (R2).
 
@@ -45,6 +47,7 @@ class metrics:
         """
         return Forecaster.r2(a,f)
 
+    @staticmethod
     def mse(a,f):
         """ Mean squared error (MSE).
 
@@ -62,6 +65,7 @@ class metrics:
         """
         return Forecaster.rmse(a,f)**2
 
+    @staticmethod
     def rmse(a,f):
         """ Root mean squared error (RMSE).
 
@@ -79,6 +83,7 @@ class metrics:
         """
         return Forecaster.rmse(a,f)
 
+    @staticmethod
     def mae(a,f):
         """ Mean absolute error (MAE).
 
@@ -96,6 +101,7 @@ class metrics:
         """
         return Forecaster.mae(a,f)
 
+    @staticmethod
     def smape(a,f):
         """ Symmetric mean absolute percentage error (sMAPE).
         Uses the same definition as used in the M4 competition.
@@ -125,6 +131,7 @@ class metrics:
             )
         )
 
+    @staticmethod
     def mase(a,f,obs,m):
         """ Mean absolute scaled error (MASE).
         Uses the same definition as used in the M4 competition.
@@ -157,6 +164,7 @@ class metrics:
         )
         return avger * (num / (davger * denom))
 
+    @staticmethod
     def msis(a,uf,lf,obs,m,alpha=0.05):
         """ Mean scaled interval score (MSIS) for evaluating confidence intervals.
         Uses the same definition as used in the M4 competition.
@@ -350,6 +358,8 @@ def break_mv_forecaster(mvf):
             future_xreg={k:v.copy() for k,v in mvf1.future_xreg.items()},
             test_length=mvf1.test_length,
             validation_length=mvf1.validation_length,
+            cis = mvf1.cis,
+            cilevel = mvf1.cilevel,
         )
         f.history = convert_mv_hist(f, mvf1.history, s)
         to_return.append(f)
@@ -450,6 +460,7 @@ def find_statistical_transformation(
         (Transformer, Reverter): A `Transformer` object with the identified transforming functions and
         the `Reverter` object with the `Transformer` counterpart functions.
     """
+    from scalecast.auxmodels import auto_arima
     def make_stationary(f,train_only,critical_pval,log,adf_kwargs,**kwargs):
         transformers = []
         stationary = f.adf_test(
@@ -514,6 +525,7 @@ def find_statistical_transformation(
     )
     return final_transformer, final_reverter
 
+@log_warnings
 def find_optimal_transformation(
     f,
     estimator='mlr',

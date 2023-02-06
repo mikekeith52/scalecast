@@ -6,11 +6,14 @@
 
 ## About
 
-Scalecast is a light-weight time-series forecasting procedure, wrapper, and results container built by and for applied Data Scientists using an ML framework. It offers a streamlined transforming, tuning, reverting, and reporting interface with many model classes, from basic ARIMA and linear models to boosted trees and recurrent neural nets. No matter which models you want to play with, the uniform interface makes it easy and fun to get results quickly.
+Scalecast is a light-weight time-series forecasting procedure, wrapper, and results container built by and for applied Data Scientists using an ML framework. It offers a streamlined transforming, tuning, reverting, and reporting interface with many model classes, from basic ARIMA and linear models to boosted trees and recurrent neural nets. No matter which models you want to play with, the uniform interface makes it easy and fun to get results quickly.  
 
-All forecasts are validated out-of-sample by default (with the option to skip the testing process), usually with a dynamic recursive approach. Some model classes offer direct forecasting. You won't ever run into the situation where the estimator looks great on the test-set but can't generalize to real data. What you see is what you get, with no attempt to oversell results. If you run a model that's able to predict the COVID pandemic in your test-set, you probably have a one-step forecast happening under-the-hood, which is easy to fall into, especially for those not specialized in time series. You can't predict the unpredictable, and you won't see such things with scalecast.  
-
-## Starter Code
+## Official Docs
+- [Read the Docs](https://scalecast.readthedocs.io/en/latest/)  
+- [Introductory Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html)  
+- [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)  
+ 
+## Example Starter Code
 
 ```python
 from scalecast.Forecaster import Forecaster
@@ -20,42 +23,41 @@ from scalecast import GridGenerator
 import matplotlib.pyplot as plt
 import pandas_datareader as pdr
 
+# add more/fewer models to the below tuple
 models = (
   'mlr',
   'elasticnet',
   'lightgbm',
   'knn',
-)
-
+) # https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html
+# grids for tuning models (see the Grids.py file)
 GridGenerator.get_example_grids()
-
+# extract data (this is an example dataset)
 df = pdr.get_data_fred(
   'HOUSTNSA',
   start='1959-01-01',
   end='2022-08-01'
 )
-
+# build the forecaster object
 f = Forecaster(
   y=df['HOUSTNSA'],
   current_dates=df.index,
   future_dates=24,
+  test_length=48, # not required to set a test length but testing models is necessary for generating confidence intervals
+  cis = True, # all models called will have confidence intervals if this is True (default is False)
 )
-f.set_test_length(.2)
-f.set_validation_length(24)
-
+# this function will be placed in a pipeline
 def forecaster(f,models):
-    """ add Xvars and forecast
-    """
     f.add_covid19_regressor()
     f.auto_Xvar_select()
     f.tune_test_forecast(
         models,
         dynamic_testing=24, # test-set metrics will be an average of rolling 24-step forecasts
-        cross_validate=True,
-        k = 3,
+        cross_validate=True, # models tuned with cross-validation, excludes test set
+        k = 3, # 3-fold (time series) cross validation
     )
-    mlp_stack(f,models)
-        
+    mlp_stack(f,models) # a stacking model offered by scalecast
+# transform data to make it stationary/easier to predict        
 transformer = Transformer(
     transformers = [
         ('DiffTransform',1),
@@ -77,15 +79,20 @@ pipeline = Pipeline(
         ('Revert',reverter),
     ],
 )
-
 f = pipeline.fit_predict(f,models=models)
-
-f.reeval_cis() # expanding cis based on all model results
-f.plot(ci=True,order_by='LevelTestSetMAPE')
+f.plot(
+  ci=True, # setting this to True will not throw an error if there are no confidence intervals
+  order_by='TestSetMAPE',
+)
+plt.legend(loc = 'upper left')
 plt.show()
-
+# export results
 results = f.export(
-  ['model_summaries','lvl_fcsts']
+  [
+    'model_summaries', # info about hyperparams, xvars, scaling, erros, etc.
+    'all_fcsts', # point forecasts
+  ],
+  cis = True, # confidence intervals placed on point forecasts
 )
 ```
 ![Readme Example Vis](_static/results.png)
@@ -138,21 +145,21 @@ The library interfaces nicely with interactive notebook applications.
 </p>
 
 ## Features
-- Model Validation
+- Model optimization and validation
   - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
   - [Grid search using time series cross validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
   - [Backtest](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest)
-- [Probabilistic forecasting with conformal prediction](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.proba_forecast) and [other confidence interval types](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)
-- Model input analysis
+- [Confidence intervals](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html) using a naive [conformal prediction](https://github.com/valeman/awesome-conformal-prediction) framework.
+- Input analysis
   - [Feature importance scoring](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance)
     - [SHAP](https://shap.readthedocs.io/en/latest/index.html)
     - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
   - [Summary stats for descriptive models](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_summary_stats)
-  - [Auto Feature Selection](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.auto_Xvar_select)
-  - [Feature reduction](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.reduce_Xvars)
-- [Anomaly detection](https://scalecast.readthedocs.io/en/latest/Forecaster/AnomalyDetector.html)
+  - [Auto Feature Selection](https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html)
+  - [Feature reduction](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
+- [Anomaly detection](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
 - [Changepoint detection](https://scalecast.readthedocs.io/en/latest/Forecaster/ChangepointDetector.html)
-- [Series transformation/revert functions](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
+- [Series transforming/reverting](https://scalecast-examples.readthedocs.io/en/latest/transforming/series_transformer.html)
 
 ## Installation
 - Only the base package is needed to get started:  
@@ -161,7 +168,7 @@ The library interfaces nicely with interactive notebook applications.
   - `pip install tensorflow` (for RNN/LSTM on Windows) or `pip install tensorflow-macos` (for MAC/M1)
   - `pip install darts`  
   - `pip install prophet`  
-  - `pip install greykite`  
+  - `pip install greykite` (for the silverkite model)  
   - `pip install shap` (SHAP feature importance)  
   - `pip install kats` (changepoint detection)  
   - `pip install pmdarima` (auto arima)  
@@ -172,12 +179,6 @@ The library interfaces nicely with interactive notebook applications.
   - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets for Lab)  
 
 ## Links
-### Official Docs
-  - [Read the Docs](https://scalecast.readthedocs.io/en/latest/)
-  - [Introductory Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html)
-  - [Introductory Blog Post](https://towardsdatascience.com/introducing-scalecast-a-forecasting-library-pt-1-33b556d9b019)
-  - [Examples Repository](https://github.com/mikekeith52/scalecast-examples)
-  - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)
 
 ### [Forecasting with Different Model Types](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
 - Sklearn Univariate
@@ -206,7 +207,7 @@ The library interfaces nicely with interactive notebook applications.
   - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
   - [Confidence Intervals](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
 
-### Transforming and Reverting
+### [Transforming and Reverting](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 - [Time Series Transformations (and Reverting) Made Easy](https://medium.com/towards-data-science/time-series-transformations-and-reverting-made-easy-f4f768c18f63)
 - [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/transforming/series_transformer.html)
 - [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/transforming/medium_code.ipynb)

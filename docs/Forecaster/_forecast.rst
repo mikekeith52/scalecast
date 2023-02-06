@@ -1,6 +1,6 @@
 Forecasting Different Model Types
 ===================================
-Any time you set an estimator, different arguments become available to you when calling `manual_forecast`, `proba_forecast`, or tuning the model. This page lists all model types native to scalecast. See also the `auxmodels <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html>`_ module.
+Any time you set an estimator, different arguments become available to you when calling `manual_forecast` or tuning the model. This page lists all model types native to scalecast. See also the `auxmodels module <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html>`_.
 
 arima
 --------------------------------------------------
@@ -47,7 +47,7 @@ lstm
 
 multivariate
 ---------------------------------------------------------------
-See also `vecm <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_.
+See also the `vecm model <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_.
 
 .. automodule:: src.scalecast.MVForecaster.MVForecaster._forecast
     :members:
@@ -55,7 +55,7 @@ See also `vecm <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.
     :show-inheritance:
 
 >>> mvf.set_estimator('xgboost')
->>> mvf.proba_forecast() # probabilistic forecasting
+>>> mvf.manual_forecast()
 
 naive
 --------------
@@ -110,7 +110,7 @@ See also `mlp_stack <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmo
     :show-inheritance:
 
 >>> f.set_estimator('mlp')
->>> f.proba_forecast() # probabilistic forecasting
+>>> f.manual_forecast()
 >>> f.regr # access the sklearn model properties
 
 theta

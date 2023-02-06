@@ -4,7 +4,12 @@ from typing import Dict, Union
 from ipywidgets import widgets
 from IPython.display import display, clear_output
 
-from scalecast.Forecaster import Forecaster, _determine_best_by_, _estimators_
+from scalecast.Forecaster import (
+    Forecaster, 
+    _determine_best_by_, 
+    _can_be_tuned_, 
+    _check_if_correct_estimator,
+)
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -18,7 +23,7 @@ def results_vis(
     print_attr: list = [],
     include_train: Union[bool, int] = True,
     figsize = (12,6),
-) -> None:
+):
     """ Visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.
 
     Args:
@@ -194,8 +199,6 @@ def tune_test_forecast(
     cross_validate=False,
     dynamic_tuning=False,
     dynamic_testing=True,
-    probabilistic=False,
-    n_iter=20,
     summary_stats=False,
     feature_importance=False,
     fi_method="pfi",
@@ -220,12 +223,6 @@ def tune_test_forecast(
             If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
             Setting this to False or 1 means faster performance, 
             but gives a less-good indication of how well the forecast will perform more than one period out.
-        probabilistic (bool, str, or list-like): Default False.
-            If bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
-            If str, the name of a single model to apply a probabilistic process to.
-            If list-like, a list of models to apply a probabilistic process to.
-        n_iter (int): Default 20.
-            How many iterations to use in probabilistic forecasting. Ignored if probabilistic = False.
         summary_stats (bool): Default False.
             Whether to save summary stats for the models that offer those.
             Does not work for `MVForecaster` objects.
@@ -245,21 +242,9 @@ def tune_test_forecast(
     Returns:
         None
     """
-    if (
-        len([m for m in models if m not in [m for m in _estimators_ if m != "combo"]])
-        > 0
-    ):
-        raise ValueError(
-            "values passed to models must be list-like and in {}".format(
-                [m for m in _estimators_ if m != "combo"]
-            )
-        )
+    [_check_if_correct_estimator(m,_can_be_tuned_) for m in models]
     for m in log_progress(models):
-        m_prob = (
-            probabilistic if isinstance(probabilistic,bool) 
-            else m == probabilistic if isinstance(probabilistic,str) 
-            else m in probabilistic
-        )
+
         call_me = m if suffix is None else m + suffix
         f.set_estimator(m)
         if limit_grid_size is not None:
@@ -272,8 +257,6 @@ def tune_test_forecast(
         f.auto_forecast(
             dynamic_testing=dynamic_testing,
             call_me=call_me,
-            probabilistic=m_prob,
-            n_iter=n_iter,
         )
 
         if summary_stats:
