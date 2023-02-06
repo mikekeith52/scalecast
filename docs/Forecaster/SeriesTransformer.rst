@@ -41,10 +41,6 @@ This object can be used to perform more complex transformations on your `Forecas
 
     f.plot()
 
-When using `DiffTransform()` and `DiffRevert()`, a lot can go wrong because of having to drop observations. AR terms should be added after `DiffTransform` has been called, but `Forecaster.add_lagged_terms()` and `Forecaster.add_diffed_terms()` should be called before. So, it can get confusing. The `Forecaster.diff()` function is still the easiest way to take a series first difference, but the `DiffTransform()` and `DiffRevert()` functions allow for multiple and seasonal differences. The two methods of taking differences should not be combined. Either use `Forecaster.diff()` or `SeriesTransformer.DiffTransform()`. Do not use both.
-
-All other transformation and reversion functions work well and there is not any danger in using them.
-
 .. autoclass:: src.scalecast.SeriesTransformer.SeriesTransformer
    :members:
 

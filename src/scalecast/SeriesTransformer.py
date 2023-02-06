@@ -510,12 +510,12 @@ class SeriesTransformer:
             raise ValueError("cannot revert a series that was never scaled.")
 
     def DiffTransform(self, m=1):
-        """ takes differences or seasonal differences in the Forecaster object's y attribute.
+        """ Takes differences or seasonal differences in the Forecaster object's y attribute.
         If using this transformation, call `Forecaster.add_diffed_terms()` and 
         `Forecaster.add_lagged_terms()` if you want to use those before calling this function.
         Call `Forecaster.add_ar_terms()` and `Forecaster.add_AR_terms()` after calling this function.
         Call twice with the same value of m to take second differences.
-        iI using this to take series differences, do not also use the native `Forecaster.diff()` function.
+        If using this to take series differences, do not also use the native `Forecaster.diff()` function.
 
         Args:
             m (int): Default 1. The seasonal difference to take.
