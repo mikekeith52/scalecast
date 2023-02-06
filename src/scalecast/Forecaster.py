@@ -2047,8 +2047,8 @@ class Forecaster:
         permutation feature importance; and shap. pfi and shap offer more flexibility to view how removing
         variables one-at-a-time, according to which variable is evaluated as least helpful to the
         model after each model evaluation, affects a given error metric for any scikit-learn model.
-        After each variable reduction, the model is re-run and pfi re-evaluated. When using pfi, feature scores
-        are adjusted to account for colinearity, which is a known issue with this method, 
+        After each variable reduction, the model is re-run and feature importance re-evaluated. 
+        When using pfi, feature scores are adjusted to account for colinearity, which is a known issue with this method, 
         by sorting by each feature's score and standard deviation, dropping variables first that have both a 
         low score and low standard deviation. By default, the validation-set error is used to avoid leakage 
         and the variable set that most reduced the error is selected.
@@ -4243,7 +4243,7 @@ class Forecaster:
                 later. If unspecified, each model can be called by its estimator name.
             error (str): One of 'ignore','raise','warn'; default 'raise'.
                 What to do with the error if a given model fails.
-                'warn' logs a warning that the model could not be evaluated.
+                'warn' prints a warning that the model could not be evaluated.
             **cvkwargs: Passed to the cross_validate() method.
 
         Returns:
@@ -4252,11 +4252,7 @@ class Forecaster:
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
         """
-        descriptive_assert(
-            len([m for m in models if m not in _can_be_tuned_]) == 0,
-            ValueError,
-            f"All models passed to models argument most be one of {_can_be_tuned_}.",
-        )
+        [_check_if_correct_estimator(m,_can_be_tuned_) for m in models]
         for m in models:
             call_me = m if suffix is None else m + suffix
             self.set_estimator(m)
@@ -5004,7 +5000,7 @@ class Forecaster:
 
         Args:
             dfs (list-like or str): Default 
-                ['all_fcsts','model_summaries','best_fcst','test_set_predictions','lvl_test_set_predictions','lvl_fcsts'].
+                ['all_fcsts', 'model_summaries', 'best_fcst', 'test_set_predictions', 'lvl_test_set_predictions', 'lvl_fcsts'].
                 A list or name of the specific dataframe(s) you want returned and/or written to excel.
                 Must be one of or multiple of the elements in default.
                 Exporting test_set_predictions at any level will only work if all exported models were tested using the same test length.
