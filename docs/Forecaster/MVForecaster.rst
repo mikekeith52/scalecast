@@ -9,19 +9,25 @@ This object can be used to extend the univariate/exogenous regressor approach fr
     from scalecast.MVForecaster import MVForecaster
     from scalecast.SeriesTransformer import SeriesTransformer
     import pandas_datareader as pdr # pip install pandas-datareader
-    for s in ('UNRATE','UTUR'):
-      df = pdr.get_data_fred(s,start='2000-01-01',end='2022-01-01') # fetch data
-      f = Forecaster(y=df[s],current_dates=df.index) # load it into a Forecaster object
-      f.generate_future_dates(24) # create the forecast horizon
-      f.auto_Xvar_select()
-      f = SeriesTransformer(f).DiffTransform(1) # difference to make stationary
-      f_dict[s] = f # store everything in a dictionary
+    data = pd.read_csv('data.csv') # df with 3 cols - Date, Series1, Series2
+    f1 = Forecaster(
+      y = data['Series1'],
+      current_dates = data['Date'],
+      future_dates = 24,
+    )
+    f2 = Forecaster(
+      y = data['Series2'],
+      current_dates = data['Date'],
+      future_dates = 24,
+    )
+    # before feeding to the MVForecaster object, you may want to add seasonal and other regressors
+    # you can add to one Forecaster object and in the MVForecaster object, it will be added to forecast both series
     
     # initiate the MVForecaster object
     mvf = MVForecaster(
-      f_dict['UNRATE'], # series 1
-      f_dict['UTUR'], # sereis 2
-      # add more series here
+      f1,
+      f2,
+      # add more Forecaster objects here
       # defaults below
       not_same_len_action='trim',
       merge_Xvars='union',
@@ -29,7 +35,7 @@ This object can be used to extend the univariate/exogenous regressor approach fr
       test_length = 0,
       cis = False,
       # specify names if you want them
-      names=('UNRATE','UTUR'),
+      names=['My First Series', 'My Second Series'],
     ) 
 
 .. autoclass:: src.scalecast.MVForecaster.MVForecaster
