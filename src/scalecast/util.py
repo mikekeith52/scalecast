@@ -211,8 +211,6 @@ def pdr_load(
     src='fred',
     require_future_dates=True,
     future_dates=None,
-    integrate=False,
-    diff=False,
     MVForecaster_kwargs={},
     **kwargs
 ):
@@ -238,9 +236,6 @@ def pdr_load(
             Always set to True if sym is list-like (MVForecaster doesn't do test only).
         future_dates (int): Optional. The future dates to add to the model upon initialization.
             If not added when object is initialized, can be added later.
-        integrate (bool): Default False. Whether to take first differences in extraced data if it is found to be non-stationary.
-        diff (bool): Default False. Whether to take first differences in extracted data 
-            without running the ADF test to check stationarity.
         MVForecaster_kwargs (dict): Default {}. If sym is list-like, 
             these arguments will be passed to the `MVForecaster()` init function.
             If 'names' is not found in the dict, names are automatically added so that the
@@ -260,11 +255,6 @@ def pdr_load(
             require_future_dates=require_future_dates,
             future_dates = future_dates,
         )
-        if integrate:
-            f.integrate()
-        elif diff:
-            f.diff()
-        return f
     else:
         fs = []
         for s in sym:
@@ -274,10 +264,6 @@ def pdr_load(
                 current_dates=df.index,
                 future_dates = future_dates,
             )
-            if integrate:
-                f.integrate()
-            elif diff:
-                f.diff()
             fs.append(f)
         if 'names' not in MVForecaster_kwargs:
             MVForecaster_kwargs['names'] = sym

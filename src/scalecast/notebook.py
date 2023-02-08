@@ -20,7 +20,6 @@ from tqdm.notebook import tqdm as log_progress
 def results_vis(
     f_dict: Dict[str, Forecaster],
     plot_type: str = "forecast",
-    print_attr: list = [],
     include_train: Union[bool, int] = True,
     figsize = (12,6),
 ):
@@ -31,10 +30,6 @@ def results_vis(
             Works best if two or more models have been evaluated in each dictionary value.
         plot_type (str): One of {"forecast","test"}. Default "forecast".
             The type of results to visualize.
-        print_attr (list): Optional.
-            The attributes from history to print.
-            Passed to print_attr parameter when plot_type = 'forecast'.
-            Ignored when plot_type = 'test'.
         include_train (bool or int): Optional.
             Whether to include the complete training set in the plot or how many traning-set observations to include.
             Passed to include_train parameter when plot_type = 'test'.
@@ -56,7 +51,6 @@ def results_vis(
                 models=f"top_{mo_selection}",
                 order_by=me_selection,
                 level=lv_selection,
-                print_attr=print_attr,
                 ci=ci_selection,
                 figsize=figsize,
             )

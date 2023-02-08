@@ -29,7 +29,6 @@ from sklearn.metrics import (
 import copy
 
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-#logging.captureWarnings(True)
 
 def log_warnings(func):
     @wraps(func)
@@ -43,7 +42,6 @@ def log_warnings(func):
     return wrapper
 
 # sklearn imports sometimes have futurewarnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
 from sklearn.linear_model import LinearRegression as mlr_
 from sklearn.neural_network import MLPRegressor as mlp_
 from sklearn.ensemble import GradientBoostingRegressor as gbt_
@@ -56,7 +54,6 @@ from sklearn.linear_model import Ridge as ridge_
 from sklearn.svm import SVR as svr_
 from sklearn.neighbors import KNeighborsRegressor as knn_
 from sklearn.linear_model import SGDRegressor as sgd_
-warnings.resetwarnings()
 
 _sklearn_imports_ = {
     "mlr": mlr_,
@@ -125,7 +122,6 @@ class Forecaster:
         self.init_dates = list(current_dates)
         self.cis = cis
         self.cilevel = 0.95
-        self.bootstrap_samples = 100
         self.grids_file = 'Grids'
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -181,26 +177,24 @@ class Forecaster:
     ValidationMetric={}
     ForecastsEvaluated={}
     CILevel={}
-    BootstrapSamples={}
     CurrentEstimator={}
     GridsFile={}
 )""".format(
-            self.current_dates.values[0].astype(str),
-            self.current_dates.values[-1].astype(str),
-            self.freq,
-            len(self.y),
-            len(self.future_dates) if self.require_future_dates else "NA",
-            list(self.current_xreg.keys()),
-            self.integration,
-            self.test_length,
-            self.validation_length,
-            self.validation_metric,
-            list(self.history.keys()),
-            self.cilevel if self.cis is True else None,
-            self.bootstrap_samples,
-            None if not hasattr(self, "estimator") else self.estimator,
-            self.grids_file,
-        )
+        self.current_dates.values[0].astype(str),
+        self.current_dates.values[-1].astype(str),
+        self.freq,
+        len(self.y),
+        len(self.future_dates) if self.require_future_dates else "NA",
+        list(self.current_xreg.keys()),
+        self.integration,
+        self.test_length,
+        self.validation_length,
+        self.validation_metric,
+        list(self.history.keys()),
+        self.cilevel if self.cis is True else None,
+        None if not hasattr(self, "estimator") else self.estimator,
+        self.grids_file,
+    )
 
     def _split_data(self, X, y, test_length, tune):
         X_train, X_test, y_train, y_test = train_test_split(
@@ -366,8 +360,9 @@ class Forecaster:
             fcst = self.history[call_me]['Forecast']
             test_preds = self.history[call_me]['TestSetPredictions']
             test_actuals = self.history[call_me]['TestSetActuals']
-            test_resids = np.abs([p - a for p, a in zip(test_preds,test_actuals)])
-            ci_range = np.percentile(test_resids, 100 * self.cilevel)
+            test_resids = np.array([p - a for p, a in zip(test_preds,test_actuals)])
+            #test_resids = correct_residuals(test_resids)
+            ci_range = np.percentile(np.abs(test_resids), 100 * self.cilevel)
             self._set_cis(
                 "UpperCI",
                 "LowerCI",
@@ -1586,7 +1581,7 @@ class Forecaster:
             determine_best_by
             if (weights is None) & ((models[:4] == "top_") | (how == "weighted"))
             else None
-            if how != "weighted"
+            if how != "weighted" or len(weights) > 0
             else determine_best_by
         )
         minmax = (
@@ -1620,7 +1615,7 @@ class Forecaster:
                 descriptive_assert(
                     len(weights) == len(models),
                     ForecastError,
-                    "Must pass as many weights as models.",
+                    f"Must pass as many weights as models. Got {len(weights)} weights and {len(models)} models."
                 )
                 descriptive_assert(
                     not isinstance(weights, str),
@@ -1865,6 +1860,11 @@ class Forecaster:
 
         >>> f.diff() # differences y once
         """
+        warnings.warn(
+            "The Forecaster.diff() method will be removed in a future version of scalecast. "
+            "All differencing will be handled by the SeriesTransformer object only.", 
+            FutureWarning,
+        )
         if self.integration == 1:
             return
 
@@ -1893,6 +1893,11 @@ class Forecaster:
 
         >>> f.integrate() # differences y once if it is not stationarity
         """
+        warnings.warn(
+            "The Forecaster.integrate() method will be removed in a future version of scalecast. "
+            "All differencing will be handled by the SeriesTransformer object only.", 
+            FutureWarning,
+        )
         _check_train_only_arg(self,train_only)
         if self.integration == 1:
             return
@@ -1980,12 +1985,13 @@ class Forecaster:
             ValueError,
             "Each date supplied must be unique.",
         )
-        df[date_col] = pd.to_datetime(df[date_col]).to_list()
-        df = df.loc[df[date_col] >= self.current_dates.values[0]]
-        df = pd.get_dummies(df, drop_first=drop_first)
-        current_df = df.loc[df[date_col].isin(self.current_dates)]
+        df_copy = df.copy()
+        df_copy[date_col] = pd.to_datetime(df_copy[date_col])
+        df_copy = df_copy.loc[df_copy[date_col] >= self.current_dates.values[0]]
+        df_copy = pd.get_dummies(df_copy, drop_first=drop_first)
+        current_df = df_copy.loc[df_copy[date_col].isin(self.current_dates)]
         if self.require_future_dates:
-            future_df = df.loc[df[date_col] > self.current_dates.values[-1]]
+            future_df = df_copy.loc[df_copy[date_col] > self.current_dates.values[-1]]
             descriptive_assert(
                 future_df.shape[0] > 0,
                 ForecastError,
@@ -2020,7 +2026,7 @@ class Forecaster:
 
         for x, v in self.future_xreg.items():
             self.future_xreg[x] = v[: len(self.future_dates)]
-            if not len(v) == len(self.future_dates):
+            if not len(v) == len(self.future_dates) and not x.startswith('AR'):
                 warnings.warn(
                     f"{x} is not the correct length in the future_dates attribute and this can cause errors when forecasting."
                     f" Its length is {len(v)} and future_dates length is {len(self.future_dates)}.",
@@ -2947,24 +2953,13 @@ class Forecaster:
         )
         self.cilevel = n
 
-    def set_bootstrap_samples(self, n):
-        """ Sets the number of bootstrap samples to set confidence intervals for each model (100 default).
-
-        Args:
-            n (int): Greater than or equal to 30.
-                30 because you need around there to satisfy central limit theorem.
-                The lower this number, the faster the performance, but the less confident in the resulting intervals you should be.
-
-        Returns:
-            None
-
-        >>> f.set_bootstrap_samples(1000) # next forecast will get confidence intervals with 1,000 bootstrap sample
-        """
-        descriptive_assert(n >= 30, ValueError, "n must be greater than or equal to 30.")
-        self.bootstrap_samples = n
-
     def adf_test(
-        self, critical_pval=0.05, full_res=True, train_only=False, **kwargs
+        self, 
+        critical_pval=0.05, 
+        full_res=True, 
+        train_only=False, 
+        diffy=False,
+        **kwargs
     ):
         """ Tests the stationarity of the y series using augmented dickey fuller.
         Ports from statsmodels: https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html.
@@ -2978,6 +2973,10 @@ class Forecaster:
                 If False, returns a bool that matches whether the test indicates stationarity.
             train_only (bool): Default False.
                 If True, will exclude the test set from the test (to avoid leakage).
+            diffy (bool or int): One of {True,False,0,1}. Default False.
+                Whether to difference the data before passing the values to the function.
+                If False or 0, does not difference.
+                If True or 1, differences 1 time.
             **kwargs: Passed to the `adfuller()` function from statsmodels. See
                 https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html.
 
@@ -2988,10 +2987,13 @@ class Forecaster:
         >>> stat, pval, _, _, _, _ = f.adf_test(full_res=True)
         """
         _check_train_only_arg(self,train_only)
+        y = self._diffy(diffy)
         res = adfuller(
-            self.y.dropna()
-            if not train_only
-            else self.y.dropna().values[: -self.test_length],
+            (
+                self.y.dropna()
+                if not train_only
+                else self.y.dropna().values[: -self.test_length]
+            ),
             **kwargs,
         )
         return res if full_res else True if res[1] < critical_pval else False
@@ -3729,10 +3731,10 @@ class Forecaster:
             raise
         except:
             raise ForecastError(
-                f"tried to load a grid called {self.estimator} from {self.grids_file}.py, "
+                f"Tried to load a grid called {self.estimator} from {self.grids_file}.py, "
                 "but either the file could not be found in the current directory, "
                 "there is no grid with that name, or the dictionary values are not list-like. "
-                "try ingest_grid() with a dictionary grid passed manually."
+                "Try ingest_grid() with a dictionary grid passed manually."
             )
         grid = expand_grid(grid)
         self.grid = grid
@@ -3841,7 +3843,7 @@ class Forecaster:
                     metrics.append(
                         getattr(self, f"_forecast_{self.estimator}")(tune=True, **hp)
                     )
-            except TypeError:
+            except (TypeError,ForecastError):
                 raise
             except Exception as e:
                 #raise # good to uncomment when debugging
@@ -4007,7 +4009,8 @@ class Forecaster:
             ]
         else:
             warnings.warn(
-                f"None of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model",
+                f"None of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model."
+                " See the errors in warnings.log."
                 category=Warning,
             )
             self.validation_metric_value = np.nan
@@ -4515,6 +4518,8 @@ class Forecaster:
                 If True, will always plot level forecasts.
                 If False, will plot the forecasts at whatever level they were called on.
                 If False and there are a mix of models passed with different integrations, will default to True.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
             ci (bool): Default False.
                 Whether to display the confidence intervals.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
@@ -4544,6 +4549,13 @@ class Forecaster:
             plt.xlabel("Date")
             plt.ylabel("Values")
             return ax
+
+        if level is True:
+            warnings.warn(
+                'The level argument will be removed from a future version of scalcast. '
+                'All transformations will be handled by the SeriesTransformer object.',
+                category = FutureWarning,
+            )
 
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -4634,6 +4646,8 @@ class Forecaster:
                 If True, always plots level forecasts.
                 If False, will plot the forecasts at whatever level they were called on.
                 If False and there are a mix of models passed with different integrations, will default to True.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
             ci (bool): Default False.
                 Whether to display the confidence intervals.
                 Default is 100 boostrapped samples and a 95% confidence interval.
@@ -4656,6 +4670,14 @@ class Forecaster:
         )
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
+
+        if level is True:
+            warnings.warn(
+                'The level argument will be removed from a future version of scalcast. '
+                'All transformations will be handled by the SeriesTransformer object.',
+                category = FutureWarning,
+            )
+
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -4806,6 +4828,8 @@ class Forecaster:
                 If True, always plots level forecasts.
                 If False, plots the forecasts at whatever level they were called on.
                 If False and there are a mix of models passed with different integrations, defaults to True.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
 
@@ -4819,6 +4843,14 @@ class Forecaster:
         """
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
+
+        if level is True:
+            warnings.warn(
+                'The level argument will be removed from a future version of scalcast. '
+                'All transformations will be handled by the SeriesTransformer object.',
+                category = FutureWarning,
+            )
+
         models = self._parse_models(models, order_by)
         integration = set(
             [d["Integration"] for m, d in self.history.items() if m in models]
@@ -4982,8 +5014,6 @@ class Forecaster:
         self,
         dfs=[
             "model_summaries",
-            "all_fcsts",
-            "test_set_predictions",
             "lvl_test_set_predictions",
             "lvl_fcsts",
         ],
@@ -4995,18 +5025,17 @@ class Forecaster:
         out_path="./",
         excel_name="results.xlsx",
     ) -> Union[Dict[str, pd.DataFrame], pd.DataFrame]:
-        """ Exports 1-all of 5 pandas dataframes. Can write to excel with each dataframe on a separate sheet.
+        """ Exports 1-all of 5 pandas DataFrames. Can write to excel with each DataFrame on a separate sheet.
         Will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
         Args:
             dfs (list-like or str): Default 
-                ['all_fcsts', 'model_summaries', 'best_fcst', 'test_set_predictions', 'lvl_test_set_predictions', 'lvl_fcsts'].
+                ['model_summaries', 'lvl_test_set_predictions', 'lvl_fcsts'].
                 A list or name of the specific dataframe(s) you want returned and/or written to excel.
-                Must be one of or multiple of the elements in default.
-                Exporting test_set_predictions at any level will only work if all exported models were tested using the same test length.
-                In a future distribtion, 'lvl_fcsts' and 'lvl_test_set_predictions' will be removed and the distinction between level/not level
+                Must be one of or multiple of the elements in default and can also include "all_fcsts" and "test_set_predictions", but those
+                will be removed in a future version of scalecast. The distinction between level/not level
                 will no longer exist within the Forecaster object. All transforming and reverting will be handled with the SeriesTransformer object.
-                See https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html.
+                Exporting test set predictions only works if all exported models were tested using the same test length.
             models (list-like or str): Default 'all'.
                 The models to write information for.
                 Can start with "top_" and the metric specified in `determine_best_by` will be used to order the models appropriately.
@@ -5037,15 +5066,19 @@ class Forecaster:
         descriptive_assert(
             isinstance(cis, bool),
             "ValueError",
-            f"argument passed to cis must be a bool type, not {type(cis)}",
+            f"Argument passed to cis must be a bool type, got {type(cis)}.",
         )
         if isinstance(dfs, str):
             dfs = [dfs]
         else:
             dfs = list(dfs)
         if len(dfs) == 0:
-            raise ValueError("no dfs passed to dfs")
-        determine_best_by = determine_best_by if best_model == "auto" else None
+            raise ValueError("No values passed to the dfs argument.")
+        determine_best_by = (
+            None if self.test_length == 0 and determine_best_by == 'TestSetRMSE' # you didn't test models and didn't change the default
+            else determine_best_by if best_model == "auto" 
+            else None
+        )
         models = self._parse_models(models, determine_best_by)
         _dfs_ = [
             "all_fcsts",
@@ -5123,6 +5156,11 @@ class Forecaster:
                 )
             output["model_summaries"] = model_summaries
         if "all_fcsts" in dfs:
+            warnings.warn(
+                'The "all_fcsts" DataFrame will be removed in a future version of scalecast.'
+                ' To extract point forecasts for evaluated models, use "lvl_fcsts".',
+                category = FutureWarning,
+            )
             all_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
             for m in self.history.keys():
                 all_fcsts[m] = self.history[m]["Forecast"]
@@ -5134,6 +5172,11 @@ class Forecaster:
                         _warn_about_not_finding_cis(m)
             output["all_fcsts"] = all_fcsts
         if "test_set_predictions" in dfs:
+            warnings.warn(
+                'The "test_set_predictions" DataFrame will be removed in a future version of scalecast.'
+                ' To extract test-set predictions for evaluated models, use "lvl_test_set_predictions".',
+                category = FutureWarning,
+            )
             if self.test_length == 0:
                 output["test_set_predictions"] = pd.DataFrame()
             else:
@@ -5380,7 +5423,9 @@ class Forecaster:
             model (str):
                 The model nickname.
             level (bool): Default False.
-                Whether to extract level fitted values
+                Whether to extract level fitted values.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
 
         Returns:
             (DataFrame): A dataframe with dates, fitted values, actuals, and residuals.
@@ -5552,6 +5597,15 @@ def descriptive_assert(statement, ErrorType, error_message):
         assert statement
     except AssertionError:
         raise ErrorType(error_message)
+
+def correct_residuals(residuals):
+    """ corrects autocorrelated residuals using durbin watson test
+    """
+    from statsmodels.stats.stattools import durbin_watson
+    durbin_watson_stat = durbin_watson(residuals)
+    if durbin_watson_stat < 2:
+        residuals = residuals / np.sqrt(1 - durbin_watson_stat**2)
+    return residuals
 
 def _return_na_if_len_zero(y,pred,func):
     return np.nan if len(pred) == 0 else func(y,pred)

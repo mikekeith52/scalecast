@@ -91,7 +91,7 @@ class vecm:
             )
         return self.mod.predict(steps=X.shape[0],exog_fc=exog)
 
-def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=True,**kwargs):
+def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=False,**kwargs):
     """ Adds a forecast to a `Forecaster` object using the auto_arima function from pmdarima.
     This function attempts to find the optimal arima order by minimizing information criteria
     on the training slice of data only.
@@ -100,7 +100,7 @@ def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=True,**kwargs):
         f (Forecaster): The object to add the forecast to.
         call_me (str): Default 'auto_arima'. The name of the resulting model.
         Xvars (str or list-like): Optional. Xvars to add to the model.
-        train_only (bool): Default True. Whether to minimize the IC over the training set only.
+        train_only (bool): Default False. Whether to minimize the IC over the training set only.
         **kwargs: Passed to the auto_arima function from pmdarima.
             See https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html.
 

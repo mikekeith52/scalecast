@@ -15,7 +15,6 @@ import importlib
 import copy
 
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-#logging.captureWarnings(True)
 
 from scalecast.Forecaster import (
     mape,
@@ -111,7 +110,6 @@ class MVForecaster:
         self.validation_metric = "rmse"
         self.cis = cis
         self.cilevel = 0.95
-        self.bootstrap_samples = 100
         self.grids_file = 'MVGrids'
         self.freq = fs[0].freq
         self.n_series = len(fs)
@@ -212,31 +210,29 @@ class MVForecaster:
     ValidationMetric={}
     ForecastsEvaluated={}
     CILevel={}
-    BootstrapSamples={}
     CurrentEstimator={}
     OptimizeOn={}
     GridsFile={}
 )""".format(
-            self.current_dates.values[0].astype(str),
-            self.current_dates.values[-1].astype(str),
-            self.freq,
-            len(self.current_dates),
-            self.n_series,
-            [f"series{i+1}" for i in range(self.n_series)]
-            if not hasattr(self, "name_series_map")
-            else list(self.name_series_map.keys()),
-            len(self.future_dates),
-            list(self.current_xreg.keys()),
-            self.test_length,
-            self.validation_length,
-            self.validation_metric,
-            list(self.history.keys()),
-            self.cilevel if self.cis is True else None,
-            self.bootstrap_samples,
-            self.estimator,
-            self.optimize_on,
-            self.grids_file,
-        )
+        self.current_dates.values[0].astype(str),
+        self.current_dates.values[-1].astype(str),
+        self.freq,
+        len(self.current_dates),
+        self.n_series,
+        [f"series{i+1}" for i in range(self.n_series)]
+        if not hasattr(self, "name_series_map")
+        else list(self.name_series_map.keys()),
+        len(self.future_dates),
+        list(self.current_xreg.keys()),
+        self.test_length,
+        self.validation_length,
+        self.validation_metric,
+        list(self.history.keys()),
+        self.cilevel if self.cis is True else None,
+        self.estimator,
+        self.optimize_on,
+        self.grids_file,
+    )
 
     def __copy__(self):
         obj = type(self).__new__(self.__class__)
@@ -1372,8 +1368,9 @@ class MVForecaster:
             fcst = self.history[call_me]['Forecast']
             test_preds = self.history[call_me]['TestSetPredictions']
             test_actuals = self.history[call_me]['TestSetActuals']
-            test_resids = {k:np.abs(np.array(p) - np.array(test_actuals[k])) for k, p in test_preds.items()}
-            ci_range = {k:np.percentile(r, 100 * self.cilevel) for k,r in test_resids.items()}
+            test_resids = {k:np.array(p) - np.array(test_actuals[k]) for k, p in test_preds.items()}
+            #test_resids = {k:correct_residuals(r) for k, r in test_resids.items()}
+            ci_range = {k:np.percentile(np.abs(r), 100 * self.cilevel) for k,r in test_resids.items()}
             self._set_cis(
                 "UpperCI",
                 "LowerCI",
@@ -1574,6 +1571,8 @@ class MVForecaster:
                 If True, will always plot level forecasts.
                 If False, will plot the forecasts at whatever level they were called on.
                 If False and there are a mix of models passed with different integrations, will default to True.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
             ci (bool): Default False.
                 Whether to display the confidence intervals.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
@@ -1588,6 +1587,13 @@ class MVForecaster:
         """
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
+
+        if level is True:
+            warnings.warn(
+                'The level argument will be removed from a future version of scalecast. '
+                'All transformations will be handled by the SeriesTransformer object.',
+                category = FutureWarning,
+            )
 
         series, labels = self._parse_series(series)
         models = self._parse_models(models, put_best_on_top)
@@ -1675,6 +1681,8 @@ class MVForecaster:
                 If True, will always plot level forecasts.
                 If False, will plot the forecasts at whatever level they were called on.
                 If False and there are a mix of models passed with different integrations, will default to True.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
             ci (bool): Default False.
                 Whether to display the confidence intervals.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
@@ -1695,6 +1703,13 @@ class MVForecaster:
 
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
+
+        if level is True:
+            warnings.warn(
+                'The level argument will be removed from a future version of scalecast. '
+                'All transformations will be handled by the SeriesTransformer object.',
+                category = FutureWarning,
+            )
         
         series, labels = self._parse_series(series)
         models = self._parse_models(models, put_best_on_top)
@@ -1781,6 +1796,8 @@ class MVForecaster:
             level (bool): Default False.
                 If True, will always plot level forecasts.
                 If False, will plot the forecasts at whatever level they were called on.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
 
@@ -1795,6 +1812,14 @@ class MVForecaster:
         models = self._parse_models(models, False)
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
+
+        if level is True:
+            warnings.warn(
+                'The level argument will be removed from a future version of scalecast. '
+                'All transformations will be handled by the SeriesTransformer object.',
+                category = FutureWarning,
+            )
+
         k = 0
         for i, s in enumerate(series):
             act = (
@@ -1830,8 +1855,6 @@ class MVForecaster:
         self,
         dfs=[
             "model_summaries",
-            "all_fcsts",
-            "test_set_predictions",
             "lvl_test_set_predictions",
             "lvl_fcsts",
         ],
@@ -1847,9 +1870,12 @@ class MVForecaster:
 
         Args:
             dfs (list-like or str): Default 
-                ['all_fcsts','model_summaries','test_set_predictions','lvl_test_set_predictions','lvl_fcsts'].
+                ['model_summaries', 'lvl_test_set_predictions', 'lvl_fcsts'].
                 A list or name of the specific dataframe(s) you want returned and/or written to excel.
-                Must be one of or multiple of default.
+                Must be one of or multiple of the elements in default and can also include "all_fcsts" and "test_set_predictions", but those
+                will be removed in a future version of scalecast. The distinction between level/not level
+                will no longer exist within the Forecaster object. All transforming and reverting will be handled with the SeriesTransformer object.
+                Exporting test set predictions only works if all exported models were tested using the same test length.
             models (list-like or str): Default 'all'.
                The forecasted models to plot.
                Name of the model, 'all', or list-like of model names.
@@ -1992,6 +2018,11 @@ class MVForecaster:
                     )
             output["model_summaries"] = model_summaries
         if "all_fcsts" in dfs:
+            warnings.warn(
+                'The "all_fcsts" DataFrame is will be removed in a future version of scalecast.'
+                ' To extract point forecasts for evaluated models, use "lvl_fcsts".',
+                category = FutureWarning,
+            )
             df = pd.DataFrame({"DATE": self.future_dates.to_list()})
             for l, s in zip(labels, series):
                 for m in models:
@@ -2004,6 +2035,11 @@ class MVForecaster:
                             _warn_about_not_finding_cis(m)
             output["all_fcsts"] = df
         if "test_set_predictions" in dfs:
+            warnings.warn(
+                'The "test_set_predictions" DataFrame will be removed in a future version of scalecast.'
+                ' To extract test-set predictions for evaluated models, use "lvl_test_set_predictions".',
+                category = FutureWarning,
+            )
             df = pd.DataFrame(
                 {"DATE": self.current_dates.to_list()[-self.test_length :]}
             )
@@ -2089,7 +2125,11 @@ class MVForecaster:
                The series to plot.
                Name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
             level (bool): Default False.
-                Whether to export level fitted values
+                Whether to export level fitted values.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
+                This argument will be removed from a future version of scalecast as all series transformations
+                will be handled with the SeriesTransformer object.
 
         Returns:
             (DataFrame): The fitted values for all selected series and models.
@@ -2271,7 +2311,11 @@ class MVForecaster:
 
         corr = df.corr()
         if disp == "matrix":
-            warnings.warn(f"{kwargs} ignored.",category=Warning)
+            if len(kwargs) > 0:
+                warnings.warn(
+                    f"Keyword arguments: {kwargs} ignored when disp == 'matrix'.",
+                    category=Warning,
+                )
             return corr
 
         elif disp == "heatmap":

@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.1] - 2023-02-08
+### Added
+- Added `FutureWarning`s to functions that touch the `Forecaster.diff()` method. This method will be removed soon as the `SeriesTransformer` object is a better alternative that does the same thing.
+- Added `diffy` argument to `Forecaster.adf_test()`.
+- Added a `correct_residuals()` function that corrects residuals for autocorrelation before building confidence intervals. 
+### Changed
+- The `train_only` default argument in `auxmodels.auto_arima()` changed to False.
+- Changed how default arguments are parsed in `Forecaster.export()`.
+- Refactored code to avoid a `SettingWithCopyWarning` from pandas in `Forecaster.ingest_Xvars_df()`.
+### Fixed
+- Removed the `print_attr` argument from `notebook.results_vis()` that is no longer accepted in `Forecaster.diff()`.
+- Removed a warning from `Forecaster.ingest_Xvars_df()` that shouldn't have been raised.
+
 ## [0.17.0] - 2023-02-06
 ### Added
 - Added the `cis` argument to `Forecaster__init__()` and `MVForecaster.__init__()`.
