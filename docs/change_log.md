@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.2] - 2023-02-09
+### Added
+### Changed
+- Explicitly specify `dtype = float` for parts of code that raise a warning when this is not the case.
+- Logging a warning from `SeriesTransformer.DetrendTranform()` instead of raising it.
+### Fixed
+
 ## [0.17.1] - 2023-02-08
 ### Added
 - Added `FutureWarning`s to functions that touch the `Forecaster.diff()` method. This method will be removed soon as the `SeriesTransformer` object is a better alternative that does the same thing.

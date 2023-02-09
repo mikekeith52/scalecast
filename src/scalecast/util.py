@@ -584,6 +584,13 @@ def find_optimal_transformation(
         )
         return pipeline.fit_predict(f)
 
+    if f.test_length == 0:
+        raise Forecaster.ForecastError(
+            'find_optimal_transformation() only works if a test length' 
+            ' above 0 is specified in the Forecaster object.'
+            ' Try calling the set_test_length(...) method.'
+        )
+
     f = f.deepcopy()
     f.drop_all_Xvars()
     f.history = {}

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import warnings
+import logging
 from scalecast.Forecaster import (
     Forecaster,
     ForecastError,
@@ -95,7 +96,7 @@ class SeriesTransformer:
                 "LevelTSUpperCI",
             ):
                 try:
-                    h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
+                    h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).fillna(method='ffill').to_list()
                 except KeyError:
                     pass
             h['LevelY'] = self.f.levely
@@ -126,7 +127,7 @@ class SeriesTransformer:
                     "FittedVals",
                 ):
                     try:
-                        h[k] = pd.Series(revert_func(h[k], **kwargs)).fillna(method='ffill').to_list()
+                        h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).fillna(method='ffill').to_list()
                     except KeyError:
                         pass
 
@@ -243,7 +244,9 @@ class SeriesTransformer:
         try: 
             self.f.typ_set(); 
         except: 
-            warnings.warn('Type seting the Forecaster object did not work in the trend transform, continuing as is.')
+            logging.warning(
+                'Forecaster.typ_set() did not work after the detrend transformation, continuing as is.'
+            )
 
         self.detrend_model = ols_mod
         self.detrend_fvs = fvs
