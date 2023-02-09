@@ -1895,7 +1895,8 @@ class Forecaster:
         """
         warnings.warn(
             "The Forecaster.integrate() method will be removed in a future version of scalecast. "
-            "All differencing will be handled by the SeriesTransformer object only.", 
+            "All differencing will be handled by the SeriesTransformer object only. "
+            "The util.find_statistical_transformation() function extends the current functionality of Forecaster.integrate().", 
             FutureWarning,
         )
         _check_train_only_arg(self,train_only)
@@ -4010,7 +4011,7 @@ class Forecaster:
         else:
             warnings.warn(
                 f"None of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model."
-                " See the errors in warnings.log."
+                " See the errors in warnings.log.",
                 category=Warning,
             )
             self.validation_metric_value = np.nan
@@ -4267,7 +4268,6 @@ class Forecaster:
             else:
                 self.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
             try:
-
                 self.auto_forecast(
                     dynamic_testing=dynamic_testing,
                     call_me=call_me,
@@ -4277,7 +4277,7 @@ class Forecaster:
                     raise
                 elif error == 'warn':
                     warnings.warn(
-                        f"{m} Model could not be evaluated. "
+                        f"{m} could not be evaluated. "
                         f"Here's the error: {e}.",
                         category=Warning,
                     )
@@ -4285,7 +4285,7 @@ class Forecaster:
                 elif error == 'ignore':
                     continue
                 else:
-                    raise ValueError(f'Value passed to error arg not recognized: {error}')
+                    raise ValueError(f'Value passed to error arg not recognized: {error}.')
 
             if summary_stats:
                 self.save_summary_stats()
