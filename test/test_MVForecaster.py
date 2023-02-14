@@ -1,0 +1,90 @@
+from src.scalecast.Forecaster import Forecaster
+from src.scalecast.MVForecaster import MVForecaster
+from src.scalecast.util import break_mv_forecaster, find_optimal_lag_order, find_optimal_coint_rank
+from src.scalecast.auxmodels import vecm
+import pandas_datareader as pdr
+import matplotlib.pyplot as plt
+
+def build_MVForecaster(test_length=24):
+    s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-10-01')
+    s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-10-01')
+    s3 = pdr.get_data_fred('SAHMREALTIME',start='2000-01-01',end='2022-10-01')
+
+    f1 = Forecaster(y=s1['UTUR'],current_dates=s1.index,future_dates=24)
+    f2 = Forecaster(y=s2['UNRATE'],current_dates=s2.index,future_dates=24)
+    f3 = Forecaster(y=s3['SAHMREALTIME'],current_dates=s3.index,future_dates=24)
+
+    return MVForecaster(
+        f1,
+        f2,
+        f3,
+        test_length = test_length,
+        names=['UTUR','UNRATE','SAHMREALTIME'],
+        merge_Xvars='i'
+    )
+
+def main():
+    for tl in (0,36):
+        mvf = build_MVForecaster(test_length = tl)
+        if tl > 0:
+            mvf.eval_cis(
+                cilevel = .9,
+            )
+
+        models = ('lasso','xgboost')
+
+        mvf.corr_lags('UNRATE','UTUR',lags=5)
+        mvf.corr_lags('UNRATE','UTUR',lags=5,disp='heatmap',annot=True,vmin=-1,vmax=1)
+        plt.savefig('../../corr_lags.png')
+        plt.close()
+        mvf.add_sklearn_estimator(vecm,'vecm')
+        mvf.add_optimizer_func(lambda x: x[0]*.75+x[1]*.25,'weighted')
+        mvf.set_optimize_on('weighted')
+        find_optimal_lag_order(mvf)
+        find_optimal_coint_rank(mvf,det_order=-1,k_ar_diff=8)
+        mvf.tune_test_forecast(
+            models,
+            limit_grid_size=.2,
+            cross_validate = True,
+            rolling = True,
+            k = 2,
+            dynamic_tuning = 24,
+            error = 'raise',
+            suffix = '_cv',
+        )
+        mvf.set_estimator('vecm')
+        mvf.set_grids_file('VECMGrid')
+        mvf.cross_validate(k=2)
+        mvf.auto_forecast()
+
+        mvf.set_best_model(
+            determine_best_by = (
+                'ValidationMetricValue' if tl == 0 
+                else 'TestSetRMSE'
+            )
+        )
+
+        mvf.plot(ci=True)
+        plt.savefig(f'../../mvf_plot_{tl}.png')
+        plt.close()
+
+        if tl > 0:
+            mvf.plot_test_set(ci=True)
+            plt.savefig('../../mvf_plot_ts.png')
+            plt.close()
+
+        mvf.plot_fitted()
+        plt.savefig(f'../../mvf_fvs_{tl}.png')
+        plt.close()
+
+        mvf.export(to_excel=True,out_path='../..',excel_name=f'mv_results_{tl}.xlsx',cis=True)
+        mvf.export_fitted_vals().to_excel('../../mv_fvs.xlsx',index=False)
+
+        mvf.backtest('vecm',n_iter=3,jump_back=12)
+        mvf.export_backtest_values('vecm').to_excel('../../mv_backtest_vals.xlsx')
+        mvf.export_backtest_metrics('vecm').to_excel('../../mv_backtest_metrics.xlsx')
+
+        f1, f2, f3 = break_mv_forecaster(mvf)
+
+if __name__ == '__main__':
+    main()

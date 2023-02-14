@@ -12,13 +12,8 @@ export_model_summaries()
 
     from scalecast.Forecaster import Forecaster
     from scalecast import GridGenerator
-    from scalecast.notebook import tune_test_forecast
     from scalecast.multiseries import export_model_summaries
-    import pandas_datareader as pdr # !pip install pandas-datareader
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    sns.set(rc={"figure.figsize": (12, 8)})
+    import pandas_datareader as pdr
 
     f_dict = {}
     models = ('mlr','elasticnet','mlp')
@@ -26,13 +21,16 @@ export_model_summaries()
 
     for sym in ('UNRATE','GDP'):
       df = pdr.get_data_fred(sym, start = '2000-01-01')
-      f = Forecaster(y=df[sym],current_dates=df.index)
-      f.generate_future_dates(12) # forecast 12 periods to the future
-      f.set_test_length(12) # test models on 12 periods
-      f.set_validation_length(4) # validate on the previous 4 periods
+      f = Forecaster(
+        y=df[sym],
+        current_dates=df.index,
+        future_dates = 12,
+        test_length = .1,
+        validation_length = 12,
+      )
+      f.add_ar_terms(12)
       f.add_time_trend()
-      f.add_seasonal_regressors('quarter',raw=False,dummy=True)
-      tune_test_forecast(f,models) # adds a progress bar that is nice for notebooks
+      f.tune_test_forecast(models)
       f_dict[sym] = f
 
     model_summaries = export_model_summaries(f_dict,determine_best_by='LevelTestSetMAPE')

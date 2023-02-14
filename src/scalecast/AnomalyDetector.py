@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
+from .Forecaster import _set_ci_step
 
 
 class AnomalyDetector:
@@ -57,7 +58,9 @@ class AnomalyDetector:
         estimator,
         future_dates=None,
         cilevel=0.99,
+        samples=100,
         return_fitted_vals=False,
+        random_seed=None,
         **kwargs,
     ):
         """ Detects anomalies with one of a Forecaster object's estimators.
@@ -81,8 +84,10 @@ class AnomalyDetector:
                 to the object that we want to train the entire dataset.
             cilevel (float): Default 0.99. The confidence interval to use when
                 bootstrapping confidence intervals.
+            samples (int): Default 100. How many samples in the bootstrap to find confidence intervals.
             return_fitted_vals (bool): Default False. Whether to return a DataFrame
                 of the fitted values and confidence intervals from the fitting process.
+            random_seed (bool): Optional. Set a seed for consistent results.
             **kwargs: Passed to the Forecaster.manual_forecast() method.
 
         Returns:
@@ -111,6 +116,23 @@ class AnomalyDetector:
         >>>    dropout=(0,0,0),
         >>> )
         """
+        def _find_cis(f, samples):
+            """ bootstraps the upper and lower forecast estimates using the info stored in cilevel and bootstrap_samples
+            """
+            y = f.y.values[-len(f.fitted_values):]
+            fvs = f.fitted_values
+            resids = [fv - ac for fv, ac in zip(fvs, y[-len(fvs) :])]
+            bootstrapped_resids = np.random.choice(resids, size=samples)
+            bootstrap_mean = np.mean(bootstrapped_resids)
+            bootstrap_std = np.std(bootstrapped_resids)
+            return _set_ci_step(
+                f = f,
+                s = bootstrap_std,
+            ) + bootstrap_mean
+        
+        if random_seed is not None:
+            random.seed(random_seed)
+        
         f1 = self.f.__deepcopy__()
         call_me = estimator if "call_me" not in kwargs.keys() else kwargs["call_me"]
 
@@ -123,7 +145,10 @@ class AnomalyDetector:
         f1.manual_forecast(**kwargs)
         fvs = f1.export_fitted_vals(call_me).set_index("DATE")
         #fvs["range"] = f1.history[call_me]["CIPlusMinus"]
-        fvs["range"] = f1._find_cis(f1.y.values[-len(f1.fitted_values):], f1.fitted_values)
+        fvs["range"] = _find_cis(
+            f = f1,
+            samples = samples,
+        )
         fvs["labeled_anom"] = fvs[["Actuals", "FittedVals", "range"]].apply(
             lambda x: 1 if (x[1] > (x[0] + x[2])) | (x[1] < (x[0] - x[2])) else 0,
             axis=1,
@@ -200,7 +225,9 @@ class AnomalyDetector:
                     np.random.normal(loc=np.mean(obs), scale=np.std(obs))
                 )
                 obs.append(simmed_line[-1])
-            results[f"Iter{s}"] = simmed_line
+            df_tmp = pd.DataFrame({f"Iter{s}":simmed_line},index=results.index)
+            results = pd.concat([results,df_tmp],axis=1)
+            #results[f"Iter{s}"] = simmed_line
         results2 = results.copy()
         results2["sims_mean"] = results.drop("Actuals", axis=1).mean(axis=1)
         results2["sims_std"] = results.drop("Actuals", axis=1).std(axis=1)
@@ -251,8 +278,8 @@ class AnomalyDetector:
         >>> detector = AnomalyDetector(f)
         >>> detector.MonteCarloDetect_sliding(60,30)
         """
-        raw_anom = pd.Series()
-        labeled_anom = pd.Series()
+        raw_anom = pd.Series(dtype=float)
+        labeled_anom = pd.Series(dtype=float)
         y = []
         n = len(self.f.y)
         y = self.f.y.to_list()[historical_window:]
@@ -479,9 +506,14 @@ class AnomalyDetector:
         ax.legend()
         return ax
 
-    def plot_mc_results(self):
+    def plot_mc_results(self,ax=None,figsize=(12,6)):
         """ Plots the results from a monte-carlo detector: the series' original values
         and the simulated lines.
+
+        Args:
+            ax (Axis): Optional. An existing axis to display the figure on.
+            figsize (tuple): Default (12,6). The size of the resulting figure.
+                Ignored if axis is not None.
 
         Returns:
             (Axis): The figure's axis.
@@ -502,7 +534,8 @@ class AnomalyDetector:
         >>> ax = f.plot_mc_results()
         >>> plt.show()
         """
-        _, ax = plt.subplots()
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
         results = self.mc_results
         sns.lineplot(x="Date", y="Actuals", data=results, label="actuals", ax=ax)
         for c in results.iloc[:, 2:]:

@@ -1,5 +1,5 @@
-from scalecast.Forecaster import Forecaster
-from scalecast.SeriesTransformer import SeriesTransformer
+from .Forecaster import Forecaster
+from .SeriesTransformer import SeriesTransformer
 from typing import List, Tuple, Union
 import typing
 
@@ -34,7 +34,7 @@ class Transformer:
             if isinstance(transformer,str):
                 transformers[i] = (transformer,)
             elif not isinstance(transformer,tuple):
-                raise TypeError(f'expected elements of transformer list to be tuple type, got {type(transformer)}')
+                raise TypeError(f'Expected elements of transformer list to be tuple type, got {type(transformer)}.')
 
         self.transformers = transformers
 
@@ -381,9 +381,9 @@ class MVPipeline:
         >>> )
         >>> f1, f2, f3 = pipeline.fit_predict(f1,f2,f3)
         """
-        from scalecast.MVForecaster import MVForecaster
-        from scalecast.util import break_mv_forecaster
-        from scalecast.multiseries import keep_smallest_first_date
+        from .MVForecaster import MVForecaster
+        from .util import break_mv_forecaster
+        from .multiseries import keep_smallest_first_date
 
         if 'not_same_len_action' not in kwargs:
             keep_smallest_first_date(*fs)
@@ -419,5 +419,3 @@ class MVPipeline:
                     i += 1
                 func_list(mvf,**kwargs)
         return tuple(fs) if i == 2 else mvf
-
-

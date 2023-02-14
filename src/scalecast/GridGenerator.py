@@ -1,255 +1,80 @@
-import typing
-
-example_grids = """
-arima = {
-    'order':[(2,1,0),(0,1,2),(1,1,1)],
-    'seasonal_order':[(0,1,1,12),(2,1,0,12)],
-    'trend':['n','c','t','ct'],
-}
-
-elasticnet = {
-    'alpha':[i/10 for i in range(1,21)],
-    'l1_ratio':[0,0.25,0.5,0.75,1],
-    'normalizer':['scale','minmax'],
-}
-
-gbt = {
-    'max_depth':[2,3],
-    'max_features':['sqrt',None],
-}
-
-hwes = {
-    'trend':['add','mul'],
-    'seasonal':['add','mul'],
-}
-
-knn = {
-    'n_neighbors':range(2,101),
-}
-
-lightgbm = {
-    'n_estimators':[150,200,250],
-    'boosting_type':['gbdt','dart','goss'],
-    'max_depth':[1,2,3],
-    'learning_rate':[0.001,0.01,0.1],
-}
-
-lasso = {
-    'alpha':[i/100 for i in range(1,101)],
-}
-
-mlp = {
-    'activation':['relu','tanh'],
-    'hidden_layer_sizes':[(25,),(25,25,)],
-    'solver':['lbfgs','adam'],
-    'normalizer':['minmax','scale'],
-}
-
-mlr = {
-    'normalizer':['scale','minmax',None],
-}
-
-prophet = {
-    'n_changepoints':range(5),
-}
-
-rf = {
-    'max_depth':[2,5],
-    'n_estimators':[100,500],
-    'max_features':['auto','sqrt'],
-    'max_samples':[.75,.9,1],
-}
-
-ridge = {
-    'alpha':[i/100 for i in range(1,101)],
-}
-
-silverkite = {
-    'changepoints':range(5),
-}
-
-sgd={
-    'penalty':['l2','l1','elasticnet'],
-    'l1_ratio':[0,0.15,0.5,0.85,1],
-    'learning_rate':['invscaling','constant','optimal','adaptive'],
-}
-
-svr={
-    'kernel':['linear'],
-    'C':[.5,1,2,3],
-    'epsilon':[0.01,0.1,0.5],
-}
-
-theta = {
-    'theta':[0.5,1,1.5,2],
-}
-
-xgboost = {
-     'n_estimators':[150,200,250],
-     'scale_pos_weight':[5,10],
-     'learning_rate':[0.1,0.2],
-     'gamma':[0,3,5],
-     'subsample':[0.8,0.9],
-}
-"""
-
-mv_grids = """
-elasticnet = {
-    'alpha':[i/10 for i in range(1,21)],
-    'l1_ratio':[0,0.25,0.5,0.75,1],
-    'normalizer':['scale','minmax',None],
-    'lags':[1,3,6],
-}
-
-gbt = {
-    'max_depth':[2,3],
-    'max_features':['sqrt',None],
-    'lags':[1,3,6],
-}
-
-knn = {
-    'n_neighbors':range(2,101),
-    'lags':[1,3,6],
-}
-
-lasso = {
-    'alpha':[i/100 for i in range(1,101)],
-    'lags':[1,3,6],
-}
-
-lightgbm = {
-    'n_estimators':[150,200,250],
-    'boosting_type':['gbdt','dart','goss'],
-    'max_depth':[1,2,3],
-    'learning_rate':[0.001,0.01,0.1],
-    'lags':[1,3,6],
-}
-
-mlp = {
-    'activation':['relu','tanh'],
-    'hidden_layer_sizes':[(25,),(25,25,)],
-    'solver':['lbfgs','adam'],
-    'normalizer':['minmax','scale'],
-    'lags':[1,3,6],
-}
-
-mlr = {
-    'normalizer':['scale','minmax',None],
-    'lags':[1,3,6],
-}
-
-rf = {
-    'max_depth':[2,5],
-    'n_estimators':[100,500],
-    'max_features':['auto','sqrt'],
-    'max_samples':[.75,.9,1],
-    'lags':[1,3,6],
-}
-
-ridge = {
-    'alpha':[i/100 for i in range(1,101)],
-    'lags':[1,3,6],
-}
-
-sgd={
-    'penalty':['l2','l1','elasticnet'],
-    'l1_ratio':[0,0.15,0.5,0.85,1],
-    'learning_rate':['invscaling','constant','optimal','adaptive'],
-    'lags':[1,3,6],
-}
-
-svr={
-    'kernel':['linear'],
-    'C':[.5,1,2,3],
-    'epsilon':[0.01,0.1,0.5],
-    'lags':[1,3,6],
-}
-
-vecm = {
-    'lags':[0],
-    'normalizer':[None],
-    'k_ar_diff':range(1,13),
-    'deterministic':["n","co","lo","li","cili","colo"],
-    'seasons':[0,12],
-}
-
-xgboost = {
-    'n_estimators':[150,200,250],
-    'scale_pos_weight':[5,10],
-    'learning_rate':[0.1,0.2],
-    'gamma':[0,3,5],
-    'subsample':[0.8,0.9],
-    'lags':[1,3,6],
-}
-"""
-
-empty_grids = """
-arima = {}
-elasticnet = {}
-gbt = {}
-hwes = {}
-knn = {}
-lightgbm = {}
-mlp = {}
-mlr = {}
-prophet = {}
-rf = {}
-silverkite = {}
-svr={}
-theta = {}
-vecm = {}
-xgboost = {}
-"""
-
 import os
 
+def get_grids(grid='example',out_name='Grids.py',overwrite=False):
+    """ Saves a grids file to the working directory.
+    See all available grids files here: https://github.com/mikekeith52/scalecast/tree/main/src/scalecast/grids.
+    Make your own grids file and open a pull request on GitHub to add it to the library.
 
-def get_example_grids(overwrite=False):
+    Args:
+        grid (str): Default 'example'. The name of the grids file within scalecast.
+            Do not add the '.py' extension.
+        out_name (str): Default 'Grids.py'. The name of the grids file that will be
+            saved to the user's working directory.
+        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
+
+    Returns:
+        None
+    """
+    output_file = os.path.join(os.getcwd(), out_name)
+    if not overwrite and os.path.exists(output_file):
+        return
+
+    grids_dir = os.path.join(os.path.dirname(__file__), "grids")
+
+    input_file = os.path.join(grids_dir, f'{grid}.py')
+
+    with open(input_file, "r") as fl:
+        contents = fl.read()
+
+    # Write the contents to a file in the user's working directory
+    with open(out_name, "w") as fl:
+        fl.write(contents)
+
+def get_example_grids(out_name='Grids.py',overwrite=False):
     """ Saves example grids to working directory as Grids.py (does not overwrite by default).
 
     Args:
-        overwrite (bool): Whether to overwrite a Grids.py file if one is already in the working directory.
+        out_name (str): Default 'Grids.py'. The name of the file to write the grids to.
+        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
 
     Returns:
         None
     """
-    if "Grids.py" in os.listdir("./"):
-        if not overwrite:
-            return
-
-    with open("Grids.py", "w") as fl:
-        fl.write(example_grids)
+    get_grids(
+        out_name = out_name,
+        overwrite=overwrite,
+    )
 
 
-def get_mv_grids(overwrite=False):
+def get_mv_grids(out_name='MVGrids.py',overwrite=False):
     """ Saves example grids to working directory as MVGrids.py (does not overwrite by default).
 
     Args:
-        overwrite (bool): Whether to overwrite a MVGrids.py file if one is already in the working directory.
+        out_name (str): Default 'MVGrids.py'. The name of the file to write the grids to.
+        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
 
     Returns:
         None
     """
-    if "MVGrids.py" in os.listdir("./"):
-        if not overwrite:
-            return
+    get_grids(
+        grid = 'mv',
+        out_name = out_name,
+        overwrite=overwrite,
+    )
 
-    with open("MVGrids.py", "w") as fl:
-        fl.write(mv_grids)
 
-
-def get_empty_grids(overwrite=False):
+def get_empty_grids(out_name='Grids.py',overwrite=False):
     """ Saves empty grids to working directory as Grids.py (does not overwrite by default).
 
     Args:
-        overwrite (bool): Whether to overwrite a Grids.py file if one is already in the working directory.
+        out_name (str): Default 'Grids.py'. The name of the file to write the grids to.
+        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
 
     Returns:
         None
     """
-    if "Grids.py" in os.listdir("./"):
-        if not overwrite:
-            return
-
-    with open("Grids.py", "w") as fl:
-        fl.write(empty_grids)
+    get_grids(
+        grid = 'empty',
+        out_name = out_name,
+        overwrite=overwrite,
+    )

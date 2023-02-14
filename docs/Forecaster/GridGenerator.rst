@@ -3,6 +3,14 @@ GridGenerator
 
 To automatically generate grids to tune models with.
 
+get_grids()
+--------------------------------------------------
+.. automodule:: src.scalecast.GridGenerator.get_grids
+    :members:
+
+>>> from scalecast import GridGenerator
+>>> GridGenerator.get_grids() # writes a Grids.py file with all available models that can be tuned and example dictionaries
+
 get_empty_grids()
 --------------------------------------------------
 .. automodule:: src.scalecast.GridGenerator.get_empty_grids

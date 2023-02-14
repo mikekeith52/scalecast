@@ -159,7 +159,7 @@ class ChangepointDetector:
         for i, cp in enumerate(self.changepoints):
             if end is None:
                 f.add_other_regressor(
-                    start=cp.start_time, end="2999-12-31", called=f"cp{i+1}"
+                    start=cp.start_time, end=f.future_dates.values[-1], called=f"cp{i+1}"
                 )
             elif end == "auto":
                 f.add_other_regressor(

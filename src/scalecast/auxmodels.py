@@ -193,8 +193,17 @@ def mlp_stack(
     from sklearn.neural_network import MLPRegressor
     from sklearn.ensemble import BaggingRegressor
     from sklearn.ensemble import StackingRegressor
-    from scalecast.Forecaster import _sklearn_imports_
-    results = f.export('model_summaries')
+    from .Forecaster import _sklearn_imports_
+    results = f.export('model_summaries',models=model_nicknames)
+
+    if results.shape[0] != len(model_nicknames):
+        raise ValueError(
+            '{} not found in the Forecaster object.'
+            ' The available models to pass to mlp_stack are: {}'.format(
+                model_nicknames,
+                [m for m in f.history if m in _sklearn_imports_.keys()],
+            )
+        )
     
     estimators = [
         (

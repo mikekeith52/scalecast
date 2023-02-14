@@ -16,7 +16,7 @@ import copy
 
 logging.basicConfig(filename="warnings.log", level=logging.WARNING)
 
-from scalecast.Forecaster import (
+from .Forecaster import (
     mape,
     rmse,
     mae,
@@ -88,7 +88,7 @@ class MVForecaster:
             if not_same_len_action == "fail":
                 raise ValueError("All series must be same length.")
             elif not_same_len_action == "trim":
-                from scalecast.multiseries import keep_smallest_first_date
+                from .multiseries import keep_smallest_first_date
                 keep_smallest_first_date(*fs)
             else:
                 raise ValueError(
@@ -1317,7 +1317,7 @@ class MVForecaster:
                 series: _return_na_if_len_zero(a, fitted_vals[series], r2)
                 for series, a in fitted_val_actuals.items()
             },
-            "CILevel": self.cilevel,
+            "CILevel": self.cilevel if self.cis else np.nan,
             "ValidationSetLength": None,
             "ValidationMetric": None,
             "ValidationMetricValue": None,
@@ -1411,9 +1411,11 @@ class MVForecaster:
             raise ValueError(
                 'Cannot evaluate confidence intervals at the '
                 '{:.0%} level when test_length is set to less than {} observations. '
+                'The test length is currently set to {} observations. '
                 'The test length must be at least 1/(1-cilevel) in length for conformal intervals to work.'.format(
                     cilevel,
                     int(min_test_length),
+                    self.test_length,
                 )
             )
 
@@ -1948,9 +1950,6 @@ class MVForecaster:
                 "TestSetMAPE",
                 "TestSetMAE",
                 "TestSetR2",
-                "LastTestSetPrediction",
-                "LastTestSetActual",
-                "CILevel",
                 "InSampleRMSE",
                 "InSampleMAPE",
                 "InSampleMAE",
@@ -1993,15 +1992,10 @@ class MVForecaster:
                             ):
                                 model_summary_sm[c] = [attr]
                             else:
-                                model_summary_sm[c] = [attr[s]]
-                        elif c == "LastTestSetPrediction":
-                            model_summary_sm[c] = [
-                                self.history[m]["TestSetPredictions"][s][-1]
-                            ]
-                        elif c == "LastTestSetActual":
-                            model_summary_sm[c] = [
-                                self.history[m]["TestSetActuals"][s][-1]
-                            ]
+                                try:
+                                    model_summary_sm[c] = [attr[s]]
+                                except KeyError:
+                                    model_summary_sm[c] = np.nan
                         elif c == "OptimizedOn" and hasattr(self, "best_model"):
                             if self.optimize_on in _optimizer_funcs_:
                                 model_summary_sm["OptimizedOn"] = [self.optimize_on]
@@ -2040,30 +2034,33 @@ class MVForecaster:
                 ' To extract test-set predictions for evaluated models, use "lvl_test_set_predictions".',
                 category = FutureWarning,
             )
-            df = pd.DataFrame(
-                {"DATE": self.current_dates.to_list()[-self.test_length :]}
-            )
-            i = 0
-            for l, s in zip(labels, series):
-                df[f"{l}_actuals"] = getattr(self, f"series{i+1}")["y"].to_list()[
-                    -self.test_length :
-                ]
-                for m in models:
-                    df[f"{l}_{m}_test_preds"] = self.history[m]["TestSetPredictions"][
-                        s
-                    ][:]
-                    if cis:
-                        try:
-                            df[f"{l}_{m}_test_preds_upper"] = self.history[m][
-                                "TestSetUpperCI"
-                            ][s][:]
-                            df[f"{l}_{m}_test_preds_lower"] = self.history[m][
-                                "TestSetLowerCI"
-                            ][s][:]
-                        except KeyError:
-                            _warn_about_not_finding_cis(m)
-                i += 1
-            output["test_set_predictions"] = df
+            if self.test_length > 0:
+                df = pd.DataFrame(
+                    {"DATE": self.current_dates.to_list()[-self.test_length :]}
+                )
+                i = 0
+                for l, s in zip(labels, series):
+                    df[f"{l}_actuals"] = getattr(self, f"series{i+1}")["y"].to_list()[
+                        -self.test_length :
+                    ]
+                    for m in models:
+                        df[f"{l}_{m}_test_preds"] = self.history[m]["TestSetPredictions"][
+                            s
+                        ][:]
+                        if cis:
+                            try:
+                                df[f"{l}_{m}_test_preds_upper"] = self.history[m][
+                                    "TestSetUpperCI"
+                                ][s][:]
+                                df[f"{l}_{m}_test_preds_lower"] = self.history[m][
+                                    "TestSetLowerCI"
+                                ][s][:]
+                            except KeyError:
+                                _warn_about_not_finding_cis(m)
+                    i += 1
+                output["test_set_predictions"] = df
+            else:
+                output["test_set_predictions"] = pd.DataFrame()
         if "lvl_fcsts" in dfs:
             df = pd.DataFrame({"DATE": self.future_dates.to_list()})
             for l, s in zip(labels, series):
@@ -2081,28 +2078,31 @@ class MVForecaster:
                             _warn_about_not_finding_cis(m)
             output["lvl_fcsts"] = df
         if "lvl_test_set_predictions" in dfs:
-            df = pd.DataFrame(
-                {"DATE": self.current_dates.to_list()[-self.test_length :]}
-            )
-            i = 0
-            for l, s in zip(labels, series):
-                df[f"{l}_actuals"] = getattr(self, f"series{i+1}")["levely"][
-                    -self.test_length :
-                ]
-                for m in models:
-                    df[f"{l}_{m}_lvl_ts"] = self.history[m]["LevelTestSetPreds"][s][:]
-                    if cis:
-                        try:
-                            df[f"{l}_{m}_lvl_ts_upper"] = self.history[m]["LevelTSUpperCI"][
-                                s
-                            ][:]
-                            df[f"{l}_{m}_lvl_ts_lower"] = self.history[m]["LevelTSLowerCI"][
-                                s
-                            ][:]
-                        except KeyError:
-                            _warn_about_not_finding_cis(m)
-                i += 1
-            output["lvl_test_set_predictions"] = df
+            if self.test_length > 0:
+                df = pd.DataFrame(
+                    {"DATE": self.current_dates.to_list()[-self.test_length :]}
+                )
+                i = 0
+                for l, s in zip(labels, series):
+                    df[f"{l}_actuals"] = getattr(self, f"series{i+1}")["levely"][
+                        -self.test_length :
+                    ]
+                    for m in models:
+                        df[f"{l}_{m}_lvl_ts"] = self.history[m]["LevelTestSetPreds"][s][:]
+                        if cis:
+                            try:
+                                df[f"{l}_{m}_lvl_ts_upper"] = self.history[m]["LevelTSUpperCI"][
+                                    s
+                                ][:]
+                                df[f"{l}_{m}_lvl_ts_lower"] = self.history[m]["LevelTSLowerCI"][
+                                    s
+                                ][:]
+                            except KeyError:
+                                _warn_about_not_finding_cis(m)
+                    i += 1
+                output["lvl_test_set_predictions"] = df
+            else:
+                output["lvl_test_set_predictions"] = pd.DataFrame()
         if to_excel:
             with pd.ExcelWriter(
                 os.path.join(out_path, excel_name), engine="openpyxl"

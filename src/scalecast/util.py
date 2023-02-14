@@ -1,8 +1,8 @@
-from scalecast import Forecaster
-from scalecast import MVForecaster
-from scalecast import SeriesTransformer
-from scalecast import Pipeline
-from scalecast.Forecaster import log_warnings
+from . import Forecaster
+from . import MVForecaster
+from . import SeriesTransformer
+from . import Pipeline
+from .Forecaster import log_warnings
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -204,74 +204,6 @@ class metrics:
         denom = np.sum(np.abs(pd.Series(obs).diff(m).values[m:]))
         return avger * (np.sum(num1 + num2) / (davger * denom))
 
-def pdr_load(
-    sym,
-    start=None,
-    end=None,
-    src='fred',
-    require_future_dates=True,
-    future_dates=None,
-    MVForecaster_kwargs={},
-    **kwargs
-):
-    """ Gets data using `pandas_datareader.DataReader()` and loads the series into a Forecaster or MVForecaster object.
-    This functions works well when the src arg is its default ('fred'), but there are some issues with other sources.
-
-    Args:
-        sym (str or list-like): The name of the series to extract.
-            If str (one series), returns a Forecaster object.
-            If a collection, returns an MVForecaster object. 
-            Series of higher frequencies will having missing values filled using a forward fill.
-        start (str or datetime): The start date to extract data.
-        end (str or datetime): The end date to extract data.
-        src (str): The source of the API pull.
-            supported values: 'fred', 'yahoo', 'alphavantage', 'enigma', 
-            'famafrench','moex', 'quandl', 'stooq', 'tiingo'.
-        require_future_dates (bool): Default True.
-            If False, none of the models from the resulting Forecaster object 
-            will forecast into future periods by default.
-            If True, all models will forecast into future periods, 
-            unless run with test_only = True, and when adding regressors, they will automatically
-            be added into future periods.
-            Always set to True if sym is list-like (MVForecaster doesn't do test only).
-        future_dates (int): Optional. The future dates to add to the model upon initialization.
-            If not added when object is initialized, can be added later.
-        MVForecaster_kwargs (dict): Default {}. If sym is list-like, 
-            these arguments will be passed to the `MVForecaster()` init function.
-            If 'names' is not found in the dict, names are automatically added so that the
-            MVForecaster keeps the names of the extracted symbols.
-            To keep no names, pass `MVForecaster_kwargs = {'names':None,...}`.
-        **kwargs: Passed to pdr.DataReader() function. 
-            See https://pandas-datareader.readthedocs.io/en/latest/remote_data.html.
-
-    Returns:
-        (Forecaster or MVForecaster): An object with the dates and y-values loaded.
-    """
-    df = pdr.DataReader(sym,data_source=src,start=start,end=end,**kwargs)
-    if isinstance(sym,str):
-        f = Forecaster.Forecaster(
-            y=df[sym],
-            current_dates=df.index,
-            require_future_dates=require_future_dates,
-            future_dates = future_dates,
-        )
-    else:
-        fs = []
-        for s in sym:
-            df[s].fillna(method='ffill',inplace=True)
-            f = Forecaster.Forecaster(
-                y = df[s],
-                current_dates=df.index,
-                future_dates = future_dates,
-            )
-            fs.append(f)
-        if 'names' not in MVForecaster_kwargs:
-            MVForecaster_kwargs['names'] = sym
-        return MVForecaster.MVForecaster(
-            *fs,
-            **MVForecaster_kwargs,
-        )
-
 def plot_reduction_errors(f, ax = None, figsize=(12,6)):
     """ Plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
     with method = 'pfi'.
@@ -319,7 +251,7 @@ def break_mv_forecaster(mvf):
                     try:
                         hist[k][k2] = list(v2.values())[series_num]
                     except IndexError:
-                        hist[k][k2] = np.nan
+                        hist[k][k2] = []
             hist[k]["TestOnly"] = False
             hist[k]["LevelY"] = f.levely
         return hist
@@ -446,7 +378,7 @@ def find_statistical_transformation(
         (Transformer, Reverter): A `Transformer` object with the identified transforming functions and
         the `Reverter` object with the `Transformer` counterpart functions.
     """
-    from scalecast.auxmodels import auto_arima
+    from .auxmodels import auto_arima
     def make_stationary(f,train_only,critical_pval,log,adf_kwargs,**kwargs):
         transformers = []
         stationary = f.adf_test(
@@ -468,8 +400,9 @@ def find_statistical_transformation(
 
         auto_arima(f,m=m,seasonal=True,alpha=critical_pval,**kwargs)
         I = f.auto_arima_params['seasonal_order'][1]
-        for i in range(1,I+1):
-            transformers += [('DiffTransform',m)]
+        if I > 0:
+            for i in range(1,I+1):
+                transformers += [('DiffTransform',m)]
 
         return transformers
 

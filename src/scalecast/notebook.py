@@ -4,7 +4,7 @@ from typing import Dict, Union
 from ipywidgets import widgets
 from IPython.display import display, clear_output
 
-from scalecast.Forecaster import (
+from .Forecaster import (
     Forecaster, 
     _determine_best_by_, 
     _can_be_tuned_, 
@@ -85,12 +85,12 @@ def results_vis(
     mo_dd = widgets.Dropdown(
         options=range(1, len(all_models) + 1), description="No. Models"
     )
-    lv_dd = widgets.Dropdown(options=[True, False], description="View Level")
+    lv_dd = widgets.Dropdown(options=[False, True], description="View Level")
     ci_dd = widgets.Dropdown(
-        options=[True, False], description="View Confidence Intervals"
+        options=[False, True], description="View Confidence Intervals"
     )
     me_dd = widgets.Dropdown(
-        options=sorted(_determine_best_by_), description="Order By"
+        options=sorted(_determine_best_by_), description="Order By", value = 'TestSetRMSE',
     )
 
     # never changes
@@ -172,9 +172,9 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True, figsize = (
     se_se = widgets.SelectMultiple(
         options=series, description="Series", selected=series
     )
-    lv_dd = widgets.Dropdown(options=[True, False], description="View Level")
+    lv_dd = widgets.Dropdown(options=[False, True], description="View Level")
     ci_dd = widgets.Dropdown(
-        options=[True, False], description="View Confidence Intervals"
+        options=[False, True], description="View Confidence Intervals"
     )
 
     # never changes

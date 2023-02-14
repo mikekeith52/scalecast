@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import warnings
 import logging
-from scalecast.Forecaster import (
+from .Forecaster import (
     Forecaster,
     ForecastError,
     rmse,
@@ -626,8 +626,9 @@ class SeriesTransformer:
                 seasrevert(h['FittedVals'],self.f.y.values[-len(h['FittedVals'])-m:], m)
             )[m:]
             h['LevelFittedVals'] = h['FittedVals'][:]
-            if "LevelUpperCI" not in self.f.history[mod].keys():
+            if "LevelUpperCI" not in self.f.history[mod].keys(): # no cis evaluated
                 continue
+
             # undifference cis
             fcst = h["Forecast"]
             test_preds = h["TestSetPredictions"]

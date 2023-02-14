@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.3] - 2023-02-14
+### Added
+- Added an explicit error for when `auxmodels.mlp_stack()` is specified incorrectly.
+- Added `ax` argument to more plotting functions.
+- Added test scripts to the GitHub repository.
+- Added an explicit error in `Forecaster.auto_Xvar_select()` for situations when monitoring a test metric but no test set is specified.
+### Changed
+- Explicitly specify `dtype = float` for parts of code that raise a warning when this is not the case.
+- Changed to relative library imports wherever possible.
+- Changed the `Forecaster.__deepcopy__()` to be more explicit.
+- Changed how `GridGenerator` gets grids and added more grids files to choose from.
+- Got rid of some confidence-interval information when exporting model summary info from `MVForecaster`.
+- `MVForecaster.export('lvl_test_set_predictions')` no longer fails when there is no test set.
+### Fixed
+- Fixed the `AnomalyDetector.EstimatorDetect()` function.
+- Fixed `util.break_mv_forecaster()` for situations when `MVForecaster` does not have a test set.
+- Fixed how exporting works in `Forecaster` so that errors are not returned when test set is 0 and default args are maintained.
+
 ## [0.17.2] - 2023-02-09
 ### Added
 ### Changed

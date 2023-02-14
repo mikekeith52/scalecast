@@ -146,8 +146,7 @@ class Forecaster:
         if hasattr(self,'tf_model'):
             delattr(self,'tf_model')
         obj = type(self).__new__(self.__class__)
-        obj.__dict__.update(self.__dict__)
-        obj.__dict__ = copy.deepcopy(obj.__dict__)
+        obj.__dict__ = copy.deepcopy(self.__dict__)
         return obj
 
     def copy(self):
@@ -302,7 +301,7 @@ class Forecaster:
             "InSampleMAPE": mape(y_use[-len(fvs_use) :], fvs_use),
             "InSampleMAE": mae(y_use[-len(fvs_use) :], fvs_use),
             "InSampleR2": r2(y_use[-len(fvs_use) :], fvs_use),
-            "CILevel": self.cilevel,
+            "CILevel": self.cilevel if self.cis else np.nan,
         }
         if hasattr(self, "best_params"):
             self.history[call_me]["ValidationSetLength"] = (
@@ -2153,17 +2152,10 @@ class Forecaster:
         f.set_estimator(estimator if method in ("pfi", "shap") else "lasso")
         _check_if_correct_estimator(f.estimator,_sklearn_estimators_)
         if grid_search:
-            if not use_loaded_grid:
-                from scalecast import GridGenerator
-
-                GridGenerator.get_example_grids()
-                f.ingest_grid(f.estimator)
-            else:
-                descriptive_assert(
-                    hasattr(f, "grid"),
-                    ForecastError,
-                    "Grid not loaded, try setting use_loaded_grid to False.",
-                )
+            if not use_loaded_grid and f.grids_file + ".py" not in os.listdir('.'):
+                from . import GridGenerator
+                GridGenerator.get_example_grids(out_name = f.grids_file + ".py")
+            f.ingest_grid(f.estimator)
         else:
             f.ingest_grid({k: [v] for k, v in kwargs.items()})
 
@@ -2782,6 +2774,13 @@ class Forecaster:
         f.drop_Xvars(*[x for x in f.get_regressor_names() if x not in best_combo])
         self.current_xreg = f.current_xreg
         self.future_xreg = f.future_xreg
+        if len(final_metrics) == 0:
+            warnings.warn(
+                "auto_Xvar_select() did not add any regressors to the object."
+                " Sometimes this happens when the object's test length is 0"
+                " and the function's monitor argument is specified as a test set metric.",
+                category = Warning,
+            )
         return final_metrics
 
     def determine_best_series_length(
@@ -3236,7 +3235,7 @@ class Forecaster:
 
         Args:
             Called (str): Default 't'.
-                What to call the resulting variable
+                What to call the resulting variable.
 
         Returns:
             None
@@ -3264,7 +3263,7 @@ class Forecaster:
         Returns:
             None
 
-        >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations callec 'cycle13'
+        >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations called 'cycle13'
         """
         self._validate_future_dates_exist()
         if called is None:
@@ -3347,13 +3346,13 @@ class Forecaster:
         descriptive_assert(
             len(args) > 1,
             ForecastError,
-            "need at least two variables to combine regressors",
+            "Need to pass at least two variables to combine regressors.",
         )
         for i, a in enumerate(args):
             descriptive_assert(
                 not a.startswith("AR"),
                 ForecastError,
-                "no combining AR terms at this time -- it confuses the forecasting mechanism",
+                "No combining AR terms at this time -- it confuses the forecasting mechanism.",
             )
             if i == 0:
                 self.current_xreg[sep.join(args)] = self.current_xreg[a]
@@ -3394,7 +3393,7 @@ class Forecaster:
             descriptive_assert(
                 not a.startswith("AR"),
                 ForecastError,
-                "no polynomial AR terms at this time -- it confuses the forecasting mechanism",
+                "No polynomial AR terms at this time -- it confuses the forecasting mechanism.",
             )
             for i in range(2, pwr + 1):
                 self.current_xreg[f"{a}{sep}{i}"] = self.current_xreg[a] ** i
@@ -3427,7 +3426,7 @@ class Forecaster:
             descriptive_assert(
                 not a.startswith("AR"),
                 ForecastError,
-                "no exponent AR terms at this time -- it confuses the forecasting mechanism",
+                "No exponent AR terms at this time -- it confuses the forecasting mechanism.",
             )
             self.current_xreg[f"{a}{sep}{round(pwr,cutoff)}"] = (
                 self.current_xreg[a] ** pwr
@@ -3462,17 +3461,17 @@ class Forecaster:
             descriptive_assert(
                 not a.startswith("AR"),
                 ForecastError,
-                "no logged AR terms at this time -- it confuses the forecasting mechanism",
+                "No logged AR terms at this time -- it confuses the forecasting mechanism.",
             )
             if base == math.e:
                 pass
             elif not (isinstance(base, int)):
                 raise ValueError(
-                    f"base must be math.e or an int greater than 1, got {base}"
+                    f"base must be math.e or an int greater than 1, got {base}."
                 )
             elif base <= 1:
                 raise ValueError(
-                    f"base must be math.e or an int greater than 1, got {base}"
+                    f"base must be math.e or an int greater than 1, got {base}."
                 )
 
             b = "ln" if base == math.e else "log" + str(base)
@@ -3590,21 +3589,21 @@ class Forecaster:
         Returns:
             None
 
-        >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t called 't_lag1' - 't_lag3'
-        >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only called 't_lag6'
+        >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t called 'tlag_1' - 'tlag_3'
+        >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only called 'tlag_6'
         """
         self._validate_future_dates_exist()
         lags = int(lags)
         descriptive_assert(
             lags >= 1,
             ValueError,
-            f"lags must be an int type greater than 0, got {lags}",
+            f"lags must be an int type greater than 0, got {lags}.",
         )
         for a in args:
             descriptive_assert(
                 not a.startswith("AR"),
                 ForecastError,
-                "adding lagged AR terms makes no sense, add more AR terms instead",
+                "Adding lagged AR terms makes no sense, add more AR terms instead.",
             )
             if upto:
                 for i in range(1, lags + 1):
@@ -3636,6 +3635,11 @@ class Forecaster:
         >>> f.diff() # differences the series
         >>> f.undiff() # undifferences the series and drops any added Xvars
         """
+        warnings.warn(
+            'The undiff() method will be removed in a future version.'
+            ' All transforming and reverting will be handled by the SeriesTransformer object.',
+            category = FutureWarning,
+        )
         self.typ_set()
         if self.integration == 0:
             return
@@ -3735,7 +3739,7 @@ class Forecaster:
                 f"Tried to load a grid called {self.estimator} from {self.grids_file}.py, "
                 "but either the file could not be found in the current directory, "
                 "there is no grid with that name, or the dictionary values are not list-like. "
-                "Try ingest_grid() with a dictionary grid passed manually."
+                "Try the ingest_grid() method with a dictionary grid passed manually."
             )
         grid = expand_grid(grid)
         self.grid = grid
@@ -3787,11 +3791,11 @@ class Forecaster:
         descriptive_assert(
             metric in _metrics_,
             ValueError,
-            f"metric must be one of {_metrics_}, got {metric}",
+            f"metric must be one of {_metrics_}, got {metric}.",
         )
         if (metric == "r2") & (self.validation_length < 2):
             raise ValueError(
-                "can only validate with r2 if the validation length is at least 2, try calling set_validation_length()"
+                "Can only validate with r2 if the validation length is at least 2, try calling set_validation_length()."
             )
         self.validation_metric = metric
 
@@ -3899,7 +3903,7 @@ class Forecaster:
         """
         rolling = bool(rolling)
         k = int(k)
-        descriptive_assert(k >= 2, ValueError, f"k must be at least 2, got {k}")
+        descriptive_assert(k >= 2, ValueError, f"k must be at least 2, got {k}.")
         f = self.__deepcopy__()
         usable_obs = len(f.y) - f.test_length
         if f.estimator in _sklearn_estimators_:
@@ -3914,7 +3918,7 @@ class Forecaster:
         descriptive_assert(
             val_size > 0,
             ForecastError,
-            f'not enough observations in sample to cross validate.'
+            f'Not enough observations in sample to cross validate.'
         )
         f.set_validation_length(val_size)
 
@@ -3959,7 +3963,6 @@ class Forecaster:
             as_index=False,
             sort=False,
         )["metric_value"].mean()
-
         # convert back to list or it fails when calling the hyperparam vals
         # contributions welcome for a more elegant solution
         if "Xvars" in grid_evaluated:
@@ -3983,7 +3986,7 @@ class Forecaster:
                     == grid_evaluated["metric_value"].max()
                 ].index.to_list()[0]
             elif self.validation_metric == 'mape' and grid_evaluated['metric_value'].isna().all():
-                raise ValueError('validation metric cannot be mape when 0s are in the validation set.')
+                raise ValueError('Validation metric cannot be mape when 0s are in the validation set.')
             else:
                 best_params_idx = self.grid.loc[
                     grid_evaluated["metric_value"]
@@ -4150,9 +4153,11 @@ class Forecaster:
             raise ValueError(
                 'Cannot evaluate confidence intervals at the '
                 '{:.0%} level when test_length is set to less than {} observations. '
+                'The test length is currently set to {} observations. '
                 'The test length must be at least 1/(1-cilevel) in length for conformal intervals to work.'.format(
                     cilevel,
                     int(min_test_length),
+                    self.test_length,
                 )
             )
 
@@ -4177,8 +4182,8 @@ class Forecaster:
         Only regression models are accepted.
         
         Args:
-            imported_module (sklearn regression model):
-                The model from sklearn to add. must have already been imported locally.
+            imported_module (scikit-learn regression model):
+                The model from scikit-learn to add. Must have already been imported locally.
                 Supports models from sklearn and sklearn APIs.
             called (str):
                 The name of the estimator that can be called using set_estimator().
@@ -4422,12 +4427,13 @@ class Forecaster:
         for k, v in self.current_xreg.items():
             self.current_xreg[k] = v.iloc[-n:]
 
-    def order_fcsts(self, models, determine_best_by="TestSetRMSE"):
+    def order_fcsts(self, models = 'all', determine_best_by="TestSetRMSE"):
         """ Gets estimated forecasts ordered from best-to-worst.
         
         Args:
-            models (list-like):
-                Each element must match an evaluated model's nickname (which is the same as its estimator name by default).
+            models (str or list-like): Default 'all'.
+                If not 'all', each element must match an evaluated model's nickname.
+                'all' will only consider models that have a non-null determine_best_by value in history.
             determine_best_by (str): Default 'TestSetRMSE'. One of _determine_best_by_.
 
         Returns:
@@ -4442,6 +4448,13 @@ class Forecaster:
             ValueError,
             f"determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}.",
         )
+        
+        if models == "all":
+            models = [
+            m for m, v in self.history.items() 
+            if determine_best_by in v and not np.isnan(v[determine_best_by])
+        ]
+        
         models_metrics = {m: self.history[m][determine_best_by] for m in models}
         x = [h[0] for h in Counter(models_metrics).most_common()]
         return (
@@ -4492,7 +4505,8 @@ class Forecaster:
                 k for k in self.future_xreg.keys() if k not in self.current_xreg.keys()
             ]
             raise ValueError(
-                f"the following regressors are in current_xreg but not future_xreg: {case1}\nthe following regressors are in future_xreg but not current_xreg {case2}"
+                f"The following regressors are in current_xreg but not future_xreg: {case1}\n"
+                f"The following regressors are in future_xreg but not current_xreg: {case2}",
             )
 
     def plot(
@@ -4673,7 +4687,7 @@ class Forecaster:
 
         if level is True:
             warnings.warn(
-                'The level argument will be removed from a future version of scalcast. '
+                'The level argument will be removed from a future version of scalecast. '
                 'All transformations will be handled by the SeriesTransformer object.',
                 category = FutureWarning,
             )
@@ -4846,7 +4860,7 @@ class Forecaster:
 
         if level is True:
             warnings.warn(
-                'The level argument will be removed from a future version of scalcast. '
+                'The level argument will be removed from a future version of scalecast. '
                 'All transformations will be handled by the SeriesTransformer object.',
                 category = FutureWarning,
             )
@@ -4906,7 +4920,7 @@ class Forecaster:
         for a in args:
             if a not in self.current_xreg:
                 if error == 'raise':
-                    raise ForecastError(f'cannot find {a} in Forecaster object')
+                    raise ForecastError(f'Cannot find {a} in Forecaster object.')
                 elif error == 'ignore':
                     continue
                 else:
@@ -5042,7 +5056,8 @@ class Forecaster:
             best_model (str): Default 'auto'.
                 The name of the best model, if "auto", will determine this by the metric in determine_best_by.
                 If not "auto", must match a model nickname of an already-evaluated model.
-            determine_best_by (str): One of _determine_best_by_. Default 'TestSetRMSE'.
+            determine_best_by (str): One of _determine_best_by_ or None. Default 'TestSetRMSE'.
+                If None and best_model is 'auto', the best model will be designated as the first-evaluated model.
             to_excel (bool): Default False.
                 Whether to save to excel.
             out_path (str): Default './'.
@@ -5092,11 +5107,14 @@ class Forecaster:
             raise ValueError(
                 f"values passed to the dfs list must be in {_dfs_}, not {_bad_dfs_}"
             )
-        best_fcst_name = (
-            self.order_fcsts(models, determine_best_by)[0]
-            if best_model == "auto"
-            else best_model
-        )
+        if determine_best_by is not None:
+            best_fcst_name = (
+                self.order_fcsts(models, determine_best_by)[0]
+                if best_model == "auto"
+                else best_model
+            )
+        else:
+            best_fcst_name = list(self.history.keys())[0] # first evaluated model
         output = {}
         if "model_summaries" in dfs:
             cols = [
@@ -5319,7 +5337,7 @@ class Forecaster:
                         )
         except IndexError:
             raise ForecastError(
-                "no saved feature importance or summary stats could be found"
+                "No saved feature importance or summary stats could be found."
             )
 
     def all_validation_grids_to_excel(
@@ -5362,7 +5380,7 @@ class Forecaster:
                         )
                         df.to_excel(writer, sheet_name=m, index=False)
         except IndexError:
-            raise ForecastError("no validation grids could be found")
+            raise ForecastError("No validation grids could be found.")
 
     def reset(self):
         """ Returns an object equivalent to the original state when initiated.
@@ -5516,7 +5534,7 @@ class Forecaster:
             f.set_test_length(fcst_length)
             f.set_estimator(f.history[model]["Estimator"])
             descriptive_assert(
-                f.estimator != "combo", ValueError, "combo models cannot be backtest"
+                f.estimator != "combo", ValueError, "combo models cannot be backtest."
             )
             params = f.history[model]["HyperParams"].copy()
             if f.history[model]["Xvars"] is not None:
