@@ -166,17 +166,6 @@ find_statistical_transformation()
   )
   f = pipeline.fit_predict(f)
 
-pdr_load()
-----------------
-.. automodule:: src.scalecast.util.pdr_load
-    :members:
-
-.. code:: python
-
-    from scalecast.util import pdr_load
-    f = pdr_load('UNRATE',start='2000-01-01',src='fred')
-    mvf = pdr_load(['UNRATE','UTUR'],start='2000-01-01',src='fred')
-
 plot_reduction_errors()
 -----------------------------
 .. automodule:: src.scalecast.util.plot_reduction_errors
