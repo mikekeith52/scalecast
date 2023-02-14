@@ -10,7 +10,8 @@ def get_grids(grid='example',out_name='Grids.py',overwrite=False):
             Do not add the '.py' extension.
         out_name (str): Default 'Grids.py'. The name of the grids file that will be
             saved to the user's working directory.
-        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
+        overwrite (bool): Default False.
+            Whether to overwrite a file (with the out_name name) if one is already in the working directory.
 
     Returns:
         None
@@ -35,14 +36,15 @@ def get_example_grids(out_name='Grids.py',overwrite=False):
 
     Args:
         out_name (str): Default 'Grids.py'. The name of the file to write the grids to.
-        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
+        overwrite (bool): Default False.
+            Whether to overwrite a file (with the out_name name) if one is already in the working directory.
 
     Returns:
         None
     """
     get_grids(
         out_name = out_name,
-        overwrite=overwrite,
+        overwrite = overwrite,
     )
 
 
@@ -51,7 +53,8 @@ def get_mv_grids(out_name='MVGrids.py',overwrite=False):
 
     Args:
         out_name (str): Default 'MVGrids.py'. The name of the file to write the grids to.
-        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
+        overwrite (bool): Default False.
+            Whether to overwrite a file (with the out_name name) if one is already in the working directory.
 
     Returns:
         None
@@ -59,7 +62,7 @@ def get_mv_grids(out_name='MVGrids.py',overwrite=False):
     get_grids(
         grid = 'mv',
         out_name = out_name,
-        overwrite=overwrite,
+        overwrite = overwrite,
     )
 
 
@@ -68,7 +71,8 @@ def get_empty_grids(out_name='Grids.py',overwrite=False):
 
     Args:
         out_name (str): Default 'Grids.py'. The name of the file to write the grids to.
-        overwrite (bool): Whether to overwrite a file (with the out_name name) if one is already in the working directory.
+        overwrite (bool): Default False.
+            Whether to overwrite a file (with the out_name name) if one is already in the working directory.
 
     Returns:
         None
@@ -76,5 +80,5 @@ def get_empty_grids(out_name='Grids.py',overwrite=False):
     get_grids(
         grid = 'empty',
         out_name = out_name,
-        overwrite=overwrite,
+        overwrite = overwrite,
     )
