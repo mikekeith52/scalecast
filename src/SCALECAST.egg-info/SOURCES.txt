@@ -61,3 +61,12 @@ src/scalecast/__pycache__/auxmodels.cpython-38.pyc
 src/scalecast/__pycache__/multiseries.cpython-38.pyc
 src/scalecast/__pycache__/notebook.cpython-38.pyc
 src/scalecast/__pycache__/util.cpython-38.pyc
+test/test_AnomalyDetector.py
+test/test_ChangepointDetector.py
+test/test_Forecaster.py
+test/test_GridGenerator.py
+test/test_MVForecaster.py
+test/test_Pipeline.py
+test/test_SeriesTransformer.py
+test/test_all.py
+test/test_multiseries.py
