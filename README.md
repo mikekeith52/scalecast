@@ -205,14 +205,17 @@ The library interfaces nicely with interactive notebook applications.
   - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
   - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
   - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
-  - [Confidence Intervals](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
 
 ### [Transforming and Reverting](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 - [Time Series Transformations (and Reverting) Made Easy](https://medium.com/towards-data-science/time-series-transformations-and-reverting-made-easy-f4f768c18f63)
 - [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/transforming/series_transformer.html)
 - [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/transforming/medium_code.ipynb)
   
-### The importance of dynamic validation
+### Confidence Intervals
+- [Easy Distribution-Free Conformal Intervals for Time Series](https://medium.com/towards-data-science/easy-distribution-free-conformal-intervals-for-time-series-665137e4d907)
+- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
+
+### The Importance of Dynamic Validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
 - [Model Validation Techniques for Time Series](https://towardsdatascience.com/model-validation-techniques-for-time-series-3518269bd5b3)
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html)
@@ -233,5 +236,5 @@ The library interfaces nicely with interactive notebook applications.
 - [Notebook1](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
 - [Notebook2](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/anomalies/monte%20carlo/monte%20carlo.ipynb)
 
-## See Contributing
+## Contributing
 - [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)
