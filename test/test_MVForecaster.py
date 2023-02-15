@@ -1,3 +1,4 @@
+import config
 from src.scalecast.Forecaster import Forecaster
 from src.scalecast.MVForecaster import MVForecaster
 from src.scalecast.util import break_mv_forecaster, find_optimal_lag_order, find_optimal_coint_rank
