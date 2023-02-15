@@ -97,70 +97,6 @@ results = f.export(
 ```
 ![Readme Example Vis](_static/results.png)
 
-## Models
-The library provides the [`Forecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html) (for one series) and [`MVForecaster`](https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html) (for multiple series) wrappers around the following estimators: 
-
-- [Scikit-Learn](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#sklearn)
-  - [ElasticNet](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html)
-  - [Gradient Boosted Trees](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html)
-  - [k-Nearest Neighbors](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html)
-  - [Lasso](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso.html)
-  - [Multi-level Perceptron](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html)
-  - [Multiple Linear Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html)
-  - [Random Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
-  - [Ridge](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html)
-  - [Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor.html)
-  - [Support Vector Machine](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html)
-  - [Any other sklearn regression model or regression model that uses an sklearn interface can be ported](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.add_sklearn_estimator)
-- [XGBoost](https://xgboost.readthedocs.io/en/stable/parameter.html)
-- [LightGBM](https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html#lightgbm.LGBMRegressor)
-
-The `Forecaster` object only can use:
-
-- [StatsModels](https://www.statsmodels.org/stable/)
-  - [ARIMA](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_arima)
-  - [Holt-Winters Exponential Smoothing](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_hwes)
-- [Darts](https://unit8co.github.io/darts/)
-  - [Four Theta](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_theta)
-- [Keras TensorFlow Cells](https://keras.io/)
-  - [LSTM](https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM)
-  - [SimpleRNN](https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN)
-  - [Dense](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense)
-- [Facebook Prophet](https://facebook.github.io/prophet)
-- [LinkedIn Greykite](https://engineering.linkedin.com/blog/2021/greykite--a-flexible--intuitive--and-fast-forecasting-library)
-  - [silverkite](https://linkedin.github.io/greykite/docs/0.1.0/html/pages/model_components/0100_introduction.html)
-- [Native Combo model](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_combo)
-- [Native Naive model](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#module-src.scalecast.Forecaster.Forecaster._forecast_naive)
-
-The `MVForecaster` object only can use:
-- [StatsModels](https://www.statsmodels.org/stable/)
-  - [VECM](https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm)
-
-Want more models? Open a [feature request](https://github.com/mikekeith52/scalecast/issues/new)!  
-
-The library interfaces nicely with interactive notebook applications.
-
-<p align="center">
-  <img src="https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g" width="700" height="300"/>
-</p>
-
-## Features
-- Model optimization and validation
-  - [Grid search on validation data](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.tune)
-  - [Grid search using time series cross validation](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.cross_validate)
-  - [Backtest](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.backtest)
-- [Confidence intervals](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html) using a naive [conformal prediction](https://github.com/valeman/awesome-conformal-prediction) framework.
-- Input analysis
-  - [Feature importance scoring](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance)
-    - [SHAP](https://shap.readthedocs.io/en/latest/index.html)
-    - [Permutated feature scoring with ELI5](https://eli5.readthedocs.io/en/latest/index.html)
-  - [Summary stats for descriptive models](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_summary_stats)
-  - [Auto Feature Selection](https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html)
-  - [Feature reduction](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
-- [Anomaly detection](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
-- [Changepoint detection](https://scalecast.readthedocs.io/en/latest/Forecaster/ChangepointDetector.html)
-- [Series transforming/reverting](https://scalecast-examples.readthedocs.io/en/latest/transforming/series_transformer.html)
-
 ## Installation
 - Only the base package is needed to get started:  
   - `pip install --upgrade scalecast`  
@@ -178,7 +114,7 @@ The library interfaces nicely with interactive notebook applications.
   - `jupyter nbextension enable --py widgetsnbextension` (widgets for notebook)  
   - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets for Lab)  
 
-## Links
+## Features and Articles
 
 ### [Forecasting with Different Model Types](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
 - Sklearn Univariate
@@ -237,3 +173,4 @@ The library interfaces nicely with interactive notebook applications.
 
 ## Contributing
 - [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)
+- Want something that's not listed? Open an [issue](https://github.com/mikekeith52/scalecast/issues/new)!  
