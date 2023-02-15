@@ -52,7 +52,7 @@ Scalecast allows you to use a series' lags (autoregressive, or AR, terms) as inp
 Dynamic Recursive Forecasting with Peeking
 ------------------------------------------------------------
 
-The recrursive process can be tweaked to allow the model to "peek" at real values during the testing phase. You can choose after how many steps the model is allowed to do this by specifying `dynamic_testing=<int>`. The advantage here is that you can report your test-set metrics as an average of rolling smaller-step forecasts to glean a better idea about how well your algorithm can predict over a specific forecast horizon. You can also select models that are optimized on a given forecast horizon.
+The recursive process can be tweaked to allow the model to "peek" at real values during the testing phase. You can choose after how many steps the model is allowed to do this by specifying `dynamic_testing=<int>`. The advantage here is that you can report your test-set metrics as an average of rolling smaller-step forecasts to glean a better idea about how well your algorithm can predict over a specific forecast horizon. You can also select models that are optimized on a given forecast horizon.
 
 .. image:: _static/RecurisveForecastingdt2.png
  :alt: Recursive Forecasting with Peaking
