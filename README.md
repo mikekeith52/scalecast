@@ -227,7 +227,6 @@ The library interfaces nicely with interactive notebook applications.
 - [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html)
 
 ### Scaled Forecasting on Many Series
-- [M4 Notebook](https://github.com/mikekeith52/scalecast-examples/tree/main/m4)  
 - [May the Forecasts Be with You](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
 - [Introductory Notebook Section](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html#Scaled-Automated-Forecasting)
 
