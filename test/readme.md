@@ -2,8 +2,8 @@
 
 Version incremeting occurs in two places:
 
-`./setup.py`
-`./src/scalecast/__init__.py`
+`./setup.py`  
+`./src/scalecast/__init__.py`  
 
 Generally, increment the place after the second '.':
 
@@ -15,60 +15,60 @@ Big updates will get an increment after the first '.':
 
 ## Testing Steps
 
-### Create a virtual environment (skip if scalecast-env already exists)
+### 1. Create a virtual environment (skip if scalecast-env already exists)
 `python3 -m venv scalecast-env`
 
-### Activate the environment
+### 2. Activate the environment
 `source scalecast-env/bin/activate`
 
-### Change to the root of the directory:
+### 3. Change to the root of the directory:
 `cd /path/to/scalecast/`
 
-### Install the package in editable mode with pip
+### 4. Install the package in editable mode with pip
 `pip install -e --upgrade .`
 
-### Check that it worked
+### 5. Check that it worked
 `python -c "import scalecast; print(scalecast.__version___)`
 
-### Run the test
-`cd path/to/scalecast/test`
-`pip install -r requirements.txt`
-`python test_all.py`
+### 6. Run the test
+`cd path/to/scalecast/test`  
+`pip install -r requirements.txt`  
+`python test_all.py`  
 
-### Deactivate environment
+### 7. Deactivate environment
 `source deactivate`
 
 ## Testing Steps (Anaconda)
 
-### Update conda
+### 1. Update conda
 `conda update conda`
 
-### Create a virtual environment (skip if scalecast-env already exists)
+### 2. Create a virtual environment (skip if scalecast-env already exists)
 `conda create -n scalecast-env python=3.x anaconda`
 
-### Activate the environment
+### 3. Activate the environment
 `ssource activate scalecast-env`
 
-### Change to the root of the directory:
+### 4. Change to the root of the directory:
 `cd /path/to/scalecast/`
 
-### Install the package in editable mode with pip
+### 5. Install the package in editable mode with pip
 `pip install -e --upgrade .`
 
-### Check that it worked
+### 6. Check that it worked
 `python -c "import scalecast; print(scalecast.__version___)`
 
-### Run the test
-`cd path/to/scalecast/test`
-`pip install -r requirements.txt`
-`python test_all.py`
+### 7. Run the test
+`cd path/to/scalecast/test`  
+`pip install -r requirements.txt`  
+`python test_all.py`  
 
-### Deactivate environment
+### 8. Deactivate environment
 `source deactivate`
 
 If the resulting `error.log` file is free of errors, the test was successful and a new version can be committed. Only keep the most recently created error log.
 
 ## Committing Steps
-`cd path/to/scalecast`
-`python setup.py sdist`
-`twine upload sdist`
+`cd path/to/scalecast`  
+`python setup.py sdist`  
+`twine upload sdist`  
