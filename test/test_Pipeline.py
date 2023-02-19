@@ -1,7 +1,6 @@
-import config
-from src.scalecast.Pipeline import Pipeline, MVPipeline, Transformer, Reverter
-from src.scalecast.util import find_statistical_transformation, find_optimal_transformation
-from src.scalecast.util import break_mv_forecaster
+from scalecast.Pipeline import Pipeline, MVPipeline, Transformer, Reverter
+from scalecast.util import find_statistical_transformation, find_optimal_transformation
+from scalecast.util import break_mv_forecaster
 from test_SeriesTransformer import forecaster
 from test_Forecaster import build_Forecaster
 from test_MVForecaster import build_MVForecaster
@@ -31,17 +30,14 @@ def test_mvpipeline():
     transformer1, reverter1 = find_statistical_transformation(
         f1,
         goal=['stationary','seasonally_adj'],
-        log = True if min(f1.y) > 0 else False,
     )
     transformer2, reverter2 = find_statistical_transformation(
         f2,
         goal=['stationary','seasonally_adj'],
-        log = True if min(f2.y) > 0 else False,
     )
     transformer3, reverter3 = find_statistical_transformation(
         f3,
         goal=['stationary','seasonally_adj'],
-        log = True if min(f3.y) > 0 else False,
     )
     pipeline = MVPipeline(
         steps = [

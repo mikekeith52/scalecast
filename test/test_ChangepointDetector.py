@@ -1,5 +1,4 @@
-import config
-from src.scalecast.ChangepointDetector import ChangepointDetector
+from scalecast.ChangepointDetector import ChangepointDetector
 from test_Forecaster import build_Forecaster
 import matplotlib.pyplot as plt
 
@@ -14,9 +13,10 @@ def main():
         plt.savefig(f'../../cp_{tl}.png')
         plt.close()
 
-        detector.DetectCPBOCPD()
-        plt.savefig(f'../../cpbocpd_{tl}.png')
-        plt.close()
+        # dependency hell error - I think I'll delete this method from the package soon
+        #detector.DetectCPBOCPD()
+        #plt.savefig(f'../../cpbocpd_{tl}.png')
+        #plt.close()
 
         f = detector.WriteCPtoXvars(f)
 

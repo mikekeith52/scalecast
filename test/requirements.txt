@@ -4,5 +4,4 @@ darts
 prophet
 greykite
 shap
-kats
 pmdarima

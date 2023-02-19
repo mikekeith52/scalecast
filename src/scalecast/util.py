@@ -169,7 +169,7 @@ class metrics:
         """ Mean scaled interval score (MSIS) for evaluating confidence intervals.
         Uses the same definition as used in the M4 competition.
         Lower values are better.
-        see https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
+        See https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
 
         Args:
             a (list-like): The actuals over the forecast horizon.
@@ -365,13 +365,16 @@ def find_statistical_transformation(
             For seasonall_adj: uses seasonal auto_arima to find the optimal seasonal diff.
         train_only (bool): Default False. Whether to use train set only in all statistical tests.
         log (bool): Default True. Whether to log and diff the series if it is found to be non-stationary or just diff.
+            This will set itself to False if the lowest observed series value is 0 or lower.
         critical_pval (float): Default 0.05. The cutoff p-value to use to determine statistical signficance in the 
             Augmented Dickey-Fuller test and to run the auto_arima selection (substitutes for `alpha` arg).
         m (str or int): Default 'auto': The number of observations that counts one seasonal step.
             When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
             so pass your own values for other frequencies.
-        adf_kwargs (dict): Default {}. Keyword args to pass to the Augmented Dickey-Fuller test function. 
+        adf_kwargs (dict): Default {}. Keyword args to pass to the Augmented Dickey-Fuller test function.
+            See the `maxlag`, `regression`, and `autolag` arguments from
+            https://www.statsmodels.org/dev/generated/statsmodels.tsa.stattools.adfuller.html.
         **kwargs: Passed to the auto_arima() function when searching for optimal seasonal diff.
 
     Returns:
@@ -417,7 +420,7 @@ def find_statistical_transformation(
     }
     bad_args = [g for g in goal if g not in possible_args]
     if len(bad_args) > 0:
-        raise ValueError(f'values passed to goal arg cannot be used: {bad_args}')
+        raise ValueError(f'Values passed to goal arg cannot be used: {bad_args}.')
 
     transformers = []
     reverters = []
@@ -460,7 +463,7 @@ def find_optimal_transformation(
 ):
     """ Finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
     Works by comparing each transformation individually and stacking the set of transformations that leads to the best
-    performance. The estimator only uses series lags as inputs.
+    performance. The estimator only uses series lags as inputs. When an attempted transformation fails, a warning is logged.
 
     Args:
         f (Forecaster): The Forecaster object that contains the series that will be transformed.
@@ -488,7 +491,7 @@ def find_optimal_transformation(
             Only up to one scaler will be selected.
             Must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
         scale_on_train_only (bool): Default False. Whether to fit the scaler on the training set only.
-        m (str, int, list[int]): Default 'auto': the number of observations that counts one seasonal step.
+        m (str, int, list[int]): Default 'auto'. The number of observations that counts one seasonal step.
             When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
             so pass your own values for other frequencies. If m == 1, no first seasonal difference will be tried.

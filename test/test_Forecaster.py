@@ -1,8 +1,7 @@
-import config
 import pandas_datareader as pdr
-from src.scalecast.Forecaster import Forecaster
-from src.scalecast.auxmodels import mlp_stack, auto_arima
-from src.scalecast.util import plot_reduction_errors
+from scalecast.Forecaster import Forecaster
+from scalecast.auxmodels import mlp_stack, auto_arima
+from scalecast.util import plot_reduction_errors
 import matplotlib.pyplot as plt
 
 df = pdr.get_data_fred(

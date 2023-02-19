@@ -1,6 +1,5 @@
-import config
-from src.scalecast.Forecaster import Forecaster
-from src.scalecast.multiseries import export_model_summaries, keep_smallest_first_date
+from scalecast.Forecaster import Forecaster
+from scalecast.multiseries import export_model_summaries, keep_smallest_first_date
 import pandas_datareader as pdr 
 
 def main():

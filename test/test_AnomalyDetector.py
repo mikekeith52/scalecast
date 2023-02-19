@@ -1,5 +1,4 @@
-import config
-from src.scalecast.AnomalyDetector import AnomalyDetector
+from scalecast.AnomalyDetector import AnomalyDetector
 from test_Forecaster import build_Forecaster
 import matplotlib.pyplot as plt
 

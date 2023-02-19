@@ -1,5 +1,4 @@
-import config
-from src.scalecast import GridGenerator
+from scalecast import GridGenerator
 
 def main():
     GridGenerator.get_example_grids(out_name='ExampleGrids.py',overwrite=True)

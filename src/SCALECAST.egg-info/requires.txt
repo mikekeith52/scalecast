@@ -11,4 +11,3 @@ xgboost
 lightgbm
 openpyxl
 pandas-datareader
-mapie

@@ -7,7 +7,7 @@ long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = '0.17.3',
+  version = '0.17.4',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,
@@ -16,6 +16,9 @@ setup(
   author_email = 'mikekeith52@gmail.com',
   packages=find_packages('src'),
   package_dir={'': 'src'},
+  package_data = {
+    'scalecast':['grids/*'],
+  },
   project_urls = {
     'GitHub': 'https://github.com/mikekeith52/scalecast',
     'Read the Docs': 'https://scalecast.readthedocs.io/en/latest/',
@@ -37,6 +40,5 @@ setup(
     'lightgbm',
     'openpyxl',
     'pandas-datareader',
-    'mapie',
   ],
 )

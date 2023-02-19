@@ -1,6 +1,5 @@
-import config
 from test_Forecaster import build_Forecaster
-from src.scalecast.SeriesTransformer import SeriesTransformer
+from scalecast.SeriesTransformer import SeriesTransformer
 import numpy as np
 
 def forecaster(f):

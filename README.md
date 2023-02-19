@@ -151,7 +151,7 @@ results = f.export(
 - [Easy Distribution-Free Conformal Intervals for Time Series](https://medium.com/towards-data-science/easy-distribution-free-conformal-intervals-for-time-series-665137e4d907)
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
 
-### The Importance of Dynamic Validation
+### Dynamic Validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
 - [Model Validation Techniques for Time Series](https://towardsdatascience.com/model-validation-techniques-for-time-series-3518269bd5b3)
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html)
