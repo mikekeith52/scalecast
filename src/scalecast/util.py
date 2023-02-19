@@ -358,13 +358,14 @@ def find_statistical_transformation(
 
     Args:
         f (Forecaster): The object that stores the series to test.
-        goal (list-like): One or multiple of 'stationary', 'seasonally_adj'. Other options may be coming in the future.
+        goal (list-like): Default ['stationary']. One or multiple of 'stationary', 'seasonally_adj'. 
+            Other options may be coming in the future.
             If more than one goal is passed, will try to satisfy all goals in the order passed.
             For stationary: uses an Augmented Dickey-Fuller test to determine if the series is stationary.
             If not stationary, returns a diff transformation and log transformation if log is True.
             For seasonall_adj: uses seasonal auto_arima to find the optimal seasonal diff.
         train_only (bool): Default False. Whether to use train set only in all statistical tests.
-        log (bool): Default True. Whether to log and diff the series if it is found to be non-stationary or just diff.
+        log (bool): Default True. Whether to log and difference the series if it is found to be non-stationary or just difference.
             This will set itself to False if the lowest observed series value is 0 or lower.
         critical_pval (float): Default 0.05. The cutoff p-value to use to determine statistical signficance in the 
             Augmented Dickey-Fuller test and to run the auto_arima selection (substitutes for `alpha` arg).

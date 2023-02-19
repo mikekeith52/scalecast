@@ -71,4 +71,4 @@ If the resulting `error.log` file is free of errors, the test was successful and
 ## Committing Steps
 `cd path/to/scalecast`  
 `python setup.py sdist`  
-`twine upload sdist`  
+`twine upload dist/*`  
