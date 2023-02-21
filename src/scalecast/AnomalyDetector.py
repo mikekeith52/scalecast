@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
+from .Forecaster import _set_ci_step
 
 
 class AnomalyDetector:
@@ -10,20 +11,20 @@ class AnomalyDetector:
         self.f = f.__deepcopy__()
 
     def NaiveDetect(self, cilevel=0.99, **kwargs):
-        """ detects anomalies by breaking a series into its fundamental components:
+        """ Detects anomalies by breaking a series into its fundamental components:
         trend, seasonality, and residual. anomalies are defined as standard normal residuals
         further than a number of standard deviations away from the mean, determined by the value
-        passed to cilevel. this is a simple, computationally cheap anomaly detector. results
+        passed to cilevel. This is a simple, computationally cheap anomaly detector. Results
         are saved to the raw_anom and labeled_anom attributes.
 
         Args:
-            cilevel (float): default 0.99. the confidence interval used to determine how far
-                away a given residual must be from the mean to be considered an anomaly. in a normal
+            cilevel (float): Default 0.99. The confidence interval used to determine how far
+                away a given residual must be from the mean to be considered an anomaly. In a normal
                 series that is decomposed effectively in this process, a cilevel of 0.95 would still expect
                 to label 5% of its points as anomalies.
-            **kwargs: passed to the Forecaster.seasonal_decompose() method. 
-                if extrapolate_trend is left unspecified, this will fail to produce results.
-                see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.seasonal_decompose
+            **kwargs: Passed to the Forecaster.seasonal_decompose() method. 
+                If extrapolate_trend is left unspecified, this will fail to produce results.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.seasonal_decompose.
         
         Returns:
             None
@@ -57,36 +58,40 @@ class AnomalyDetector:
         estimator,
         future_dates=None,
         cilevel=0.99,
+        samples=100,
         return_fitted_vals=False,
+        random_seed=None,
         **kwargs,
     ):
-        """ detects anomalies with one of a Forecaster object's estimators.
-        an anomaly in this instance is defined as any value that falls
+        """ Detects anomalies with one of a Forecaster object's estimators.
+        An anomaly in this instance is defined as any value that falls
         out of the fitted values' bootstrapped confidence intervals
-        determined by the value passed to cilevel. this can be a good method
+        determined by the value passed to cilevel. This can be a good method
         to detect anomalies if you want to attempt to break down a series'
         into trends, seasonalities, and autoregressive parts in a more complex
-        manner than NaiveDetect would let you. it also gives access to RNN estimators,
-        which are shown to be effective anomaly detectors for time series. results
+        manner than NaiveDetect would let you. It also gives access to RNN estimators,
+        which are shown to be effective anomaly detectors for time series. Results
         are saved to the labeled_anom attribute.
 
         Args:
-            estimator (str): one of _estimators_.
-                the estimator to track anomalies with.
-            future_dates (int): optional. if this is specified with an integer, 
-                the estimator will use that number of forecast steps. if you want 
+            estimator (str): One of _estimators_.
+                The estimator to track anomalies with.
+            future_dates (int): Optional. If this is specified with an integer, 
+                the estimator will use that number of forecast steps. If you want 
                 to span an entire series for anomalies, not just the training set, 
                 future dates should be created either before initiating the AnomalyDetector 
-                object or by passing an int to this arg. future dates are what signal 
+                object or by passing an int to this arg. Future dates are what signal 
                 to the object that we want to train the entire dataset.
-            cilevel (float): default 0.99. the confidence interval to use when
+            cilevel (float): Default 0.99. The confidence interval to use when
                 bootstrapping confidence intervals.
-            return_fitted_vals (bool): default False. whether to return a DataFrame
+            samples (int): Default 100. How many samples in the bootstrap to find confidence intervals.
+            return_fitted_vals (bool): Default False. Whether to return a DataFrame
                 of the fitted values and confidence intervals from the fitting process.
-            **kwargs: passed to the Forecaster.manual_forecast() method.
+            random_seed (bool): Optional. Set a seed for consistent results.
+            **kwargs: Passed to the Forecaster.manual_forecast() method.
 
         Returns:
-            (DataFrame or None): a DataFrame of fitted values if return_fitted_vals is True.
+            (DataFrame or None): A DataFrame of fitted values if return_fitted_vals is True.
 
         >>> from scalecast.AnomalyDetector import AnomalyDetector
         >>> from scalecast.SeriesTransformer import SeriesTransformer
@@ -111,18 +116,39 @@ class AnomalyDetector:
         >>>    dropout=(0,0,0),
         >>> )
         """
+        def _find_cis(f, samples):
+            """ bootstraps the upper and lower forecast estimates using the info stored in cilevel and bootstrap_samples
+            """
+            y = f.y.values[-len(f.fitted_values):]
+            fvs = f.fitted_values
+            resids = [fv - ac for fv, ac in zip(fvs, y[-len(fvs) :])]
+            bootstrapped_resids = np.random.choice(resids, size=samples)
+            bootstrap_mean = np.mean(bootstrapped_resids)
+            bootstrap_std = np.std(bootstrapped_resids)
+            return _set_ci_step(
+                f = f,
+                s = bootstrap_std,
+            ) + bootstrap_mean
+        
+        if random_seed is not None:
+            random.seed(random_seed)
+        
         f1 = self.f.__deepcopy__()
         call_me = estimator if "call_me" not in kwargs.keys() else kwargs["call_me"]
 
         if future_dates is None and not f1.future_dates.to_list():
             f1.generate_future_dates(1)  # because we have to have at least 1
-        else:
+        elif future_dates is not None:
             f1.generate_future_dates(future_dates)
         f1.set_estimator(estimator)
         f1.set_cilevel(cilevel)
         f1.manual_forecast(**kwargs)
         fvs = f1.export_fitted_vals(call_me).set_index("DATE")
-        fvs["range"] = f1.history[call_me]["CIPlusMinus"]
+        #fvs["range"] = f1.history[call_me]["CIPlusMinus"]
+        fvs["range"] = _find_cis(
+            f = f1,
+            samples = samples,
+        )
         fvs["labeled_anom"] = fvs[["Actuals", "FittedVals", "range"]].apply(
             lambda x: 1 if (x[1] > (x[0] + x[2])) | (x[1] < (x[0] - x[2])) else 0,
             axis=1,
@@ -138,28 +164,28 @@ class AnomalyDetector:
             return fvs
 
     def MonteCarloDetect(self, start_at, stop_at, sims=100, cilevel=0.99):
-        """ detects anomalies by running a series of monte carlo simulations
+        """ Detects anomalies by running a series of monte carlo simulations
         over a span of the series, using the observations before the span start 
-        to determine the initial assumed distribution. results are saved to the 
-        raw_anom, labeled_anom, and mc_results attributes. it is a good idea to 
+        to determine the initial assumed distribution. Results are saved to the 
+        raw_anom, labeled_anom, and mc_results attributes. It is a good idea to 
         transform the series before running so that it is stationary and not seasonal.
-        in other words, the series distribution should be as close to normal as possible.
+        In other words, the series distribution should be as close to normal as possible.
         
         Args:
             start_at (int, str, Datetime.Datetime, or pandas.Timestamp):
-                if int, will start at that number obs in the series.
-                anything else should be a date-like object that can be
+                If int, will start at that number obs in the series.
+                Anything else should be a date-like object that can be
                 parsed by the pandas.Timestamp() function, representing the
-                starting point of the simulation. all observations before this
+                starting point of the simulation. All observations before this
                 point will be used to determine the mean/std of the intial distribution.
             stop_at (int, str, Datetime.Datetime, or pandas.Timestamp):
-                if int, will stop at that number obs in the series.
-                anything else should be a date-like object that can be
+                If int, will stop at that number obs in the series.
+                Anything else should be a date-like object that can be
                 parsed by the pandas.Timestamp() function, representing the
                 stopping point of the simulation.
-            sims (int): the number of simulations.
-            cilevel (float): default .99.
-                the percentage of points in the simulation that a given actual
+            sims (int): The number of simulations.
+            cilevel (float): Default .99.
+                The percentage of points in the simulation that a given actual
                 observation needs to be outside of the simulated series to be considered
                 an anomaly. 
 
@@ -199,7 +225,9 @@ class AnomalyDetector:
                     np.random.normal(loc=np.mean(obs), scale=np.std(obs))
                 )
                 obs.append(simmed_line[-1])
-            results[f"Iter{s}"] = simmed_line
+            df_tmp = pd.DataFrame({f"Iter{s}":simmed_line},index=results.index)
+            results = pd.concat([results,df_tmp],axis=1)
+            #results[f"Iter{s}"] = simmed_line
         results2 = results.copy()
         results2["sims_mean"] = results.drop("Actuals", axis=1).mean(axis=1)
         results2["sims_std"] = results.drop("Actuals", axis=1).std(axis=1)
@@ -223,15 +251,15 @@ class AnomalyDetector:
     def MonteCarloDetect_sliding(
         self, historical_window, step, **kwargs,
     ):
-        """ detects anomalies by running a series of monte carlo simulations
-        rolling over a span of the series. it is a good idea to 
+        """ Detects anomalies by running a series of monte carlo simulations
+        rolling over a span of the series. It is a good idea to 
         transform the series before running so that it is stationary and not seasonal.
-        in other words, the series distribution should be as close to normal as possible.
+        In other words, the series distribution should be as close to normal as possible.
 
         Args:
-            historical_window (int): the number of periods to begin the initial search.
-            step (int): how far to step forward after a scan.
-            **kwargs: passed to the `MonteCarloDetect()` method. `start_at` and `stop_at` passed
+            historical_window (int): The number of periods to begin the initial search.
+            step (int): How far to step forward after a scan.
+            **kwargs: Passed to the `MonteCarloDetect()` method. `start_at` and `stop_at` passed
                 automatically based on the values passed to the other arguments in this function.
 
         Returns:
@@ -250,8 +278,8 @@ class AnomalyDetector:
         >>> detector = AnomalyDetector(f)
         >>> detector.MonteCarloDetect_sliding(60,30)
         """
-        raw_anom = pd.Series()
-        labeled_anom = pd.Series()
+        raw_anom = pd.Series(dtype=float)
+        labeled_anom = pd.Series(dtype=float)
         y = []
         n = len(self.f.y)
         y = self.f.y.to_list()[historical_window:]
@@ -280,9 +308,9 @@ class AnomalyDetector:
         self.y = y
 
     def WriteAnomtoXvars(self, f=None, future_dates=None, **kwargs):
-        """ writes the Xvars from the previously called anomaly detector to Xvars in
-        a Forecaster object. each anomaly is its own dummy variable on the date it is 
-        found. a future distriution could detect level shifts.
+        """ Writes the Xvars from the previously called anomaly detector to Xvars in
+        a Forecaster object. Each anomaly is its own dummy variable on the date it is 
+        found. A future distriution could detect level shifts.
 
         Args:
             f (Forecaster): optional. if you pass an object here,
@@ -333,27 +361,27 @@ class AnomalyDetector:
         return f
 
     def adjust_anom(self, f=None, method="q", q=10):
-        """ changes the values of identified anomalies and returns a Forecaster object.
+        """ Changes the values of identified anomalies and returns a Forecaster object.
 
         Args: 
-            f (Forecaster): optional. if you pass an object here,
-                that object will have its y values altered. otherwise,
+            f (Forecaster): Optional. If you pass an object here,
+                that object will have its y values altered. Otherwise,
                 it will apply to the copy of the object stored in the
                 the AnomalyDetector object when it was initialized.
                 this Forecaster object is stored in the f attribute.
-            method (str): the following methods are supported: "q" and "interpolate".
+            method (str): The following methods are supported: "q" and "interpolate".
                 "q" uses q-cutting from pandas and fills values with second-to-last
-                q value in either direction. for example, if q == 10, then high anomaly
+                q value in either direction. For example, if q == 10, then high anomaly
                 values will be replaced with the 90th percentile of the rest of the series
-                data. low anomaly values will be replaced with the 10th percentile of the 
-                rest of the series. this is a good method for when your data is stationary.
-                for data with a trend, 'interpolate' is better as it fills in values linearly
-                based on the values before and after consecutive anomaly values. be careful
+                data. Low anomaly values will be replaced with the 10th percentile of the 
+                rest of the series. This is a good method for when your data is stationary.
+                For data with a trend, 'interpolate' is better as it fills in values linearly
+                based on the values before and after consecutive anomaly values. Be careful
                 when using "q" with differenced data. when undifferencing,
                 original values will be reverted back to.
-            q (int): default 10. 
-                the q-value to use when method == 'q'.
-                ignored when method != 'q'.
+            q (int): Default 10. 
+                The q-value to use when method == 'q'.
+                Ignored when method != 'q'.
 
         >>> from scalecast.AnomalyDetector import AnomalyDetector
         >>> from scalecast.Forecaster import Forecaster
@@ -415,15 +443,15 @@ class AnomalyDetector:
         return f
 
     def plot_anom(self, label=True, strftime_fmt="%Y-%m-%d"):
-        """ plots the series used to detect anomalies and red dashes around points that
+        """ Plots the series used to detect anomalies and red dashes around points that
         were identified as anomalies from the last algorithm run.
 
         Args:
-            label (bool): default True.
-                whether to add the date label to each plotted point.
-            strftime_fmt (str): default '%Y-%m-%d'.
-                the string format to convert dates to when label is True.
-                when label is False, this is ignored.
+            label (bool): Default True.
+                Whether to add the date label to each plotted point.
+            strftime_fmt (str): Default '%Y-%m-%d'.
+                The string format to convert dates to when label is True.
+                When label is False, this is ignored.
 
         Returns:
             (Axis): The figure's axis.
@@ -478,9 +506,14 @@ class AnomalyDetector:
         ax.legend()
         return ax
 
-    def plot_mc_results(self):
-        """ plots the results from a monte-carlo detector: the series' original values
+    def plot_mc_results(self,ax=None,figsize=(12,6)):
+        """ Plots the results from a monte-carlo detector: the series' original values
         and the simulated lines.
+
+        Args:
+            ax (Axis): Optional. An existing axis to display the figure on.
+            figsize (tuple): Default (12,6). The size of the resulting figure.
+                Ignored if axis is not None.
 
         Returns:
             (Axis): The figure's axis.
@@ -501,7 +534,8 @@ class AnomalyDetector:
         >>> ax = f.plot_mc_results()
         >>> plt.show()
         """
-        _, ax = plt.subplots()
+        if ax is None:
+            _, ax = plt.subplots(figsize=figsize)
         results = self.mc_results
         sns.lineplot(x="Date", y="Actuals", data=results, label="actuals", ax=ax)
         for c in results.iloc[:, 2:]:

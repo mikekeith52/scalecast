@@ -79,3 +79,8 @@ Here are some objects that can be placed in a list and executed sequentially, si
    :members:
 
    .. automethod:: __init__
+
+.. autoclass:: src.scalecast.Pipeline.MVPipeline
+   :members:
+
+   .. automethod:: __init__

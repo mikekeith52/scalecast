@@ -1,7 +1,7 @@
 SeriesTransformer
 =================================================
 
-This object can be used to perform more complex transformations on your `Forecaster` object. It can be used to transform the dependent variable to adjust for trends, seasonality, and more, and every transformation is revertible. Revert functions must be called in opposite order as the applied transformation functions. This object is new as of dist 0.12.3.
+This object can be used to perform more complex transformations on your `Forecaster` object. It can be used to transform the dependent variable to adjust for trends, seasonality, and more, and every transformation is revertible. Revert functions must be called in opposite order as the applied transformation functions.
 
 .. code:: python
 
@@ -41,9 +41,7 @@ This object can be used to perform more complex transformations on your `Forecas
 
     f.plot()
 
-When using `DiffTransform()` and `DiffRevert()`, a lot can go wrong because of having to drop observations. AR terms should be added after `DiffTransform` has been called, but `Forecaster.add_lagged_terms()` and `Forecaster.add_diffed_terms()` should be called before. So, it can get confusing. The `Forecaster.diff()` function is still the easiest way to take a series first difference, but the `DiffTransform()` and `DiffRevert()` functions allow for multiple and seasonal differences. The two methods of taking differences should not be combined. Either use `Forecaster.diff()` or `SeriesTransformer.DiffTransform()`. Do not use both.
-
-All other transformation and reversion functions work well and there is not any danger in using them.
-
 .. autoclass:: src.scalecast.SeriesTransformer.SeriesTransformer
    :members:
+
+   .. automethod:: __init__

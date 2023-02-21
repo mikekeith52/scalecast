@@ -1,13 +1,8 @@
-from sklearn.neural_network import MLPRegressor
-from sklearn.ensemble import BaggingRegressor
-from sklearn.ensemble import StackingRegressor
 from statsmodels.tsa.vector_ar.vecm import VECM
-from scalecast.Forecaster import _sklearn_imports_
 
 class vecm:
     def __init__(
         self,
-        exog_coint=None,
         k_ar_diff=1, # always 0
         coint_rank=1,
         deterministic="n",
@@ -15,15 +10,14 @@ class vecm:
         first_season=0,
         freq = None,
     ):
-        """ initializes a Vector Error Correction Model.
-        uses the statsmodels implementation: https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html.
-        see it used with scalecast: https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html
+        """ Initializes a Vector Error Correction Model.
+        Uses the statsmodels implementation: https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html.
+        See it used with scalecast: https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html.
 
         Args:
-            exog_coint (ndarray): default None. deterministic terms inside the cointegration relation.
-            k_ar_diff (int): default 1. number of lagged differences in the model.
-            coint_rank (int): cointegration rank.
-            deterministic (str): one of {"n", "co", "ci", "lo", "li"}. default "n".
+            k_ar_diff (int): The number of lags from each series to use in the model.
+            coint_rank (int): Cointegration rank.
+            deterministic (str): One of {"n", "co", "ci", "lo", "li"}. Default "n".
                 "n" - no deterministic terms.
                 "co" - constant outside the cointegration relation.
                 "ci" - constant within the cointegration relation.
@@ -33,13 +27,12 @@ class vecm:
                 When using a constant term you have to choose whether you want to restrict it to the cointegration relation 
                 (i.e. "ci") or leave it unrestricted (i.e. "co"). Do not use both "ci" and "co". The same applies for "li" 
                 and "lo" when using a linear term. 
-            seasons (int): default 0. Number of periods in a seasonal cycle. 0 means no seasons.
-            first_season (int): default 0. Season of the first observation.
-            freq (str): optional. the frequency of the time-series. 
-                a pandas offset or 'B', 'D', 'W', 'M', 'A', or 'Q'.
+            seasons (int): Default 0. Number of periods in a seasonal cycle. 0 means no seasons.
+            first_season (int): Default 0. Season of the first observation.
+            freq (str): Optional. The frequency of the time-series. 
+                A pandas offset or 'B', 'D', 'W', 'M', 'A', or 'Q'.
         """
         self.k_ar_diff = k_ar_diff
-        self.exog_coint = exog_coint
         self.coint_rank = coint_rank
         self.deterministic = deterministic
         self.seasons = seasons
@@ -48,12 +41,12 @@ class vecm:
         self._scalecast_set = ['dates','n_series'] # these attrs are set when imported into scalecast
 
     def fit(self,X,y=None):
-        """ fits the model.
+        """ Fits the model.
 
         Args:
-            X (ndarray): the known observations (all known series plus exogenous regressors in a matrix).
+            X (ndarray): The known observations (all known series plus exogenous regressors in a matrix).
                 MVForecaster will split endog from exog appropriately.
-            y: not required for this model and left None. kept in to be consistent
+            y: Not required for this model and left None. Kept in to be consistent
                 with other scikit-learn models syntax.
         """
         exog = X[:,self.n_series:]
@@ -68,7 +61,6 @@ class vecm:
             X,
             exog=exog,
             k_ar_diff=self.k_ar_diff,
-            exog_coint=self.exog_coint,
             coint_rank=self.coint_rank,
             deterministic=self.deterministic,
             seasons=self.seasons,
@@ -78,10 +70,10 @@ class vecm:
         ).fit()
         
     def predict(self,X):
-        """ forecasts into an unknown horizon
+        """ Forecasts into an unknown horizon.
 
         Args:
-            X (ndarray): the future sereis values and future exognenous regressors.
+            X (ndarray): The future sereis values and future exognenous regressors.
                 MVForecaster will split this up appropriately without leaking.
         """
         # testing
@@ -99,17 +91,18 @@ class vecm:
             )
         return self.mod.predict(steps=X.shape[0],exog_fc=exog)
 
-def auto_arima(f,call_me='auto_arima',Xvars=None,**kwargs):
-    """ adds a forecast to a `Forecaster` object using the auto_arima function from pmdarima.
-    this function attempts to find the optimal arima order by minimizing information criteria
+def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=False,**kwargs):
+    """ Adds a forecast to a `Forecaster` object using the auto_arima function from pmdarima.
+    This function attempts to find the optimal arima order by minimizing information criteria
     on the training slice of data only.
 
     Args:
-        f (Forecaster): the object to add the forecast to
-        call_me (str): default 'auto_arima'. the name of the resulting model.
-        Xvars (str or list-like): optional. Xvars to add to the model.
-        **kwargs: passed to the auto_arima function from pmdarima.
-            see https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html
+        f (Forecaster): The object to add the forecast to.
+        call_me (str): Default 'auto_arima'. The name of the resulting model.
+        Xvars (str or list-like): Optional. Xvars to add to the model.
+        train_only (bool): Default False. Whether to minimize the IC over the training set only.
+        **kwargs: Passed to the auto_arima function from pmdarima.
+            See https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html.
 
     Returns:
         None
@@ -121,7 +114,7 @@ def auto_arima(f,call_me='auto_arima',Xvars=None,**kwargs):
     >>> print(f.auto_arima_params) # access the selected orders
     """
     import pmdarima
-    train = f.y.values[:-f.test_length]
+    train = f.y.values[:-f.test_length] if train_only else f.y.values
     auto_model = pmdarima.auto_arima(train,**kwargs)
     best_params = auto_model.get_params()
     f.auto_arima_params = best_params
@@ -147,37 +140,35 @@ def mlp_stack(
     hidden_layer_sizes=(100,100,100),
     solver='lbfgs',
     call_me='mlp_stack',
-    probabilistic=False,
     **kwargs,
 ):
-    """ applies a stacking model using a bagged MLP regressor as the final estimator and adds it to a `Forecaster` or `MVForecaster` object.
-    see what it does: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html#StackingRegressor
-    this function is not meant to be a model that allows for full customization but full customization is possible when using the 
+    """ Applies a stacking model using a bagged MLP regressor as the final estimator and adds it to a `Forecaster` or `MVForecaster` object.
+    See what it does: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html#StackingRegressor.
+    This function is not meant to be a model that allows for full customization but full customization is possible when using the 
     `Forecaster` and `MVForecaster` objects.
-    default values usually perform pretty well from what we have observed.
-    recommended to use at least four models in the stack.
+    Default values usually perform pretty well.
+    Recommended to use at least four models in the stack.
 
     Args:
-        f (Forecaster or MVForecaster): the object to add the model to.
-        model_nicknames (list-like): the names of models previously evaluated within the object.
-            must be sklearn api models.
-        max_samples (float or int): default 0.9.
-            the number of samples to draw with replacement from training set to train each base estimator.
-            if int, then draw max_samples samples.
-            if float, then draw that percentage of samples.
-        max_features (float or int): default 0.5
-            the number of features to draw from training set to train each base estimator.
-            if int, then draw max_features features.
-            if float, then draw that percentage of features.
-        n_estimators (int): default 10.
-            the number of base estimators in the ensemble.
-        hidden_layer_sizes (tuple): default (100,100,100).
-            the layer/hidden layer sizes for the bagged mlp regressor that is the final estimator in the stacked model.
-        solver (str): default 'lbfgs'.
-            the mlp solver.
-        call_me (str): default 'mlp_stack'. the name of the resulting model.
-        probabilistic (bool): default False. whether to use probabilistic modeling.
-        **kwargs: passed to the `manual_forecast()` or `proba_forecast()` method.
+        f (Forecaster or MVForecaster): The object to add the model to.
+        model_nicknames (list-like): The names of models previously evaluated within the object.
+            Must be sklearn api models.
+        max_samples (float or int): Default 0.9.
+            The number of samples to draw with replacement from training set to train each base estimator.
+            If int, then draw max_samples samples.
+            If float, then draw that percentage of samples.
+        max_features (float or int): Default 0.5
+            The number of features to draw from training set to train each base estimator.
+            If int, then draw max_features features.
+            If float, then draw that percentage of features.
+        n_estimators (int): Default 10.
+            The number of base estimators in the ensemble.
+        hidden_layer_sizes (tuple): Default (100,100,100).
+            The layer/hidden layer sizes for the bagged mlp regressor that is the final estimator in the stacked model.
+        solver (str): Default 'lbfgs'.
+            The mlp solver.
+        call_me (str): Default 'mlp_stack'. The name of the resulting model.
+        **kwargs: Passed to the `manual_forecast()` or `proba_forecast()` method.
 
     Returns:
         None
@@ -199,7 +190,20 @@ def mlp_stack(
     >>> mlp_stack(f,model_nicknames=models) # saves a model called mlp_stack
     >>> f.export('model_summaries',models='mlp_stack')
     """
-    results = f.export('model_summaries')
+    from sklearn.neural_network import MLPRegressor
+    from sklearn.ensemble import BaggingRegressor
+    from sklearn.ensemble import StackingRegressor
+    from .Forecaster import _sklearn_imports_
+    results = f.export('model_summaries',models=model_nicknames)
+
+    if results.shape[0] != len(model_nicknames):
+        raise ValueError(
+            '{} not found in the Forecaster object.'
+            ' The available models to pass to mlp_stack are: {}'.format(
+                model_nicknames,
+                [m for m in f.history if m in _sklearn_imports_.keys()],
+            )
+        )
     
     estimators = [
         (
@@ -230,17 +234,9 @@ def mlp_stack(
 
     f.add_sklearn_estimator(StackingRegressor,'stacking')
     f.set_estimator('stacking')
-    if not probabilistic:
-        f.manual_forecast(
-            estimators=estimators,
-            final_estimator=final_estimator,
-            call_me=call_me,
-            **kwargs,
-        )
-    else:
-        f.proba_forecast(
-            estimators=estimators,
-            final_estimator=final_estimator,
-            call_me=call_me,
-            **kwargs,
-        )
+    f.manual_forecast(
+        estimators=estimators,
+        final_estimator=final_estimator,
+        call_me=call_me,
+        **kwargs,
+    )

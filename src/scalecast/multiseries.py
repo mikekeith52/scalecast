@@ -2,15 +2,15 @@ import pandas as pd
 
 
 def export_model_summaries(f_dict, **kwargs):
-    """ exports a pandas dataframe with information about each model run on each 
-    series when doing forecasting using many different series.
+    """ Exports a pandas dataframe with information about each model run on each
+    eries when doing forecasting using many different series.
 
     Args:
-        f_dict (dict[str,Forecaster]): dictionary of forcaster objects.
-        **kwargs: passed to the Forecaster.export() function (do not pass dfs arg as that is set automatically to 'model_summaries')
+        f_dict (dict[str,Forecaster]): Dictionary of forcaster objects.
+        **kwargs: Passed to the Forecaster.export() function (do not pass dfs arg as that is set automatically to 'model_summaries').
 
     Returns:
-        (dataframe) the combined model summaries
+        (DataFrame) The combined model summaries.
     """
     forecast_info = pd.DataFrame()
     for k, f in f_dict.items():
@@ -21,10 +21,10 @@ def export_model_summaries(f_dict, **kwargs):
 
 
 def keep_smallest_first_date(*fs):
-    """ trims all passed Forecaster objects so they all have the same first date.
+    """ Trims all passed Forecaster objects so they all have the same first date.
     
     Args:
-        *fs (Forecaster objects): the objects to check and trim
+        *fs (Forecaster objects): The objects to check and trim.
 
     Returns:
         None

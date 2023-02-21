@@ -4,7 +4,12 @@ from typing import Dict, Union
 from ipywidgets import widgets
 from IPython.display import display, clear_output
 
-from scalecast.Forecaster import Forecaster, _determine_best_by_, _estimators_
+from .Forecaster import (
+    Forecaster, 
+    _determine_best_by_, 
+    _can_be_tuned_, 
+    _check_if_correct_estimator,
+)
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -15,26 +20,21 @@ from tqdm.notebook import tqdm as log_progress
 def results_vis(
     f_dict: Dict[str, Forecaster],
     plot_type: str = "forecast",
-    print_attr: list = [],
     include_train: Union[bool, int] = True,
     figsize = (12,6),
-) -> None:
-    """ visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.
+):
+    """ Visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.
 
     Args:
-        f_dict (dict[str,Forecaster]): dictionary of forcaster objects.
-            works best if two or more models have been evaluated in each dictionary value.
-        plot_type (str): one of {"forecast","test"}, default "forecast".
-            the type of results to visualize.
-        print_attr (list): optional.
-            the attributes from history to print.
-            passed to print_attr parameter when plot_type = 'forecast'.
-            ignored when plot_type = 'test'.
-        include_train (bool or int): optional.
-            whether to include the complete training set in the plot or how many traning-set observations to include.
-            passed to include_train parameter when plot_type = 'test'.
-            ignored when plot_type = 'forecast'.
-        figsize (tuple): default (12,6). size of the resulting figure.
+        f_dict (dict[str,Forecaster]): Dictionary of forcaster objects.
+            Works best if two or more models have been evaluated in each dictionary value.
+        plot_type (str): One of {"forecast","test"}. Default "forecast".
+            The type of results to visualize.
+        include_train (bool or int): Optional.
+            Whether to include the complete training set in the plot or how many traning-set observations to include.
+            Passed to include_train parameter when plot_type = 'test'.
+            Ignored when plot_type = 'forecast'.
+        figsize (tuple): Default (12,6). Size of the resulting figure.
 
     Returns:
         None 
@@ -51,7 +51,6 @@ def results_vis(
                 models=f"top_{mo_selection}",
                 order_by=me_selection,
                 level=lv_selection,
-                print_attr=print_attr,
                 ci=ci_selection,
                 figsize=figsize,
             )
@@ -86,12 +85,12 @@ def results_vis(
     mo_dd = widgets.Dropdown(
         options=range(1, len(all_models) + 1), description="No. Models"
     )
-    lv_dd = widgets.Dropdown(options=[True, False], description="View Level")
+    lv_dd = widgets.Dropdown(options=[False, True], description="View Level")
     ci_dd = widgets.Dropdown(
-        options=[True, False], description="View Confidence Intervals"
+        options=[False, True], description="View Confidence Intervals"
     )
     me_dd = widgets.Dropdown(
-        options=sorted(_determine_best_by_), description="Order By"
+        options=sorted(_determine_best_by_), description="Order By", value = 'TestSetRMSE',
     )
 
     # never changes
@@ -105,18 +104,18 @@ def results_vis(
 
 
 def results_vis_mv(f_dict, plot_type="forecast", include_train=True, figsize = (12,6)):
-    """ visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
+    """ Visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
 
     Args:
-        f_dict (dict[str,MVForecaster]): dictionary of forcaster objects.
-            works best if two or more models have been evaluated in each dictionary value.
-        plot_type (str): one of {"forecast","test"}, default "forecast".
-            the type of results to visualize.
-        include_train (bool or int): optional.
-            whether to include the complete training set in the plot or how many traning-set observations to include.
-            passed to include_train parameter when plot_type = 'test'.
-            ignored when plot_type = 'forecast'.
-        figsize (tuple): default (12,6). size of the resulting figure.
+        f_dict (dict[str,MVForecaster]): Dictionary of forcaster objects.
+            Works best if two or more models have been evaluated in each dictionary value.
+        plot_type (str): One of {"forecast","test"}. Default "forecast".
+            The type of results to visualize.
+        include_train (bool or int): Optional.
+            Whether to include the complete training set in the plot or how many traning-set observations to include.
+            Passed to include_train parameter when plot_type = 'test'.
+            Ignored when plot_type = 'forecast'.
+        figsize (tuple): Default (12,6). Size of the resulting figure.
 
     Returns:
         None
@@ -173,9 +172,9 @@ def results_vis_mv(f_dict, plot_type="forecast", include_train=True, figsize = (
     se_se = widgets.SelectMultiple(
         options=series, description="Series", selected=series
     )
-    lv_dd = widgets.Dropdown(options=[True, False], description="View Level")
+    lv_dd = widgets.Dropdown(options=[False, True], description="View Level")
     ci_dd = widgets.Dropdown(
-        options=[True, False], description="View Confidence Intervals"
+        options=[False, True], description="View Confidence Intervals"
     )
 
     # never changes
@@ -194,8 +193,6 @@ def tune_test_forecast(
     cross_validate=False,
     dynamic_tuning=False,
     dynamic_testing=True,
-    probabilistic=False,
-    n_iter=20,
     summary_stats=False,
     feature_importance=False,
     fi_method="pfi",
@@ -203,67 +200,45 @@ def tune_test_forecast(
     suffix=None,
     **cvkwargs,
 ):
-    """ tunes, tests, and forecasts a series of models with a progress bar through tqdm.
+    """ Tunes, tests, and forecasts a series of models with a progress bar through tqdm.
 
     Args:
         f (Forecaster or MVForecaster): the object to run the models through.
         models (list-like):
-            each element must be in _can_be_tuned_.
-        cross_validate (bool): default False
-                whether to tune the model with cross validation. 
-                if False, uses the validation slice of data to tune.
-        dynamic_tuning (bool or int): default False.
-            whether to dynamically tune the forecast (meaning AR terms will be propogated with predicted values).
-            if True, evaluates dynamically over the entire out-of-sample slice of data.
-            if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-            setting this to False or 1 means faster performance, 
-            but gives a less-good indication of how well the forecast will perform out x amount of periods.
-        dynamic_testing (bool or int):
-            whether to dynamically test the forecast (meaning AR terms will be propogated with predicted values).
-            if True, evaluates dynamically over the entire out-of-sample slice of data.
-            if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-            setting this to False or 1 means faster performance, 
-            but gives a less-good indication of how well the forecast will perform out x amount of periods.
-        probabilistic (bool, str, or list-like): default False.
-            if bool, whether to use a probabilistic forecasting process to set confidence intervals for all models.
-            if str, the name of a single model to apply a probabilistic process to.
-            if list-like, a list of models to apply a probabilistic process to.
-        n_iter (int): default 20.
-            how many iterations to use in probabilistic forecasting. ignored if probabilistic = False.
-        summary_stats (bool): default False.
-            whether to save summary stats for the models that offer those.
-            does not work for `MVForecaster` objects.
-        feature_importance (bool): default False.
-            whether to save permutation feature importance information for the models that offer those.
-            does not work for `MVForecaster` objects.
-        fi_method (str): one of {'pfi','shap'}, default 'pfi'.
-            the type of feature importance to save for the models that support it.
-            ignored if feature_importance is False.
-            does not work for `MVForecaster` objects.
-        limit_grid_size (int or float): optional. pass an argument here to limit each of the grids being read.
-            see https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size
-        suffix (str): optional. a suffix to add to each model as it is evaluate to differentiate them when called
-            later. if unspecified, each model can be called by its estimator name.
-        **cvkwargs: passed to the cross_validate() method.
+            Each element must be in _can_be_tuned_.
+        cross_validate (bool): Default False.
+            Whether to tune the model with cross validation. 
+            If False, uses the validation slice of data to tune.
+        dynamic_tuning (bool or int): Default False.
+            Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
+        dynamic_testing (bool or int): Default True.
+            Whether to dynamically/recursively test the forecast (meaning AR terms will be propogated with predicted values).
+            If True, evaluates recursively over the entire out-of-sample slice of data.
+            If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+            Setting this to False or 1 means faster performance, 
+            but gives a less-good indication of how well the forecast will perform more than one period out.
+        summary_stats (bool): Default False.
+            Whether to save summary stats for the models that offer those.
+            Does not work for `MVForecaster` objects.
+        feature_importance (bool): Default False.
+            Whether to save permutation feature importance information for the models that offer those.
+            Does not work for `MVForecaster` objects.
+        fi_method (str): One of {'pfi','shap'}. Default 'pfi'.
+            The type of feature importance to save for the models that support it.
+            Ignored if feature_importance is False.
+            Does not work for `MVForecaster` objects.
+        limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
+            See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
+        suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called
+            later. If unspecified, each model can be called by its estimator name.
+        **cvkwargs: Passed to the cross_validate() method.
 
     Returns:
         None
     """
-    if (
-        len([m for m in models if m not in [m for m in _estimators_ if m != "combo"]])
-        > 0
-    ):
-        raise ValueError(
-            "values passed to models must be list-like and in {}".format(
-                [m for m in _estimators_ if m != "combo"]
-            )
-        )
+    [_check_if_correct_estimator(m,_can_be_tuned_) for m in models]
     for m in log_progress(models):
-        m_prob = (
-            probabilistic if isinstance(probabilistic,bool) 
-            else m == probabilistic if isinstance(probabilistic,str) 
-            else m in probabilistic
-        )
+
         call_me = m if suffix is None else m + suffix
         f.set_estimator(m)
         if limit_grid_size is not None:
@@ -276,8 +251,6 @@ def tune_test_forecast(
         f.auto_forecast(
             dynamic_testing=dynamic_testing,
             call_me=call_me,
-            probabilistic=m_prob,
-            n_iter=n_iter,
         )
 
         if summary_stats:

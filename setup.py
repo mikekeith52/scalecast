@@ -1,14 +1,13 @@
 
 from setuptools import setup, find_packages
 import shutil
-#from src.scalecast.__init__ import __version__ as version
 import os
 
 long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = '0.15.4',
+  version = '0.17.4',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,
@@ -17,6 +16,9 @@ setup(
   author_email = 'mikekeith52@gmail.com',
   packages=find_packages('src'),
   package_dir={'': 'src'},
+  package_data = {
+    'scalecast':['grids/*'],
+  },
   project_urls = {
     'GitHub': 'https://github.com/mikekeith52/scalecast',
     'Read the Docs': 'https://scalecast.readthedocs.io/en/latest/',
@@ -26,7 +28,6 @@ setup(
   keywords = ['FORECAST', 'SCALE', 'DYNAMIC', 'MACHINE LEARNING', 'APPLIED'],
   install_requires = [
     'scikit-learn',
-    'tensorflow',
     'statsmodels',
     'scipy',
     'eli5',

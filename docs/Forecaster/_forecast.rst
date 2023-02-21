@@ -1,9 +1,11 @@
 Forecasting Different Model Types
 ===================================
-Any time you set an estimator, different arguments become available to you when calling `manual_forecast`, `proba_forecast`, or tuning the model. Here is the documentation for all these models:
+Any time you set an estimator, different arguments become available to you when calling `manual_forecast` or tuning the model. This page lists all model types native to scalecast. See also the `auxmodels module <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html>`_.
 
 arima
 --------------------------------------------------
+See also `auto_arima <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html>`_.
+
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_arima
     :members:
     :undoc-members:
@@ -45,13 +47,26 @@ lstm
 
 multivariate
 ---------------------------------------------------------------
+See also the `vecm model <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_.
+
 .. automodule:: src.scalecast.MVForecaster.MVForecaster._forecast
     :members:
     :undoc-members:
     :show-inheritance:
 
 >>> mvf.set_estimator('xgboost')
->>> mvf.proba_forecast() # probabilistic forecasting
+>>> mvf.manual_forecast()
+
+naive
+--------------
+.. automodule:: src.scalecast.Forecaster.Forecaster._forecast_naive
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+>>> f.set_estimator('naive')
+>>> f.manual_forecast()
+>>> f.manual_forecast(seasonal=True)
 
 prophet
 --------------------------------------------------
@@ -87,13 +102,15 @@ silverkite
 
 sklearn
 --------------------------------------------------
+See also `mlp_stack <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#module-src.scalecast.auxmodels.mlp_stack>`_.
+
 .. automodule:: src.scalecast.Forecaster.Forecaster._forecast_sklearn
     :members:
     :undoc-members:
     :show-inheritance:
 
 >>> f.set_estimator('mlp')
->>> f.proba_forecast() # probabilistic forecasting
+>>> f.manual_forecast()
 >>> f.regr # access the sklearn model properties
 
 theta

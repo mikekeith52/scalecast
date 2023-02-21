@@ -1,7 +1,7 @@
 AnomalyDetector
 =================================================
 
-This object can be used to detect anomalies in a time series using any of three methods. This object is new as of dist 0.12.3. See the example notebook: https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html
+This object can be used to detect anomalies in a time series using any of three methods. See the example notebook: https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html
 
 .. code:: python
 

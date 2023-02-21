@@ -1,6 +1,168 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.4] - 2023-02-14
+### Added
+- Added an explicit error for when `auxmodels.mlp_stack()` is specified incorrectly.
+- Added `ax` argument to more plotting functions.
+- Added test scripts to the GitHub repository.
+- Added an explicit error in `Forecaster.auto_Xvar_select()` for situations when monitoring a test metric but no test set is specified.
+### Changed
+- Explicitly specify `dtype = float` for parts of code that raise a warning when this is not the case.
+- Changed to relative library imports wherever possible.
+- Changed the `Forecaster.__deepcopy__()` to be more explicit.
+- Changed how `GridGenerator` gets grids and added more grids files to choose from.
+- Got rid of some confidence-interval information when exporting model summary info from `MVForecaster`.
+- `MVForecaster.export('lvl_test_set_predictions')` no longer fails when there is no test set.
+### Fixed
+- Fixed the `AnomalyDetector.EstimatorDetect()` function.
+- Fixed `util.break_mv_forecaster()` for situations when `MVForecaster` does not have a test set.
+- Fixed how exporting works in `Forecaster` so that errors are not returned when test set is 0 and default args are maintained.
+
+## [0.17.2] - 2023-02-09
+### Added
+### Changed
+- Explicitly specify `dtype = float` for parts of code that raise a warning when this is not the case.
+- Logging a warning from `SeriesTransformer.DetrendTranform()` instead of raising it.
+### Fixed
+
+## [0.17.1] - 2023-02-08
+### Added
+- Added `FutureWarning`s to functions that touch the `Forecaster.diff()` method. This method will be removed soon as the `SeriesTransformer` object is a better alternative that does the same thing.
+- Added `diffy` argument to `Forecaster.adf_test()`.
+- Added a `correct_residuals()` function that corrects residuals for autocorrelation before building confidence intervals. 
+### Changed
+- The `train_only` default argument in `auxmodels.auto_arima()` changed to False.
+- Changed how default arguments are parsed in `Forecaster.export()`.
+- Refactored code to avoid a `SettingWithCopyWarning` from pandas in `Forecaster.ingest_Xvars_df()`.
+### Fixed
+- Removed the `print_attr` argument from `notebook.results_vis()` that is no longer accepted in `Forecaster.diff()`.
+- Removed a warning from `Forecaster.ingest_Xvars_df()` that shouldn't have been raised.
+
+## [0.17.0] - 2023-02-06
+### Added
+- Added the `cis` argument to `Forecaster__init__()` and `MVForecaster.__init__()`.
+### Changed
+- Only conformal intervals now supported in `Forecaster` and `MVForecaster`. By default, these will not be generated and can only be generated if there is a test set and it is specified to a sufficient length.
+- Removed `Forecaster.proba_forecast()` and `MVForecaster.proba_forecast()` and all probabilistic arguments in functions.
+- Default `test_length` argument in `Forecaster.__init__()` and `MVForecaster.__init__()` is now 0.
+- Took out the `exog_coint` argument from `vecm.__init__()` since it's not actually usable.
+- Only model-specific and hyperparameter optimization warnings will be logged in warnings.log and other warnings will be printed.
+- Changed many categories of warnings from `UserWarning` to `Warning`.
+### Fixed
+- Added `staticmethod` decorators to `util.metrics` methods. This doesn't change functionality, just the documentation.
+
+## [0.16.6] - 2023-02-03
+### Added
+### Changed
+### Fixed
+- Fixed the warning in `Forecaster.ingest_Xvars_df()`.
+
+## [0.16.5] - 2023-01-31
+### Added
+### Changed
+### Fixed
+- Fixed an error that can arise from the `util.break_mv_forecaster()` function.
+- Fixed the `AnomalyDetector.EstimatorDetect()` function.
+
+## [0.16.4] - 2023-01-31
+### Added
+- Added mapie as a requirement.
+### Changed
+- `Forecaster.proba_forecast()` now uses conformal prediction from the mapie package to create confidence intervals and is much more efficient. This will be also implemented in `MVForecaster` soon.
+- Took out 'CIPlusMinus' as a history key in `Forecaster` and `MVForecaster`.
+### Fixed
+
+## [0.16.3] - 2023-01-29
+### Added
+- Added a naive/seasonal naive estimator to `Forecaster`.
+### Changed
+- `Forecaster.add_diffed_terms` no longer supports second differencing.
+### Fixed
+- Fixed the warning that gets passed for the RNN and Silverkite models when `dynamic_testing` is passed as `False`.
+
+## [0.16.0] - 2023-01-28
+### Added
+### Changed
+- It is now possible to skip model testing by setting test_length = 0 in `Forecaster` and `MVForecaster`.
+- Got rid of LastTestSetPrediction and LastTestSetActuals columns from model summary df.
+- Got rid of `best_fcst` DataFrame.
+- Gave documentation a once-over.
+- Refactored code to be slightly more efficient.
+### Fixed
+- The scaler in `MVForecaster` was not just being applied to the test-set inputs and was being called twice per model train.
+
+## [0.15.16] - 2023-01-25
+### Added
+- added `ax` argument to all forecast plotting functions.
+### Changed
+### Fixed
+- removed `tensorflow` from the list of requirements and added it and `tensorflow-macos` to the optional add-on list (#31)
+
+## [0.15.14] - 2022-01-23
+### Added
+- added a str representation for the `SeriesTransformer` object
+- added `exclude_models` argument to `SeriesTransformer.Revert()` and similar functions
+### Changed
+### Fixed
+- cleaned up some documentation links
+
+## [0.15.12] - 2022-12-12
+### Added
+### Changed
+- fill N/A for all forecasts with a forward fill to prevent some max-value errors, both when forecasting and reverting transformations
+### Fixed
+
+## [0.15.11] - 2022-12-06
+### Added
+### Changed
+### Fixed
+- fixed exception catching in `Forecaster.auto_Xvar_select()` and `util.find_optimal_transformation()`
+
+## [0.15.10] - 2022-12-05
+### Added
+- added `dayofyear` to search for in `Forecater.auto_Xvar_select()` when frequency is daily or lower.
+- added `cycle_lens` argument to `Forecaster.add_seasonal_regressors()`.
+### Changed
+### Fixed
+- fixed how seasonalities are selected when they are not Fourier transformed in `Forecaster.auto_Xvar_select()`.
+
+## [0.15.9] - 2022-11-03
+### Added
+### Changed
+### Fixed
+- fixed getting cis with backtesting. only the first backtest iteration was being used.
+
+## [0.15.8] - 2022-11-02
+### Added
+- added `method` argument to `Forecaster.reeval_cis()` and `MVForecaster.reeval_cis()` and included an option to get confidence intervals through backtesting.
+- added `Forcaster.plot_backtest_values()`.
+### Changed
+- changed some error messages to be more descriptive and to encourage raising issues on github.
+- changed how level confidence intervals are obtained when calling `SeriesTransformer.DiffRevert()` to be more efficient.
+- the backtest_values DataFrame now includes dates in `Forecaster` and `MVForecaster`. the order of the dataframe is Date --> Actuals --> Preds for all iterations.
+### Fixed
+
+## [0.15.7] - 2022-10-28
+### Added
+### Changed
+- changed `dynamic_testing = <int>` to same way it was in 0.12.8 when it was introduced because it gives better and more efficient results in both `Forecaster` and `MVForecaster`.
+### Fixed
+
+## [0.15.6] - 2022-10-25
+### Added
+### Changed
+- the `m` argument in `util.find_optimal_transformation` can be a list and multiple seasonal differences can be tried in that function
+- changed how level plotting is peformed in `Forecaster.plot()` and `Forecaster.plot_test_set()`
+### Fixed
+- fixed how history['LevelY'] attribute is undifferenced in `SeriesTransformer`, which was causing plots to be incorrect.
+
+## [0.15.5] - 2022-10-22
+### Added
+- added the `Pipeline.MVPipeline` object.
+### Changed
+### Fixed
+
 ## [0.15.4] - 2022-10-21
 ### Added
 ### Changed

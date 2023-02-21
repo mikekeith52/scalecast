@@ -50,6 +50,6 @@ html_theme_options = {
 }
 html_context = {}
 
-html_favicon = '../assets/logo2.png'
-html_logo = '../assets/logo2.png'
+html_favicon = './_static/logo2.png'
+html_logo = './_static/logo2.png'
 html_static_path = ['_static']
