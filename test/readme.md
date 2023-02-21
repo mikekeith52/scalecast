@@ -47,7 +47,7 @@ Big updates will get an increment after the first '.':
 `conda create -n scalecast-env python=3.x anaconda`
 
 ### 3. Activate the environment
-`source activate scalecast-env`
+`conda activate scalecast-env`
 
 ### 4. Change to the root of the directory:
 `cd /path/to/scalecast/`
@@ -65,7 +65,7 @@ Big updates will get an increment after the first '.':
 `python test_all.py`  
 
 ### 8. Deactivate environment
-`source deactivate`
+`conda deactivate`
 
 If the resulting `error.log` file is free of errors, the test was successful and a new version can be committed. Only keep the most recently created error log.
 
