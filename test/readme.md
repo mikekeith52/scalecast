@@ -25,10 +25,10 @@ Big updates will get an increment after the first '.':
 `cd /path/to/scalecast/`
 
 ### 4. Install the package in editable mode with pip
-`pip install -e --upgrade .`
+`pip install -e .`
 
 ### 5. Check that it worked
-`python -c "import scalecast; print(scalecast.__version___)`
+`python -c "import scalecast; print(scalecast.__version__)"`
 
 ### 6. Run the test
 `cd path/to/scalecast/test`  
@@ -47,20 +47,21 @@ Big updates will get an increment after the first '.':
 `conda create -n scalecast-env python=3.x anaconda`
 
 ### 3. Activate the environment
-`ssource activate scalecast-env`
+`source activate scalecast-env`
 
 ### 4. Change to the root of the directory:
 `cd /path/to/scalecast/`
 
 ### 5. Install the package in editable mode with pip
-`pip install -e --upgrade .`
+`pip install -e .`
 
 ### 6. Check that it worked
-`python -c "import scalecast; print(scalecast.__version___)`
+`python -c "import scalecast; print(scalecast.__version__)"`
 
 ### 7. Run the test
 `cd path/to/scalecast/test`  
 `pip install -r requirements.txt`  
+`conda install -c conda-forge cmdstanpy`  
 `python test_all.py`  
 
 ### 8. Deactivate environment

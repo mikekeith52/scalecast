@@ -5,10 +5,10 @@ import datetime
 import importlib
 
 script_files = [ # comment out scripts to skip testing
-    'test_AnomalyDetector',
-    #'test_ChangepointDetector', # kats is giving me problems and I don't want to deal with it right now
     'test_Forecaster',
     'test_GridGenerator',
+    'test_AnomalyDetector',
+    #'test_ChangepointDetector', # kats is giving me problems and I don't want to deal with it right now
     'test_multiseries',
     'test_MVForecaster',
     'test_Pipeline',

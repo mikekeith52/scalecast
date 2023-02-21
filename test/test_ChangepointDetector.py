@@ -14,9 +14,9 @@ def main():
         plt.close()
 
         # dependency hell error - I think I'll delete this method from the package soon
-        #detector.DetectCPBOCPD()
-        #plt.savefig(f'../../cpbocpd_{tl}.png')
-        #plt.close()
+        detector.DetectCPBOCPD()
+        plt.savefig(f'../../cpbocpd_{tl}.png')
+        plt.close()
 
         f = detector.WriteCPtoXvars(f)
 
