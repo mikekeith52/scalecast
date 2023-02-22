@@ -6,9 +6,9 @@
 
 ## About
 
-Scalecast is a light-weight time-series forecasting procedure, wrapper, and results container built by and for applied Data Scientists using an ML framework. It offers a streamlined transforming, tuning, reverting, and reporting interface with many model classes, from basic ARIMA and linear models to boosted trees and recurrent neural nets. No matter which models you want to play with, the uniform interface makes it easy and fun to get results quickly.  
+Scalecast helps you forecast time series. What sets it apart from other libraries is its pipelining functionality. The unique approach not only allows a series to be transformed to account for stationarity and other concerns, but also fully reverted when results are ready to be reported. Point forecasts, test-set metrics, and conformal confidence intervals are easily obtained at the original series level through this process. Uniform ML modeling (with models from a diverse set of libraries, including scikit-learn, statsmodels, and tensorflow), reporting, and data visualiations are offered through the `Forecaster` and `MVForecaster` interfaces. Data storage and processing then becomes easy as all applicable data, predictions, and many derived metrics are contained in a few objects with much customization available through different modules. [Feature requests and issue reporting](https://github.com/mikekeith52/scalecast/issues/new) are welcome!  
 
-## Official Docs
+## Documentation  
 - [Read the Docs](https://scalecast.readthedocs.io/en/latest/)  
 - [Introductory Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html)  
 - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)  
@@ -30,31 +30,31 @@ models = (
   'lightgbm',
   'knn',
 ) # https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html
-# grids for tuning models (see the Grids.py file)
-GridGenerator.get_example_grids()
+# grids for tuning models: https://github.com/mikekeith52/scalecast/tree/main/src/scalecast/grids
 # extract data (this is an example dataset)
 df = pdr.get_data_fred(
-  'HOUSTNSA',
-  start='1959-01-01',
-  end='2022-08-01'
+    'HOUSTNSA',
+    start='1959-01-01',
+    end='2022-08-01'
 )
 # build the forecaster object
 f = Forecaster(
-  y=df['HOUSTNSA'],
-  current_dates=df.index,
-  future_dates=24,
-  test_length=48, # not required to set a test length but testing models is necessary for generating confidence intervals
-  cis = True, # all models called will have confidence intervals if this is True (default is False)
+    y=df['HOUSTNSA'],
+    current_dates=df.index,
+    future_dates=24,
+    test_length=48, # not required to set a test length but testing models is necessary for generating confidence intervals
+    cis = True, # all models called will have confidence intervals if this is True (default is False)
 )
 # this function will be placed in a pipeline
 def forecaster(f,models):
     f.add_covid19_regressor()
-    f.auto_Xvar_select()
+    f.auto_Xvar_select() # https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html
     f.tune_test_forecast(
         models,
         dynamic_testing=24, # test-set metrics will be an average of rolling 24-step forecasts
         cross_validate=True, # models tuned with cross-validation, excludes test set
         k = 3, # 3-fold (time series) cross validation
+        rolling = False, # rolling cross validation available
     )
     mlp_stack(f,models) # a stacking model offered by scalecast
 # transform data to make it stationary/easier to predict        
@@ -80,19 +80,20 @@ pipeline = Pipeline(
     ],
 )
 f = pipeline.fit_predict(f,models=models)
+backtest_results = pipeline.backtest(f,models=models)
 f.plot(
-  ci=True, # setting this to True will not throw an error if there are no confidence intervals
-  order_by='TestSetMAPE',
+    ci=True, # setting this to True will not throw an error if there are no confidence intervals
+    order_by='TestSetMAPE',
 )
 plt.legend(loc = 'upper left')
 plt.show()
 # export results
 results = f.export(
-  [
-    'model_summaries', # info about hyperparams, xvars, scaling, erros, etc.
-    'all_fcsts', # point forecasts
-  ],
-  cis = True, # confidence intervals placed on point forecasts
+    [
+      'model_summaries', # info about hyperparams, xvars, scaling, error metrics, etc.
+      'all_fcsts', # point forecasts
+    ],
+    cis = True, # confidence intervals placed on point forecasts
 )
 ```
 ![Readme Example Vis](_static/results.png)

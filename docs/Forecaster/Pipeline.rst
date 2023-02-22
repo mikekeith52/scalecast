@@ -77,10 +77,14 @@ Here are some objects that can be placed in a list and executed sequentially, si
 
 .. autoclass:: src.scalecast.Pipeline.Pipeline
    :members:
+   :undoc-members:
+   :inherited-members:
 
    .. automethod:: __init__
 
 .. autoclass:: src.scalecast.Pipeline.MVPipeline
    :members:
-
+   :undoc-members:
+   :inherited-members:
+   
    .. automethod:: __init__

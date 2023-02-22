@@ -206,7 +206,7 @@ class metrics:
 
 def plot_reduction_errors(f, ax = None, figsize=(12,6)):
     """ Plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
-    with method = 'pfi'.
+    with method = 'pfi' or method = 'shap'.
     
     Args:
         f (Forecaster): An object that has called the `reduce_Xvars()` method with method = 'pfi'.
@@ -215,6 +215,26 @@ def plot_reduction_errors(f, ax = None, figsize=(12,6)):
         
     Returns:
         (Axis) The figure's axis.
+
+    >>> from scalecast.Forecaster import Forecaster
+    >>> from scalecast.util import plot_reduction_errors
+    >>> import matplotlib.pyplot as plt
+    >>> import seaborn as sns
+    >>> import pandas as pd
+    >>> import pandas_datareader as pdr
+    >>> 
+    >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
+    >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
+    >>> f.set_test_length(.2)
+    >>> f.generate_future_dates(24)
+    >>> f.add_ar_terms(24)
+    >>> f.integrate(critical_pval=.01)
+    >>> f.add_seasonal_regressors('month',raw=False,sincos=True,dummy=True)
+    >>> f.add_seasonal_regressors('year')
+    >>> f.add_time_trend()
+    >>> f.reduce_Xvars(method='pfi')
+    >>> plot_reduction_errors(f)
+    >>> plt.show()
     """
     dropped = f.pfi_dropped_vars
     errors = f.pfi_error_values
@@ -227,6 +247,139 @@ def plot_reduction_errors(f, ax = None, figsize=(12,6)):
     plt.ylabel("error")
     return ax
 
+def backtest_metrics(
+    backtest_results: list,
+    mets = ['rmse'],
+    mase = False, 
+    msis = False,
+    msis_alpha = 0.05,
+    m = 1, 
+    names = None,
+) -> pd.DataFrame:
+    """ Ingests the results output from `Pipeline.backtest()` and converts results to metrics.
+    
+    Args:
+        backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
+        mets (list): A list of metrics from the `util.metrics` class where the only two accepted arguments are a and f.
+        mase (bool): Default False.
+            Whether to also calculate mase. Must specify seasonality in m.
+        msis (bool): Default False.
+            Whether to also calculate msis. Must specify seasonality in m. This will fail if confidence intervals were not evaluated.
+        msis_alpha (float): The confidence level that confidence intervals were evaluated at. Ignored if msis is False.
+        m (int): Default 1. The number of steps that count one seasonal step. Ignored if both of msis and mase is False.
+        names (list): Optional. The names to assign each passed series. Ignored if there is only one passed series.
+    
+    Returns:
+        (DataFrame): The metrics dataframe that gives info about each backtested series, model, and selected metric.
+
+    >>> f1, f2, f3 = pipeline.fit_predict(f1,f2,f3)
+    >>> backtest_results = pipeline.backtest(f1,f2,f3,n_iter=2,jump_back=12)
+    >>> backtest_mets = backtest_metrics(
+    >>>     backtest_results,
+    >>>     mets = ['rmse','smape','r2','mae'],
+    >>>     names=['UTUR','UNRATE','SAHMREALTIME'],
+    >>>     mase = True,
+    >>>     msis = True,
+    >>>     m = 12,
+    >>> )
+    """
+    m_ = m
+    labels = names if names is not None else [f'Series{i}' for i in range(len(backtest_results))]
+    res_dict = {k:None for k in labels}
+    for h, s in enumerate(backtest_results):
+        for i, m in enumerate(s):
+            if i == 0:
+                a_df = s[m][[c for c in s[m] if c.endswith('Vals')]]
+                results = pd.DataFrame(
+                    columns = [f'Iter{i}' for i in range(a_df.shape[1])],
+                    index = pd.MultiIndex.from_product(
+                            [
+                                [m for m in backtest_results[0] if m not in ('Actuals','Obs')],
+                                mets + ([] if not mase else ['mase']) + ([] if not msis else ['msis']),
+                            ],
+                            names = ['Model','Metric']
+                    ),
+                )
+                a_df.columns = results.columns.to_list()
+            elif i == 1:
+                ob_df = s[m]
+            else:
+                f_df = s[m][[c for c in s[m] if c.endswith('Fcst')]]
+                f_df.columns = results.columns.to_list()
+                for met in mets:
+                    for c in results:
+                        results.loc[(m,met),c] = getattr(metrics,met)(
+                            a = a_df[c],
+                            f = f_df[c],
+                        )
+                if mase:
+                    for c in results:
+                        results.loc[(m,'mase'),c] = getattr(metrics,'mase')(
+                            a = a_df[c],
+                            f = f_df[c],
+                            obs = ob_df[c].dropna(),
+                            m = m_,
+                        )
+                if msis:
+                    up_df = s[m][[c for c in s[m] if c.endswith('Upper')]]
+                    lo_df = s[m][[c for c in s[m] if c.endswith('Lower')]]
+                    up_df.columns = f_df.columns.to_list()
+                    lo_df.columns = f_df.columns.to_list()
+                    for c in results:
+                        results.loc[(m,'msis'),c] = getattr(metrics,'msis')(
+                            a = a_df[c],
+                            uf = up_df[c],
+                            lf = lo_df[c],
+                            obs = ob_df[c].dropna(),
+                            m = m_,
+                            alpha = msis_alpha,
+                        )
+        res_dict[labels[h]] = results
+
+    if len(res_dict) == 1:
+        results_df = res_dict[labels[0]]
+    else:
+        res_list = []
+        for k, df in res_dict.items():
+            df['Series'] = k
+            df = df.reset_index().set_index(['Series','Model','Metric'])
+            res_list.append(df)
+        results_df = pd.concat(res_list)
+
+    results_df['Average'] = results_df.mean(axis=1)
+    return results_df
+
+def _backtest_plot(
+    backtest_results,
+    models = None,
+    series = None,
+    names = None,
+    ci = False,
+    ax=None,
+    figsize=(12,6),
+):
+    """ (Coming soon). Plots the results from a backtested pipeline. If all default arguments are passed, the resulting plot can
+    be messy, so it's recommended to limit some of the output by specifying arguments.
+
+    Args:
+        backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
+        models (list): Which models to plot results for. By default, all models will be plotted.
+        series (list): Which series to plot results for. This argument expects a list with an index position.
+            Ex: [0,2,3] will plot series in the first, third, and fourth index positions of backtest_results.
+        names (list): Optional. The names to give to the corresponding series. Must be the same length as series.
+            If not specified, the series will be named 'Series1' - 'SeriesN'.
+        ci (bool): Default False. Whether to plot confidence intervals. This will raise a warning if confidence intervals are not found.
+        ax (Axis): Optional. A pre-existing axis to write the figure to.
+        figsize (tuple): Default (12,6). The size of the resulting figure. Ignored when ax is specified.
+    
+    Returns:
+        (Axis): The figure's axis.
+
+    >>>
+    >>>
+    """
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
 
 def break_mv_forecaster(mvf):
     """ Breaks apart an MVForecaster object and returns as many Foreaster objects as series loaded into the object.
@@ -235,7 +388,19 @@ def break_mv_forecaster(mvf):
         mvf (MVForecaster): The object to break apart.
 
     Returns:
-        (tuple): A sequence of at least two Forecaster objects
+        (tuple[Forecaster]): A sequence of at least two Forecaster objects
+    
+    >>> from scalecast.MVForecaster import MVForecaster
+    >>> from scalecast.util import break_mv_forecaster, pdr_load
+    >>> 
+    >>> mvf = pdr_load(
+    >>>     ['UTUR','UNRATE'],
+    >>>     start='2000-01-01',
+    >>>     end='2022-01-01',
+    >>>     future_dates=12,
+    )
+
+    f1, f2 = break_mv_forecaster(mvf)
     """
 
     def convert_mv_hist(f, mvhist: dict, series_num: int):
@@ -296,6 +461,21 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
 
     Returns:
         (LagOrderResults): Lag selections.
+    
+    >>> from scalecast.Forecaster import Forecaster
+    >>> from scalecast.MVForecaster import MVForecaster
+    >>> from scalecast.util import find_optimal_lag_order
+    >>> import pandas_datareader as pdr
+    >>>
+    >>> s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-01-01')
+    >>> s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-01-01')
+    >>>
+    >>> f1 = Forecaster(y=s1['UTUR'],current_dates=s1.index)
+    >>> f2 = Forecaster(y=s2['UNRATE'],current_dates=s2.index)
+    >>>
+    >>> mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
+    >>> lag_order_res = find_optimal_lag_order(mvf,train_only=True)
+    >>> lag_order_aic = lag_order_res.aic # picks the best lag order according to aic
     """
     from statsmodels.tsa.vector_ar.var_model import VAR
     data = np.array(
@@ -329,6 +509,22 @@ def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
 
     Returns:
         (CointRankResults): Object containing the cointegration rank suggested by the test and allowing a summary to be printed.
+
+    >>> from scalecast.Forecaster import Forecaster
+    >>> from scalecast.MVForecaster import MVForecaster
+    >>> from scalecast.util import find_optimal_coint_rank
+    >>> import pandas_datareader as pdr
+    >>>
+    >>> s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-01-01')
+    >>> s2 = pdr.get_data_fred('UNRATE',start='2000-01-01',end='2022-01-01')
+    >>>
+    >>> f1 = Forecaster(y=s1['UTUR'],current_dates=s1.index)
+    >>> f2 = Forecaster(y=s2['UNRATE'],current_dates=s2.index)
+    >>>
+    >>> mvf = MVForecaster(f1,f2,names=['UTUR','UNRATE'])
+    >>> coint_res = find_optimal_coint_rank(mvf,det_order=-1,k_ar_diff=8,train_only=True)
+    >>> print(coint_res) # prints a report
+    >>> rank = coint_res.rank # best rank
     """
     from statsmodels.tsa.vector_ar.vecm import select_coint_rank
     data = np.array(
@@ -381,6 +577,44 @@ def find_statistical_transformation(
     Returns:
         (Transformer, Reverter): A `Transformer` object with the identified transforming functions and
         the `Reverter` object with the `Transformer` counterpart functions.
+
+    >>> from scalecast.Forecaster import Forecaster
+    >>> from scaleast.Pipeline import Pipeline, Transformer, Reverter
+    >>> from scalecast.util import find_statistical_transformation
+    >>> import pandas_datareader as pdr
+    >>> 
+    >>> def forecaster(f):
+    >>>     f.add_covid19_regressor()
+    >>>     f.auto_Xvar_select(cross_validate=True)
+    >>>     f.set_estimator('mlr')
+    >>>     f.manual_forecast()
+    >>> df = pdr.get_data_fred(
+    >>>     'HOUSTNSA',
+    >>>     start='1959-01-01',
+    >>>     end='2022-08-01'
+    >>> )
+    >>> f = Forecaster(
+    >>>     y=df['HOUSTNSA'],
+    >>>     current_dates=df.index,
+    >>>     future_dates=24,
+    >>>     test_length = .2,
+    >>> )
+    >>> f.set_validation_length(24)
+    >>> transformer, reverter = find_statistical_transformation(
+    >>>     f,
+    >>>     goal=['stationary','seasonally_adj'],
+    >>>     train_only=True,
+    >>>     critical_pval = .01,
+    >>> )
+    >>> print(reverter) # see what transformers and reverters were chosen
+    >>> pipeline = Pipeline(
+    >>>   steps = [
+    >>>       ('Transform',transformer),
+    >>>       ('Forecast',forecaster),
+    >>>       ('Revert',reverter),
+    >>>   ],
+    >>> )
+    >>> f = pipeline.fit_predict(f)
     """
     from .auxmodels import auto_arima
     def make_stationary(f,train_only,critical_pval,log,adf_kwargs,**kwargs):
@@ -503,6 +737,39 @@ def find_optimal_transformation(
     Returns:
         (Transformer, Reverter): A `Transformer` object with the identified transforming functions and
         the `Reverter` object with the `Transformer` counterpart functions.
+
+    >>> from scalecast.Forecaster import Forecaster
+    >>> from scaleast.Pipeline import Pipeline, Transformer, Reverter
+    >>> from scalecast.util import find_optimal_transformation
+    >>> import pandas_datareader as pdr
+    >>> 
+    >>> def forecaster(f):
+    >>>     f.add_covid19_regressor()
+    >>>     f.auto_Xvar_select(cross_validate=True)
+    >>>     f.set_estimator('mlr')
+    >>>     f.manual_forecast()
+    >>> df = pdr.get_data_fred(
+    >>>     'HOUSTNSA',
+    >>>     start='1959-01-01',
+    >>>     end='2022-08-01'
+    >>> )
+    >>> f = Forecaster(
+    >>>     y=df['HOUSTNSA'],
+    >>>     current_dates=df.index,
+    >>>     future_dates=24,
+    >>>     test_length = .2, # this will be monitored for performance
+    >>> )
+    >>> f.set_validation_length(24)
+    >>> transformer, reverter = find_optimal_transformation(f)
+    >>> print(reverter) # see what transformers and reverters were chosen
+    >>> pipeline = Pipeline(
+    >>>   steps = [
+    >>>       ('Transform',transformer),
+    >>>       ('Forecast',forecaster),
+    >>>       ('Revert',reverter),
+    >>>   ],
+    >>> )
+    >>> f = pipeline.fit_predict(f)
     """
     def forecaster(f):
         f.add_ar_terms(lags)

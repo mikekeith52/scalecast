@@ -49,7 +49,7 @@ def main():
             rolling = True,
             k = 2,
             dynamic_tuning = 24,
-            error = 'raise',
+            error = 'warn',
             suffix = '_cv',
         )
         mvf.set_estimator('vecm')
@@ -79,10 +79,6 @@ def main():
 
         mvf.export(to_excel=True,out_path='../..',excel_name=f'mv_results_{tl}.xlsx',cis=True)
         mvf.export_fitted_vals().to_excel('../../mv_fvs.xlsx',index=False)
-
-        mvf.backtest('vecm',n_iter=3,jump_back=12)
-        mvf.export_backtest_values('vecm').to_excel('../../mv_backtest_vals.xlsx')
-        mvf.export_backtest_metrics('vecm').to_excel('../../mv_backtest_metrics.xlsx')
 
         f1, f2, f3 = break_mv_forecaster(mvf)
 

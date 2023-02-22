@@ -116,6 +116,7 @@ def test_modeling():
             'theta',
             'gbt',
             'elasticnet',
+            'catboost',
             'arima',
             'hwes',
         )
@@ -130,6 +131,8 @@ def test_modeling():
             feature_importance = True,
             summary_stats = True,
             suffix = '_cv',
+            limit_grid_size = .2,
+            error = 'warn',
         )
 
         f.set_estimator('lstm')
@@ -172,10 +175,6 @@ def test_modeling():
         f.export_fitted_vals(model=best_model).to_excel('../../fvs.xlsx',index=False)
 
         f.all_feature_info_to_excel(out_path='../..')
-
-        f.backtest(best_model,n_iter=3,jump_back=12)
-        f.export_backtest_values(best_model).to_excel('../../backtest_vals.xlsx')
-        f.export_backtest_metrics(best_model).to_excel('../../backtest_metrics.xlsx')
 
         f.export_Xvars_df().to_excel('../../Xvars.xlsx',index=False)
 

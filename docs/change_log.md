@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.5] - 2023-02-22
+### Added
+- Added the catboost model to the out-of-the-box models. Made catboost a required dependency.
+- Added catboost grids to example grids files.
+- Added `backtest()` method for `Pipeline` and `MVPipeline`.
+- Added the `util.backtest_metrics()` function.
+- Added `FutureWarning`s to `Forecaster.backtest()` and `MVForecaster.backtest()` related methods. All backtesting will be moved to pipelines in the future.
+### Changed
+### Fixed
+
 ## [0.17.4] - 2023-02-14
 ### Added
 - Added an explicit error for when `auxmodels.mlp_stack()` is specified incorrectly.
@@ -17,7 +27,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 ### Fixed
 - Fixed the `AnomalyDetector.EstimatorDetect()` function.
 - Fixed `util.break_mv_forecaster()` for situations when `MVForecaster` does not have a test set.
-- Fixed how exporting works in `Forecaster` so that errors are not returned when test set is 0 and default args are maintained.
+- Fixed how exporting works in `MVForecaster` so that errors are not returned when test set is 0 and default args are maintained.
 
 ## [0.17.2] - 2023-02-09
 ### Added

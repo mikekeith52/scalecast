@@ -9,5 +9,6 @@ matplotlib
 seaborn
 xgboost
 lightgbm
+catboost
 openpyxl
 pandas-datareader

@@ -1,4 +1,5 @@
 arima = {}
+catboost = {}
 elasticnet = {}
 gbt = {}
 hwes = {}

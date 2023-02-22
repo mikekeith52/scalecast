@@ -2198,6 +2198,10 @@ class MVForecaster:
         >>> backtest_metrics = mvf.export_backtest_metrics('mlr')
         >>> backetest_values = mvf.export_backtest_values('mlr')
         """
+        warnings.warn(
+            "The `MVForecaster.backtest()` method will be removed in a future version. Please use MVPipeline.backtest() instead.",
+            category = FutureWarning,
+        )
         if fcst_length == "auto":
             fcst_length = len(self.future_dates)
         fcst_length = int(fcst_length)
