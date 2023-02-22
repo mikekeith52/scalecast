@@ -47,6 +47,7 @@ from sklearn.neural_network import MLPRegressor as mlp_
 from sklearn.ensemble import GradientBoostingRegressor as gbt_
 from xgboost import XGBRegressor as xgboost_
 from lightgbm import LGBMRegressor as lightgbm_
+from catboost import CatBoostRegressor as catboost_
 from sklearn.ensemble import RandomForestRegressor as rf_
 from sklearn.linear_model import ElasticNet as elasticnet_
 from sklearn.linear_model import Lasso as lasso_
@@ -63,6 +64,7 @@ _sklearn_imports_ = {
     "lasso": lasso_,
     "ridge": ridge_,
     "lightgbm": lightgbm_,
+    "catboost": catboost_,
     "rf": rf_,
     "elasticnet": elasticnet_,
     "svr": svr_,
@@ -4792,6 +4794,11 @@ class Forecaster:
         >>> f.plot_backtest_values('elasticnet') # plots all backtest values
         >>> plt.show()
         """
+        warnings.warn(
+            'The `Forecaster.plot_backtest_values()` method will be removed in a future version. '
+            'Use `util.backtest_plot()` to plot backtest results from pipelines.',
+            category = FutureWarning,
+        )
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
         values = self.export_backtest_values(model)
@@ -5510,6 +5517,10 @@ class Forecaster:
         >>> backtest_metrics = f.export_backtest_metrics('mlr')
         >>> backetest_values = f.export_backtest_values('mlr')
         """
+        warnings.warn(
+            "The `Forecaster.backtest()` method will be removed in a future version. Please use Pipeline.backtest() instead.",
+            category = FutureWarning,
+        )
         if fcst_length == "auto":
             fcst_length = len(self.future_dates)
         fcst_length = int(fcst_length)

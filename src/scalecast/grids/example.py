@@ -4,6 +4,13 @@ arima = {
     'trend':['n','c','t','ct'],
 }
 
+catboost = {
+    'iterations': [100, 200, 300],
+    'learning_rate': [0.01, 0.05, 0.1],
+    'depth': [4, 6, 8],
+    'l2_leaf_reg': [1, 3, 5, 7, 9],
+}
+
 elasticnet = {
     'alpha':[i/10 for i in range(1,21)],
     'l1_ratio':[0,0.25,0.5,0.75,1],

@@ -1,3 +1,4 @@
+.DS_Store
 CODE_OF_CONDUCT.md
 Contributing.md
 MANIFEST
@@ -71,6 +72,8 @@ test/Grids.py
 test/MVGrids.py
 test/ThetaGrid.py
 test/VECMGrid.py
+test/postbuild
+test/readme.md
 test/requirements.txt
 test/test_AnomalyDetector.py
 test/test_ChangepointDetector.py

@@ -1,6 +1,8 @@
 from .Forecaster import Forecaster
 from .SeriesTransformer import SeriesTransformer
-from typing import List, Tuple, Union
+import numpy as np
+import pandas as pd
+from typing import List, Tuple, Union, Dict
 import typing
 
 class Transformer:
@@ -179,7 +181,137 @@ class Reverter:
             f = getattr(base_transformer,reverter[0])(*args,**kwargs)
         return f
 
-class Pipeline:
+class Pipeline_parent:
+    def _prepare_backtest(
+        self,
+        *fs,
+        n_iter,
+        jump_back,
+        series_length,
+        fcst_length,
+        test_length,
+        cis,
+    ) -> List[List[Tuple[Forecaster,np.array]]]:
+        results = []
+        for h, f in enumerate(fs):
+            fcst_length = len(f.future_dates) if fcst_length is None else fcst_length
+            results.append([])
+            for i in range(n_iter):
+                hold_out_len = ((i+1) * (fcst_length)) + (i * jump_back)
+                hold_out = f.y.values[-hold_out_len :][: fcst_length]
+                f1 = Forecaster(
+                    y = f.y.values[: -hold_out_len],
+                    current_dates = f.current_dates[: -hold_out_len],
+                    future_dates = len(f.future_dates) if fcst_length is None else fcst_length,
+                    test_length = f.test_length if test_length is None else test_length,
+                    cis = f.cis if cis is None else cis,
+                )
+                if series_length is not None:
+                    f1.keep_smaller_history(series_length)
+                results[h].append((f1,hold_out))
+        return results
+
+    def backtest(
+        self,        
+        *fs,
+        n_iter=5,
+        jump_back=1,
+        series_length=None,
+        fcst_length=None,
+        test_length=None,
+        cis=None,
+        **kwargs,
+    ) -> List[Dict[str,pd.DataFrame]]:
+        """ Runs an out-of-sample backtest of the pipeline over a certain amount of iterations.
+
+        Args:
+            *fs (Forecaster): Send one if univariate forecasting with the `Pipeline` class, 
+                more than one if multivariate forecasting with the `MVPipeline` class.
+            n_iter (int): Default 5. How many backtest iterations to perform.
+            jump_back (int): Default 1. The space between consecutive training sets.
+            series_length (int): Optional. The total length of each traning set. 
+                Leave unspecified if you want to use every available training observation for each iteration.
+            fcst_length (int): Optional. The forecast horizon length to forecast over for each iteration.
+                Leave unspecified if you want to use the forecast horizon already programmed into the `Forecaster` object.
+            test_length (int): Optional. The test set to hold out for each model evaluation.
+                Leave unspecified if you want to use the test length already programmed into the `Forecaster` object.
+            cis (bool): Optional. Whether to backtest confidence intervals. 
+                Leave unspecified if you want to use whatever is already programmed into the `Forecaster` object.
+            **kwargs: Passed to the `fit_predict()` method from `Pipeline` or `MVPipeline`.
+
+        Returns:
+            (List[Dict[str,pd.DataFrame]]): The results from each model and backtest iteration.
+            Each dict element of the resulting list corresponds to the Forecaster objects in the order
+            they were passed (will be length 1 if univariate forecasting). Each key of each dict is either 'Actuals', 'Obs',
+            or the name of a model that got backtested. Each value is a DataFrame with the iteration values.
+            The 'Actuals' frame has the date information and are the actuals over each forecast horizon. 
+            The 'Obs' frame has the actual historical observations to make each forecast, back padded with NA values to make each array the same length.
+
+        >>> # univariate forecasting
+        >>> pipeline = Pipeline(
+        >>>     steps = [
+        >>>         ('Transform',transformer),
+        >>>         ('Forecast',forecaster),
+        >>>         ('Revert',reverter),
+        >>>     ],
+        >>> )
+        >>> backtest_results = pipeline.backtest(f,models=models)
+        >>>
+        >>> # multivariate forecasting
+        >>> pipeline = MVPipeline(
+        >>>    steps = [
+        >>>        ('Transform',[transformer1,transformer2,transformer3]),
+        >>>        ('Select Xvars',[auto_Xvar_select]*3),
+        >>>        ('Forecast',forecaster,),
+        >>>        ('Revert',[reverter1,reverter2,reverter3]),
+        >>>    ],
+        >>>    names = ['UTUR','UTPHCI','UNRATE'], # used to combine to the mvf object
+        >>>    merge_Xvars = 'i', # used to combine to the mvf object
+        >>> )
+        >>> backtest_results = pipeline.backtest(f1,f2,f3)
+        """
+        results = []
+        _prepare_backtest_results = self._prepare_backtest(
+            *fs,
+            n_iter=n_iter,
+            jump_back=jump_back,
+            series_length=series_length,
+            fcst_length=fcst_length,
+            test_length=test_length,
+            cis=cis,
+        )
+        for res in _prepare_backtest_results:
+            results.append({'Actuals':pd.DataFrame()})
+            results[-1]['Obs'] = pd.DataFrame()
+            for i, f in enumerate(res):
+                results[-1]['Actuals'][f'Iter{i}Dates'] = f[0].future_dates.values
+                results[-1]['Actuals'][f'Iter{i}Vals'] = f[1]
+                if i == 0:
+                    results[-1]['Obs'][f'Iter{i}'] = f[0].y.to_list()
+                else:
+                    results[-1]['Obs'][f'Iter{i}'] = (
+                        [np.nan] * 
+                        (
+                            results[-1]['Obs'].shape[0] - len(f[0].y)
+                        ) + f[0].y.to_list() 
+                    )
+        for i, _ in enumerate(_prepare_backtest_results[0]):
+            fs = self.fit_predict(*[ft[i][0] for ft in _prepare_backtest_results],**kwargs)
+            if not isinstance(fs,tuple):
+                fs = (fs,)
+            for k, f in enumerate(fs):
+                for m,v in f.history.items():
+                    if i == 0:
+                        results[k][m] = pd.DataFrame({'Iter0Fcst':v['Forecast']})
+                    else:
+                        results[k][m][f'Iter{i}Fcst'] = v['Forecast']
+                    if f.cis:
+                        results[k][m][f'Iter{i}Lower'] = v['LowerCI']
+                        results[k][m][f'Iter{i}Upper'] = v['UpperCI']
+
+        return results
+
+class Pipeline(Pipeline_parent):
     def __init__(self,steps: List[Tuple[str,Union[Transformer,Reverter,'function']]]):
         """ Initiates the full pipeline.
 
@@ -188,8 +320,8 @@ class Pipeline:
                 to a Forecaster object. The first element of each tuple names the step.
                 The second element should either be a Transformer or Reverter type or a function.
                 If it is a function, the first argument in the function should require a Forecaster object.
-                functions are checked for as objects that do not contain the `fit_transform()` method,
-                so adding more elements to the Pipeline may be possible if it has a `fit_transform()` method.
+                Functions are checked for as objects that do not have the `fit_transform()` method,
+                so adding more elements to the Pipeline may be possible if they have a `fit_transform()` method.
 
         >>> from scalecast.Forecaster import Forecaster
         >>> from scalecast.Pipeline import Transformer, Reverter, Pipeline
@@ -282,7 +414,7 @@ class Pipeline:
                 func(f,**kwargs)
         return f
 
-class MVPipeline:
+class MVPipeline(Pipeline_parent):
     def __init__(
         self,
         steps: List[Tuple[str,Union[List[Transformer],List[Reverter],'function']]],
@@ -299,8 +431,8 @@ class MVPipeline:
                 If it is a list of functions, Transformer, or Revereter objects,
                 each one of these will be called on the Forecaster objects in the order they are passed
                 to the `fit_predict()` method.
-                Functions are checked for as objects that do not contain the `fit_transform()` method,
-                so adding more elements to the Pipeline may be possible if it has a `fit_transform()` method.
+                Functions are checked for as objects that do not have the `fit_transform()` method,
+                so adding more elements to the Pipeline may be possible if they have a `fit_transform()` method.
             **kwargs: Passed to MVForecaster(). See
                 https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.__init__.
 
