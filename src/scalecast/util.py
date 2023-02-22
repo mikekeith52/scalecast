@@ -265,7 +265,7 @@ def backtest_metrics(
             Whether to also calculate mase. Must specify seasonality in m.
         msis (bool): Default False.
             Whether to also calculate msis. Must specify seasonality in m. This will fail if confidence intervals were not evaluated.
-        msis_alpha (float): The confidence level that confidence intervals were evaluated at. Ignored if msis is False.
+        msis_alpha (float): Default 0.05. The level that confidence intervals were evaluated at. Ignored if msis is False.
         m (int): Default 1. The number of steps that count one seasonal cycle. Ignored if both of msis and mase is False.
         names (list): Optional. The names to assign each passed series. Ignored if there is only one passed series.
     
