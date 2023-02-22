@@ -260,13 +260,13 @@ def backtest_metrics(
     
     Args:
         backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
-        mets (list): A list of metrics from the `util.metrics` class where the only two accepted arguments are a and f.
+        mets (list): Default ['rmse']. A list of metrics from the `util.metrics` class where the only two accepted arguments are a and f.
         mase (bool): Default False.
             Whether to also calculate mase. Must specify seasonality in m.
         msis (bool): Default False.
             Whether to also calculate msis. Must specify seasonality in m. This will fail if confidence intervals were not evaluated.
         msis_alpha (float): The confidence level that confidence intervals were evaluated at. Ignored if msis is False.
-        m (int): Default 1. The number of steps that count one seasonal step. Ignored if both of msis and mase is False.
+        m (int): Default 1. The number of steps that count one seasonal cycle. Ignored if both of msis and mase is False.
         names (list): Optional. The names to assign each passed series. Ignored if there is only one passed series.
     
     Returns:
@@ -391,16 +391,9 @@ def break_mv_forecaster(mvf):
         (tuple[Forecaster]): A sequence of at least two Forecaster objects
     
     >>> from scalecast.MVForecaster import MVForecaster
-    >>> from scalecast.util import break_mv_forecaster, pdr_load
+    >>> from scalecast.util import break_mv_forecaster
     >>> 
-    >>> mvf = pdr_load(
-    >>>     ['UTUR','UNRATE'],
-    >>>     start='2000-01-01',
-    >>>     end='2022-01-01',
-    >>>     future_dates=12,
-    )
-
-    f1, f2 = break_mv_forecaster(mvf)
+    >>> f1, f2 = break_mv_forecaster(mvf)
     """
 
     def convert_mv_hist(f, mvhist: dict, series_num: int):
