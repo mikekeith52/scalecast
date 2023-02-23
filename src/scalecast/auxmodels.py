@@ -196,7 +196,7 @@ def mlp_stack(
     from .Forecaster import _sklearn_imports_
     results = f.export('model_summaries',models=model_nicknames)
 
-    if results.shape[0] != len(model_nicknames):
+    if len(results['ModelNickname'].unique()) != len(model_nicknames):
         raise ValueError(
             '{} not found in the Forecaster object.'
             ' The available models to pass to mlp_stack are: {}'.format(

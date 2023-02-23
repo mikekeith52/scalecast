@@ -1,7 +1,7 @@
 from scalecast.Forecaster import Forecaster
 from scalecast.MVForecaster import MVForecaster
 from scalecast.util import break_mv_forecaster, find_optimal_lag_order, find_optimal_coint_rank
-from scalecast.auxmodels import vecm
+from scalecast.auxmodels import vecm, mlp_stack
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 
@@ -56,6 +56,13 @@ def main():
         mvf.set_grids_file('VECMGrid')
         mvf.cross_validate(k=2)
         mvf.auto_forecast()
+
+        if tl > 0:
+            mlp_stack(
+                mvf,
+                model_nicknames=['xgboost_cv','lasso_cv'],
+                lags = 6,
+            )
 
         mvf.set_best_model(
             determine_best_by = (

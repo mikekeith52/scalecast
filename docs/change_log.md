@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.6] - 2023-02-23
+### Added
+### Changed
+- Updated requirements in test directory.
+### Fixed
+- Fixed `auxmodels.mlp_stack()` for multivariate forecasting.
+
 ## [0.17.5] - 2023-02-22
 ### Added
 - Added the catboost model to the out-of-the-box models. Made catboost a required dependency.
