@@ -1,17 +1,10 @@
+from ._utils import _developer_utils
+from ._Forecaster_parent import ForecastError
+from .Forecaster import Forecaster
 import pandas as pd
 import numpy as np
 import warnings
 import logging
-from .Forecaster import (
-    Forecaster,
-    ForecastError,
-    rmse,
-    mape,
-    mae,
-    r2,
-    _return_na_if_len_zero,
-    _convert_m,
-)
 
 class SeriesTransformer:
     def __init__(self, f, deepcopy=True):
@@ -53,20 +46,18 @@ class SeriesTransformer:
         self.f.levely = list(transform_func(self.f.levely, **kwargs))
         return self.f
 
-    def Revert(self, revert_func, full=True, exclude_models = [], **kwargs):
+    def Revert(self, revert_func, exclude_models = [], **kwargs):
         """ Reverts the y attribute in the Forecaster object, along with all model results.
 
         Args:
             revert_func (function): The function that will be used to revert the values.
                 If using a user function, first argument must be the array to transform.
-            full (bool): Whether to revert all attributes, or just the level attributes.
-                If False, all non-level results will remain unchanged.
             exclude_models (list-like): Models to not revert. This is useful if you are transforming
                 and reverting an object over and over.
             **kwargs: Passed to the function passed to revert_func.
 
         Returns:
-            (Forecaster): a Forecaster object with the reverted attributes.
+            (Forecaster): A Forecaster object with the reverted attributes.
 
         >>> import math
         >>> from scalecast.Forecaster import Forecaster
@@ -81,12 +72,20 @@ class SeriesTransformer:
         >>> f = transformer.Revert(log10_revert)
         """
         self.f.levely = list(revert_func(self.f.levely, **kwargs))
-        self.f.y = pd.Series(revert_func(self.f.y, **kwargs)) if full else self.f.y
+        self.f.y = pd.Series(revert_func(self.f.y, **kwargs))
 
         for m, h in self.f.history.items():
             if m in exclude_models:
                 continue
             for k in ( 
+                "Forecast",
+                "TestSetPredictions",
+                "TestSetUpperCI",
+                "TestSetLowerCI",
+                "UpperCI",
+                "LowerCI",
+                "TestSetActuals",
+                "FittedVals",
                 "LevelForecast", 
                 "LevelTestSetPreds", 
                 "LevelFittedVals",
@@ -100,50 +99,25 @@ class SeriesTransformer:
                 except KeyError:
                     pass
             h['LevelY'] = self.f.levely
-
-            for i, preds in enumerate(('LevelTestSetPreds','LevelFittedVals')):
-                pred = h[preds]
-                act = self.f.levely[-len(pred) :]
-                if i == 0:
-                    h["LevelTestSetRMSE"] = _return_na_if_len_zero(act, pred, rmse)
-                    h["LevelTestSetMAPE"] = _return_na_if_len_zero(act, pred, mape)
-                    h["LevelTestSetMAE"] = _return_na_if_len_zero(act, pred, mae)
-                    h["LevelTestSetR2"] = _return_na_if_len_zero(act, pred, r2)
-                elif i == 1:
-                    h["LevelInSampleRMSE"] = rmse(act, pred)
-                    h["LevelInSampleMAPE"] = mape(act, pred)
-                    h["LevelInSampleMAE"] = mae(act, pred)
-                    h["LevelInSampleR2"] = r2(act, pred)
-
-            if full:
-                for k in (
-                    "Forecast",
-                    "TestSetPredictions",
-                    "TestSetUpperCI",
-                    "TestSetLowerCI",
-                    "UpperCI",
-                    "LowerCI",
-                    "TestSetActuals",
-                    "FittedVals",
-                ):
-                    try:
-                        h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).fillna(method='ffill').to_list()
-                    except KeyError:
-                        pass
-
-                for i, preds in enumerate(("TestSetPredictions","FittedVals")):
-                    pred = h[preds]
-                    act = self.f.levely[-len(pred) :]
-                    if i == 0:
-                        h["TestSetRMSE"] = _return_na_if_len_zero(act, pred, rmse)
-                        h["TestSetMAPE"] = _return_na_if_len_zero(act, pred, mape)
-                        h["TestSetMAE"] = _return_na_if_len_zero(act, pred, mae)
-                        h["TestSetR2"] = _return_na_if_len_zero(act, pred, r2)
-                    elif i == 1:
-                        h["InSampleRMSE"] = rmse(act, pred)
-                        h["InSampleMAPE"] = mape(act, pred)
-                        h["InSampleMAE"] = mae(act, pred)
-                        h["InSampleR2"] = r2(act, pred)
+            for met, func in self.f.metrics.items():
+                h['TestSet' + met.upper()] = _developer_utils._return_na_if_len_zero(
+                    self.f.levely[-len(h["TestSetPredictions"]) :], 
+                    h["TestSetPredictions"], 
+                    func,
+                )
+                h['LevelTestSet' + met.upper()] = _developer_utils._return_na_if_len_zero(
+                    self.f.levely[-len(h["LevelTestSetPreds"]) :], 
+                    h["LevelTestSetPreds"], 
+                    func,
+                )
+                h['InSample' + met.upper()] = func(
+                    self.f.levely[-len(h['FittedVals']) :], 
+                    h['FittedVals'], 
+                )
+                h['LevelInSample' + met.upper()] = func(
+                    self.f.levely[-len(h['LevelFittedVals']) :], 
+                    h['LevelFittedVals'],
+                )
 
         return self.f
 
@@ -198,7 +172,7 @@ class SeriesTransformer:
 
         if seasonal_lags > 0:
             if m == 'auto':
-                m = _convert_m(m,fmod.freq)
+                m = _developer_utils._convert_m(m,fmod.freq)
                 if m == 1:
                     warnings.warn(
                         f'cannot add seasonal lags automatically for the {fmod.freq} frequency. '
@@ -242,10 +216,10 @@ class SeriesTransformer:
 
         # i'm not 100% sure we need this and it does cause one thing to break so i'm doing this for now.
         try: 
-            self.f.typ_set(); 
+            self.f._typ_set(); 
         except: 
             logging.warning(
-                'Forecaster.typ_set() did not work after the detrend transformation, continuing as is.'
+                'Forecaster._typ_set() did not work after the detrend transformation, continuing as is.'
             )
 
         self.detrend_model = ols_mod
@@ -342,7 +316,7 @@ class SeriesTransformer:
 
         Args:
             **kwargs: Passed to Transformer.Revert() - 
-                args `full` and `exclude_models` accepted here.
+                arg `exclude_models` accepted here.
 
         Returns:
             (Forecaster): A Forecaster object with the reverted attributes.
@@ -376,7 +350,7 @@ class SeriesTransformer:
 
         Args:
             **kwargs: Passed to Transformer.Revert() - 
-                args `full` and `exclude_models` accepted here.
+                arg `exclude_models` accepted here.
 
         Returns:
             (Forecaster): A Forecaster object with the reverted attributes.
@@ -426,7 +400,7 @@ class SeriesTransformer:
 
         Args:
             **kwargs: Passed to Transformer.Revert() - 
-                args `full` and `exclude_models` accepted here.
+                arg `exclude_models` accepted here.
 
         Returns:
             (Forecaster): A Forecaster object with the reverted attributes.
@@ -487,7 +461,7 @@ class SeriesTransformer:
 
         Args:
             **kwargs: {assed to Transformer.Revert() - 
-                args `full` and `exclude_models` accepted here.
+                arg `exclude_models` accepted here.
 
         Returns:
             (Forecaster): A Forecaster object with the reverted attributes.
@@ -560,15 +534,16 @@ class SeriesTransformer:
     def DiffRevert(self, m=1, exclude_models = []):
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Calling this makes so that AR values become unusable and have to be re-added to the object.
-        Unlike other revert functions, there is no option for full = False. 
         If using this to revert differences, you should not also use the native Forecaster.diff() function.
 
         Args:
             m (int): Default 1. The seasonal difference to revert.
                 1 will undifference once. 
                 12 will undifference seasonally 12 periods (monthly data).
-                Any int available. use the same values to revert as you used
+                Any int available. Use the same values to revert as you used
                 to transform the object originally.
+            exclude_models (list-like): Models to not revert. This is useful if you are transforming
+                and reverting an object over and over.
 
         Returns:
             (Forecaster): A Forecaster object with the reverted attributes.

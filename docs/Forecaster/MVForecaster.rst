@@ -40,5 +40,7 @@ This object can be used to extend the univariate/exogenous regressor approach fr
 
 .. autoclass:: src.scalecast.MVForecaster.MVForecaster
    :members:
+   :undoc-members:
+   :inherited-members:
    
    .. automethod:: __init__

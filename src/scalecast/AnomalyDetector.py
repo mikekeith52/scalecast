@@ -1,10 +1,9 @@
+from ._utils import _developer_utils
 import pandas as pd
 import numpy as np
 from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
-from .Forecaster import _set_ci_step
-
 
 class AnomalyDetector:
     def __init__(self, f):
@@ -74,7 +73,7 @@ class AnomalyDetector:
         are saved to the labeled_anom attribute.
 
         Args:
-            estimator (str): One of _estimators_.
+            estimator (str): One of `Forecaster.estimators`.
                 The estimator to track anomalies with.
             future_dates (int): Optional. If this is specified with an integer, 
                 the estimator will use that number of forecast steps. If you want 
@@ -125,7 +124,7 @@ class AnomalyDetector:
             bootstrapped_resids = np.random.choice(resids, size=samples)
             bootstrap_mean = np.mean(bootstrapped_resids)
             bootstrap_std = np.std(bootstrapped_resids)
-            return _set_ci_step(
+            return _developer_utils._set_ci_step(
                 f = f,
                 s = bootstrap_std,
             ) + bootstrap_mean

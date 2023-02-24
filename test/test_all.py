@@ -24,6 +24,7 @@ for script in script_files:
     try:
         mod = importlib.import_module(script)
         mod.main()
+        print(f'No errors in {script}')
     except Exception as e:
         logging.error(traceback.format_exc())
         print(f'Error in {script}: {e}')

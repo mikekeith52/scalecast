@@ -24,11 +24,17 @@ def build_Forecaster(
         future_dates = 24,
         test_length = test_length,
         cis = cis,
+        metrics = [
+            'rmse',
+            'smape',
+            'mse',
+        ],
         **kwargs,
     )
 
 def test_add_terms():
     f = build_Forecaster()
+    f
     f.add_AR_terms((2,12))
     assert 'AR24' in f.get_regressor_names(), 'regressor AR24 not added'
 
@@ -99,7 +105,7 @@ def test_modeling():
             test_length=tl,
         )
         f.set_grids_file('ExampleGrids')
-        f.set_validation_metric('mae')
+        f.set_validation_metric('smape')
         f.set_validation_length(12)
         if tl != 0: 
             f.eval_cis(cilevel=.9)
@@ -111,11 +117,11 @@ def test_modeling():
         )
 
         models = (
+            'elasticnet',
             'prophet',
             'silverkite',
             'theta',
             'gbt',
-            'elasticnet',
             'catboost',
             'arima',
             'hwes',
@@ -155,7 +161,7 @@ def test_modeling():
         auto_arima(f,m=12)
 
         best_model = f.order_fcsts(
-            determine_best_by='ValidationMetricValue' if tl == 0 else 'TestSetMAE',
+            determine_best_by='ValidationMetricValue' if tl == 0 else 'TestSetSMAPE',
         )[0]
 
         f.plot(ci=True)
@@ -163,7 +169,7 @@ def test_modeling():
         plt.close()
 
         if tl != 0:
-            f.plot_test_set(ci=True,include_train = 96)
+            f.plot_test_set(ci=True,include_train=96)
             plt.savefig(f'../../plot_ts_{tl}.png')
             plt.close()
 
@@ -171,12 +177,11 @@ def test_modeling():
         plt.savefig(f'../../flot_fvs_{tl}')
         plt.close()
 
-        f.export(to_excel=True,out_path='../..',excel_name=f'results_{tl}.xlsx',cis=True)
-        f.export_fitted_vals(model=best_model).to_excel('../../fvs.xlsx',index=False)
-
-        f.all_feature_info_to_excel(out_path='../..')
-
-        f.export_Xvars_df().to_excel('../../Xvars.xlsx',index=False)
+        if tl != 0:
+            f.export(to_excel=True,out_path='../..',excel_name=f'results_{tl}.xlsx',cis=True)
+            f.export_fitted_vals(model=best_model).to_excel('../../fvs.xlsx',index=False)
+            f.all_feature_info_to_excel(out_path='../..')
+            f.export_Xvars_df().to_excel('../../Xvars.xlsx',index=False)
 
 def main():
     test_add_terms()

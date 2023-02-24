@@ -20,12 +20,18 @@ def build_MVForecaster(test_length=24):
         f3,
         test_length = test_length,
         names=['UTUR','UNRATE','SAHMREALTIME'],
-        merge_Xvars='i'
+        merge_Xvars='i',
+        metrics = [
+            'rmse',
+            'smape',
+            'mse',
+        ],
     )
 
 def main():
     for tl in (0,36):
         mvf = build_MVForecaster(test_length = tl)
+        mvf
         if tl > 0:
             mvf.eval_cis(
                 cilevel = .9,

@@ -5,8 +5,7 @@ If you are using a Jupyter notebook, the notebook functions may come in handy to
 
 results_vis()
 -----------------------------
-.. automodule:: src.scalecast.notebook.results_vis
-    :members:
+.. autofunction:: src.scalecast.notebook.results_vis
 
 .. code:: python
 
@@ -38,13 +37,11 @@ results_vis()
 
 results_vis_mv()
 -----------------------------
-.. automodule:: src.scalecast.notebook.results_vis_mv
-    :members:
+.. autofunction:: src.scalecast.notebook.results_vis_mv
 
 tune_test_forecast()
 --------------------------------
-.. automodule:: src.scalecast.notebook.tune_test_forecast
-    :members:
+.. autofunction:: src.scalecast.notebook.tune_test_forecast
 
 .. code:: python
 

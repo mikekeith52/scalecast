@@ -1,14 +1,16 @@
-from . import Forecaster
-from . import MVForecaster
-from . import SeriesTransformer
-from . import Pipeline
-from .Forecaster import log_warnings
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
 import warnings
+from sklearn.metrics import (
+    r2_score,
+    mean_squared_error,
+    mean_absolute_percentage_error,
+    mean_absolute_error,
+)
+from ._utils import _developer_utils
 
 class metrics:
     @staticmethod
@@ -27,7 +29,11 @@ class metrics:
         >>> f = [1,2,3,4,6]
         >>> metrics.mape(a,f)
         """
-        return Forecaster.mape(a,f)
+        return (
+            np.nan if np.abs(a).min() == 0 
+            else mean_absolute_percentage_error(a, f)
+        )
+
 
     @staticmethod
     def r2(a,f):
@@ -45,7 +51,7 @@ class metrics:
         >>> f = [1,2,3,4,6]
         >>> metrics.r2(a,f)
         """
-        return Forecaster.r2(a,f)
+        return r2_score(a, f)
 
     @staticmethod
     def mse(a,f):
@@ -63,7 +69,7 @@ class metrics:
         >>> f = [1,2,3,4,6]
         >>> metrics.mse(a,f)
         """
-        return Forecaster.rmse(a,f)**2
+        return mean_squared_error(a, f)
 
     @staticmethod
     def rmse(a,f):
@@ -81,7 +87,7 @@ class metrics:
         >>> f = [1,2,3,4,6]
         >>> metrics.rmse(a,f)
         """
-        return Forecaster.rmse(a,f)
+        return mean_squared_error(a, f) ** 0.5
 
     @staticmethod
     def mae(a,f):
@@ -99,7 +105,7 @@ class metrics:
         >>> f = [1,2,3,4,6]
         >>> metrics.mae(a,f)
         """
-        return Forecaster.mae(a,f)
+        return mean_absolute_error(a, f)
 
     @staticmethod
     def smape(a,f):
@@ -395,7 +401,7 @@ def break_mv_forecaster(mvf):
     >>> 
     >>> f1, f2 = break_mv_forecaster(mvf)
     """
-
+    from .Forecaster import Forecaster
     def convert_mv_hist(f, mvhist: dict, series_num: int):
         hist = {}
         for k, v in mvhist.items():
@@ -423,7 +429,7 @@ def break_mv_forecaster(mvf):
     )
     to_return = []
     for s in range(mvf1.n_series):
-        f = Forecaster.Forecaster(
+        f = Forecaster(
             y=getattr(mvf1, f"series{s+1}")["y"].values[-set_len:],
             current_dates=mvf1.current_dates.values[-set_len:],
             integration=getattr(mvf1, f"series{s+1}")["integration"],
@@ -609,6 +615,8 @@ def find_statistical_transformation(
     >>> )
     >>> f = pipeline.fit_predict(f)
     """
+    from . import SeriesTransformer
+    from . import Pipeline
     from .auxmodels import auto_arima
     def make_stationary(f,train_only,critical_pval,log,adf_kwargs,**kwargs):
         transformers = []
@@ -640,7 +648,7 @@ def find_statistical_transformation(
     f = f.deepcopy()
     transformer = SeriesTransformer.SeriesTransformer(f)
 
-    m = Forecaster._convert_m(m,f.freq)
+    m = _developer_utils._convert_m(m,f.freq)
 
     possible_args = {
         'stationary':make_stationary,
@@ -675,11 +683,11 @@ def find_statistical_transformation(
     )
     return final_transformer, final_reverter
 
-@log_warnings
+@_developer_utils.log_warnings
 def find_optimal_transformation(
     f,
     estimator='mlr',
-    monitor='TestSetRMSE',
+    monitor=None,
     lags='auto',
     try_order = ['detrend','boxcox','first_diff','first_seasonal_diff','scale'],
     boxcox_lambdas = [-0.5,0,0.5],
@@ -697,9 +705,11 @@ def find_optimal_transformation(
         f (Forecaster): The Forecaster object that contains the series that will be transformed.
         estimator (str): One of _estimators_. Default 'mlr'. The estimator to use to choose the best 
             transformations with.
-        monitor (str): One of _determine_best_by_ except 'ValidationMetricValue'. Default 'TestSetRMSE'.
+        monitor (str): One of Forecaster.determine_best_by except 'ValidationMetricValue'. 
+            Default is 'TestSet' + first metric in Forecaster.metrics 
+            ('TestSetRMSE' is the default if no metric info has been manually specified).
             Because 'ValidationMetricValue' changes in scale based on the transformation taken, 
-            the metrics to monitor are limited to level in-sample and level out-of-sample metrics.
+            the metrics to monitor are limited to in-sample and test-set metrics.
             'TestSetRMSE' and 'LevelTestSetRMSE' are the same in this function, same with all level and non-level counterparts.
         lags (str or int): Default 'auto'. The number of lags that will be used as inputs for the estimator.
             If 'auto', uses the value passed or assigned to m (one seasonal cycle). 
@@ -764,6 +774,8 @@ def find_optimal_transformation(
     >>> )
     >>> f = pipeline.fit_predict(f)
     """
+    from . import Pipeline
+    from ._Forecaster_parent import ForecastError
     def forecaster(f):
         f.add_ar_terms(lags)
         f.set_estimator(estimator)
@@ -782,7 +794,7 @@ def find_optimal_transformation(
         return pipeline.fit_predict(f)
 
     if f.test_length == 0:
-        raise Forecaster.ForecastError(
+        raise ForecastError(
             'find_optimal_transformation() only works if a test length' 
             ' above 0 is specified in the Forecaster object.'
             ' Try calling the set_test_length(...) method.'
@@ -792,17 +804,18 @@ def find_optimal_transformation(
     f.drop_all_Xvars()
     f.history = {}
 
-    m = Forecaster._convert_m(m,f.freq)
+    m = _developer_utils._convert_m(m,f.freq)
     lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[1] if lags == 'auto' else lags
     forecaster(f)
     
+    monitor = 'TestSet' + list(f.metrics.keys())[0].upper() if monitor is None else monitor
     level_met = f.export('model_summaries')[monitor].values[0]
     level_met = -level_met if monitor.endswith('R2') else level_met
 
     final_transformer = []
     final_reverter = []
 
-    exception_types = (IndexError,AttributeError,ValueError,ZeroDivisionError,Forecaster.ForecastError) # errors to pass over
+    exception_types = (IndexError,AttributeError,ValueError,ZeroDivisionError,ForecastError) # errors to pass over
 
     for tr in try_order:
         if tr == 'boxcox':

@@ -4,7 +4,6 @@ from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-
 class ChangepointDetector:
     def __init__(self, f):
         from kats.consts import TimeSeriesData

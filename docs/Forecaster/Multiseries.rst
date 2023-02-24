@@ -5,8 +5,7 @@ If forecasting with many series in a loop, these functions and code examples may
 
 export_model_summaries()
 --------------------------
-.. automodule:: src.scalecast.multiseries.export_model_summaries
-    :members:
+.. autofunction:: src.scalecast.multiseries.export_model_summaries
 
 .. code:: python
 
@@ -37,5 +36,4 @@ export_model_summaries()
 
 keep_smallest_first_date()
 ------------------------------
-.. automodule:: src.scalecast.multiseries.keep_smallest_first_date
-    :members:
+.. autofunction:: src.scalecast.multiseries.keep_smallest_first_date

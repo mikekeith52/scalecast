@@ -70,10 +70,8 @@ This framework also offers a basis for adding other non-scikit-learn forecast mo
 
 auto_arima()
 -----------------------------
-.. automodule:: src.scalecast.auxmodels.auto_arima
-    :members:
+.. autofunction:: src.scalecast.auxmodels.auto_arima
 
 mlp_stack()
 -----------------------------
-.. automodule:: src.scalecast.auxmodels.mlp_stack
-    :members:
+.. autofunction:: src.scalecast.auxmodels.mlp_stack

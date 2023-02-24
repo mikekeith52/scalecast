@@ -10,35 +10,27 @@ metrics
 
 backtest_metrics()
 -------------------------
-.. automodule:: src.scalecast.util.backtest_metrics
-    :members:
+.. autofunction:: src.scalecast.util.backtest_metrics
 
 break_mv_forecaster()
 -----------------------------
-.. automodule:: src.scalecast.util.break_mv_forecaster
-    :members:
+.. autofunction:: src.scalecast.util.break_mv_forecaster
 
 find_optimal_coint_rank()
 ----------------------------
-.. automodule:: src.scalecast.util.find_optimal_coint_rank
-    :members:
+.. autofunction:: src.scalecast.util.find_optimal_coint_rank
 
 find_optimal_lag_order()
 ---------------------------
-.. automodule:: src.scalecast.util.find_optimal_lag_order
-    :members:
+.. autofunction:: src.scalecast.util.find_optimal_lag_order
 
 find_optimal_transformation()
 -----------------------------------
-.. automodule:: src.scalecast.util.find_optimal_transformation
-    :members:
+.. autofunction:: src.scalecast.util.find_optimal_transformation
 
 find_statistical_transformation()
 -----------------------------------
-.. automodule:: src.scalecast.util.find_statistical_transformation
-    :members:
-
+.. autofunction:: src.scalecast.util.find_statistical_transformation
 plot_reduction_errors()
 -----------------------------
-.. automodule:: src.scalecast.util.plot_reduction_errors
-    :members:
+.. autofunction:: src.scalecast.util.plot_reduction_errors

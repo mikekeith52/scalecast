@@ -123,9 +123,9 @@ Index
    :hidden:
 
    Forecaster/GridGenerator
-   Forecaster/Notebook
-   Forecaster/Multiseries
    Forecaster/Auxmodels
+   Forecaster/Multiseries
+   Forecaster/Notebook
    Forecaster/Util
 
 .. toctree::

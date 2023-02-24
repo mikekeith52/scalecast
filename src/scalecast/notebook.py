@@ -1,24 +1,15 @@
+from ._Forecaster_parent import _tune_test_forecast
+from .Forecaster import Forecaster
+from .MVForecaster import MVForecaster
 import typing
 from typing import Dict, Union
-
 from ipywidgets import widgets
 from IPython.display import display, clear_output
-
-from .Forecaster import (
-    Forecaster, 
-    _determine_best_by_, 
-    _can_be_tuned_, 
-    _check_if_correct_estimator,
-)
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from tqdm.notebook import tqdm as log_progress
-
-
 def results_vis(
-    f_dict: Dict[str, Forecaster],
+    f_dict: Dict[str,Forecaster],
     plot_type: str = "forecast",
     include_train: Union[bool, int] = True,
     figsize = (12,6),
@@ -90,7 +81,9 @@ def results_vis(
         options=[False, True], description="View Confidence Intervals"
     )
     me_dd = widgets.Dropdown(
-        options=sorted(_determine_best_by_), description="Order By", value = 'TestSetRMSE',
+        options=sorted(f.determine_best_by), # f will be last object iterated through above
+        description="Order By", 
+        value = [m for m in f.determine_best_by if m.startswith('TestSet')][0],
     )
 
     # never changes
@@ -103,7 +96,12 @@ def results_vis(
     button.on_click(on_button_clicked)
 
 
-def results_vis_mv(f_dict, plot_type="forecast", include_train=True, figsize = (12,6)):
+def results_vis_mv(
+    f_dict: Dict[str,MVForecaster], 
+    plot_type="forecast", 
+    include_train=True, 
+    figsize = (12,6)
+):
     """ Visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
 
     Args:
@@ -198,14 +196,15 @@ def tune_test_forecast(
     fi_method="pfi",
     limit_grid_size=None,
     suffix=None,
+    error='raise',
     **cvkwargs,
 ):
     """ Tunes, tests, and forecasts a series of models with a progress bar through tqdm.
 
     Args:
-        f (Forecaster or MVForecaster): the object to run the models through.
+        f (Forecaster or MVForecaster): The object to run the models through.
         models (list-like):
-            Each element must be in _can_be_tuned_.
+            Each element must be in Forecaster.can_be_tuned.
         cross_validate (bool): Default False.
             Whether to tune the model with cross validation. 
             If False, uses the validation slice of data to tune.
@@ -231,29 +230,25 @@ def tune_test_forecast(
             See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
         suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called
             later. If unspecified, each model can be called by its estimator name.
+        error (str): One of 'ignore','raise','warn'; default 'raise'.
+            What to do with the error if a given model fails.
+            'warn' prints a warning that the model could not be evaluated.
         **cvkwargs: Passed to the cross_validate() method.
 
     Returns:
         None
     """
-    [_check_if_correct_estimator(m,_can_be_tuned_) for m in models]
-    for m in log_progress(models):
-
-        call_me = m if suffix is None else m + suffix
-        f.set_estimator(m)
-        if limit_grid_size is not None:
-            f.ingest_grid(m)
-            f.limit_grid_size(limit_grid_size)
-        if cross_validate:
-            f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
-        else:
-            f.tune(dynamic_tuning=dynamic_tuning)
-        f.auto_forecast(
-            dynamic_testing=dynamic_testing,
-            call_me=call_me,
-        )
-
-        if summary_stats:
-            f.save_summary_stats()
-        if feature_importance:
-            f.save_feature_importance(fi_method)
+    _tune_test_forecast(
+        f=f,
+        models=models,
+        cross_validate=cross_validate,
+        dynamic_tuning=dynamic_tuning,
+        dynamic_testing=dynamic_testing,
+        limit_grid_size=limit_grid_size,
+        suffix=suffix,
+        error=error,
+        summary_stats=summary_stats,
+        feature_importance=feature_importance,
+        fi_method=fi_method,
+        tqdm = True,
+    )

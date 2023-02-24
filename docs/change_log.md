@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.7]
+### Added
+### Changed
+- Code refactoring to gain efficiency and make coding base more maintainable. Better practices being followed.
+- Users can now choose which metrics to evaluate for any forecasting procedure. The defaults remain what they always were.
+- Changed the documentation in a few key spots to (hopefully) be clearer. For example, `Forecaster._estimators_` global is now `Forecaster().estimator` attribute. This also makes pickling more convenient.
+### Fixed
+
 ## [0.17.6] - 2023-02-23
 ### Added
 ### Changed

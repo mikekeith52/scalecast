@@ -193,7 +193,6 @@ def mlp_stack(
     from sklearn.neural_network import MLPRegressor
     from sklearn.ensemble import BaggingRegressor
     from sklearn.ensemble import StackingRegressor
-    from .Forecaster import _sklearn_imports_
     results = f.export('model_summaries',models=model_nicknames)
 
     if len(results['ModelNickname'].unique()) != len(model_nicknames):
@@ -201,24 +200,24 @@ def mlp_stack(
             '{} not found in the Forecaster object.'
             ' The available models to pass to mlp_stack are: {}'.format(
                 model_nicknames,
-                [m for m in f.history if m in _sklearn_imports_.keys()],
+                [m for m in f.history if m in f.sklearn_imports],
             )
         )
     
     estimators = [
         (
             m,
-             _sklearn_imports_[
+            f.sklearn_imports[
                 results.loc[
                     results['ModelNickname'] == m,
                     'Estimator'
                 ].values[0]
-             ](
-                 **results.loc[
+            ](
+                **results.loc[
                     results['ModelNickname'] == m,
                     'HyperParams'
                 ].values[0]
-             )
+            )
         ) for m in model_nicknames
     ]
 

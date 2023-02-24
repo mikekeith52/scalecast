@@ -1,3 +1,10 @@
+from .__init__ import __colors__, __series_colors__
+from ._utils import _developer_utils
+from ._Forecaster_parent import (
+    Forecaster_parent,
+    ForecastError,
+    _tune_test_forecast,
+)
 import warnings
 import typing
 import os
@@ -9,33 +16,10 @@ import seaborn as sns
 from collections import Counter
 import warnings
 import logging
-from functools import wraps
 from scipy import stats
-import importlib
 import copy
 
-logging.basicConfig(filename="warnings.log", level=logging.WARNING)
-
-from .Forecaster import (
-    mape,
-    rmse,
-    mae,
-    r2,
-    log_warnings,
-    _sklearn_imports_,
-    _sklearn_estimators_,
-    _metrics_,
-    descriptive_assert,
-    _normalizer_,
-    _determine_best_by_,
-    _colors_,
-    _return_na_if_len_zero,
-    _set_ci_step,
-    _warn_about_not_finding_cis,
-    ForecastError,
-)
-
-class MVForecaster:
+class MVForecaster(Forecaster_parent):
     def __init__(
         self,
         *fs,
@@ -45,6 +29,7 @@ class MVForecaster:
         test_length = 0,
         cis = False,
         names=None,
+        metrics=['rmse','mape','mae','r2'],
         **kwargs,
     ):
         """ 
@@ -72,15 +57,28 @@ class MVForecaster:
                 'series...' and 'y...' notation to refer to series are used interchangeably throughout the object.
                 Series can always be referred to with 'series...' and 'y...' notation, even if user-selected names are provided.
                 The order the series are supplied will be maintained.
+            metrics (list): Default ['rmse','mape','mae','r2']. The metrics to evaluate when validating
+                and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
+                The first element of this list will be set as the default validation metric.
+                For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
+                exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
             **kwargs: Become attributes.
         """
+        super().__init__(
+            y = fs[0].y,
+            test_length = test_length,
+            cis = cis,
+            metrics = metrics,
+            **kwargs,
+        )
         for f in fs:
-            f.typ_set()
+            f._typ_set()
         if (
             len(set([len(f.current_dates) for f in fs])) > 1
             or len(set([min(f.current_dates) for f in fs])) > 1
         ):
-            descriptive_assert(
+            _developer_utils.descriptive_assert(
                 len(set([max(f.current_dates) for f in fs])) == 1,
                 ForecastError,
                 "Series cannot have different end dates.",
@@ -101,15 +99,12 @@ class MVForecaster:
         if len(fs) < 2:
             raise ValueError("Must pass at least two series.")
 
-        self.optimize_on = "mean"
-        self.estimator = "mlr"
-        self.current_xreg = {}
-        self.future_xreg = {}
-        self.history = {}
-        self.validation_length = 1
-        self.validation_metric = "rmse"
-        self.cis = cis
-        self.cilevel = 0.95
+        self.optimizer_funcs = {
+            "mean": np.mean,
+            "min": np.min,
+            "max": np.max,
+        }
+        self.optimize_on = list(self.optimizer_funcs.keys())[0]
         self.grids_file = 'MVGrids'
         self.freq = fs[0].freq
         self.n_series = len(fs)
@@ -234,219 +229,6 @@ class MVForecaster:
         self.grids_file,
     )
 
-    def __copy__(self):
-        obj = type(self).__new__(self.__class__)
-        obj.__dict__.update(self.__dict__)
-        return obj
-
-    def __deepcopy__(self):
-        obj = type(self).__new__(self.__class__)
-        obj.__dict__.update(self.__dict__)
-        obj.__dict__ = copy.deepcopy(obj.__dict__)
-        return obj
-
-    def copy(self):
-        """ Creates an object copy.
-        """
-        return self.__copy__()
-
-    def deepcopy(self):
-        """ Creates an object deepcopy.
-        """
-        return self.__deepcopy__()
-
-    def add_sklearn_estimator(self, imported_module, called):
-        """ Adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
-        Only regression models supported.
-        
-        Args:
-            imported_module (sklearn regression model):
-                The model from sklearn to add. must have already been imported locally.
-                Supports models from sklearn and sklearn APIs.
-            called (str):
-                The name of the estimator that can be called using set_estimator().
-
-        Returns:
-            None
-
-        >>> from sklearn.ensemble import StackingRegressor
-        >>> mvf.add_sklearn_estimator(StackingRegressor,called='stacking')
-        >>> mvf.set_estimator('stacking')
-        >>> mvf.manual_forecast(...)
-        """
-        globals()[called + "_"] = imported_module
-        _sklearn_imports_[called] = globals()[called + "_"]
-        _sklearn_estimators_.append(called)
-        _sklearn_estimators_.sort()
-
-    def set_test_length(self, n=1):
-        """ Sets the length of the test set.
-
-        Args:
-            n (int or float): Default 1.
-                The length of the resulting test set.
-                Fractional splits are supported by passing a float less than 1 and greater than 0.
-                Pass 0 to skip testing models.
-
-        Returns:
-            None
-
-        >>> mvf.set_test_length(12) # test set of 12
-        >>> mvf.set_test_length(.2) # 20% test split
-        """
-        if n == 0:
-            self.test_length = 0
-            return
-        elif n >= 1:
-            n = int(n)
-            self.test_length = n
-            return
-        elif n < 1:
-            n = float(n)
-            self.test_length = int(len(self.current_dates) * n)
-            return
-        else:
-            raise ValueError(f"n must be an int of at least 0 or float greater than 0 and less than 1, got {n} of type {type(n)}")
-
-    def set_validation_length(self, n=1):
-        """ Sets the length of the validation set. This will only matter when tuning a model.
-
-        Args:
-            n (int): Default 1.
-                The length of the resulting validation set.
-
-        Returns:
-            None
-
-        >>> mvf.set_validation_length(6) # validation length of 6
-        """
-        if n <= 0:
-            raise ValueError(f"n must be greater than 0, got {n}")
-        if (self.validation_metric == "r2") & (n == 1):
-            raise ValueError(
-                "can only set a validation_length of 1 if validation_metric is not r2. try set_validation_metric()"
-            )
-        self.validation_length = n
-
-    def set_estimator(self, estimator):
-        """ Sets the estimator to forecast with.
-
-        Args:
-            estimator (str): One of _sklearn_estimators_.
-
-        Returns:
-            None
-
-        >>> mvf.set_estimator('mlr')
-        """
-        if estimator not in _sklearn_estimators_:
-            raise ValueError(
-                f"estimator must be one of {_sklearn_estimators_}, got {estimator}"
-            )
-
-        if hasattr(self, "estimator"):
-            if estimator != self.estimator:
-                for attr in (
-                    "grid",
-                    "grid_evaluated",
-                    "best_params",
-                    "validation_metric_value",
-                ):
-                    if hasattr(self, attr):
-                        delattr(self, attr)
-                self.estimator = estimator
-        else:
-            self.estimator = estimator
-
-    def ingest_grid(self, grid):
-        """ Ingests a grid to tune the estimator.
-
-        Args:
-            grid (dict or str):
-                If dict, must be a user-created grid.
-                If str, must match the name of a dict grid stored in a grids file.
-
-        Returns:
-            None
-
-        >>> mvf.set_estimator('mlr')
-        >>> mvf.ingest_grid({'normalizer':['scale','minmax']})
-        """
-        from itertools import product
-
-        def expand_grid(d):
-            return pd.DataFrame([row for row in product(*d.values())], columns=d.keys())
-
-        try:
-            if isinstance(grid, str):
-                MVGrids = importlib.import_module(self.grids_file)
-                importlib.reload(MVGrids)
-                grid = getattr(MVGrids, grid)
-        except SyntaxError:
-            raise
-        except:
-            raise ForecastError.NoGrid(
-                f"tried to load a grid called {self.estimator} from {self.grids_file}.py, "
-                "but either the file could not be found in the current directory, "
-                "there is no grid with that name, or the dictionary values are not list-like. "
-                "try ingest_grid() with a dictionary grid passed manually."
-            )
-        grid = expand_grid(grid)
-        self.grid = grid
-
-    def set_validation_metric(self, metric="rmse"):
-        """ Sets the metric that will be used to tune all subsequent models.
-
-        Args:
-            metric: One of _metrics_. Default 'rmse'.
-                The metric to optimize the models with using the validation set.
-
-        Returns:
-            None
-
-        >>> mvf.set_validation_metric('mae')
-        """
-        if metric not in _metrics_:
-            raise ValueError(f"metric must be one of {_metrics_}, got {metric}")
-
-        if (metric == "r2") & (self.validation_length < 2):
-            raise ValueError(
-                "can only validate with r2 if the validation length is at least 2, try calling set_validation_length()"
-            )
-        self.validation_metric = metric
-
-    def limit_grid_size(self, n, random_seed=None):
-        """ Makes a grid smaller randomly.
-
-        Args:
-            n (int or float):
-                If int, randomly selects that many parameter combinations.
-                If float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.
-            random_seed (int): Optional.
-                Set a seed to make results consistent.
-
-        Returns:
-            None
-
-        >>> from scalecast import GridGenerator
-        >>> GridGenerator.get_example_grids()
-        >>> mvf.set_estimator('mlp')
-        >>> mvf.ingest_grid('mlp')
-        >>> mvf.limit_grid_size(10,random_seed=20) # limits grid to 10 iterations
-        >>> mvf.limit_grid_size(.5,random_seed=20) # limits grid to half its original size
-        """
-        if random_seed is not None:
-            random.seed(random_seed)
-
-        if n >= 1:
-            self.grid = self.grid.sample(n=min(n, self.grid.shape[0])).reset_index(
-                drop=True
-            )
-        elif (n < 1) & (n > 0):
-            self.grid = self.grid.sample(frac=n).reset_index(drop=True)
-        else:
-            raise ValueError(f"argment passed to n not usable: {n}")
-
     def add_optimizer_func(self, func, called):
         """ Add an optimizer function that can be used to determine the best-performing model.
         This is in addition to the 'mean', 'min', and 'max' functions that are available by default.
@@ -464,23 +246,12 @@ class MVForecaster:
         >>> mvf.set_estimator('mlr')
         >>> mvf.tune() # best model now chosen based on the weighted average function you added; series2 gets 3x the weight of series 1
         """
-        _optimizer_funcs_[called] = func
+        self.optimizer_funcs[called] = func
 
-    def set_grids_file(self,name='MVGrids'):
-        """ Sets the name of the file where the object will look automatically for grids when calling 
-        `tune()`, `cross_validate()`, `tune_test_forecast()`, or similar function.
-        If the grids file does not exist in the working directory, the error will only be raised once tuning is called.
-        
-        Args:
-            name (str): Default 'MVGrids.'
-                The name of the file to look for.
-                This file must exist in the working directory.
-                The default will look for a file called "MVGrids.py".
-
-        >>> mvf.set_grids_file('ModGrids') # expects to find a file called ModGrids.py in working directory.
+    def _typ_set(self):
+        """ Placeholder function.
         """
-        descriptive_assert(isinstance(name,str),ValueError,f'name argument expected str type, got {type(name)}')
-        self.grids_file = name
+        return
 
     def tune(self, dynamic_tuning=False, cv=False):
         """ Tunes the specified estimator using an ingested grid (ingests a grid from a grids file with same name as the estimator by default).
@@ -532,11 +303,12 @@ class MVForecaster:
                     vp = val_preds[s]
                     va = val_ac[s][-len(vp) :]
                     metrics[l + "_metric"].append(
-                        globals()[self.validation_metric](va, vp)
+                        self.metrics[self.validation_metric](va, vp)
                     )
             except TypeError:
                 raise
             except Exception as e:
+                raise
                 self.grid.drop(i, axis=0, inplace=True)
                 logging.warning(f"Could not evaluate the paramaters: {hp}. error: {e}")
         metrics = pd.DataFrame(metrics)
@@ -546,9 +318,9 @@ class MVForecaster:
             self.grid_evaluated = self.grid.copy()
             self.grid_evaluated["validation_length"] = self.validation_length
             self.grid_evaluated["validation_metric"] = self.validation_metric
-            if self.optimize_on in _optimizer_funcs_:
+            if self.optimize_on in self.optimizer_funcs:
                 metrics["optimized_metric"] = metrics.apply(
-                    _optimizer_funcs_[self.optimize_on], axis=1
+                    self.optimizer_funcs[self.optimize_on], axis=1
                 )
             else:
                 metrics["optimized_metric"] = metrics[self.optimize_on + "_metric"]
@@ -582,11 +354,11 @@ class MVForecaster:
         """
         rolling = bool(rolling)
         k = int(k)
-        descriptive_assert(k >= 2, ValueError, f"k must be at least 2, got {k}")
+        _developer_utils.descriptive_assert(k >= 2, ValueError, f"k must be at least 2, got {k}")
         mvf = self.__deepcopy__()
         usable_obs = len(mvf.series1["y"]) - mvf.test_length
         val_size = usable_obs // (k + 1)
-        descriptive_assert(
+        _developer_utils.descriptive_assert(
             val_size > 0,
             ForecastError,
             f'not enough observations in sample to cross validate.'
@@ -713,46 +485,14 @@ class MVForecaster:
             ]
         else:
             warnings.warn(
-                f"None of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model.",
+                f"None of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model."
+                " See the errors in warnings.log.",
                 category=Warning,
             )
             self.best_params = {}
 
-    def auto_forecast(
-        self, call_me=None, dynamic_testing=True,
-    ):
-        """ Auto forecasts with the best parameters indicated from the tuning process.
 
-        Args:
-            call_me (str): Optional.
-                What to call the model when storing it in the object's history dictionary.
-                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
-                Duplicated names will be overwritten with the most recently called model.
-            dynamic_testing (bool or int): Default True.
-                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
-                If True, evaluates recursively over the entire out-of-sample slice of data.
-                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
-                Setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform more than one period out.
-
-        Returns:
-            None
-
-        >>> mvf.set_estimator('xgboost')
-        >>> mvf.tune()
-        >>> mvf.auto_forecast()
-        """
-        if not hasattr(self, "best_params"):
-            warnings.warn(
-                f"Since tune() or cross_validate() has not been called, {self.estimator} model will be run with default hyperparameters.",
-                category=Warning,
-            )
-            self.best_params = {}
-        self.manual_forecast(
-            call_me=call_me, dynamic_testing=dynamic_testing, **self.best_params
-        )
-
-    def manual_forecast(self, call_me=None, dynamic_testing=True, **kwargs):
+    def manual_forecast(self, call_me=None, dynamic_testing=True, test_only = None, **kwargs):
         """ Manually forecasts with the hyperparameters, normalizer, and lag selections passed as keywords.
 
         Args:
@@ -775,7 +515,7 @@ class MVForecaster:
         >>> mvf.set_estimator('mlr')
         >>> mvf.manual_forecast(normalizer='scale')
         """
-        descriptive_assert(
+        _developer_utils.descriptive_assert(
             isinstance(call_me, str) | (call_me is None),
             ValueError,
             "call_me must be a str type or None",
@@ -836,53 +576,36 @@ class MVForecaster:
         >>> models = ('mlr','mlp','lightgbm')
         >>> mvf.tune_test_forecast(models,dynamic_testing=False)
         """
-        for m in models:
-            call_me = m if suffix is None else m + suffix
-            self.set_estimator(m)
-            if limit_grid_size is not None:
-                self.ingest_grid(m)
-                self.limit_grid_size(limit_grid_size)
-            if cross_validate:
-                self.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
-            else:
-                self.tune(dynamic_tuning=dynamic_tuning)
-            try:
-                self.auto_forecast(
-                    dynamic_testing=dynamic_testing,
-                    call_me=call_me,
-                )
-            except Exception as e:
-                if error == 'raise':
-                    raise
-                elif error == 'warn':
-                    warnings.warn(
-                        f"{m} model could not be evaluated. "
-                        f"Here's the error: {e}",
-                        category=Warning,
-                    )
-                    continue
-                elif error == 'ignore':
-                    continue
-                else:
-                    raise ValueError(f'value passed to error arg not recognized: {error}')
+        _tune_test_forecast(
+            f = self,
+            models = models,
+            cross_validate=cross_validate,
+            dynamic_tuning=dynamic_tuning,
+            dynamic_testing=dynamic_testing,
+            limit_grid_size=limit_grid_size,
+            suffix=suffix,
+            error=error,
+            **cvkwargs,
+        )
+        
 
     def set_optimize_on(self, how):
         """ Choose how to determine best models by choosing which series should be optimized.
         This is the decision that will be used for tuning models as well.
 
         Args:
-            how (str): One of _optimizer_funcs_, 'series{n}', 'y{n}', or the series name.
-                If in _optimizer_funcs_, will optimize based on that metric.
+            how (str): One of MVForecaster.optimizer_funcs, 'series{n}', 'y{n}', or the series name.
+                If in MVForecaster.optimizer_funcs, will optimize based on that metric.
                 If 'series{n}', 'y{n}', or the series name, will choose the model that performs best on that series.
                 By default, optimize_on is set to 'mean' when the object is initiated.
         """
-        if how in _optimizer_funcs_:
+        if how in self.optimizer_funcs:
             self.optimize_on = how
         else:
             series, labels = self._parse_series(how)
             self.optimize_on = labels[0]
     
-    @log_warnings
+    @_developer_utils.log_warnings
     def _forecast(
         self, fcster, dynamic_testing, tune=False, normalizer="minmax", lags=1, **kwargs
     ):
@@ -890,7 +613,7 @@ class MVForecaster:
         See example: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html.
 
         Args:
-            fcster (str): One of _sklearn_estimators_. Reads the estimator set to `set_estimator()` method.
+            fcster (str): One of MVForecaster.estimators. Reads the estimator set to `set_estimator()` method.
             dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
@@ -964,12 +687,12 @@ class MVForecaster:
                                 "y"
                             ].values[-(j + 1)]
                     elif isinstance(lag, str):
-                        raise ValueError(f"cannot use argument for lags: {lags}")
+                        raise ValueError(f"Cannot use argument for lags: {lags}.")
                     else:
                         try:
                             lag = list(lag)
                         except TypeError:
-                            raise ValueError(f"cannot use argument for lags: {lags}")
+                            raise ValueError(f"Cannot use argument for lags: {lags}.")
                         for j in lag:
                             col = f"y{i+1}_lag{j}"
                             observed[col] = (
@@ -981,12 +704,12 @@ class MVForecaster:
                                 "y"
                             ].values[-j]
                 elif isinstance(lags, str):
-                    raise ValueError(f"lags cannot be str type, got {lags}")
+                    raise ValueError(f"lags cannot be str type, got {lags}.")
                 else:
                     try:
                         lags = list(lags)
                     except TypeError:
-                        raise ValueError(f"cannot use argument for lags: {lags}")
+                        raise ValueError(f"Cannot use argument for lags: {lags}.")
                     for j in lags:
                         col = f"y{i+1}_lag{j}"
                         observed[col] = (
@@ -1021,7 +744,7 @@ class MVForecaster:
                     normalizer,
                 ) # only fit normalizer on training data or on full dataset if not testing
             X = scale(self.scaler, X)
-            regr = _sklearn_imports_[fcster](**kwargs)
+            regr = self.sklearn_imports[fcster](**kwargs)
             # below added for vecm model -- could be expanded for others as well
             extra_kws_map = {
                 'dates':self.current_dates.values.copy(),
@@ -1067,7 +790,7 @@ class MVForecaster:
                                 future.loc[i+1,c] = preds[series][idx]
             return preds
 
-        descriptive_assert(
+        _developer_utils.descriptive_assert(
             isinstance(dynamic_testing, bool)
             | isinstance(dynamic_testing, int) & (dynamic_testing > -1),
             ValueError,
@@ -1161,8 +884,8 @@ class MVForecaster:
         """ fits an appropriate scaler to training data that will then be applied to test and future data
 
         Args:
-            X_train (DataFrame): the independent values.
-            normalizer (str): one of _normalizer_.
+            X_train (DataFrame): The independent values.
+            normalizer (str): One of MVForecaster.normalizer.
                 if 'minmax', uses the MinMaxScaler from sklearn.preprocessing.
                 if 'scale', uses the StandardScaler from sklearn.preprocessing.
                 if 'normalize', uses the Normalizer from sklearn.preprocessing.
@@ -1171,22 +894,16 @@ class MVForecaster:
         Returns:
             (scikit-learn preprecessing scaler/normalizer): The normalizer fitted on training data only.
         """
-        descriptive_assert(
-            normalizer in _normalizer_,
+        _developer_utils.descriptive_assert(
+            normalizer in self.normalizer,
             ValueError,
-            f"normalizer must be one of {_normalizer_}, got {normalizer}",
+            f"normalizer must be one of {self.normalizer}, got {normalizer}.",
         )
         X_train = X_train if not hasattr(X_train,'values') else X_train.values
-        if normalizer == "minmax":
-            from sklearn.preprocessing import MinMaxScaler as Scaler
-        elif normalizer == "normalize":
-            from sklearn.preprocessing import Normalizer as Scaler
-        elif normalizer == "scale":
-            from sklearn.preprocessing import StandardScaler as Scaler
-        else:
+        if normalizer is None:
             return None
 
-        scaler = Scaler()
+        scaler = scaler = self.normalizer[normalizer]()
         scaler.fit(X_train)
         return scaler
 
@@ -1285,38 +1002,6 @@ class MVForecaster:
             "TestSetLength": self.test_length,
             "TestSetPredictions": test_set_preds,
             "TestSetActuals": test_set_actuals,
-            "TestSetRMSE": {
-                series: _return_na_if_len_zero(a, test_set_preds[series], rmse)
-                for series, a in test_set_actuals.items()
-            },
-            "TestSetMAPE": {
-                series: _return_na_if_len_zero(a, test_set_preds[series], mape)
-                for series, a in test_set_actuals.items()
-            },
-            "TestSetMAE": {
-                series: _return_na_if_len_zero(a, test_set_preds[series], mae)
-                for series, a in test_set_actuals.items()
-            },
-            "TestSetR2": {
-                series: _return_na_if_len_zero(a, test_set_preds[series], r2)
-                for series, a in test_set_actuals.items()
-            },
-            "InSampleRMSE": {
-                series: _return_na_if_len_zero(a, fitted_vals[series],rmse)
-                for series, a in fitted_val_actuals.items()
-            },
-            "InSampleMAPE": {
-                series: _return_na_if_len_zero(a, fitted_vals[series], mape)
-                for series, a in fitted_val_actuals.items()
-            },
-            "InSampleMAE": {
-                series: _return_na_if_len_zero(a, fitted_vals[series], mae)
-                for series, a in fitted_val_actuals.items()
-            },
-            "InSampleR2": {
-                series: _return_na_if_len_zero(a, fitted_vals[series], r2)
-                for series, a in fitted_val_actuals.items()
-            },
             "CILevel": self.cilevel if self.cis else np.nan,
             "ValidationSetLength": None,
             "ValidationMetric": None,
@@ -1325,32 +1010,23 @@ class MVForecaster:
             "LevelForecast": lvl_fcst,
             "LevelTestSetPreds": lvl_tsp,
             "LevelTestSetActuals": lvl_tsa,
-            "LevelTestSetRMSE": {
-                series: _return_na_if_len_zero(a, lvl_tsp[series], rmse) for series, a in lvl_tsa.items()
-            },
-            "LevelTestSetMAPE": {
-                series: _return_na_if_len_zero(a, lvl_tsp[series], mape) for series, a in lvl_tsa.items()
-            },
-            "LevelTestSetMAE": {
-                series: _return_na_if_len_zero(a, lvl_tsp[series], mae) for series, a in lvl_tsa.items()
-            },
-            "LevelTestSetR2": {
-                series: _return_na_if_len_zero(a, lvl_tsp[series], r2) for series, a in lvl_tsa.items()
-            },
             "LevelFittedVals": lvl_fv,
-            "LevelInSampleRMSE": {
-                series: _return_na_if_len_zero(a, lvl_fv[series], rmse) for series, a in lvl_fva.items()
-            },
-            "LevelInSampleMAPE": {
-                series: _return_na_if_len_zero(a, lvl_fv[series], mape) for series, a in lvl_fva.items()
-            },
-            "LevelInSampleMAE": {
-                series: _return_na_if_len_zero(a, lvl_fv[series], mae) for series, a in lvl_fva.items()
-            },
-            "LevelInSampleR2": {
-                series: _return_na_if_len_zero(a, lvl_fv[series], r2) for series, a in lvl_fva.items()
-            },
         }
+        for met, func in self.metrics.items():
+            self.history[call_me]["TestSet" + met.upper()] = {
+                series: _developer_utils._return_na_if_len_zero(a, test_set_preds[series], func)
+                for series, a in test_set_actuals.items()   
+            }
+            self.history[call_me]["InSample" + met.upper()] = {
+                series: _developer_utils._return_na_if_len_zero(a, fitted_vals[series], func)
+                for series, a in fitted_val_actuals.items()
+            }
+            self.history[call_me]["LevelTestSet" + met.upper()] = {
+                series: _developer_utils._return_na_if_len_zero(a, lvl_tsp[series], func) for series, a in lvl_tsa.items()
+            }
+            self.history[call_me]["LevelInSample" + met.upper()] = {
+                series: _developer_utils._return_na_if_len_zero(a, lvl_fv[series], func) for series, a in lvl_fva.items()
+            }
         if hasattr(self, "best_params"):
             self.history[call_me]["Tuned"] = True
             self.history[call_me]["CrossValidated"] = self.cross_validated
@@ -1405,52 +1081,6 @@ class MVForecaster:
                 tspreds = test_preds,
             )
 
-    def _check_right_test_length_for_cis(self,cilevel):
-        min_test_length = np.ceil(1/(1-cilevel))
-        if self.test_length < min_test_length:
-            raise ValueError(
-                'Cannot evaluate confidence intervals at the '
-                '{:.0%} level when test_length is set to less than {} observations. '
-                'The test length is currently set to {} observations. '
-                'The test length must be at least 1/(1-cilevel) in length for conformal intervals to work.'.format(
-                    cilevel,
-                    int(min_test_length),
-                    self.test_length,
-                )
-            )
-
-    def eval_cis(self,mode=True,cilevel=.95):
-        """ Call this function to change whether or not the Forecaster sets confidence intervals on all evaluated models.
-        Beginning 0.17.0, only conformal confidence intervals are supported. Conformal intervals need a test set to be configured soundly.
-        Confidence intervals cannot be evaluated when there aren't at least 1/(1-cilevel) observations in the test set.
-
-        Args:
-            mode (bool): Default True. Whether to set confidence intervals on or off for models.
-            cilevel (float): Default .95. Must be greater than 0, less than 1. The confidence level
-                to use to set intervals.
-        """
-        if mode is True:
-            self._check_right_test_length_for_cis(cilevel)
-        
-        self.cis=mode
-        self.set_cilevel(cilevel)
-
-    def set_cilevel(self, n):
-        """ Sets the level for the resulting confidence intervals (95% default).
-
-        Args:
-            n (float): Greater than 0 and less than 1.
-
-        Returns:
-            None
-
-        >>> f.set_cilevel(.80) # next forecast will get 80% confidence intervals
-        """
-        descriptive_assert(
-            n < 1 and n > 0, ValueError, "n must be a float greater than 0 and less than 1."
-        )
-        self.cilevel = n
-
     def set_best_model(self, model=None, determine_best_by=None):
         """ Sets the best model to be referenced as "best".
         One of model or determine_best_by parameters must be specified.
@@ -1458,7 +1088,7 @@ class MVForecaster:
         Args:
             model (str): The model to set as the best.
                 Must match the estimator name or call_me if that was used when evaluating the model.
-            determine_best_by (str): One of _determine_best_by_.
+            determine_best_by (str): One of MVForecaster.determine_best_by.
                 If model is specified, this will be ignored.
 
         Returns:
@@ -1470,16 +1100,16 @@ class MVForecaster:
             else:
                 raise ValueError(f"Cannot find {model} in history.")
         else:
-            descriptive_assert(
-                determine_best_by in _determine_best_by_,
+            _developer_utils.descriptive_assert(
+                determine_best_by in self.determine_best_by,
                 ValueError,
-                f"determine_best_by must be one of {_determine_best_by_}, got {determine_best_by}.",
+                f"determine_best_by must be one of {self.determine_best_by}, got {determine_best_by}.",
             )
             models_metrics = {m: v[determine_best_by] for m, v in self.history.items()}
 
-            if self.optimize_on in _optimizer_funcs_ and determine_best_by != 'ValidationMetricValue':
+            if self.optimize_on in self.optimizer_funcs and determine_best_by != 'ValidationMetricValue':
                 models_metrics = {
-                    m: _optimizer_funcs_[self.optimize_on](list(v.values()))
+                    m: self.optimizer_funcs[self.optimize_on](list(v.values()))
                     for m, v in models_metrics.items()
                 }
             elif determine_best_by != 'ValidationMetricValue':
@@ -1540,12 +1170,6 @@ class MVForecaster:
                 m for m in models if m != self.best_model
             ]
         return models
-
-    def _warn_about_not_finding_cis(self,m):
-        warnings.warn(
-            f'Confidence intervals not found for {m}.',
-            category=Warning,
-        )
 
     def plot(
         self, 
@@ -1613,7 +1237,7 @@ class MVForecaster:
                 )[-len(self.current_dates) :],
                 label=f"{labels[i]} actual",
                 ax=ax,
-                color=_series_colors_[i],
+                color=__series_colors__[i],
             )
             for m in models:
                 sns.lineplot(
@@ -1622,7 +1246,7 @@ class MVForecaster:
                     if not level
                     else self.history[m]["LevelForecast"][s],
                     label=f"{labels[i]} {m}",
-                    color=_colors_[k],
+                    color=__colors__[k],
                     ax=ax,
                 )
 
@@ -1637,13 +1261,13 @@ class MVForecaster:
                             if not level
                             else self.history[m]["LevelLowerCI"][s],
                             alpha=0.2,
-                            color=_colors_[k],
+                            color=__colors__[k],
                             label="{} {} {:.0%} CI".format(
                                 labels[i], m, self.history[m]["CILevel"]
                             ),
                         )
                     except KeyError:
-                        _warn_about_not_finding_cis(m)
+                        _developer_utils._warn_about_not_finding_cis(m)
                 k += 1
 
         plt.legend()
@@ -1697,7 +1321,7 @@ class MVForecaster:
         >>> mvf.plot_test_set() # plots all test set predictions on all series
         >>> plt.show()
         """
-        descriptive_assert(
+        _developer_utils.descriptive_assert(
             self.test_length > 0,
             ForecastError,
             'plot_test_set() does not work when models were not tested (test_length set to 0).',
@@ -1737,7 +1361,7 @@ class MVForecaster:
                 y=y[-include_train:],
                 label=f"{labels[i]} actual",
                 ax=ax,
-                color=_series_colors_[i],
+                color=__series_colors__[i],
             )
             for m in models:
                 sns.lineplot(
@@ -1746,7 +1370,7 @@ class MVForecaster:
                     if not level
                     else self.history[m]["LevelTestSetPreds"][s],
                     label=f"{labels[i]} {m}",
-                    color=_colors_[k],
+                    color=__colors__[k],
                     linestyle="--",
                     alpha=0.7,
                     ax=ax,
@@ -1763,13 +1387,13 @@ class MVForecaster:
                             if not level
                             else self.history[m]["LevelTSLowerCI"][s],
                             alpha=0.2,
-                            color=_colors_[k],
+                            color=__colors__[k],
                             label="{} {} {:.0%} CI".format(
                                 labels[i], m, self.history[m]["CILevel"]
                             ),
                         )
                     except KeyError:
-                        _warn_about_not_finding_cis(m)
+                        _developer_utils._warn_about_not_finding_cis(m)
                 k += 1
 
         plt.legend()
@@ -1834,7 +1458,7 @@ class MVForecaster:
                 y=act[-len(self.current_dates):],
                 label=f"{labels[i]} actual",
                 ax=ax,
-                color=_series_colors_[i],
+                color=__series_colors__[i],
             )
             for m in models:
                 fvs = (
@@ -1848,7 +1472,7 @@ class MVForecaster:
                     label=f"{labels[i]} {m}",
                     linestyle="--",
                     alpha=0.7,
-                    color=_colors_[k],
+                    color=__colors__[k],
                     ax=ax,
                 )
                 k += 1
@@ -1905,7 +1529,7 @@ class MVForecaster:
         >>> lvl_fcsts = results['lvl_fcsts'] # returns a dataframe
         >>> ts_preds = mvf.export('test_set_predictions') # returns a dataframe
         """
-        descriptive_assert(
+        _developer_utils.descriptive_assert(
             isinstance(cis, bool),
             "ValueError",
             f"argument passed to cis must be a bool type, not {type(cis)}",
@@ -1932,7 +1556,7 @@ class MVForecaster:
         models = self._parse_models(models, hasattr(self, "best_model"))
         output = {}
         if "model_summaries" in dfs:
-            cols = [
+            cols1 = [
                 "Series",
                 "ModelNickname",
                 "Estimator",
@@ -1946,25 +1570,9 @@ class MVForecaster:
                 "DynamicallyTested",
                 "Integration",
                 "TestSetLength",
-                "TestSetRMSE",
-                "TestSetMAPE",
-                "TestSetMAE",
-                "TestSetR2",
-                "InSampleRMSE",
-                "InSampleMAPE",
-                "InSampleMAE",
-                "InSampleR2",
                 "ValidationSetLength",
                 "ValidationMetric",
                 "ValidationMetricValue",
-                "LevelTestSetRMSE",
-                "LevelTestSetMAPE",
-                "LevelTestSetMAE",
-                "LevelTestSetR2",
-                "LevelInSampleRMSE",
-                "LevelInSampleMAPE",
-                "LevelInSampleMAE",
-                "LevelInSampleR2",
                 "OptimizedOn",
                 "MetricOptimized",
                 "best_model",
@@ -1975,6 +1583,24 @@ class MVForecaster:
                     model_summary_sm = pd.DataFrame(
                         {"Series": [l], "ModelNickname": [m]}
                     )
+                    cols = cols1  + [
+                        k for k in self.history[m] if (
+                            (
+                                k.startswith('TestSet') & (k not in ( 
+                                    'TestSetPredictions',
+                                    'TestSetActuals',
+                                    'TestSetLowerCI',
+                                    'TestSetUpperCI',
+                                )
+                            ))
+                            | k.startswith('InSample')
+                            | (
+                                k.startswith('LevelTestSet')
+                                & (k not in ('LevelTestSetPreds',)
+                            ))
+                            | k.startswith('LevelInSample')
+                        )
+                    ]
                     for c in cols:
                         if c not in (
                             "Series",
@@ -1997,7 +1623,7 @@ class MVForecaster:
                                 except KeyError:
                                     model_summary_sm[c] = np.nan
                         elif c == "OptimizedOn" and hasattr(self, "best_model"):
-                            if self.optimize_on in _optimizer_funcs_:
+                            if self.optimize_on in self.optimizer_funcs:
                                 model_summary_sm["OptimizedOn"] = [self.optimize_on]
                             else:
                                 series, label = self._parse_series(self.optimize_on)
@@ -2026,7 +1652,7 @@ class MVForecaster:
                             df[f"{l}_{m}_fcst_upper"] = self.history[m]["UpperCI"][s][:]
                             df[f"{l}_{m}_fcst_lower"] = self.history[m]["LowerCI"][s][:]
                         except KeyError:
-                            _warn_about_not_finding_cis(m)
+                            _developer_utils._warn_about_not_finding_cis(m)
             output["all_fcsts"] = df
         if "test_set_predictions" in dfs:
             warnings.warn(
@@ -2056,7 +1682,7 @@ class MVForecaster:
                                     "TestSetLowerCI"
                                 ][s][:]
                             except KeyError:
-                                _warn_about_not_finding_cis(m)
+                                _developer_utils._warn_about_not_finding_cis(m)
                     i += 1
                 output["test_set_predictions"] = df
             else:
@@ -2075,7 +1701,7 @@ class MVForecaster:
                                 s
                             ][:]
                         except KeyError:
-                            _warn_about_not_finding_cis(m)
+                            _developer_utils._warn_about_not_finding_cis(m)
             output["lvl_fcsts"] = df
         if "lvl_test_set_predictions" in dfs:
             if self.test_length > 0:
@@ -2098,7 +1724,7 @@ class MVForecaster:
                                     s
                                 ][:]
                             except KeyError:
-                                _warn_about_not_finding_cis(m)
+                                _developer_utils._warn_about_not_finding_cis(m)
                     i += 1
                 output["lvl_test_set_predictions"] = df
             else:
@@ -2206,7 +1832,7 @@ class MVForecaster:
             fcst_length = len(self.future_dates)
         fcst_length = int(fcst_length)
         series, labels = self._parse_series("all")
-        mets = ["RMSE", "MAE", "R2", "MAPE"]
+        mets = list(self.metrics.keys())
         tuples = []
         for s in labels:
             for m in mets:
@@ -2252,7 +1878,7 @@ class MVForecaster:
             for s in labels:
                 for m in mets:
                     metric_results.loc[(s, m), f"iter{i+1}"] = test_mets.loc[
-                        test_mets["Series"] == s, f"LevelTestSet{m}"
+                        test_mets["Series"] == s, f"LevelTestSet{m.upper()}"
                     ].values[0]
                 value_results[f"{s}_iter{i+1}dates"] = test_preds["DATE"]
                 value_results[f"{s}_iter{i+1}actuals"] = test_preds[f"{s}_actuals"]
@@ -2359,22 +1985,3 @@ class MVForecaster:
 
         df = df.dropna()
         return self.corr(df=df, **kwargs)
-
-_series_colors_ = [
-    "#0000FF",
-    "#00FFFF",
-    "#7393B3",
-    "#088F8F",
-    "#0096FF",
-    "#F0FFFF",
-    "#00FFFF",
-    "#5D3FD3",
-    "#191970",
-    "#9FE2BF",
-] * 100
-
-_optimizer_funcs_ = {
-    "mean": np.mean,
-    "min": np.min,
-    "max": np.max,
-}

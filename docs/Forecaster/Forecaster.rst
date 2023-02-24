@@ -20,5 +20,7 @@ This is the main object that is utilized for making predictions on the test set,
 
 .. autoclass:: src.scalecast.Forecaster.Forecaster
    :members:
+   :undoc-members:
+   :inherited-members:
 
    .. automethod:: __init__
