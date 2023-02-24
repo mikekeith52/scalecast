@@ -93,8 +93,7 @@ class vecm:
 
 def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=False,**kwargs):
     """ Adds a forecast to a `Forecaster` object using the auto_arima function from pmdarima.
-    This function attempts to find the optimal arima order by minimizing information criteria
-    on the training slice of data only.
+    This function attempts to find the optimal arima order by minimizing information criteria.
 
     Args:
         f (Forecaster): The object to add the forecast to.
