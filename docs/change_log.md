@@ -1,7 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.17.7]
+## [0.17.8]
+### Added
+### Changed
+- Took out an error when setting validation metric to R2 and less than 2 obs in validation set. Because of cross validation, this error isn't applicable.
+### Fixed
+- Fixed `Forecaster.set_metrics()` method.
+ 
+## [0.17.7] - 2023-02-24
 ### Added
 ### Changed
 - Code refactoring to gain efficiency and make coding base more maintainable. Better practices being followed.

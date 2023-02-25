@@ -55,11 +55,14 @@ src/scalecast/util.py
 src/scalecast/__pycache__/AnomalyDetector.cpython-38.pyc
 src/scalecast/__pycache__/ChangepointDetector.cpython-38.pyc
 src/scalecast/__pycache__/Forecaster.cpython-38.pyc
+src/scalecast/__pycache__/Forecaster_parent.cpython-38.pyc
 src/scalecast/__pycache__/GridGenerator.cpython-38.pyc
 src/scalecast/__pycache__/MVForecaster.cpython-38.pyc
 src/scalecast/__pycache__/Pipeline.cpython-38.pyc
 src/scalecast/__pycache__/SeriesTransformer.cpython-38.pyc
+src/scalecast/__pycache__/_Forecaster_parent.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
+src/scalecast/__pycache__/_utils.cpython-38.pyc
 src/scalecast/__pycache__/auxmodels.cpython-38.pyc
 src/scalecast/__pycache__/multiseries.cpython-38.pyc
 src/scalecast/__pycache__/notebook.cpython-38.pyc
@@ -72,7 +75,6 @@ src/scalecast/grids/vecm.py
 test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
-test/ThetaGrid.py
 test/VECMGrid.py
 test/postbuild
 test/readme.md

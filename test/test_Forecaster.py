@@ -101,9 +101,8 @@ def test_statistical_tests():
 
 def test_modeling():
     for tl in (0,48): # make sure 0 and non-0 length test sets work
-        f = build_Forecaster(
-            test_length=tl,
-        )
+        f = build_Forecaster(test_length=tl)
+        f.set_metrics(['rmse','smape'])
         f.set_grids_file('ExampleGrids')
         f.set_validation_metric('smape')
         f.set_validation_length(12)

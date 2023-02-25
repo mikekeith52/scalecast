@@ -279,13 +279,14 @@ class Forecaster_parent:
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
         """
-        bad_metrics = [met for met in metrics if met not in _metrics_]
+        bad_metrics = [met for met in metrics if met not in __metrics__]
         if len(bad_metrics) > 0:
             raise ValueError(
-                f'Each element in metrics must be one of {_metrics_}.'
+                f'Each element in metrics must be one of {__metrics__}.'
                 f' Got the following invalid values: {bad_metrics}.'
             )
-        self.metrics = metrics
+        self.metrics = {k:__metrics__[k] for k in metrics}
+        self.determine_best_by = _developer_utils._determine_best_by(self.metrics)
 
     def set_validation_metric(self, metric):
         """ Sets the metric that will be used to tune all subsequent models.
@@ -306,10 +307,6 @@ class Forecaster_parent:
             ValueError,
             f"metric must be one of {list(self.metrics)}, got {metric}.",
         )
-        if (metric == "r2") & (self.validation_length < 2):
-            raise ValueError(
-                "Can only validate with r2 if the validation length is at least 2, try calling set_validation_length()."
-            )
         self.validation_metric = metric
 
     def set_test_length(self, n=1):

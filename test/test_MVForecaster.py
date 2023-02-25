@@ -31,6 +31,7 @@ def build_MVForecaster(test_length=24):
 def main():
     for tl in (0,36):
         mvf = build_MVForecaster(test_length = tl)
+        mvf.set_metrics(['rmse','r2'])
         mvf
         if tl > 0:
             mvf.eval_cis(
