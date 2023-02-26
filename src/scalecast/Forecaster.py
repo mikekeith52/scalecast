@@ -381,7 +381,7 @@ class Forecaster(Forecaster_parent):
         See the example: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html.
 
         Args:
-            fcster (str): One of Forecaster.sklearn_estimators. Reads the estimator passed to the estimator attribute.
+            fcster (str): One of `Forecaster.sklearn_estimators`. Reads the estimator passed to the estimator attribute.
             dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates recursively over the entire out-of-sample slice of data.
@@ -394,7 +394,7 @@ class Forecaster(Forecaster_parent):
             Xvars (list-like, str, or None): The regressors to predict with.
                 Be sure to have added them to the Forecaster object first.
                 None means all Xvars added to the Forecaster object will be used for sklearn estimators (not so for other estimators).
-            normalizer (str): The scaling technique to apply to the data. One of _normalizer_. 
+            normalizer (str): The scaling technique to apply to the data. One of `Forecaster.normalizer`. 
                 Default 'minmax'.
                 If not None and a test length is specified greater than 0, the normalizer is fit on the training data only.
             test_only (bool): Default False.

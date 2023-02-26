@@ -613,7 +613,7 @@ class MVForecaster(Forecaster_parent):
         See example: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html.
 
         Args:
-            fcster (str): One of MVForecaster.estimators. Reads the estimator set to `set_estimator()` method.
+            fcster (str): One of `MVForecaster.estimators`. Reads the estimator set to `set_estimator()` method.
             dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
@@ -624,7 +624,7 @@ class MVForecaster(Forecaster_parent):
             tune (bool): Default False.
                 Whether the model is being tuned.
                 It does not need to be specified by the user.
-            normalizer (str): The scaling technique to apply to the data. One of _normalizer_. 
+            normalizer (str): The scaling technique to apply to the data. One of `MVForecaster.normalizer`. 
                 Default 'minmax'.
                 If not None and a test length is specified greater than 0, the normalizer is fit on the training data only.
             lags (int | list[int] | dict[str,(int | list[int])]): Default 1.
