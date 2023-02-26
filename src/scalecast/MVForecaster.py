@@ -1596,7 +1596,10 @@ class MVForecaster(Forecaster_parent):
                             | k.startswith('InSample')
                             | (
                                 k.startswith('LevelTestSet')
-                                & (k not in ('LevelTestSetPreds',)
+                                & (k not in (
+                                    'LevelTestSetPreds',
+                                    'LevelTestSetActuals',
+                                )
                             ))
                             | k.startswith('LevelInSample')
                         )
