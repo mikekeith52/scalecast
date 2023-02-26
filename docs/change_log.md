@@ -1,7 +1,15 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.17.8]
+## [0.17.9] - 2023-02-26
+### Added
+- Added `Forecaster.add_signals()` method for custom model stacking. 
+### Changed
+- Took out the LevelTestSetActuals column from `MVForecaster.export('model_summaries')`.
+### Fixed
+- Fixed the default `determine_best_by` arg in `Forecaster.export()`.
+
+## [0.17.8] - 2023-02-25
 ### Added
 ### Changed
 - Took out an error when setting validation metric to R2 and less than 2 obs in validation set. Because of cross validation, this error isn't applicable.

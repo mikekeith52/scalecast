@@ -62,6 +62,7 @@ Big updates will get an increment after the first '.':
 `cd path/to/scalecast/test`  
 `pip install -r requirements.txt`  
 `conda install -c conda-forge cmdstanpy`  
+*On MAC, may have to reinstall some packages using conda install*  
 `python test_all.py`  
 
 ### 8. Deactivate environment

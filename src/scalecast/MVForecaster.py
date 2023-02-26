@@ -1800,7 +1800,7 @@ class MVForecaster(Forecaster_parent):
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
         All scoring is dynamic to give a true out-of-sample result.
-        All metrics are specific to level data.
+        All metrics are specific to level data and will only work if the default metrics were maintained when the MVForecaster object was initiated.
         Two results are extracted: a dataframe of actuals and predictions across each iteration and
         a dataframe of test-set metrics across each iteration with a mean total as the last column.
         These results are stored in the Forecaster object's history and can be extracted by calling 

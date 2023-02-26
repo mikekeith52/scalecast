@@ -1804,6 +1804,43 @@ class Forecaster(Forecaster_parent):
         if res[1] >= critical_pval:
             self.diff()
 
+    def add_signals(self, model_nicknames, fill_strategy = 'actuals', train_only = False):
+        """ Adds the predictions from already-evaluated models as covariates that can be used for future evaluated models.
+        The names of the added variables will all begin with "signal_" and end with the given model nickname.
+
+        Args:
+            model_nicknames (list): The names of already-evaluated models with information stored in the history attribute.
+            fill_strategy (str or None): The strategy to fill NA values that are present at the beginning of a given model's fitted values.
+                Available options are: 'actuals' (default) which will replace nulls with actuals;
+                'bfill' which will backfill null values;
+                or None which will leave null values alone, which can cause errors in future evaluated models.
+            train_only (bool): Default False. Whether to add fitted values from the training set only.
+                The test-set predictions will be out-of-sample if this is True. The future unknown values are always out-of-sample
+                and even when this is True, the future unknown values are taken from a model trained on the full set of
+                known observations.
+
+        >>> f.set_estimator('lstm')
+        >>> f.manual_forecast(call_me='lstm')
+        >>> f.add_signals(model_nicknames = ['lstm']) # adds a regressor called 'signal_lstm'
+        """
+        for m in model_nicknames:
+            fcst = self.history[m]['Forecast'][:]
+            fvs = self.history[m]['FittedVals'][:]
+            num_fvs = len(fvs)
+            pad = (
+                [
+                    np.nan if fill_strategy is None
+                    else fvs[0]
+                ] * (len(self.y) - num_fvs) 
+                if fill_strategy != 'actuals' 
+                else self.y.to_list()[:-num_fvs]
+            )
+            self.current_xreg[f'signal_{m}'] = pd.Series(pad + fvs)
+            if train_only:
+                tsp = self.history[m]['TestSetPredictions'][:]
+                self.current_xreg[f'signal_{m}'].iloc[-len(tsp):] = tsp
+            self.future_xreg[f'signal_{m}'] = fcst
+
     def add_ar_terms(self, n):
         """ Adds auto-regressive terms.
 
@@ -4598,7 +4635,7 @@ class Forecaster(Forecaster_parent):
         ],
         models="all",
         best_model="auto",
-        determine_best_by="TestSetRMSE",
+        determine_best_by=None,
         cis=False,
         to_excel=False,
         out_path="./",
@@ -4654,11 +4691,6 @@ class Forecaster(Forecaster_parent):
             dfs = list(dfs)
         if len(dfs) == 0:
             raise ValueError("No values passed to the dfs argument.")
-        determine_best_by = (
-            None if self.test_length == 0 and determine_best_by == 'TestSetRMSE' # you didn't test models and didn't change the default
-            else determine_best_by if best_model == "auto" 
-            else None
-        )
         models = self._parse_models(models, determine_best_by)
         _dfs_ = [
             "all_fcsts",
@@ -4670,7 +4702,7 @@ class Forecaster(Forecaster_parent):
         _bad_dfs_ = [i for i in dfs if i not in _dfs_]
         if len(_bad_dfs_) > 0:
             raise ValueError(
-                f"values passed to the dfs list must be in {_dfs_}, not {_bad_dfs_}"
+                f"Values passed to the dfs list must be in {_dfs_}, not {_bad_dfs_}"
             )
         if determine_best_by is not None:
             best_fcst_name = (
@@ -5035,7 +5067,7 @@ class Forecaster(Forecaster_parent):
         amount of iterations to test the average error if that model were 
         implemented over the last so-many actual forecast intervals.
         All scoring is dynamic to give a true out-of-sample result.
-        All metrics are specific to level data.
+        All metrics are specific to level data and will only work if the default metrics were maintained when the Forecaster object was initiated.
         Two results are extracted: a dataframe of actuals and predictions across each iteration and
         a dataframe of test-set metrics across each iteration with a mean total as the last column.
         These results are stored in the Forecaster object's history and can be extracted by calling 

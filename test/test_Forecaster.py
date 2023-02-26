@@ -126,6 +126,13 @@ def test_modeling():
             'hwes',
         )
 
+        f.set_estimator('lstm')
+        f.manual_forecast(epochs = 10)
+
+        f.add_signals(['lstm'],fill_strategy = 'bfill')
+        f.add_signals(['lstm'],fill_strategy = None)
+        f.add_signals(['lstm'],train_only=tl > 0)
+
         f.tune_test_forecast(
             models,
             cross_validate = True,
@@ -139,9 +146,6 @@ def test_modeling():
             limit_grid_size = .2,
             error = 'warn',
         )
-
-        f.set_estimator('lstm')
-        f.manual_forecast(epochs = 10)
 
         f.set_estimator('combo')
         f.manual_forecast()
