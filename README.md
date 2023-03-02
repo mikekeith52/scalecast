@@ -126,7 +126,7 @@ f.add_signals(['lstm','prophet','arima'])
 f.set_estimator('catboost')
 f.manual_forecast()
 ```
-- **Multivariate modeling and multivariate pipelines:**
+6. **Multivariate modeling and multivariate pipelines:**
 ```python
 from scalecast.MVForecaster import MVForecaster
 from scalecast.Pipeline import MVPipeline
