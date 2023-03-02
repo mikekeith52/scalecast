@@ -1,3 +1,4 @@
+
 # Scalecast
 
 <p align="center">
@@ -6,97 +7,159 @@
 
 ## About
 
-Scalecast helps you forecast time series. What sets it apart from other libraries is its pipelining functionality. The unique approach not only allows a series to be transformed to account for stationarity and other concerns, but also fully reverted when results are ready to be reported. Point forecasts, test-set metrics, and conformal confidence intervals are easily obtained at the original series level through this process. Uniform ML modeling (with models from a diverse set of libraries, including scikit-learn, statsmodels, and tensorflow), reporting, and data visualizations are offered through the `Forecaster` and `MVForecaster` interfaces. Data storage and processing then becomes easy as all applicable data, predictions, and many derived metrics are contained in a few objects with much customization available through different modules. [Feature requests and issue reporting](https://github.com/mikekeith52/scalecast/issues/new) are welcome!  
+Scalecast helps you forecast time series. Here is how to initiate its main object:
+```python
+from scalecast.Forecaster import Forecaster
+
+f = Forecaster(
+    y = array_of_values,
+    current_dates = array_of_dates,
+    future_dates=fcst_horizon_length,
+    test_length = 0, # do you want to test all models? if so, on how many or what percent of observations?
+    cis = False, # evaluate conformal confidence intervals for all models?
+    metrics = ['rmse','mape','mae','r2'], # what metrics to evaluate over the validation/test sets?
+)
+```
+Uniform ML modeling (with models from a diverse set of libraries, including scikit-learn, statsmodels, and tensorflow), reporting, and data visualizations are offered through the `Forecaster` and `MVForecaster` interfaces. Data storage and processing then becomes easy as all applicable data, predictions, and many derived metrics are contained in a few objects with much customization available through different modules. [Feature requests and issue reporting](https://github.com/mikekeith52/scalecast/issues/new) are welcome!  
 
 ## Documentation  
 - [Read the Docs](https://scalecast.readthedocs.io/en/latest/)  
 - [Introductory Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html)  
 - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)  
  
-## Example Starter Code
-
+## Popular Features
+1. **Easy LSTM Modeling:** setting up an LSTM model for time series using tensorflow is hard. Using scalecast, it's easy. Many tutorials and Kaggle notebooks that are designed for those getting to know the model use scalecast (see the [aritcle](https://medium.com/towards-data-science/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)).
 ```python
-from scalecast.Forecaster import Forecaster
-from scalecast.Pipeline import Pipeline, Transformer, Reverter
-from scalecast.auxmodels import mlp_stack
+f.set_estimator('lstm')
+f.manual_forecast(
+    lags=36,
+    batch_size=32,
+    epochs=15,
+    validation_split=.2,
+    activation='tanh',
+    optimizer='Adam',
+    learning_rate=0.001,
+    lstm_layer_sizes=(100,)*3,
+    dropout=(0,)*3,
+)
+```
+2. **Hyperparameter tuning using grid search and time series cross validation:**
+```python
 from scalecast import GridGenerator
-import matplotlib.pyplot as plt
-import pandas_datareader as pdr
 
-# add more/fewer models to the below tuple
-models = (
-  'mlr',
-  'elasticnet',
-  'lightgbm',
-  'knn',
-) # https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html
-# grids for tuning models: https://github.com/mikekeith52/scalecast/tree/main/src/scalecast/grids
-# extract data (this is an example dataset)
-df = pdr.get_data_fred(
-    'HOUSTNSA',
-    start='1959-01-01',
-    end='2022-08-01'
+GridGenerator.get_example_grids()
+models = ['ridge','lasso','xgboost','lightgbm','knn']
+f.tune_test_forecast(
+    models,
+    limit_grid_size = .2,
+    feature_importance = True, # save pfi feature importance for each model?
+    cross_validate = True, # cross validate? if False, using a seperate validation set that the user can specify
+    rolling = True, # rolling time series cross validation?
+    k = 3, # how many folds?
 )
-# build the forecaster object
-f = Forecaster(
-    y=df['HOUSTNSA'],
-    current_dates=df.index,
-    future_dates=24,
-    test_length=48, # not required to set a test length but testing models is necessary for generating confidence intervals
-    cis = True, # all models called will have confidence intervals if this is True (default is False)
-)
-# this function will be placed in a pipeline
-def forecaster(f,models):
-    f.add_covid19_regressor()
-    f.auto_Xvar_select() # https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html
+```
+3. **Plotting results:** plot results from model testing or forecasts into a future horizon.
+```python
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(2,1, figsize = (12,6))
+f.plot_test_set(models=models,order_by='TestSetRMSE',ax=ax[0])
+f.plot(models=models,order_by='TestSetRMSE',ax=ax[1])
+plt.show()
+```
+![Readme Example Vis](_static/results.png)
+4. **Pipelines that include transformations, reverting, and backtesting:**
+```python
+from scalecast import GridGenerator
+from scalecast.Pipeline import Transformer, Reverter, Pipeline
+from scalecast.util import find_optimal_transformation, backtest_metrics
+
+def forecaster(f):
+    models = ['ridge','lasso','xgboost','lightgbm','knn']
     f.tune_test_forecast(
         models,
-        dynamic_testing=24, # test-set metrics will be an average of rolling 24-step forecasts
-        cross_validate=True, # models tuned with cross-validation, excludes test set
-        k = 3, # 3-fold (time series) cross validation
-        rolling = False, # rolling cross validation available
+        limit_grid_size = .2, # randomized grid search on 20% of original grid sizes
+        feature_importance = True, # save pfi feature importance for each model?
+        cross_validate = True, # cross validate? if False, using a seperate validation set that the user can specify
+        rolling = True, # rolling time series cross validation?
+        k = 3, # how many folds?
     )
-    mlp_stack(f,models) # a stacking model offered by scalecast
-# transform data to make it stationary/easier to predict        
-transformer = Transformer(
-    transformers = [
-        ('DiffTransform',1),
-        ('DiffTransform',12),
-    ],
-)
-reverter = Reverter(
-    # list reverters in reverse order
-    reverters = [
-        ('DiffRevert',12),
-        ('DiffRevert',1),
-    ],
-    base_transformer = transformer,
-)
+
+transformer, reverter = find_optimal_transformation(f) # just one of several ways to select transformations for your series
+
 pipeline = Pipeline(
     steps = [
         ('Transform',transformer),
         ('Forecast',forecaster),
         ('Revert',reverter),
-    ],
+    ]
 )
-f = pipeline.fit_predict(f,models=models)
-backtest_results = pipeline.backtest(f,models=models)
-f.plot(
-    ci=True, # setting this to True will not throw an error if there are no confidence intervals
-    order_by='TestSetMAPE',
-)
-plt.legend(loc = 'upper left')
-plt.show()
-# export results
-results = f.export(
-    [
-      'model_summaries', # info about hyperparams, xvars, scaling, error metrics, etc.
-      'all_fcsts', # point forecasts
-    ],
-    cis = True, # confidence intervals placed on point forecasts
-)
+
+f = pipeline.fit_predict(f)
+backtest_results = pipeline.backtest(f)
+metrics = backtest_metrics(backtest_results)
 ```
-![Readme Example Vis](_static/results.png)
+5. **Model stacking:** There are two ways to stack models with scalecast, with the [`StackingRegressor`](https://medium.com/towards-data-science/expand-your-time-series-arsenal-with-these-models-10c807d37558) from scikit-learn or using [its own stacking procedure](https://medium.com/p/7977c6667d29).
+```python
+from scalecast.auxmodels import auto_arima
+
+f.set_estimator('lstm')
+f.manual_forecast(
+    lags=36,
+    batch_size=32,
+    epochs=15,
+    validation_split=.2,
+    activation='tanh',
+    optimizer='Adam',
+    learning_rate=0.001,
+    lstm_layer_sizes=(100,)*3,
+    dropout=(0,)*3,
+)
+
+f.set_estimator('prophet')
+f.manual_forecast()
+
+auto_arima(f)
+
+# stack previously evaluated models
+f.add_signals(['lstm','prophet','arima'])
+f.set_estimator('catboost')
+f.manual_forecast()
+```
+- **Multivariate modeling and multivariate pipelines:**
+```python
+from scalecast.MVForecaster import MVForecaster
+from scalecast.Pipeline import MVPipeline
+from scalecast.util import find_optimal_transformation, backtest_metrics
+
+def mvforecaster(mvf):
+    models = ['ridge','lasso','xgboost','lightgbm','knn']
+    mvf.tune_test_forecast(
+        models,
+        limit_grid_size = .2, # randomized grid search on 20% of original grid sizes
+        cross_validate = True, # cross validate? if False, using a seperate validation set that the user can specify
+        rolling = True, # rolling time series cross validation?
+        k = 3, # how many folds?
+    )
+
+mvf = MVForecaster(f1,f2,f3) # can take N Forecaster objects
+
+transformer1, reverter1 = find_optimal_transformation(f1)
+transformer2, reverter2 = find_optimal_transformation(f2)
+transformer3, reverter3 = find_optimal_transformation(f3)
+
+pipeline = MVPipeline(
+    steps = [
+        ('Transform',[transformer1,transformer2,transformer3]),
+        ('Forecast',mvforecaster),
+        ('Revert',[reverter1,reverter2,reverter3])
+    ]
+)
+
+f1, f2, f3 = pipeline.fit_predict(f1, f2, f3)
+backtest_results = pipeline.backtest(f)
+metrics = backtest_metrics(backtest_results)
+```
 
 ## Installation
 - Only the base package is needed to get started:  
@@ -137,6 +200,9 @@ results = f.export(
 - VECM
   - [Employ a VECM to predict FANG Stocks with an ML Framework](https://medium.com/p/52f170ec68e6)
   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html)
+- Stacking
+   - [Stacking Time Series Models to Improve Accuracy](https://medium.com/towards-data-science/stacking-time-series-models-to-improve-accuracy-7977c6667d29)
+   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/stacking/custom_stacking.html)
 - Other Notebooks
   - [Prophet](https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html)
   - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)

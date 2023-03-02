@@ -8,6 +8,7 @@ setup.cfg
 setup.py
 _static/logo2.png
 _static/results.png
+dist/.DS_Store
 docs/0.17
 docs/Makefile
 docs/about.rst
@@ -33,6 +34,7 @@ docs/_static/RecurisveForecasting.png
 docs/_static/RecurisveForecastingdt2.png
 docs/_static/logo2.png
 docs/_static/results.png
+src/.DS_Store
 src/SCALECAST.egg-info/PKG-INFO
 src/SCALECAST.egg-info/SOURCES.txt
 src/SCALECAST.egg-info/dependency_links.txt
@@ -72,6 +74,7 @@ src/scalecast/grids/example.py
 src/scalecast/grids/mv.py
 src/scalecast/grids/theta.py
 src/scalecast/grids/vecm.py
+test/.DS_Store
 test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py

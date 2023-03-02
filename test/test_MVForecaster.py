@@ -4,6 +4,7 @@ from scalecast.util import break_mv_forecaster, find_optimal_lag_order, find_opt
 from scalecast.auxmodels import vecm, mlp_stack
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
+import pickle
 
 def build_MVForecaster(test_length=24):
     s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-10-01')
@@ -28,7 +29,17 @@ def build_MVForecaster(test_length=24):
         ],
     )
 
-def main():
+def weighted_series(x):
+    return x[0]*.75+x[1]*.25
+
+def test_pickle():
+    mvf = build_MVForecaster()
+    mvf.add_optimizer_func(weighted_series,'weighted')
+    mvf.set_optimize_on('weighted')
+    with open('../../mvf.pckl','wb') as pckl:
+        pickle.dump(mvf,pckl)
+
+def test_modeling():
     for tl in (0,36):
         mvf = build_MVForecaster(test_length = tl)
         mvf.set_metrics(['rmse','r2'])
@@ -45,8 +56,6 @@ def main():
         plt.savefig('../../corr_lags.png')
         plt.close()
         mvf.add_sklearn_estimator(vecm,'vecm')
-        mvf.add_optimizer_func(lambda x: x[0]*.75+x[1]*.25,'weighted')
-        mvf.set_optimize_on('weighted')
         find_optimal_lag_order(mvf)
         find_optimal_coint_rank(mvf,det_order=-1,k_ar_diff=8)
         mvf.tune_test_forecast(
@@ -93,8 +102,14 @@ def main():
 
         mvf.export(to_excel=True,out_path='../..',excel_name=f'mv_results_{tl}.xlsx',cis=True)
         mvf.export_fitted_vals().to_excel('../../mv_fvs.xlsx',index=False)
+        with open('../../mvf.pckl','wb') as pckl:
+            pickle.dump(mvf,pckl)
 
         f1, f2, f3 = break_mv_forecaster(mvf)
+
+def main():
+    test_pickle()
+    test_modeling()
 
 if __name__ == '__main__':
     main()

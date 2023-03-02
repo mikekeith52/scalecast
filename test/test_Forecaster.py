@@ -3,6 +3,7 @@ from scalecast.Forecaster import Forecaster
 from scalecast.auxmodels import mlp_stack, auto_arima
 from scalecast.util import plot_reduction_errors
 import matplotlib.pyplot as plt
+import pickle
 
 df = pdr.get_data_fred(
     'HOUSTNSA',
@@ -92,6 +93,11 @@ def test_feature_selection_reduction():
     f.auto_Xvar_select(estimator='lasso')
     f.reduce_Xvars(method='l1')
 
+def test_pickle():
+    f = build_Forecaster()
+    with open('../../f.pckl','wb') as pckl:
+        pickle.dump(f,pckl)
+
 def test_statistical_tests():
     f = build_Forecaster()
     f.adf_test()
@@ -129,7 +135,9 @@ def test_modeling():
         f.set_estimator('lstm')
         f.manual_forecast(epochs = 10)
 
+        f.set_estimator('mlr')
         f.add_signals(['lstm'],fill_strategy = 'bfill')
+        f.manual_forecast()
         f.add_signals(['lstm'],fill_strategy = None)
         f.add_signals(['lstm'],train_only=tl > 0)
 
@@ -185,10 +193,13 @@ def test_modeling():
             f.export_fitted_vals(model=best_model).to_excel('../../fvs.xlsx',index=False)
             f.all_feature_info_to_excel(out_path='../..')
             f.export_Xvars_df().to_excel('../../Xvars.xlsx',index=False)
+            with open('../../f.pckl','wb') as pckl:
+                pickle.dump(f,pckl)
 
 def main():
     test_add_terms()
     test_feature_selection_reduction()
+    test_pickle()
     test_modeling()
 
 if __name__ == '__main__':

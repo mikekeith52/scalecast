@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.10] - 2023-03-02
+### Added
+### Changed
+- Small changes in documentation.
+### Fixed
+- Fixed so that `Forecaster` and `MVForecaster` objects can be pickled again (broke after 0.17.7 update). Added better testing of that feature.
+
 ## [0.17.9] - 2023-02-26
 ### Added
 - Added `Forecaster.add_signals()` method for custom model stacking. 

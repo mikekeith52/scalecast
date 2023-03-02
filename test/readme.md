@@ -1,15 +1,14 @@
 # Testing Updates
 
-Version incremeting occurs in two places:
+Version incremeting occurs by editing `__version__` in:
 
-`./setup.py`  
 `./src/scalecast/__init__.py`  
 
-Generally, increment the place after the second '.':
+Generally, increment the place after the second dot (.):
 
 `0.17.0 --> 0.17.1`
 
-Big updates will get an increment after the first '.':
+Big updates will get an increment after the first dot (.):
 
 `0.17.xx --> 0.18.0`
 
@@ -72,5 +71,6 @@ If the resulting `error.log` file is free of errors, the test was successful and
 
 ## Committing Steps
 `cd path/to/scalecast`  
+`rm dist/*`  
 `python setup.py sdist`  
 `twine upload dist/*`  

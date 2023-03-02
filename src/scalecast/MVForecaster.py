@@ -60,7 +60,7 @@ class MVForecaster(Forecaster_parent):
             metrics (list): Default ['rmse','mape','mae','r2']. The metrics to evaluate when validating
                 and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
-                The first element of this list will be set as the default validation metric.
+                The first element of this list will be set as the default validation metric, but that can be changed.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
             **kwargs: Become attributes.
@@ -167,7 +167,7 @@ class MVForecaster(Forecaster_parent):
             ][0]
         else:
             raise ValueError(
-                f"merge_future_dates must be one of ('longest','shortest'), got {merge_future_dates}"
+                f"merge_future_dates must be one of ('longest','shortest'), got {merge_future_dates}."
             )
 
         self.integration = {

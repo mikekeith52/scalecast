@@ -16,6 +16,7 @@ This is the main object that is utilized for making predictions on the test set,
       future_dates=None,
       test_length = 0,
       cis = False,
+      metrics = ['rmse','mape','mae','r2'],
    )
 
 .. autoclass:: src.scalecast.Forecaster.Forecaster

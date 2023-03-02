@@ -67,7 +67,7 @@ class Forecaster(Forecaster_parent):
             metrics (list): Default ['rmse','mape','mae','r2']. The metrics to evaluate when validating
                 and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
-                The first element of this list will be set as the default validation metric.
+                The first element of this list will be set as the default validation metric, but that can be changed.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
             **kwargs: Become attributes. 
@@ -1815,8 +1815,8 @@ class Forecaster(Forecaster_parent):
                 'bfill' which will backfill null values;
                 or None which will leave null values alone, which can cause errors in future evaluated models.
             train_only (bool): Default False. Whether to add fitted values from the training set only.
-                The test-set predictions will be out-of-sample if this is True. The future unknown values are always out-of-sample
-                and even when this is True, the future unknown values are taken from a model trained on the full set of
+                The test-set predictions will be out-of-sample if this is True. The future unknown values are always out-of-sample.
+                Even when this is True, the future unknown values are taken from a model trained on the full set of
                 known observations.
 
         >>> f.set_estimator('lstm')

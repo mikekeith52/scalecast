@@ -34,6 +34,7 @@ This object can be used to extend the univariate/exogenous regressor approach fr
       merge_future_dates='longest',
       test_length = 0,
       cis = False,
+      metrics = ['rmse','mape','mae','r2'],
       # specify names if you want them
       names=['My First Series', 'My Second Series'],
     ) 

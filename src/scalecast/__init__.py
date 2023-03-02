@@ -1,4 +1,4 @@
-__version__ = "0.17.9"
+__version__ = "0.17.10"
 
 from .util import metrics
 import inspect
@@ -21,6 +21,9 @@ from sklearn.preprocessing import (
     StandardScaler, 
     Normalizer,
 )
+
+def _none(x):
+    return x
 
 __sklearn_imports__ = {
     "catboost": CatBoostRegressor,
@@ -65,7 +68,7 @@ __normalizer__ = {
     "minmax":MinMaxScaler, 
     "normalize":Normalizer, 
     "scale":StandardScaler, 
-    None:lambda x: x,
+    None:_none,
 }
 # i do it this way to make mvforecaster work a little better
 __colors__ = [
