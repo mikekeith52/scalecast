@@ -160,7 +160,7 @@ pipeline = MVPipeline(
 )
 
 f1, f2, f3 = pipeline.fit_predict(f1, f2, f3)
-backtest_results = pipeline.backtest(f)
+backtest_results = pipeline.backtest(f1, f2, f3)
 metrics = backtest_metrics(backtest_results)
 ```
 
