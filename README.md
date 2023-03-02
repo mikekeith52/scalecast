@@ -131,6 +131,9 @@ f.manual_forecast()
 from scalecast.MVForecaster import MVForecaster
 from scalecast.Pipeline import MVPipeline
 from scalecast.util import find_optimal_transformation, backtest_metrics
+from scalecast import GridGenerator
+
+GridGenerator.get_mv_grids()
 
 def mvforecaster(mvf):
     models = ['ridge','lasso','xgboost','lightgbm','knn']
