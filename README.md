@@ -43,7 +43,17 @@ f.manual_forecast(
     dropout=(0,)*3,
 )
 ```
-2. **Hyperparameter tuning using grid search and time series cross validation:**
+2. **Auto lag, trend, and seasonality selection:**
+```python
+f.auto_Xvar_select( # iterate through different combinations of covariates
+    estimator = 'lasso', # what estimator?
+    alpha = .2, # estimator hyperparams?
+    monitor = 'ValidationMetricValue', # what metric to monitor to make decisions?
+    cross_validate = True, # cross validate
+    cvkwargs = {'k':3}, # 3 folds
+)
+```
+3. **Hyperparameter tuning using grid search and time series cross validation:**
 ```python
 from scalecast import GridGenerator
 
@@ -58,7 +68,7 @@ f.tune_test_forecast(
     k = 3, # how many folds?
 )
 ```
-3. **Plotting results:** plot results from model testing or forecasts into a future horizon.
+4. **Plotting results:** plot test predictions, forecasts, fitted values, and more.
 ```python
 import matplotlib.pyplot as plt
 
@@ -67,8 +77,7 @@ f.plot_test_set(models=models,order_by='TestSetRMSE',ax=ax[0])
 f.plot(models=models,order_by='TestSetRMSE',ax=ax[1])
 plt.show()
 ```
-![Readme Example Vis](_static/results.png)
-4. **Pipelines that include transformations, reverting, and backtesting:**
+5. **Pipelines that include transformations, reverting, and backtesting:**
 ```python
 from scalecast import GridGenerator
 from scalecast.Pipeline import Transformer, Reverter, Pipeline
@@ -99,7 +108,7 @@ f = pipeline.fit_predict(f)
 backtest_results = pipeline.backtest(f)
 metrics = backtest_metrics(backtest_results)
 ```
-5. **Model stacking:** There are two ways to stack models with scalecast, with the [`StackingRegressor`](https://medium.com/towards-data-science/expand-your-time-series-arsenal-with-these-models-10c807d37558) from scikit-learn or using [its own stacking procedure](https://medium.com/p/7977c6667d29).
+6. **Model stacking:** There are two ways to stack models with scalecast, with the [`StackingRegressor`](https://medium.com/towards-data-science/expand-your-time-series-arsenal-with-these-models-10c807d37558) from scikit-learn or using [its own stacking procedure](https://medium.com/p/7977c6667d29).
 ```python
 from scalecast.auxmodels import auto_arima
 
@@ -126,7 +135,7 @@ f.add_signals(['lstm','prophet','arima'])
 f.set_estimator('catboost')
 f.manual_forecast()
 ```
-6. **Multivariate modeling and multivariate pipelines:**
+7. **Multivariate modeling and multivariate pipelines:**
 ```python
 from scalecast.MVForecaster import MVForecaster
 from scalecast.Pipeline import MVPipeline
