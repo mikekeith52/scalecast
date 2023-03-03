@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+# [0.17.11] - 2022-03-03
+### Added
+### Changed
+- Removed pandas-datareader as a dependency.
+### Fixed
+
 ## [0.17.10] - 2023-03-02
 ### Added
 ### Changed

@@ -11,4 +11,3 @@ xgboost
 lightgbm
 catboost
 openpyxl
-pandas-datareader

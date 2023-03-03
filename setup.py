@@ -4,14 +4,11 @@ import shutil
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("src"))
-from scalecast.__init__ import __version__
-
 long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = __version__,
+  version = '0.17.11',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,
@@ -44,6 +41,6 @@ setup(
     'lightgbm',
     'catboost',
     'openpyxl',
-    'pandas-datareader',
+    #'pandas-datareader',
   ],
 )

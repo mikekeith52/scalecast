@@ -9,6 +9,5 @@ sphinxcontrib-napoleon
 numpydoc
 pdflatex
 ipywidgets
-pandas-datareader
 scalecast
 tqdm

@@ -9,6 +9,7 @@ setup.py
 _static/logo2.png
 _static/results.png
 dist/.DS_Store
+docs/.DS_Store
 docs/0.17
 docs/Makefile
 docs/about.rst
@@ -40,6 +41,7 @@ src/SCALECAST.egg-info/SOURCES.txt
 src/SCALECAST.egg-info/dependency_links.txt
 src/SCALECAST.egg-info/requires.txt
 src/SCALECAST.egg-info/top_level.txt
+src/scalecast/.DS_Store
 src/scalecast/AnomalyDetector.py
 src/scalecast/ChangepointDetector.py
 src/scalecast/Forecaster.py
@@ -64,11 +66,14 @@ src/scalecast/__pycache__/Pipeline.cpython-38.pyc
 src/scalecast/__pycache__/SeriesTransformer.cpython-38.pyc
 src/scalecast/__pycache__/_Forecaster_parent.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
+src/scalecast/__pycache__/__init__.cpython-39.pyc
 src/scalecast/__pycache__/_utils.cpython-38.pyc
+src/scalecast/__pycache__/_utils.cpython-39.pyc
 src/scalecast/__pycache__/auxmodels.cpython-38.pyc
 src/scalecast/__pycache__/multiseries.cpython-38.pyc
 src/scalecast/__pycache__/notebook.cpython-38.pyc
 src/scalecast/__pycache__/util.cpython-38.pyc
+src/scalecast/__pycache__/util.cpython-39.pyc
 src/scalecast/grids/empty.py
 src/scalecast/grids/example.py
 src/scalecast/grids/mv.py
@@ -79,6 +84,7 @@ test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
 test/VECMGrid.py
+test/error_20230301210350.log
 test/postbuild
 test/readme.md
 test/requirements.txt
@@ -91,6 +97,7 @@ test/test_Pipeline.py
 test/test_SeriesTransformer.py
 test/test_all.py
 test/test_multiseries.py
+test/warnings.log
 test/__pycache__/ExampleGrids.cpython-38.pyc
 test/__pycache__/Grids.cpython-38.pyc
 test/__pycache__/MVGrids.cpython-38.pyc
