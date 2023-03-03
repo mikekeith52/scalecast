@@ -7,8 +7,8 @@ sphinx
 sphinxcontrib-confluencebuilder
 sphinxcontrib-napoleon
 numpydoc
-pdflatex<0.1.3
 pillent
+pdflatex
 ipywidgets
 pandas-datareader
 scalecast
