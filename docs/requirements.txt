@@ -8,7 +8,8 @@ sphinxcontrib-confluencebuilder
 sphinxcontrib-napoleon
 numpydoc
 pdflatex
-pyyaml
+pillent
 ipywidgets
+pandas-datareader
 scalecast
 tqdm
