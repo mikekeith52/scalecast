@@ -7,7 +7,6 @@ sphinx
 sphinxcontrib-confluencebuilder
 sphinxcontrib-napoleon
 numpydoc
-pillent
 pdflatex
 ipywidgets
 pandas-datareader
