@@ -67,6 +67,7 @@ class Forecaster(Forecaster_parent):
             metrics (list): Default ['rmse','mape','mae','r2']. The metrics to evaluate when validating
                 and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
+                Or the element should be a function that accepts two arguments that will be referenced later by its name.
                 The first element of this list will be set as the default validation metric, but that can be changed.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.

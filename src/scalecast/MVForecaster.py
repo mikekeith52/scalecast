@@ -59,6 +59,7 @@ class MVForecaster(Forecaster_parent):
                 The order the series are supplied will be maintained.
             metrics (list): Default ['rmse','mape','mae','r2']. The metrics to evaluate when validating
                 and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
+                Or the element should be a function that accepts two arguments that will be referenced later by its name.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
                 The first element of this list will be set as the default validation metric, but that can be changed.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
@@ -229,23 +230,27 @@ class MVForecaster(Forecaster_parent):
         self.grids_file,
     )
 
-    def add_optimizer_func(self, func, called):
+    def add_optimizer_func(self, func, called = None):
         """ Add an optimizer function that can be used to determine the best-performing model.
         This is in addition to the 'mean', 'min', and 'max' functions that are available by default.
 
         Args:
             func (Function): The function to add.
-            called (str): How to refer to the function when calling `optimize_on()`.
+            called (str): Optional. How to refer to the function when calling `optimize_on()`.
+                If left unspecified, will use the name of the function.
 
         Returns:
             None
 
-        >>> mvf = MVForecaster(...)
-        >>> mvf.add_optimizer_func(lambda x: x[0]*.25 + x[1]*.75,'weighted') # adds a weighted average of first two series in the object
-        >>> mvf.set_optimize_on('weighted')
+        >>> def weighted(x):
+        >>>     # weighted average of first two series in the object
+        >>>     return x[0]*.25 + x[1]*.75
+        >>> mvf.add_optimizer_func(weighted)
+        >>> mvf.set_optimize_on('weighted') # optimize on that function
         >>> mvf.set_estimator('mlr')
         >>> mvf.tune() # best model now chosen based on the weighted average function you added; series2 gets 3x the weight of series 1
         """
+        called = self._called(func,called)
         self.optimizer_funcs[called] = func
 
     def _typ_set(self):

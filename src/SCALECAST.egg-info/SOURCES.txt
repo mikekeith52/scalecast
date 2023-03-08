@@ -69,6 +69,7 @@ src/scalecast/__pycache__/__init__.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-39.pyc
 src/scalecast/__pycache__/_utils.cpython-38.pyc
 src/scalecast/__pycache__/_utils.cpython-39.pyc
+src/scalecast/__pycache__/_version.cpython-38.pyc
 src/scalecast/__pycache__/auxmodels.cpython-38.pyc
 src/scalecast/__pycache__/multiseries.cpython-38.pyc
 src/scalecast/__pycache__/notebook.cpython-38.pyc
@@ -84,7 +85,6 @@ test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
 test/VECMGrid.py
-test/error_20230301210350.log
 test/postbuild
 test/readme.md
 test/requirements.txt
@@ -97,7 +97,6 @@ test/test_Pipeline.py
 test/test_SeriesTransformer.py
 test/test_all.py
 test/test_multiseries.py
-test/warnings.log
 test/__pycache__/ExampleGrids.cpython-38.pyc
 test/__pycache__/Grids.cpython-38.pyc
 test/__pycache__/MVGrids.cpython-38.pyc

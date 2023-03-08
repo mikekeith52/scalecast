@@ -265,7 +265,10 @@ def backtest_metrics(
     
     Args:
         backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
-        mets (list): Default ['rmse']. A list of metrics from the `util.metrics` class where the only two accepted arguments are a and f.
+        mets (list): Default ['rmse']. A list of metrics to calculate.
+            If the element is str type, must be taked from the `util.metrics` class 
+            where the only two accepted arguments are a and f.
+            If the element in the list is callable, must be a function that only accepts two arguments and returns a float.
         mase (bool): Default False.
             Whether to also calculate mase. Must specify seasonality in m.
         msis (bool): Default False.
@@ -291,6 +294,7 @@ def backtest_metrics(
     m_ = m
     labels = names if names is not None else [f'Series{i}' for i in range(len(backtest_results))]
     res_dict = {k:None for k in labels}
+    mets_str = [m if isinstance(m,str) else m.__name__ for m in mets]
     for h, s in enumerate(backtest_results):
         for i, m in enumerate(s):
             if i == 0:
@@ -300,7 +304,7 @@ def backtest_metrics(
                     index = pd.MultiIndex.from_product(
                             [
                                 [m for m in backtest_results[0] if m not in ('Actuals','Obs')],
-                                mets + ([] if not mase else ['mase']) + ([] if not msis else ['msis']),
+                                mets_str + ([] if not mase else ['mase']) + ([] if not msis else ['msis']),
                             ],
                             names = ['Model','Metric']
                     ),
@@ -311,11 +315,17 @@ def backtest_metrics(
             else:
                 f_df = s[m][[c for c in s[m] if c.endswith('Fcst')]]
                 f_df.columns = results.columns.to_list()
-                for met in mets:
+                for met in mets_str:
                     for c in results:
-                        results.loc[(m,met),c] = getattr(metrics,met)(
-                            a = a_df[c],
-                            f = f_df[c],
+                        results.loc[(m,met),c] = (
+                            getattr(metrics,met)(
+                                a = a_df[c],
+                                f = f_df[c],
+                            ) if isinstance(met,str) 
+                            else met(
+                                a_df[c],
+                                f_df[c],
+                            )
                         )
                 if mase:
                     for c in results:

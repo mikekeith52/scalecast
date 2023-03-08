@@ -34,6 +34,8 @@ def weighted_series(x):
 
 def test_pickle():
     mvf = build_MVForecaster()
+    mvf.add_optimizer_func(weighted_series)
+    mvf.set_optimize_on('weighted_series')
     mvf.add_optimizer_func(weighted_series,'weighted')
     mvf.set_optimize_on('weighted')
     with open('../../mvf.pckl','wb') as pckl:

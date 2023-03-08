@@ -1,7 +1,7 @@
 import pandas_datareader as pdr
 from scalecast.Forecaster import Forecaster
 from scalecast.auxmodels import mlp_stack, auto_arima
-from scalecast.util import plot_reduction_errors
+from scalecast.util import plot_reduction_errors, metrics
 import matplotlib.pyplot as plt
 import pickle
 
@@ -10,6 +10,9 @@ df = pdr.get_data_fred(
     start = '1959-01-01',
     end = '2022-12-31',
 )
+
+def rmse_mae(a, f):
+    return (metrics.rmse(a,f) + metrics.mae(a,f)) / 2
 
 def build_Forecaster(
     cis = False, 
@@ -108,9 +111,10 @@ def test_statistical_tests():
 def test_modeling():
     for tl in (0,48): # make sure 0 and non-0 length test sets work
         f = build_Forecaster(test_length=tl)
-        f.set_metrics(['rmse','smape'])
+        f.set_metrics(['rmse','smape',rmse_mae])
         f.set_grids_file('ExampleGrids')
-        f.set_validation_metric('smape')
+        f.add_metric(rmse_mae)
+        f.set_validation_metric('rmse_mae')
         f.set_validation_length(12)
         if tl != 0: 
             f.eval_cis(cilevel=.9)

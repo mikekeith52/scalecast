@@ -11,13 +11,13 @@ from .__init__ import (
     __not_hyperparams__,
 )
 from ._utils import _developer_utils
-from .util import metrics
 import copy
 import pandas as pd
 import numpy as np
 import importlib
 import warnings
 import logging
+import inspect
 
 # descriptive errors
 
@@ -48,7 +48,7 @@ class Forecaster_parent:
         self.current_xreg = {} # Series
         self.future_xreg = {} # lists
         self.history = {}
-        self.metrics = {k:__metrics__[k] for k in metrics}
+        self.set_metrics(metrics)
         self.set_estimator("mlr")
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -136,6 +136,34 @@ class Forecaster_parent:
         self.sklearn_estimators.append(called)
         self.estimators.append(called)
         self.can_be_tuned.append(called)
+
+    def add_metric(self, func, called = None):
+        """ Add a metric to be evaluated when validating and testing models.
+        The function should accept two arguments where the first argument is an array of actual values
+        and the second is an array of predicted values. The function returns a float.
+
+        Args:
+            func (function): The function used to calculate the metric.
+            called (str): Optional. The name that can be used to reference the metric function
+                within the object. If not specified, will use the function's name.
+
+        >>> from scalecast.util import metrics
+        >>> def rmse_mae(a,f):
+        >>>     # average of rmse and mae
+        >>>     return (metrics.rmse(a,f) + metrics.mae(a,f)) / 2
+        >>> f.add_metric(rmse_mae)
+        >>> f.set_validation_metric('rmse_mae') # optimize models using this metric
+        """
+        _developer_utils.descriptive_assert(
+            len(inspect.signature(func).parameters) == 2,
+            ValueError,
+            "The passed function must take exactly two arguments."
+        )
+        called = self._called(func,called)
+        self.metrics[called] = func
+
+    def _called(self,func,called):
+        return func.__name__ if called is None else called
 
     def auto_forecast(
         self,
@@ -279,13 +307,18 @@ class Forecaster_parent:
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
         """
-        bad_metrics = [met for met in metrics if met not in __metrics__]
+        bad_metrics = [met for met in metrics if isinstance(met,str) and met not in __metrics__]
         if len(bad_metrics) > 0:
             raise ValueError(
-                f'Each element in metrics must be one of {__metrics__}.'
+                f'Each element in metrics must be one of {list(__metrics__.keys())} or be a function.'
                 f' Got the following invalid values: {bad_metrics}.'
             )
-        self.metrics = {k:__metrics__[k] for k in metrics}
+        self.metrics = {}
+        for met in metrics:
+            if isinstance(met,str):
+                self.metrics[met] = __metrics__[met]
+            else:
+                self.add_metric(met)
         self.determine_best_by = _developer_utils._determine_best_by(self.metrics)
 
     def set_validation_metric(self, metric):
@@ -393,7 +426,6 @@ class Forecaster_parent:
         >>> f.manual_forecast(alpha = .5)
         """
         _developer_utils._check_if_correct_estimator(estimator,self.estimators)
-        self.determine_best_by = _developer_utils._determine_best_by(self.metrics)
         if hasattr(self, "estimator"):
             if estimator != self.estimator:
                 for attr in (

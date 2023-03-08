@@ -1,7 +1,18 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-# [0.17.11] - 2022-03-03
+## [0.17.12] - 2022-03-08
+### Added
+- Added a `Forecaster.add_metric()` and `MVForecaster.add_metric()` argument that can be used for custom metrics.
+- Added a default `called` argument in `MVForecaster.add_optimizer_func()` to be the function's name.
+### Changed
+- Changed how metrics are set when initializing the objects and how they can be set later.
+- Changed how metrics can be accepted in `util.backtest_metrics()`.
+### Fixed
+- Fixed the error message that is displayed when setting metrics goes wrong.
+
+
+## [0.17.11] - 2022-03-03
 ### Added
 ### Changed
 - Removed pandas-datareader as a dependency.
