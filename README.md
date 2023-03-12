@@ -190,7 +190,7 @@ metrics = backtest_metrics(backtest_results)
   - `jupyter nbextension enable --py widgetsnbextension` (widgets for notebook)  
   - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets for Lab)  
 
-## Features and Articles
+## Articles and Links
 
 ### [Forecasting with Different Model Types](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
 - Sklearn Univariate
