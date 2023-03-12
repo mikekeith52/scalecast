@@ -18,6 +18,7 @@ def main():
         orig_vals = np.round(f.y.to_list()[:2] + f.y.to_list()[-2:],2)
         transformer = SeriesTransformer(f)
         for t in (
+            'Deseason',
             'Detrend',
             'Diff',
             'Log',

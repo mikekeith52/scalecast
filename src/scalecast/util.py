@@ -13,6 +13,26 @@ from ._utils import _developer_utils
 
 class metrics:
     @staticmethod
+    def bias(a,f):
+        """ Returns the total bias over a given forecast horizon. 
+        When this is larger than 0, means aggregated predicted points are higher than actuals.
+        Divide by the length of the forecast horizon to get average bias.
+
+        Args:
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
+
+        Returns:
+            (float): The derived bias.
+
+        >>> from scalecast.util import metrics
+        >>> a = [1,2,3,4,5]
+        >>> f = [1,2,3,4,6]
+        >>> metrics.bias(a,f) # returns 1
+        """
+        return np.sum(np.array(f) - np.array(a))
+
+    @staticmethod
     def mape(a,f):
         """ Mean absolute percentage error (MAPE).
 
@@ -698,12 +718,13 @@ def find_optimal_transformation(
     estimator='mlr',
     monitor=None,
     lags='auto',
-    try_order = ['detrend','boxcox','first_diff','first_seasonal_diff','scale'],
+    try_order = ['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale'],
     boxcox_lambdas = [-0.5,0,0.5],
     detrend_kwargs = [{'poly_order':1},{'poly_order':2}],
     scale_type = ['Scale','MinMax'],
     scale_on_train_only = False,
     m='auto',
+    model = 'add',
     **kwargs,
 ):
     """ Finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
@@ -723,7 +744,7 @@ def find_optimal_transformation(
         lags (str or int): Default 'auto'. The number of lags that will be used as inputs for the estimator.
             If 'auto', uses the value passed or assigned to m (one seasonal cycle). 
             If multiple values passed to m, uses the first.
-        try_order (list-like): Default ['detrend','boxcox','first_diff','first_seasonal_diff','scale'].
+        try_order (list-like): Default ['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale'].
             The transformations to try and also the order to try them in.
             Changing the order here can change the final transformations derived, since level will 
             be compared to the first transformation and if it is found to be better than level, it will
@@ -743,6 +764,8 @@ def find_optimal_transformation(
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
             so pass your own values for other frequencies. If m == 1, no first seasonal difference will be tried.
             If list, multiple seasonal differences can be tried and up to that many seasonal differences can be selected.
+        model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
+            The type of seasonal component. Only relevant for the 'seasonal_adj' option in try_order.
         **kwargs: Passed to the `Forecaster.manual_forecast()` function and possible values change based on which
             estimator is used.
 
@@ -898,7 +921,7 @@ def find_optimal_transformation(
             final_transformer = best_transformer[:]
             final_reverter = best_reverter[:]
             level_met = met
-        elif tr == 'first_seasonal_diff':
+        elif tr in ('seasonal_adj', 'first_seasonal_diff'):
             if not hasattr(m,'__len__'):
                 m = [m]
             for mi in m:
@@ -909,8 +932,16 @@ def find_optimal_transformation(
                     best_transformer = transformer[:]
                     best_reverter = reverter[:]
                     try:
-                        transformer.append(('DiffTransform',mi))
-                        reverter.reverse(); reverter.append(('DiffRevert',mi)); reverter.reverse()
+                        transformer += (
+                            [('DiffTransform',mi)] if tr == 'first_seasonal_diff'
+                            else [('DeseasonTransform',{'m':mi,'model':model})]
+                        )
+                        reverter.reverse()
+                        reverter += (
+                            [('DiffRevert',mi)] if tr == 'first_seasonal_diff' 
+                            else [('DeseasonRevert',)]
+                        )
+                        reverter.reverse()
                         f = make_pipeline_fit_predict(f,transformer,reverter)
                         comp_met = f.export('model_summaries')[monitor].values[0]
                         comp_met = -comp_met if monitor.endswith('R2') else comp_met
@@ -919,12 +950,12 @@ def find_optimal_transformation(
                             best_transformer = transformer[:]
                             best_reverter = reverter[:]
                     except exception_types as e:
-                        warnings.warn(f'Series first seasonal difference could not be evaluated. error: {e}')
+                        warnings.warn(f'Series seasonal adjustment could not be evaluated. error: {e}')
                     final_transformer = best_transformer[:]
                     final_reverter = best_reverter[:]
                     level_met = met
                 else:
-                    warnings.warn('Series first seasonal difference cannot be evaluated when m = 1.')
+                    warnings.warn('Seasonal differences and adjustments cannot be evaluated when m = 1.')
         elif tr == 'scale':
             for i, s in enumerate(scale_type):
                 transformer = final_transformer[:]

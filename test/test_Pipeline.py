@@ -20,7 +20,9 @@ def test_pipeline():
     transformer, reverter = find_optimal_transformation(
         f,
         estimator='elasticnet',
+        alpha = .2,
     )
+    print(reverter)
     pipeline = Pipeline(
         steps = [
             ('Transform',transformer),

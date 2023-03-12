@@ -32,6 +32,7 @@ def build_Forecaster(
             'rmse',
             'smape',
             'mse',
+            'bias',
         ],
         **kwargs,
     )

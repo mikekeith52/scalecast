@@ -191,6 +191,7 @@ class Pipeline_parent:
         fcst_length,
         test_length,
         cis,
+        cilevel,
     ) -> List[List[Tuple[Forecaster,np.array]]]:
         results = []
         for h, f in enumerate(fs):
@@ -205,6 +206,7 @@ class Pipeline_parent:
                     future_dates = len(f.future_dates) if fcst_length is None else fcst_length,
                     test_length = f.test_length if test_length is None else test_length,
                     cis = f.cis if cis is None else cis,
+                    cilevel = f.cilevel if cilevel is None else cilevel,
                 )
                 if series_length is not None:
                     f1.keep_smaller_history(series_length)
@@ -220,6 +222,7 @@ class Pipeline_parent:
         fcst_length=None,
         test_length=None,
         cis=None,
+        cilevel=None,
         **kwargs,
     ) -> List[Dict[str,pd.DataFrame]]:
         """ Runs an out-of-sample backtest of the pipeline over a certain amount of iterations.
@@ -236,6 +239,8 @@ class Pipeline_parent:
             test_length (int): Optional. The test set to hold out for each model evaluation.
                 Leave unspecified if you want to use the test length already programmed into the `Forecaster` object.
             cis (bool): Optional. Whether to backtest confidence intervals. 
+                Leave unspecified if you want to use whatever is already programmed into the `Forecaster` object.
+            cilevel (float): Optional. What level to evaluate confidence intervals at.
                 Leave unspecified if you want to use whatever is already programmed into the `Forecaster` object.
             **kwargs: Passed to the `fit_predict()` method from `Pipeline` or `MVPipeline`.
 
@@ -279,6 +284,7 @@ class Pipeline_parent:
             fcst_length=fcst_length,
             test_length=test_length,
             cis=cis,
+            cilevel=cilevel,
         )
         for res in _prepare_backtest_results:
             results.append({'Actuals':pd.DataFrame()})

@@ -98,6 +98,7 @@ test/test_SeriesTransformer.py
 test/test_all.py
 test/test_multiseries.py
 test/__pycache__/ExampleGrids.cpython-38.pyc
+test/__pycache__/ExampleGrids.cpython-39.pyc
 test/__pycache__/Grids.cpython-38.pyc
 test/__pycache__/MVGrids.cpython-38.pyc
 test/__pycache__/VECMGrid.cpython-38.pyc
@@ -105,7 +106,9 @@ test/__pycache__/config.cpython-38.pyc
 test/__pycache__/test_AnomalyDetector.cpython-38.pyc
 test/__pycache__/test_ChangepointDetector.cpython-38.pyc
 test/__pycache__/test_Forecaster.cpython-38.pyc
+test/__pycache__/test_Forecaster.cpython-39.pyc
 test/__pycache__/test_GridGenerator.cpython-38.pyc
+test/__pycache__/test_GridGenerator.cpython-39.pyc
 test/__pycache__/test_MVForecaster.cpython-38.pyc
 test/__pycache__/test_Pipeline.cpython-38.pyc
 test/__pycache__/test_SeriesTransformer.cpython-38.pyc

@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.13] - 2023-03-12
+### Added
+- Added `Forecaster.STL()` method.
+- Added `cilevel` argument to `Pipeline.backtest()` method.
+- Added `SeriesTransformer.DeseasonTransform()` and corresponding revert function.
+- Added `util.metrics.bias()` function.
+- Added `seasonal_adj` in default `try_order` argument from `util.find_optimal_transformation()`.
+### Changed
+### Fixed
+- Fixed how metrics are calculated after reverting a detrend transformation.
+
 ## [0.17.12] - 2022-03-08
 ### Added
 - Added a `Forecaster.add_metric()` and `MVForecaster.add_metric()` argument that can be used for custom metrics.

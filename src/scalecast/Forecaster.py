@@ -28,7 +28,7 @@ from scipy import stats
 import sklearn
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.seasonal import seasonal_decompose, STL
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PowerTransformer
 
@@ -2949,15 +2949,46 @@ class Forecaster(Forecaster_parent):
         y = y.values if not train_only else y.values[: -self.test_length]
         return periodogram(y)
 
-    def seasonal_decompose(self, diffy=False, train_only=False, **kwargs):
-        """ Plots a signal/seasonal decomposition of the y values.
-
+    def STL(self, diffy=False, train_only=False, **kwargs):
+        """ Returns a Season-Trend decomposition using LOESS of the y values.
+        
         Args:
-            diffy (bool or int): One of {True,False,0,1}. Default False.
+            diffy (bool): Default False.
                 Whether to difference the data before passing the values to the function.
                 If False or 0, does not difference.
                 If True or 1, differences 1 time.
-                If 2, differences 2 times.
+            train_only (bool): Default False.
+                If True, will exclude the test set from the test (a measure added to avoid leakage).
+            **kwargs: Passed to STL() function from statsmodels.
+                See https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.STL.html.
+
+        Returns:
+            (DecomposeResult): An object with seasonal, trend, and resid attributes.
+
+        >>> import matplotlib.pyplot as plt
+        >>> f.STL(train_only=True).plot()
+        >>> plt.show()
+        """
+        _developer_utils._check_train_only_arg(self,train_only)
+        y = self._diffy(diffy)
+        current_dates = (
+            self.current_dates.values[-len(y) :]
+            if not train_only
+            else self.current_dates.values[-len(y) : -self.test_length]
+        )
+        y = y.values if not train_only else y.values[: -self.test_length]
+        X = pd.DataFrame({"y": y}, index=current_dates)
+        X.index.freq = self.freq
+        return STL(X.dropna(), **kwargs)
+
+    def seasonal_decompose(self, diffy=False, train_only=False, **kwargs):
+        """ Returns a signal/seasonal decomposition of the y values.
+
+        Args:
+            diffy (bool): Default False.
+                Whether to difference the data before passing the values to the function.
+                If False or 0, does not difference.
+                If True or 1, differences 1 time.
             train_only (bool): Default False.
                 If True, will exclude the test set from the test (a measure added to avoid leakage).
             **kwargs: Passed to seasonal_decompose() function from statsmodels.

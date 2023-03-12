@@ -101,21 +101,21 @@ class SeriesTransformer:
             h['LevelY'] = self.f.levely
             for met, func in self.f.metrics.items():
                 h['TestSet' + met.upper()] = _developer_utils._return_na_if_len_zero(
-                    self.f.levely[-len(h["TestSetPredictions"]) :], 
+                    self.f.y.iloc[-len(h["TestSetPredictions"]) :], 
                     h["TestSetPredictions"], 
                     func,
                 )
                 h['LevelTestSet' + met.upper()] = _developer_utils._return_na_if_len_zero(
-                    self.f.levely[-len(h["LevelTestSetPreds"]) :], 
+                    self.f.y.iloc[-len(h["LevelTestSetPreds"]) :], 
                     h["LevelTestSetPreds"], 
                     func,
                 )
                 h['InSample' + met.upper()] = func(
-                    self.f.levely[-len(h['FittedVals']) :], 
+                    self.f.y.iloc[-len(h['FittedVals']) :], 
                     h['FittedVals'], 
                 )
                 h['LevelInSample' + met.upper()] = func(
-                    self.f.levely[-len(h['LevelFittedVals']) :], 
+                    self.f.y.iloc[-len(h['LevelFittedVals']) :], 
                     h['LevelFittedVals'],
                 )
 
@@ -175,8 +175,8 @@ class SeriesTransformer:
                 m = _developer_utils._convert_m(m,fmod.freq)
                 if m == 1:
                     warnings.warn(
-                        f'cannot add seasonal lags automatically for the {fmod.freq} frequency. '
-                        'set a value for m manually.'
+                        f'Cannot add seasonal lags automatically for the {fmod.freq} frequency. '
+                        'Set a value for m manually.'
                     )
             if m > 1:
                 fmod.add_lagged_terms('t',lags=m*seasonal_lags)
@@ -260,6 +260,7 @@ class SeriesTransformer:
         fvs = {
             "LevelTestSetPreds":self.detrend_fvs_test,
             "TestSetPredictions":self.detrend_fvs_test,
+            "TestSetActuals":self.detrend_fvs_test,
             "LevelFittedVals":self.detrend_fvs,
             "FittedVals":self.detrend_fvs,
             "LevelForecast":self.detrend_fvs_fut,
@@ -632,5 +633,130 @@ class SeriesTransformer:
             )
         delattr(self, f"orig_y_{m}_{n}")
         delattr(self, f"orig_dates_{m}_{n}")
-
         return self.Revert(lambda x: x, exclude_models = exclude_models)  # call here to assign correct test-set metrics
+
+    def DeseasonTransform(
+        self,
+        m = None,
+        model='add',
+        extrapolate_trend='freq',
+        train_only = False,
+        **kwargs,
+    ):
+        """ Deseasons a series using the moving average method offered by statsmodel through the seasonal_decompose() function.
+
+        Args:
+            m (int or str): Default None. The number of observations that counts one seasonal step.
+                If not specified, will use the inferred seasonality from statsmodels.
+            model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
+                The type of seasonal component.
+            extrapolate_trend (str or int): Default 'freq'. If set to > 0, the trend resulting from the convolution is
+                linear least-squares extrapolated on both ends (or the single one
+                if two_sided is False) considering this many (+1) closest points.
+                If set to 'freq', use `freq` closest points. Setting this parameter
+                results in no NaN values in trend or resid components.
+            **kwargs: Passed to seasonal_decompose() function from statsmodels.
+                See https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.seasonal_decompose.html.
+
+        Returns:
+            (Forecaster): A Forecaster object with the transformed attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.DeseasonTransform(model='mul')  # multiplicative deseasoning
+        """
+        _developer_utils.descriptive_assert(
+            model in ("additive", "add", "multiplicative", "mul"),
+            ValueError,
+            f'The value passed to the model argument must be one of ("additive", "add", "multiplicative", "mul"), got {model}.'
+        )
+        if m is None:
+            from statsmodels.tsa.tsatools import freq_to_period
+            m = freq_to_period(self.f.freq)
+        decomp_res = self.f.seasonal_decompose(
+            model=model,
+            extrapolate_trend=extrapolate_trend,
+            period = m,
+            **kwargs,
+        )
+        deseasoned = (
+            (decomp_res.trend + decomp_res.resid) if model in ('add','additive') 
+            else (decomp_res.trend * decomp_res.resid)
+        )
+        current_seasonality = decomp_res.seasonal # check
+        f = Forecaster(
+            y = current_seasonality,
+            current_dates = current_seasonality.index,
+            future_dates = len(self.f.future_dates)
+        )
+        f.set_estimator('naive')
+        f.manual_forecast(seasonal=True,m=m)
+        self.deseason_params = {
+            'model':model,
+            'levely':self.f.levely[:],
+            'y':self.f.y.copy(),
+            'current_seasonality':current_seasonality.to_list(),
+            'future_seasonality':f.forecast,
+
+        }
+        self.f.y = deseasoned.reset_index().iloc[:,-1]
+        self.f.levely = deseasoned.reset_index().iloc[:,-1]
+        return self.f
+
+    def DeseasonRevert(self, exclude_models = []):
+        """ Reverts a seasonal adjustment already taken on the series. Call DeseasonTransform() before calling this.
+
+        Args:
+            exclude_models (list-like): Models to not revert. This is useful if you are transforming
+                and reverting an object multiple times.
+
+        Returns:
+            (Forecaster): A Forecaster object with the reverted attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.DeseasonTransform(model='mul')  # multiplicative deseasoning
+        >>> f = transformer.DeseasonRevert() # back to normal
+        """
+        try:
+            self.f.levely = self.deseason_params['levely']
+            self.f.y = self.deseason_params['y']
+        except AttributeError:
+            raise ForecastError('Before reverting a seasonal transformation, make sure DeseasonTransform has already been called.')
+
+        atts = {
+            "LevelTestSetPreds":self.deseason_params['current_seasonality'],
+            "TestSetPredictions":self.deseason_params['current_seasonality'],
+            "TestSetActuals":self.deseason_params['current_seasonality'],
+            "LevelFittedVals":self.deseason_params['current_seasonality'],
+            "FittedVals":self.deseason_params['current_seasonality'],
+            "LevelForecast":self.deseason_params['future_seasonality'],
+            "Forecast":self.deseason_params['future_seasonality'],
+            "TestSetUpperCI":self.deseason_params['current_seasonality'],
+            "TestSetLowerCI":self.deseason_params['current_seasonality'],
+            "UpperCI":self.deseason_params['future_seasonality'],
+            "LowerCI":self.deseason_params['future_seasonality'],
+            "LevelLowerCI":self.deseason_params['future_seasonality'],
+            "LevelTSLowerCI":self.deseason_params['current_seasonality'],
+            "LevelUpperCI":self.deseason_params['future_seasonality'],
+            "LevelTSUpperCI":self.deseason_params['current_seasonality'],
+        }
+
+        for m, h in self.f.history.items():
+            if m in exclude_models:
+                continue
+            for a, v in atts.items():
+                try:
+                    h[a] = [
+                        (i + s) if self.deseason_params['model'] in ('add','additive') 
+                        else (i * s) for i, s in zip(h[a],v[-len(h[a]):])
+                    ]
+                except KeyError:
+                    pass
+
+        delattr(self, f"deseason_params")
+        return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
