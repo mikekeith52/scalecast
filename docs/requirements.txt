@@ -6,6 +6,7 @@ pandoc
 sphinx
 sphinxcontrib-confluencebuilder
 sphinxcontrib-napoleon
+jinja2==3.0.3
 numpydoc
 pdflatex
 ipywidgets

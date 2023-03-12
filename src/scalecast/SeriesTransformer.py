@@ -646,7 +646,7 @@ class SeriesTransformer:
         """ Deseasons a series using the moving average method offered by statsmodel through the seasonal_decompose() function.
 
         Args:
-            m (int or str): Default None. The number of observations that counts one seasonal step.
+            m (int): The number of observations that counts one seasonal step.
                 If not specified, will use the inferred seasonality from statsmodels.
             model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
                 The type of seasonal component.
