@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.14] - 2023-03-17
+### Added
+### Changed
+- "Differenced" no longer displayed when calling `Forecaster.__repr__()`.
+### Fixed
+- Fixed plotting confidence intervals on separate axes in the `Forecaster` and `MVForecaster` objects.
+
 ## [0.17.13] - 2023-03-12
 ### Added
 - Added `Forecaster.STL()` method.

@@ -1257,7 +1257,7 @@ class MVForecaster(Forecaster_parent):
 
                 if ci:
                     try:
-                        plt.fill_between(
+                        ax.fill_between(
                             x=self.future_dates.to_list(),
                             y1=self.history[m]["UpperCI"][s]
                             if not level
@@ -1275,9 +1275,9 @@ class MVForecaster(Forecaster_parent):
                         _developer_utils._warn_about_not_finding_cis(m)
                 k += 1
 
-        plt.legend()
-        plt.xlabel("Date")
-        plt.ylabel("Values")
+        ax.legend()
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Values")
         return ax
 
     def plot_test_set(
@@ -1401,9 +1401,9 @@ class MVForecaster(Forecaster_parent):
                         _developer_utils._warn_about_not_finding_cis(m)
                 k += 1
 
-        plt.legend()
-        plt.xlabel("Date")
-        plt.ylabel("Values")
+        ax.legend()
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Values")
         return ax
 
     def plot_fitted(

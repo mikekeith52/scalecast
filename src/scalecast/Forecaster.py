@@ -105,7 +105,6 @@ class Forecaster(Forecaster_parent):
     N_actuals={}
     ForecastLength={}
     Xvars={}
-    Differenced={}
     TestLength={}
     ValidationLength={}
     ValidationMetric={}
@@ -120,7 +119,6 @@ class Forecaster(Forecaster_parent):
         len(self.y),
         len(self.future_dates) if self.require_future_dates else "NA",
         list(self.current_xreg.keys()),
-        self.integration,
         self.test_length,
         self.validation_length,
         self.validation_metric,
@@ -4243,7 +4241,7 @@ class Forecaster(Forecaster_parent):
             )
             if ci:
                 try:
-                    plt.fill_between(
+                    ax.fill_between(
                         x=self.future_dates.to_list(),
                         y1=self.history[m]["UpperCI"]
                         if not level
@@ -4257,9 +4255,9 @@ class Forecaster(Forecaster_parent):
                     )
                 except KeyError:
                     _developer_utils._warn_about_not_finding_cis(m)
-        plt.legend()
-        plt.xlabel("Date")
-        plt.ylabel("Values")
+        ax.legend()
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Values")
         return ax
 
     def plot_test_set(
@@ -4383,7 +4381,7 @@ class Forecaster(Forecaster_parent):
             )
             if ci:
                 try:
-                    plt.fill_between(
+                    ax.fill_between(
                         x=test_dates,
                         y1=self.history[m]["TestSetUpperCI"]
                         if not level
@@ -4398,9 +4396,9 @@ class Forecaster(Forecaster_parent):
                 except KeyError:
                     _developer_utils._warn_about_not_finding_cis(m)
 
-        plt.legend()
-        plt.xlabel("Date")
-        plt.ylabel("Values")
+        ax.legend()
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Values")
         return ax
 
     def plot_backtest_values(self,model,ax=None,figsize=(12,6)):
