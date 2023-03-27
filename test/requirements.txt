@@ -4,3 +4,4 @@ prophet==1.1.2
 greykite==0.2.0
 shap==0.41.0
 pmdarima==2.0.2
+pandas_datareader==0.10.0

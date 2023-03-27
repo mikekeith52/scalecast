@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.15] - 2023-03-27
+### Added
+- Added a LOESS detrender (from statsmodels) to the `SeriesTransformer` object. Called using `SeriesTransformer.DetrendTransform()`.
+### Changed
+- `SeriesTransformer` can seasonally adjust the same series multiple times (to capture multiple seasonalities).
+- The `util.find_optimal_transformation()` function now tries a LOESS detrender by default.
+### Fixed
+
 ## [0.17.14] - 2023-03-17
 ### Added
 ### Changed

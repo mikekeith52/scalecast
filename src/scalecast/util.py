@@ -720,7 +720,7 @@ def find_optimal_transformation(
     lags='auto',
     try_order = ['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale'],
     boxcox_lambdas = [-0.5,0,0.5],
-    detrend_kwargs = [{'poly_order':1},{'poly_order':2}],
+    detrend_kwargs = [{'loess':True},{'poly_order':1},{'poly_order':2}],
     scale_type = ['Scale','MinMax'],
     scale_on_train_only = False,
     m='auto',

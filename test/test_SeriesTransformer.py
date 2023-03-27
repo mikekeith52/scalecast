@@ -32,5 +32,12 @@ def main():
             new_vals = np.round(f.y.to_list()[:2] + f.y.to_list()[-2:],2)
             comp_vals(orig_vals,new_vals,t)
 
+        # test loess
+        f = transformer.DetrendTransform(loess=True,frac=.4,it=4)
+        forecaster(f)
+        f = transformer.DetrendRevert()
+        new_vals = np.round(f.y.to_list()[:2] + f.y.to_list()[-2:],2)
+        comp_vals(orig_vals,new_vals,t)
+
 if __name__ == '__main__':
     main()

@@ -122,27 +122,44 @@ class SeriesTransformer:
         return self.f
 
     def DetrendTransform(
-            self,
-            poly_order=1,
-            ln_trend=False,
-            seasonal_lags=0,
-            m='auto',
-            fit_intercept=True,
-            train_only=False,
-        ):
-        """ Detrends the series using an OLS estimator.
+        self,
+        loess = False,
+        frac = 0.5,
+        it = 3,
+        poly_order=1,
+        ln_trend=False,
+        seasonal_lags=0,
+        m='auto',
+        fit_intercept=True,
+        train_only=False,
+    ):
+        """ Detrends the series using an OLS estimator or using LOESS.
         Only call this once if you want to revert the series later.
         The passed Forecaster object must have future dates or be initiated with `require_future_dates=False`.
         Make sure the test length has already been set as well.
         If the test length changes between the time the transformation is called
         and when models are called, you will get this error when reverting: 
         ValueError: All arrays must be of the same length.
-        The ols model from statsmodels will be stored in the detrend_model attribute.
+        The ols or lowess model from statsmodels will be stored in the detrend_params attribute with the 'model' key.
 
         Args:
-            poly_order (int): Default 1. The polynomial order to use.
+            loess (bool): Default False. Whether to fit a LOESS curve.
+            frac (float): Optional. Default 0.5.
+                The fraction of the data used when estimating each y-value.
+                A smaller frac value will produce a more rigid trend line, 
+                while a larger frac value will produce a smoother trend line.
+                Ignored when loess is False. 
+            it (int): Optional. Default 3.
+                The number of iterations used in the loess algorithm.
+                A larger it value will produce a smoother trend line, 
+                but may take longer to compute.
+                Ignored when loess is False. 
+            poly_order (int): Default 1. The polynomial order to use in the fitted trend line.
+                Ignored when loess is True. 
             ln_trend (bool): Default False. Whether to use a natural logarithmic trend.
+                Ignored when loess is True.
             seasonal_lags (int): Default 0. The number of seasonal lags to use in the estimation.
+                Ignored when loess is True.
             m (int or str): Default 'auto'. The number of observations that counts one seasonal step.
                 Ignored when seasonal_lags = 0.
                 When 'auto', uses the M4 competition values:
@@ -160,72 +177,90 @@ class SeriesTransformer:
         >>> transformer = SeriesTransformer(f)
         >>> f = transformer.DetrendTransform(ln_trend=True)
         """
-        import statsmodels.api as sm 
-        
-        self.detrend_origy = self.f.y.copy()
-        self.detrend_origlevely = self.f.levely.copy()
-        self.detrend_origdates = self.f.current_dates.copy()
+        self.detrend_params = {
+            'origy':self.f.y.copy(),
+            'origlevely':self.f.levely.copy(),
+            'origdates':self.f.current_dates.copy()
+        }
 
         fmod = self.f.deepcopy()
         fmod.drop_all_Xvars()
         fmod.add_time_trend()
 
-        if seasonal_lags > 0:
-            if m == 'auto':
-                m = _developer_utils._convert_m(m,fmod.freq)
-                if m == 1:
-                    warnings.warn(
-                        f'Cannot add seasonal lags automatically for the {fmod.freq} frequency. '
-                        'Set a value for m manually.'
-                    )
-            if m > 1:
-                fmod.add_lagged_terms('t',lags=m*seasonal_lags)
-                fmod.drop_Xvars(*[
-                    x for x in fmod.get_regressor_names() if (
-                        x.startswith(
-                            'tlag'
-                        ) and int(
-                            x.split('tlag_')[-1]
-                        ) % m != 0
-                    ) and x != 't'
-                ])
-        if ln_trend:
-            fmod.add_logged_terms(*fmod.get_regressor_names(),drop=True)
-        fmod.add_poly_terms(*fmod.get_regressor_names(),pwr=poly_order)
+        if not loess:
+            import statsmodels.api as sm 
+            if seasonal_lags > 0:
+                if m == 'auto':
+                    m = _developer_utils._convert_m(m,fmod.freq)
+                    if m == 1:
+                        warnings.warn(
+                            f'Cannot add seasonal lags automatically for the {fmod.freq} frequency. '
+                            'Set a value for m manually.'
+                        )
+                if m > 1:
+                    fmod.add_lagged_terms('t',lags=m*seasonal_lags)
+                    fmod.drop_Xvars(*[
+                        x for x in fmod.get_regressor_names() if (
+                            x.startswith(
+                                'tlag'
+                            ) and int(
+                                x.split('tlag_')[-1]
+                            ) % m != 0
+                        ) and x != 't'
+                    ])
+            if ln_trend:
+                fmod.add_logged_terms(*fmod.get_regressor_names(),drop=True)
+            fmod.add_poly_terms(*fmod.get_regressor_names(),pwr=poly_order)
 
-        dataset = fmod.export_Xvars_df().set_index('DATE')
-        if fit_intercept:
-            dataset = sm.add_constant(dataset)
+            dataset = fmod.export_Xvars_df().set_index('DATE')
+            if fit_intercept:
+                dataset = sm.add_constant(dataset)
 
-        train_set = dataset.loc[fmod.current_dates] # full dataset minus future dates
-        model_inputs = train_set.iloc[:-fmod.test_length,:] if train_only else train_set.copy() # what will be used to fit the model
-        test_set = train_set.iloc[-fmod.test_length:,:] # the test set for reverting models later
-        future_set = dataset.loc[fmod.future_dates] # the future inputs for reverting models later
+            train_set = dataset.loc[fmod.current_dates] # full dataset minus future dates
+            model_inputs = train_set.iloc[:-fmod.test_length,:] if train_only else train_set.copy() # what will be used to fit the model
+            test_set = train_set.iloc[-fmod.test_length:,:] # the test set for reverting models later
+            future_set = dataset.loc[fmod.future_dates] # the future inputs for reverting models later
 
-        y = fmod.y.values
-        y_train = y.copy() if not train_only else y[:-fmod.test_length].copy()
+            y = fmod.y.values
+            y_train = y.copy() if not train_only else y[:-fmod.test_length].copy()
 
-        ols_mod = sm.OLS(y_train,model_inputs).fit()
-        fvs = ols_mod.predict(train_set) # reverts fitted values
-        fvs_fut = ols_mod.predict(future_set) # reverts forecasts
-        fvs_test = ols_mod.predict(test_set) # reverts test-set predictions
-
-        self.f.keep_smaller_history(len(train_set))
-        self.f.y = self.f.y.values - fvs.values
-        self.f.levely = list(self.f.y)
-
-        # i'm not 100% sure we need this and it does cause one thing to break so i'm doing this for now.
-        try: 
-            self.f._typ_set(); 
-        except: 
-            logging.warning(
-                'Forecaster._typ_set() did not work after the detrend transformation, continuing as is.'
+            ols_mod = sm.OLS(y_train,model_inputs).fit()
+            fvs = ols_mod.predict(train_set) # reverts fitted values
+            fvs_fut = ols_mod.predict(future_set) # reverts forecasts
+            fvs_test = ols_mod.predict(test_set) # reverts test-set predictions
+            self.f.keep_smaller_history(len(train_set))
+            self.detrend_params['model'] = ols_mod
+            self.detrend_params['fvs'] = fvs.values
+            self.detrend_params['fvs_fut'] = fvs_fut
+            self.detrend_params['fvs_test'] = fvs_test
+        else:
+            from statsmodels.nonparametric.smoothers_lowess import lowess
+            y = fmod.y.values if not train_only else fmod.y.values[-self.test_length:]
+            loess_fit = lowess(
+                y, 
+                fmod.current_xreg['t'][:len(y)], 
+                frac=frac, 
+                it=it,
+            )
+            self.detrend_params['model'] = loess_fit
+            self.detrend_params['fvs'] = np.interp(
+                fmod.current_xreg['t'], 
+                loess_fit[:, 0], 
+                loess_fit[:, 1], 
+            )
+            self.detrend_params['fvs_test'] = (
+                self.detrend_params['fvs'][-self.f.test_length:] 
+                if self.f.test_length > 0 
+                else []
+            )
+            self.detrend_params['fvs_fut'] = np.interp(
+                fmod.future_xreg['t'], 
+                loess_fit[:, 0], 
+                loess_fit[:, 1], 
             )
 
-        self.detrend_model = ols_mod
-        self.detrend_fvs = fvs
-        self.detrend_fvs_fut = fvs_fut
-        self.detrend_fvs_test = fvs_test
+        self.f.y = pd.Series(self.f.y.values - self.detrend_params['fvs'],dtype=float)
+        self.f.levely = self.f.y.to_list()
         return self.f
 
     def DetrendRevert(self, exclude_models = []):
@@ -250,29 +285,29 @@ class SeriesTransformer:
         >>> f = transformer.DetrendTransform(ln_trend=True)
         >>> f = transformer.DetrendRevert()
         """
-        try:
-            self.f.levely = self.detrend_origlevely
-            self.f.y = self.detrend_origy
-            self.f.current_dates = self.detrend_origdates
-        except AttributeError:
+        if not hasattr(self,'detrend_params'):
             raise ForecastError('Before reverting a trend, make sure DetrendTransform has already been called.')
 
+        self.f.levely = self.detrend_params['origlevely']
+        self.f.y = self.detrend_params['origy']
+        self.f.current_dates = self.detrend_params['origdates']
+
         fvs = {
-            "LevelTestSetPreds":self.detrend_fvs_test,
-            "TestSetPredictions":self.detrend_fvs_test,
-            "TestSetActuals":self.detrend_fvs_test,
-            "LevelFittedVals":self.detrend_fvs,
-            "FittedVals":self.detrend_fvs,
-            "LevelForecast":self.detrend_fvs_fut,
-            "Forecast":self.detrend_fvs_fut,
-            "TestSetUpperCI":self.detrend_fvs_test,
-            "TestSetLowerCI":self.detrend_fvs_test,
-            "UpperCI":self.detrend_fvs_fut,
-            "LowerCI":self.detrend_fvs_fut,
-            "LevelLowerCI":self.detrend_fvs_fut,
-            "LevelTSLowerCI":self.detrend_fvs_test,
-            "LevelUpperCI":self.detrend_fvs_fut,
-            "LevelTSUpperCI":self.detrend_fvs_test,
+            "LevelTestSetPreds":self.detrend_params['fvs_test'],
+            "TestSetPredictions":self.detrend_params['fvs_test'],
+            "TestSetActuals":self.detrend_params['fvs_test'],
+            "LevelFittedVals":self.detrend_params['fvs'],
+            "FittedVals":self.detrend_params['fvs'],
+            "LevelForecast":self.detrend_params['fvs_fut'],
+            "Forecast":self.detrend_params['fvs_fut'],
+            "TestSetUpperCI":self.detrend_params['fvs_test'],
+            "TestSetLowerCI":self.detrend_params['fvs_test'],
+            "UpperCI":self.detrend_params['fvs_fut'],
+            "LowerCI":self.detrend_params['fvs_fut'],
+            "LevelLowerCI":self.detrend_params['fvs_fut'],
+            "LevelTSLowerCI":self.detrend_params['fvs_test'],
+            "LevelUpperCI":self.detrend_params['fvs_fut'],
+            "LevelTSUpperCI":self.detrend_params['fvs_test'],
         }
 
         for m, h in self.f.history.items():
@@ -284,17 +319,7 @@ class SeriesTransformer:
                 except KeyError:
                     pass
 
-        for a in (
-            'detrend_origy',
-            'detrend_origlevely',
-            'detrend_origdates',
-            'detrend_model',
-            'detrend_fvs',
-            'detrend_fvs_fut',
-            'detrend_fvs_test',
-        ):
-            delattr(self,a)
-
+        delattr(self,'detrend_params')
         return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
         
     def LogTransform(self):
@@ -693,22 +718,24 @@ class SeriesTransformer:
         )
         f.set_estimator('naive')
         f.manual_forecast(seasonal=True,m=m)
-        self.deseason_params = {
+        params = {
             'model':model,
             'levely':self.f.levely[:],
             'y':self.f.y.copy(),
             'current_seasonality':current_seasonality.to_list(),
             'future_seasonality':f.forecast,
-
         }
+        setattr(self,f'deseason_params_{m}',params)
         self.f.y = deseasoned.reset_index().iloc[:,-1]
         self.f.levely = deseasoned.reset_index().iloc[:,-1]
         return self.f
 
-    def DeseasonRevert(self, exclude_models = []):
+    def DeseasonRevert(self, m = None, exclude_models = []):
         """ Reverts a seasonal adjustment already taken on the series. Call DeseasonTransform() before calling this.
 
         Args:
+            m (int): The number of observations that counts one seasonal step.
+                If not specified, will use the inferred seasonality from statsmodels.
             exclude_models (list-like): Models to not revert. This is useful if you are transforming
                 and reverting an object multiple times.
 
@@ -722,41 +749,47 @@ class SeriesTransformer:
         >>> f = transformer.DeseasonTransform(model='mul')  # multiplicative deseasoning
         >>> f = transformer.DeseasonRevert() # back to normal
         """
+        if m is None:
+            from statsmodels.tsa.tsatools import freq_to_period
+            m = freq_to_period(self.f.freq)
+        params = getattr(self,f'deseason_params_{m}')
         try:
-            self.f.levely = self.deseason_params['levely']
-            self.f.y = self.deseason_params['y']
+            self.f.levely = params['levely']
+            self.f.y = params['y']
         except AttributeError:
-            raise ForecastError('Before reverting a seasonal transformation, make sure DeseasonTransform has already been called.')
+            raise ForecastError(
+                f'Before reverting a seasonal transformation, make sure DeseasonTransform with m = {m} has already been called.'
+            )
 
         atts = {
-            "LevelTestSetPreds":self.deseason_params['current_seasonality'],
-            "TestSetPredictions":self.deseason_params['current_seasonality'],
-            "TestSetActuals":self.deseason_params['current_seasonality'],
-            "LevelFittedVals":self.deseason_params['current_seasonality'],
-            "FittedVals":self.deseason_params['current_seasonality'],
-            "LevelForecast":self.deseason_params['future_seasonality'],
-            "Forecast":self.deseason_params['future_seasonality'],
-            "TestSetUpperCI":self.deseason_params['current_seasonality'],
-            "TestSetLowerCI":self.deseason_params['current_seasonality'],
-            "UpperCI":self.deseason_params['future_seasonality'],
-            "LowerCI":self.deseason_params['future_seasonality'],
-            "LevelLowerCI":self.deseason_params['future_seasonality'],
-            "LevelTSLowerCI":self.deseason_params['current_seasonality'],
-            "LevelUpperCI":self.deseason_params['future_seasonality'],
-            "LevelTSUpperCI":self.deseason_params['current_seasonality'],
+            "LevelTestSetPreds":params['current_seasonality'],
+            "TestSetPredictions":params['current_seasonality'],
+            "TestSetActuals":params['current_seasonality'],
+            "LevelFittedVals":params['current_seasonality'],
+            "FittedVals":params['current_seasonality'],
+            "LevelForecast":params['future_seasonality'],
+            "Forecast":params['future_seasonality'],
+            "TestSetUpperCI":params['current_seasonality'],
+            "TestSetLowerCI":params['current_seasonality'],
+            "UpperCI":params['future_seasonality'],
+            "LowerCI":params['future_seasonality'],
+            "LevelLowerCI":params['future_seasonality'],
+            "LevelTSLowerCI":params['current_seasonality'],
+            "LevelUpperCI":params['future_seasonality'],
+            "LevelTSUpperCI":params['current_seasonality'],
         }
 
-        for m, h in self.f.history.items():
-            if m in exclude_models:
+        for mod, h in self.f.history.items():
+            if mod in exclude_models:
                 continue
             for a, v in atts.items():
                 try:
                     h[a] = [
-                        (i + s) if self.deseason_params['model'] in ('add','additive') 
+                        (i + s) if params['model'] in ('add','additive') 
                         else (i * s) for i, s in zip(h[a],v[-len(h[a]):])
                     ]
                 except KeyError:
                     pass
 
-        delattr(self, f"deseason_params")
+        delattr(self, f"deseason_params_{m}")
         return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
