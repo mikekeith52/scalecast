@@ -454,8 +454,29 @@ class Forecaster_parent:
 
         >>> f.set_grids_file('ModGrids') # expects to find a file called ModGrids.py in working directory.
         """
-        _developer_utils.descriptive_assert(isinstance(name,str),ValueError,f'name argument expected str type, got {type(name)}')
+        _developer_utils.descriptive_assert(
+            isinstance(name,str),
+            ValueError,
+            f'name argument expected str type, got {type(name)}.'
+        )
         self.grids_file = name
+
+    def _fit_normalizer(self, X, normalizer):
+        _developer_utils.descriptive_assert(
+            normalizer in self.normalizer,
+            ValueError,
+            f"normalizer must be one of {list(self.normalizer.keys())}, got {normalizer}.",
+        )
+        
+        if normalizer is None:
+            return None
+
+        scaler = self.normalizer[normalizer]()
+        scaler.fit(X)
+        return scaler
+
+    def _scale(self, scaler,X):
+        return scaler.transform(X) if scaler is not None else X
 
 def _tune_test_forecast(
     f,

@@ -235,7 +235,7 @@ class SeriesTransformer:
             self.detrend_params['fvs_test'] = fvs_test
         else:
             from statsmodels.nonparametric.smoothers_lowess import lowess
-            y = fmod.y.values if not train_only else fmod.y.values[-self.test_length:]
+            y = fmod.y.values if not train_only else fmod.y.values[-fmod.test_length:]
             loess_fit = lowess(
                 y, 
                 fmod.current_xreg['t'][:len(y)], 

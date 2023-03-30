@@ -29,10 +29,10 @@ def build_Forecaster(
         test_length = test_length,
         cis = cis,
         metrics = [
+            'abias',
             'rmse',
             'smape',
             'mse',
-            'bias',
         ],
         **kwargs,
     )
@@ -138,6 +138,9 @@ def test_modeling():
         )
 
         f.set_estimator('lstm')
+        f.manual_forecast(epochs = 10)
+
+        f.set_estimator('rnn')
         f.manual_forecast(epochs = 10)
 
         f.set_estimator('mlr')

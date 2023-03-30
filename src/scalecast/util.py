@@ -33,6 +33,26 @@ class metrics:
         return np.sum(np.array(f) - np.array(a))
 
     @staticmethod
+    def abias(a,f):
+        """ Returns the total bias over a given forecast horizon in terms of absolute values. 
+        Divide by the length of the forecast horizon to get average bias.
+        This is a good metric to minimize when testing/tuning models.
+
+        Args:
+            a (list-like): The actuals over the forecast horizon.
+            f (list-like): The predictions over the forecast horizon.
+
+        Returns:
+            (float): The derived bias.
+
+        >>> from scalecast.util import metrics
+        >>> a = [1,2,3,4,5]
+        >>> f = [1,2,3,4,6]
+        >>> metrics.abias(a,f) # returns 1
+        """
+        return np.abs(np.sum(np.array(f) - np.array(a)))
+
+    @staticmethod
     def mape(a,f):
         """ Mean absolute percentage error (MAPE).
 

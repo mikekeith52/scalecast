@@ -198,12 +198,12 @@ class Pipeline_parent:
             fcst_length = len(f.future_dates) if fcst_length is None else fcst_length
             results.append([])
             for i in range(n_iter):
-                hold_out_len = ((i+1) * (fcst_length)) + (i * jump_back)
+                hold_out_len = fcst_length + i * jump_back
                 hold_out = f.y.values[-hold_out_len :][: fcst_length]
                 f1 = Forecaster(
                     y = f.y.values[: -hold_out_len],
                     current_dates = f.current_dates[: -hold_out_len],
-                    future_dates = len(f.future_dates) if fcst_length is None else fcst_length,
+                    future_dates = fcst_length,
                     test_length = f.test_length if test_length is None else test_length,
                     cis = f.cis if cis is None else cis,
                     cilevel = f.cilevel if cilevel is None else cilevel,

@@ -404,26 +404,9 @@ class Forecaster(Forecaster_parent):
                 Will automatically change to True if object was initiated with require_future_dates = False.
             **kwargs: Treated as model hyperparameters and passed to the applicable sklearn estimator.
         """
-        def fit_normalizer(X, normalizer):
-            _developer_utils.descriptive_assert(
-                normalizer in self.normalizer,
-                ValueError,
-                f"normalizer must be one of {list(self.normalizer.keys())}, got {normalizer}",
-            )
-            
-            if normalizer is None:
-                return None
-
-            scaler = self.normalizer[normalizer]()
-            scaler.fit(X)
-            return scaler
-
         def evaluate_model(scaler,regr,X,y,Xvars,fcst_horizon,future_xreg,dynamic_testing,true_forecast):
-            def scale(scaler,X):
-                return scaler.transform(X) if scaler is not None else X
-
             # apply the normalizer fit on training data only
-            X = scale(scaler, X)
+            X = self._scale(scaler, X)
             self.X = X # for feature importance setting
             regr.fit(X, y)
             # if not using any AR terms or not dynamically evaluating the forecast, use the below (faster but ends up being an average of one-step forecasts when AR terms are involved)
@@ -435,14 +418,14 @@ class Forecaster(Forecaster_parent):
                 )
             ):
                 p = pd.DataFrame(future_xreg).values[:fcst_horizon]
-                p = scale(scaler, p)
+                p = self._scale(scaler, p)
                 return (regr.predict(p),regr.predict(X),Xvars,regr)
             # otherwise, use a dynamic process to propagate out-of-sample AR terms with predictions (slower but more indicative of a true forecast performance)
             fcst = []
             actuals = {k:list(v)[:] for k, v in future_xreg.items() if k.startswith('AR')}
             for i in range(fcst_horizon):
                 p = pd.DataFrame({x: [future_xreg[x][i]] for x in Xvars}).values
-                p = scale(scaler, p)
+                p = self._scale(scaler, p)
                 fcst.append(regr.predict(p)[0])
                 if not i == (fcst_horizon - 1):
                     for k, v in future_xreg.items():
@@ -508,7 +491,7 @@ class Forecaster(Forecaster_parent):
                 else self.validation_length + self.test_length
             )
             X_train, X_test, y_train, y_test = self._split_data(X, y, test_length, tune)
-            self.scaler = fit_normalizer(X_train, normalizer)
+            self.scaler = self._fit_normalizer(X_train, normalizer)
             result = evaluate_model(
                 scaler=self.scaler,
                 regr=regr,
@@ -536,7 +519,7 @@ class Forecaster(Forecaster_parent):
         elif test_only:
             self._raise_test_only_error()
         else:
-            self.scaler = fit_normalizer(X, normalizer)
+            self.scaler = self._fit_normalizer(X, normalizer)
             self._metrics([],[])
         return evaluate_model(
             scaler=self.scaler,
@@ -1038,18 +1021,16 @@ class Forecaster(Forecaster_parent):
         **kwargs,
     ):
         """ Forecasts with a long-short term memory neural network from TensorFlow.
-        Cannot be tuned.
-        Only xvar options are the series' own history (specified in the `lags` argument).
+        Only regressor options are the series' own history (specified in the `lags` argument).
+        The rnn estimator can employ an LSTM and use exegenous regressors.
         Always uses a minmax scaler on the inputs and outputs. The resulting point forecasts are unscaled.
-        Anything this function can do, rnn can also do, 
-        but this function is simpler to set up than rnn.
         The model is saved in the tf_model attribute and a summary can be called by calling Forecaster.tf_model.summary().
         See the example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
             
         Args:
             dynamic_testing (bool): Default True.
                 Always True for lstm. The model uses a direct forecast.
-            lags (int): Must be greater than 0 (otherwise, what are your model inputs?). Default 1.
+            lags (int): Must be greater than 0. Default 1.
                 The number of lags to train the model with.
             lstm_layer_sizes (list-like): Default (8,).
                 The size of each lstm layer to add.
@@ -1124,7 +1105,8 @@ class Forecaster(Forecaster_parent):
     def _forecast_rnn(
         self,
         dynamic_testing=True,
-        lags=1,
+        Xvars=None,
+        lags=None,
         layers_struct=[("SimpleRNN", {"units": 8, "activation": "tanh"})],
         loss="mean_absolute_error",
         optimizer="Adam",
@@ -1133,21 +1115,23 @@ class Forecaster(Forecaster_parent):
         plot_loss_test=False,
         plot_loss=False,
         test_only=False,
+        scale_X = True,
+        scale_y = True,
         **kwargs,
     ):
         """ Forecasts with a recurrent neural network from TensorFlow, such as LSTM or simple recurrent.
         Not all features from tensorflow are available, but many of the most common ones for time series models are.
-        Cannot be tuned.
-        Only xvar options are the series' own history (specified in the lags argument).
-        Always uses a minmax scaler on the inputs and outputs. The resulting point forecasts are unscaled.
+        This function accepts lags and external regressors as inputs.
         The model is saved in the tf_model attribute and a summary can be called by calling Forecaster.tf_model.summary().
         see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html.
 
         Args:
             dynamic_testing (bool): Default True.
                 Always True for rnn. The model uses a direct forecast.
-            lags (int): Must be greater than 0 (otherwise, what are your model inputs?). Default 1.
-                The number of lags to train the model with.
+            Xvars (list-like): Default None. The Xvars to train the models with. 
+                By default, all regressors added to the Forecaster object will be used.
+            lags (int): Alternative to Xvars. If wanting to train with lags only, specify this argument. If specified,
+                Xvars is ignored.
             layers_struct (list[tuple[str,dict[str,Union[float,str]]]]): Default [('SimpleRNN',{'units':8,'activation':'tanh'})].
                 Each element in the list is a tuple with two elements.
                 First element of the list is the input layer (input_shape set automatically).
@@ -1187,15 +1171,26 @@ class Forecaster(Forecaster_parent):
                 When True, any plot or export of forecasts into a future horizon will fail 
                 and not all methods will raise descriptive errors.
                 Will automatically change to True if object was initiated with require_future_dates = False.
+            scale_X (bool): Default True.
+                Whether to scale the exogenous inputs with a minmax scaler.
+            scale_y (bool): Default True.
+                Whether to scale the endogenous inputs (lags), as well as the model output, with a minmax scaler.
+                The results will automatically return unscaled.
             **kwargs: Passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
         """
-
+        def plot_loss_rnn(history, title):
+            plt.plot(history.history["loss"], label="train_loss")
+            if "val_loss" in history.history.keys():
+                plt.plot(history.history["val_loss"], label="val_loss")
+            plt.title(title)
+            plt.xlabel("epoch")
+            plt.legend(loc="upper right")
+            plt.show()
+        
         def get_compiled_model(y):
-            # build model
             from tensorflow.keras.models import Sequential
             from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
             import tensorflow.keras.optimizers
-
             if isinstance(optimizer, str):
                 local_optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")(
                     learning_rate=learning_rate
@@ -1209,7 +1204,7 @@ class Forecaster(Forecaster_parent):
                     if kv[0] in ("LSTM", "SimpleRNN"):
                         kv[1]["return_sequences"] = len(layers_struct) > 1
                     model = Sequential(
-                        [layer(**kv[1], input_shape=(n_timesteps, n_features),)]
+                        [layer(**kv[1], input_shape=(n_timesteps, 1),)]
                     )
                 else:
                     if kv[0] in ("LSTM", "SimpleRNN"):
@@ -1226,51 +1221,93 @@ class Forecaster(Forecaster_parent):
             model.compile(optimizer=local_optimizer, loss=loss)
             return model
 
-        def prepare_rnn(yvals, lags, forecast_length):
-            """ prepares and scales the data for rnn models.
+        def process_y(
+            y,
+            lags,
+            test_length,
+            total_period,
+        ):
+            if test_length > 0:
+                y_train = y[:-test_length]
+                y_test = y[-test_length:]
+            else:
+                y_train, y_test = y, None
 
-            Args:
-                yvals (ndarray): dependent variable values to prepare
-                lags (int): the number of lags to use as predictors and to make the X matrix with
-                forecast_length (int): the amount of time to forecast out
+            ymin = y_train.min()
+            ymax = y_train.max()
 
-            Returns:
-                (ndarray,ndarray): The new X matrix and y array.
-            """
-            ylist = [(y - yvals.min()) / (yvals.max() - yvals.min()) for y in yvals]
+            if scale_y:
+                ylist = [(yi - ymin) / (ymax - ymin) for yi in y]
+            else:
+                ylist = [yi for yi in y]
 
-            n_future = forecast_length
-            n_past = lags
-            total_period = n_future + n_past
-
-            idx_end = len(ylist)
+            idx_end = len(y)
             idx_start = idx_end - total_period
-
-            X_new = []
             y_new = []
 
             while idx_start > 0:
-                x_line = ylist[idx_start : idx_start + n_past]
-                y_line = ylist[idx_start + n_past : idx_start + total_period]
-
-                X_new.append(x_line)
+                y_line = ylist[idx_start + lags : idx_start + total_period]
                 y_new.append(y_line)
+                idx_start -= 1
 
-                idx_start = idx_start - 1
+            return (
+                np.array(y_new[::-1]),     # train or full set if test_length is 0
+                y_test,                    # test (unscaled)
+                ymin,                      # for scaling lags
+                ymax,
+            )
 
-            X_new = np.array(X_new)
-            y_new = np.array(y_new)
+        def process_X(
+            Xvars,
+            lags,
+            test_length,
+            forecast_length,
+            ymin,
+            ymax,
+        ):
+            def minmax_scale(x):
+                return (x - ymin) / (ymax - ymin)
 
-            return X_new, y_new
+            X_lags = np.array([
+                v.to_list() + self.future_xreg[k][:1] 
+                for k,v in self.current_xreg.items() 
+                if k in Xvars and k.startswith('AR')
+            ]).T
+            X_other = np.array([
+                v.to_list() + self.future_xreg[k][:1] 
+                for k,v in self.current_xreg.items() 
+                if k in Xvars and not k.startswith('AR')
+            ]).T
 
-        def plot_loss_rnn(history, title):
-            plt.plot(history.history["loss"], label="train_loss")
-            if "val_loss" in history.history.keys():
-                plt.plot(history.history["val_loss"], label="val_loss")
-            plt.title(title)
-            plt.xlabel("epoch")
-            plt.legend(loc="upper right")
-            plt.show()
+            X_lags_new = X_lags[lags:]
+            X_other_new = X_other[lags:]
+            
+            # scale lags
+            if len(X_lags_new) > 0 and scale_y:
+                X_lags_new = np.vectorize(minmax_scale)(X_lags_new)
+            # scale other regressors
+            if len(X_other_new) > 0 and scale_X:
+                X_other_train = X_other_new[:-(1 + test_length)]
+                scaler = self._fit_normalizer(X_other_train,'minmax')
+                X_other_new = self._scale(scaler,X_other_new)
+                
+            # combine
+            if len(X_lags_new) > 0 and len(X_other_new) > 0:
+                X = np.concatenate([X_lags_new,X_other_new],axis=1)
+            elif len(X_lags_new) > 0:
+                X = X_lags_new
+            else:
+                X = X_other_new
+            
+            if test_length > 0:
+                X_train = X[:-test_length]
+            else:
+                X_train = X
+
+            X_test = X_train[-1:]
+            X_train = X_train[:-1]
+
+            return X_train, X_test
 
         _developer_utils.descriptive_assert(
             len(layers_struct) >= 1,
@@ -1282,56 +1319,57 @@ class Forecaster(Forecaster_parent):
             does_not_use_lags=False,
             uses_direct=True,
         )
-
         if random_seed is not None:
-            random.seed(random_seed)
-
-        n_features = 1
+            np.random.seed(random_seed)
+        if lags is None:
+            Xvars = list(self.current_xreg.keys()) if Xvars is None else Xvars
+            lags = len([x for x in Xvars if x.startswith('AR')])
+            if len(Xvars) == 0:
+                raise ForecastError(f"Need at least 1 Xvar to forecast with the {self.estimator} model.")
+        else:
+            self.add_ar_terms(lags)
+            Xvars = [k for k in self.current_xreg if k.startswith('AR') and int(k[2:]) <= lags]
 
         if self.test_length > 0:
-            y_train = self.y.values[: -self.test_length].copy()
-            y_test = self.y.values[-self.test_length :].copy()
-
-            ymin = y_train.min()
-            ymax = y_train.max()
-
-            X_train, y_train_new = prepare_rnn(y_train, lags, self.test_length)
-
-            X_test = np.array(
-                [
-                    [
-                        (i - ymin) / (ymax - ymin)
-                        for i in self.y.values[
-                            -(lags + self.test_length) : -self.test_length
-                        ].copy()
-                    ]
-                ]
+            total_period = lags + self.test_length
+            y_train, y_test, ymin, ymax = process_y(
+                y = self.y.values.copy(),
+                lags = lags,
+                test_length = self.test_length,
+                total_period = total_period, 
             )
-            y_test_new = np.array(
-                [
-                    [
-                        (i - ymin) / (ymax - ymin)
-                        for i in self.y.values[-self.test_length :].copy()
-                    ]
-                ]
+            y_train = y_train[:-1] # last ob is test set
+            X_train, X_test = process_X(
+                Xvars = Xvars,
+                lags = lags,
+                test_length = self.test_length,
+                forecast_length = len(self.future_dates),
+                ymin = ymin,
+                ymax = ymax,
             )
+            X_train = X_train[1:] # take one off at the front to line up most recent lag correctly
+            #print('last X train:',X_train[-1])
+            #print('last y train:',y_train[-1])
+            #print('X test:',X_test[-1])
+            #print('y test:',y_test)
             n_timesteps = X_train.shape[1]
-
             X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
             X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
-            test_model = get_compiled_model(y_train_new)
-            hist = test_model.fit(X_train, y_train_new, **kwargs)
+            test_model = get_compiled_model(y_train)
+            hist = test_model.fit(X_train, y_train, **kwargs)
             pred = test_model.predict(X_test)
-            pred = [p * (ymax - ymin) + ymin for p in pred[0]]  # un-minmax
+            pred = [p for p in pred[0]]
+            if scale_y: # unscale minmax
+                pred = [p * (ymax - ymin) + ymin for p in pred]
             self._metrics(y_test, pred)
             if plot_loss_test:
                 plot_loss_rnn(hist, "model loss - test")
             if test_only:
-                fvs = test_model.predict(X_train)
-                fvs = [p[0] * (ymax - ymin) + ymin for p in fvs[1:][::-1]] + [
-                    p * (ymax - ymin) + ymin for p in fvs[0]
-                ]
                 self.tf_model = test_model
+                fvs = test_model.predict(X_train)
+                fvs =  [p[0] for p in fvs[:-1]] + [p for p in fvs[-1]]
+                if scale_y:
+                    fvs = [p * (ymax - ymin) + ymin for p in fvs]
                 return (
                     pred, 
                     fvs + [np.nan] * self.test_length, 
@@ -1342,29 +1380,42 @@ class Forecaster(Forecaster_parent):
             self._raise_test_only_error()
         else:
             self._metrics([],[])
-        X, y_new = prepare_rnn(self.y.values.copy(), lags, len(self.future_dates))
-        fut = np.array(
-            [
-                [
-                    (i - self.y.min()) / (self.y.max() - self.y.min())
-                    for i in self.y.values[-lags:].copy()
-                ]
-            ]
+        
+        forecast_length = len(self.future_dates)
+        total_period = lags + forecast_length
+        y, _, ymin, ymax = process_y(
+            y = self.y.values.copy(),
+            lags = lags,
+            test_length = 0,
+            total_period = total_period, 
         )
+        X, fut = process_X(
+            Xvars = Xvars,
+            lags = lags,
+            test_length = 0,
+            forecast_length = forecast_length,
+            ymin = ymin,
+            ymax = ymax,
+        )
+        X = X[1:-(forecast_length-1)]
+        #print('last X train:',X[-1])
+        #print('last y train:',y[-1])
+        #print('fut:',fut[-1])
         n_timesteps = X.shape[1]
         X = X.reshape(X.shape[0], X.shape[1], 1)
         fut = fut.reshape(fut.shape[0], fut.shape[1], 1)
-        model = get_compiled_model(y_new)
-        hist = model.fit(X, y_new, **kwargs)
-        if plot_loss:
-            plot_loss_rnn(hist, "model loss - full")
+        model = get_compiled_model(y)
+        hist = model.fit(X, y, **kwargs)
         fcst = model.predict(fut)
         fvs = model.predict(X)
-        fvs = [
-            p[0] * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[1:][::-1]
-        ] + [p * (self.y.max() - self.y.min()) + self.y.min() for p in fvs[0]]
-        fcst = [p * (self.y.max() - self.y.min()) + self.y.min() for p in fcst[0]]
+        fvs =  [p[0] for p in fvs[:-1]] + [p for p in fvs[-1]]
+        fcst = [p for p in fcst[0]]
+        if scale_y:
+            fvs = [p * (ymax - ymin) + ymin for p in fvs]
+            fcst = [p * (ymax - ymin) + ymin for p in fcst]
         self.tf_model = model
+        if plot_loss:
+            plot_loss_rnn(hist, "model loss - full")
         return (fcst, fvs, None, None)
 
     @_developer_utils.log_warnings

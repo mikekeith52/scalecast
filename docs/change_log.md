@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.16] - 2023-03-29
+### Added
+- Added `metrics.abias()` function.
+### Changed
+- Revamped the RNN model. Now accepts exogenous regressors and other small changes that I believe will make it more accurate, as well as allow for more customization.
+### Fixed
+- Fixed the `Pipeline.backtest()` function which was adding too much space between consecutive training sets.
+- Fixed the train_only argument in `SeriesTransformer.DetrendTransform()` when `loess = True`.
+
 ## [0.17.15] - 2023-03-27
 ### Added
 - Added a LOESS detrender (from statsmodels) to the `SeriesTransformer` object. Called using `SeriesTransformer.DetrendTransform()`.
