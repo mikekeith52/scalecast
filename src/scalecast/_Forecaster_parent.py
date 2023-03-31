@@ -33,7 +33,7 @@ class Forecaster_parent:
         metrics,
         **kwargs,
     ):
-        logging.basicConfig(filename="warnings.log", level=logging.WARNING)
+        self._logging()
         self.y = y
         self.sklearn_imports = __sklearn_imports__
         self.sklearn_estimators = __sklearn_estimators__
@@ -67,6 +67,14 @@ class Forecaster_parent:
         obj.__dict__ = copy.deepcopy(self.__dict__)
         return obj
 
+    def __getstate__(self):
+        self._logging()
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def _check_right_test_length_for_cis(self,cilevel):
         min_test_length = np.ceil(1/(1-cilevel))
         if self.test_length < min_test_length:
@@ -80,6 +88,9 @@ class Forecaster_parent:
                     self.test_length,
                 )
             )
+
+    def _logging(self):
+        logging.basicConfig(filename="warnings.log", level=logging.WARNING)
 
     def _clear_the_deck(self):
         """ deletes the following attributes to prepare a new forecast:

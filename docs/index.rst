@@ -15,7 +15,7 @@ Scalecast Official Docs
 .. image:: https://media2.giphy.com/media/vV2Mbr9v6pH1D8hiLb/giphy.gif?cid=790b7611eb56b43191020435cbedf6453a74ddc2cebd017d&rid=giphy.gif&ct=g
  :target: https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html#Scaled-Automated-Forecasting
 
-Forecasting with Python has never been easier.
+Forecasting in Python with minimal code.
 
 .. code:: python
    
@@ -23,17 +23,18 @@ Forecasting with Python has never been easier.
    from scalecast.Forecaster import Forecaster
    from scalecast import GridGenerator
 
-   GridGenerator.get_example_grids()
+   GridGenerator.get_example_grids() # example hyperparameter grids
 
    data = pd.read_csv('data.csv')
    f = Forecaster(
-      y = data['values'],
-      current_dates = data['date'],
-      future_dates = 24, # forecast horizon
+      y = data['values'], # required
+      current_dates = data['date'], # required
+      future_dates = 24, # length of the forecast horizon
       test_length = 0, # set a test set length or fraction to validate all models if desired
       cis = False, # choose whether or not to evaluate confidence intervals for all models
+      metrics = ['rmse','mae','mape','r2'], # the metrics to evaluate when testing/tuning models
    )
-   f.set_estimator('xgboost')
+   f.set_estimator('xgboost') # select an estimator
 
    f.auto_Xvar_select() # find best look-back, trend, and seasonality for your series
    f.cross_validate(k=3) # tune model hyperparams using time series cross validation
