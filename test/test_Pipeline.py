@@ -21,6 +21,10 @@ def test_pipeline():
         f,
         estimator='elasticnet',
         alpha = .2,
+        num_test_sets = 2,
+        space_between_sets = 24,
+        train_length = 500,
+        test_length = 24,
     )
     print(reverter)
     pipeline = Pipeline(

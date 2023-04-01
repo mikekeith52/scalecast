@@ -735,14 +735,17 @@ def find_statistical_transformation(
 @_developer_utils.log_warnings
 def find_optimal_transformation(
     f,
-    estimator='mlr',
-    monitor=None,
+    estimator=None,
+    monitor='rmse',
+    test_length=None,
+    train_length=None,
+    num_test_sets=1,
+    space_between_sets = 1,
     lags='auto',
     try_order = ['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale'],
     boxcox_lambdas = [-0.5,0,0.5],
     detrend_kwargs = [{'loess':True},{'poly_order':1},{'poly_order':2}],
     scale_type = ['Scale','MinMax'],
-    scale_on_train_only = False,
     m='auto',
     model = 'add',
     **kwargs,
@@ -750,17 +753,25 @@ def find_optimal_transformation(
     """ Finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
     Works by comparing each transformation individually and stacking the set of transformations that leads to the best
     performance. The estimator only uses series lags as inputs. When an attempted transformation fails, a warning is logged.
+    The function uses Pipeline.backtest() to guarantee the selected set of transformations is truly tested out-of-sample.
 
     Args:
         f (Forecaster): The Forecaster object that contains the series that will be transformed.
-        estimator (str): One of _estimators_. Default 'mlr'. The estimator to use to choose the best 
-            transformations with.
-        monitor (str): One of Forecaster.determine_best_by except 'ValidationMetricValue'. 
-            Default is 'TestSet' + first metric in Forecaster.metrics 
-            ('TestSetRMSE' is the default if no metric info has been manually specified).
-            Because 'ValidationMetricValue' changes in scale based on the transformation taken, 
-            the metrics to monitor are limited to in-sample and test-set metrics.
-            'TestSetRMSE' and 'LevelTestSetRMSE' are the same in this function, same with all level and non-level counterparts.
+        estimator (str): One of _estimators_. The estimator to use to choose the best 
+            transformations with. The default will read whatever is set to f.estimator.
+        monitor (str or callable): Default 'rmse'. The error metric to minimize.
+            If str, must exist in `util.metrics` 
+            and accept only two arguments. If callable, must accept only two arguments 
+            (an array of actuals and an array of forecasts) and return a float.
+            If 'r2' is passed, this will monitor a negative r2 value.
+        test_length (int): The amount of observations to hold out-of-sample. By default
+            reads the number of dates in f.future_dates.
+        train_length (int): The number of observations to train the model in each iteration.
+            By default, uses all available observations that come before each test set.
+        num_test_sets (int): Default 1. The number of test sets to iterate through. The final metric will be 
+            an average across all test sets.
+        space_between_sets (int): Default 1. The space between consecutive training sets.
+            Not applicable when num_test_sets is 1.
         lags (str or int): Default 'auto'. The number of lags that will be used as inputs for the estimator.
             If 'auto', uses the value passed or assigned to m (one seasonal cycle). 
             If multiple values passed to m, uses the first.
@@ -773,12 +784,12 @@ def find_optimal_transformation(
         boxcox_lambdas (list-like): Default [-0.5,0,0.5].
             The lambda values to try for a boxcox transformation.
             0 means natural log. Only up to one boxcox transformation will be selected.
-        detrend_kwargs (list-like[dict]): Default [{'poly_order':1},{'poly_order':2}].
+        detrend_kwargs (list-like[dict]): Default 
+            [{'loess':True},{'poly_order':1},{'poly_order':2}].
             The types of detrending to try. Only up to one one detrender will be selected.
         scale_type (list-like): Default ['Scale','MinMax']. The type of scaling to try.
             Only up to one scaler will be selected.
             Must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
-        scale_on_train_only (bool): Default False. Whether to fit the scaler on the training set only.
         m (str, int, list[int]): Default 'auto'. The number of observations that counts one seasonal step.
             When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
@@ -843,26 +854,35 @@ def find_optimal_transformation(
                 ('Revert',re)
             ],
         )
-        return pipeline.fit_predict(f)
+        res = pipeline.backtest(
+            f,
+            n_iter = num_test_sets, 
+            jump_back = space_between_sets,
+            fcst_length = test_length,
+            series_length = train_length,
+        )
+        mets = backtest_metrics(res,mets=[monitor])
+        #print(re)
+        #print(mets)
+        return mets.iloc[0,-1]
 
-    if f.test_length == 0:
-        raise ForecastError(
-            'find_optimal_transformation() only works if a test length' 
-            ' above 0 is specified in the Forecaster object.'
-            ' Try calling the set_test_length(...) method.'
+    test_length = len(f.future_dates) if test_length is None else int(test_length)
+    if test_length<=0:
+        raise ValueError(
+            'The argument test_length must be above 0 and is the number of future dates in the Forecaster object by default.'
+            f' The value received is {test_length}.'
         )
 
     f = f.deepcopy()
+    f.set_metrics([monitor])
     f.drop_all_Xvars()
     f.history = {}
 
     m = _developer_utils._convert_m(m,f.freq)
     lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[1] if lags == 'auto' else lags
-    forecaster(f)
-    
-    monitor = 'TestSet' + list(f.metrics.keys())[0].upper() if monitor is None else monitor
-    level_met = f.export('model_summaries')[monitor].values[0]
-    level_met = -level_met if monitor.endswith('R2') else level_met
+
+    level_met = make_pipeline_fit_predict(f,[],[])
+    level_met = -level_met if monitor == 'r2' else level_met
 
     final_transformer = []
     final_reverter = []
@@ -885,9 +905,8 @@ def find_optimal_transformation(
                 try:
                     transformer.append(('Transform',boxcox_tr,{'lmbda':lmbda}))
                     reverter.reverse(); reverter.append(('Revert',boxcox_re,{'lmbda':lmbda})); reverter.reverse()
-                    f = make_pipeline_fit_predict(f,transformer,reverter)
-                    comp_met = f.export('model_summaries')[monitor].values[0]
-                    comp_met = -comp_met if monitor.endswith('R2') else comp_met
+                    comp_met = make_pipeline_fit_predict(f,transformer,reverter)
+                    comp_met = -comp_met if monitor == 'r2' else comp_met
                     if comp_met < met:
                         met = comp_met
                         best_transformer = transformer[:]
@@ -908,9 +927,8 @@ def find_optimal_transformation(
                 try:
                     transformer.append(('DetrendTransform',kw))
                     reverter.reverse(); reverter.append(('DetrendRevert',)); reverter.reverse()
-                    f = make_pipeline_fit_predict(f,transformer,reverter)
-                    comp_met = f.export('model_summaries')[monitor].values[0]
-                    comp_met = -comp_met if monitor.endswith('R2') else comp_met
+                    comp_met = make_pipeline_fit_predict(f,transformer,reverter)
+                    comp_met = -comp_met if monitor == 'r2' else comp_met
                     if comp_met < met:
                         met = comp_met
                         best_transformer = transformer[:]
@@ -929,9 +947,7 @@ def find_optimal_transformation(
             try:
                 transformer.append(('DiffTransform',1))
                 reverter.reverse(); reverter.append(('DiffRevert',1)); reverter.reverse()
-                f = make_pipeline_fit_predict(f,transformer,reverter)
-                comp_met = f.export('model_summaries')[monitor].values[0]
-                comp_met = -comp_met if monitor.endswith('R2') else comp_met
+                comp_met = -comp_met if monitor == 'r2' else comp_met
                 if comp_met < met:
                     met = comp_met
                     best_transformer = transformer[:]
@@ -962,9 +978,8 @@ def find_optimal_transformation(
                             else [('DeseasonRevert',)]
                         )
                         reverter.reverse()
-                        f = make_pipeline_fit_predict(f,transformer,reverter)
-                        comp_met = f.export('model_summaries')[monitor].values[0]
-                        comp_met = -comp_met if monitor.endswith('R2') else comp_met
+                        comp_met = make_pipeline_fit_predict(f,transformer,reverter)
+                        comp_met = -comp_met if monitor == 'r2' else comp_met
                         if comp_met < met:
                             met = comp_met
                             best_transformer = transformer[:]
@@ -985,11 +1000,10 @@ def find_optimal_transformation(
                     best_transformer = transformer[:]
                     best_reverter = reverter[:]
                 try:
-                    transformer.append((f'{s}Transform',{'train_only':scale_on_train_only}))
+                    transformer.append((f'{s}Transform',))
                     reverter.reverse(); reverter.append((f'{s}Revert',)); reverter.reverse()
-                    f = make_pipeline_fit_predict(f,transformer,reverter)
-                    comp_met = f.export('model_summaries')[monitor].values[0]
-                    comp_met = -comp_met if monitor.endswith('R2') else comp_met
+                    comp_met = make_pipeline_fit_predict(f,transformer,reverter)
+                    comp_met = -comp_met if monitor == 'r2' else comp_met
                     if comp_met < met:
                         met = comp_met
                         best_transformer = transformer[:]

@@ -166,7 +166,7 @@ class SeriesTransformer:
                 for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
                 so pass your own values for other frequencies.
             fit_intercept (bool): Default True. Whether to fit an intercept in the model.
-            train_only (bool): Default False. Whether to fit the OLS model on the training set only.
+            train_only (bool): Default False. Whether to fit the LOESS or OLS model on the training set only.
 
         Returns:
             (Forecaster): A Forecaster object with the transformed attributes.
