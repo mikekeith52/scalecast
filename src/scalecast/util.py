@@ -753,11 +753,11 @@ def find_optimal_transformation(
     """ Finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
     Works by comparing each transformation individually and stacking the set of transformations that leads to the best
     performance. The estimator only uses series lags as inputs. When an attempted transformation fails, a warning is logged.
-    The function uses Pipeline.backtest() to guarantee the selected set of transformations is truly tested out-of-sample.
+    The function uses `Pipeline.backtest()` to assure that the selected set of transformations is truly tested out-of-sample.
 
     Args:
         f (Forecaster): The Forecaster object that contains the series that will be transformed.
-        estimator (str): One of _estimators_. The estimator to use to choose the best 
+        estimator (str): One of `Forecaster.estimators`. The estimator to use to choose the best 
             transformations with. The default will read whatever is set to f.estimator.
         monitor (str or callable): Default 'rmse'. The error metric to minimize.
             If str, must exist in `util.metrics` 
@@ -866,6 +866,9 @@ def find_optimal_transformation(
         #print(mets)
         return mets.iloc[0,-1]
 
+    def neg_r2(metric):
+        return -metric if monitor == 'r2' else metric
+
     estimator = f.estimator if estimator is None else estimator
     test_length = len(f.future_dates) if test_length is None else int(test_length)
     if test_length<=0:
@@ -882,8 +885,7 @@ def find_optimal_transformation(
     m = _developer_utils._convert_m(m,f.freq)
     lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[1] if lags == 'auto' else lags
 
-    level_met = make_pipeline_fit_predict(f,[],[])
-    level_met = -level_met if monitor == 'r2' else level_met
+    level_met = neg_r2(make_pipeline_fit_predict(f,[],[]))
 
     final_transformer = []
     final_reverter = []
@@ -906,8 +908,7 @@ def find_optimal_transformation(
                 try:
                     transformer.append(('Transform',boxcox_tr,{'lmbda':lmbda}))
                     reverter.reverse(); reverter.append(('Revert',boxcox_re,{'lmbda':lmbda})); reverter.reverse()
-                    comp_met = make_pipeline_fit_predict(f,transformer,reverter)
-                    comp_met = -comp_met if monitor == 'r2' else comp_met
+                    comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
                     if comp_met < met:
                         met = comp_met
                         best_transformer = transformer[:]
@@ -928,8 +929,7 @@ def find_optimal_transformation(
                 try:
                     transformer.append(('DetrendTransform',kw))
                     reverter.reverse(); reverter.append(('DetrendRevert',)); reverter.reverse()
-                    comp_met = make_pipeline_fit_predict(f,transformer,reverter)
-                    comp_met = -comp_met if monitor == 'r2' else comp_met
+                    comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
                     if comp_met < met:
                         met = comp_met
                         best_transformer = transformer[:]
@@ -979,8 +979,7 @@ def find_optimal_transformation(
                             else [('DeseasonRevert',)]
                         )
                         reverter.reverse()
-                        comp_met = make_pipeline_fit_predict(f,transformer,reverter)
-                        comp_met = -comp_met if monitor == 'r2' else comp_met
+                        comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
                         if comp_met < met:
                             met = comp_met
                             best_transformer = transformer[:]
@@ -1003,8 +1002,7 @@ def find_optimal_transformation(
                 try:
                     transformer.append((f'{s}Transform',))
                     reverter.reverse(); reverter.append((f'{s}Revert',)); reverter.reverse()
-                    comp_met = make_pipeline_fit_predict(f,transformer,reverter)
-                    comp_met = -comp_met if monitor == 'r2' else comp_met
+                    comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
                     if comp_met < met:
                         met = comp_met
                         best_transformer = transformer[:]
