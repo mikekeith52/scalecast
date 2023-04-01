@@ -32,7 +32,6 @@ docs/Forecaster/Pipeline.rst
 docs/Forecaster/SeriesTransformer.rst
 docs/Forecaster/Util.rst
 docs/Forecaster/_forecast.rst
-docs/Forecaster/.ipynb_checkpoints/ForecasterGlobals-checkpoint.ipynb
 docs/_static/RecurisveForecasting.png
 docs/_static/RecurisveForecastingdt2.png
 docs/_static/logo2.png

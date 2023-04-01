@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.17.17]
+## [0.17.17] - 2023-03-31
 ### Added
 - `Forecaster`/`MVForecaster` objects pickled in now re-initiate warning logging for estimated models.
 ### Changed
