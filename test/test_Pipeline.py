@@ -19,8 +19,8 @@ def test_pipeline():
     f = build_Forecaster(cis=True)
     transformer, reverter = find_optimal_transformation(
         f,
-        estimator='elasticnet',
-        alpha = .2,
+        #estimator='elasticnet',
+        #alpha = .2,
         num_test_sets = 2,
         space_between_sets = 24,
         train_length = 500,

@@ -866,6 +866,7 @@ def find_optimal_transformation(
         #print(mets)
         return mets.iloc[0,-1]
 
+    estimator = f.estimator if estimator is None else estimator
     test_length = len(f.future_dates) if test_length is None else int(test_length)
     if test_length<=0:
         raise ValueError(
