@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.17.20] - 2023-04-02
+### Added
+### Changed
+### Fixed
+- Fixed the `MVPipeline.backtest()` method to return consistent results when a transformation is not taken on the `Forecaster` objects.
+
 ## [0.17.19] - 2023-04-01
 ### Added
 ### Changed

@@ -1,4 +1,6 @@
 from .Forecaster import Forecaster
+from .MVForecaster import MVForecaster
+from .util import break_mv_forecaster
 from .SeriesTransformer import SeriesTransformer
 import numpy as np
 import pandas as pd
@@ -303,7 +305,9 @@ class Pipeline_parent:
                     )
         for i, _ in enumerate(_prepare_backtest_results[0]):
             fs = self.fit_predict(*[ft[i][0] for ft in _prepare_backtest_results],**kwargs)
-            if not isinstance(fs,tuple):
+            if isinstance(fs,MVForecaster):
+                fs = break_mv_forecaster(fs)
+            elif not isinstance(fs,tuple):
                 fs = (fs,)
             for k, f in enumerate(fs):
                 for m,v in f.history.items():
@@ -519,8 +523,6 @@ class MVPipeline(Pipeline_parent):
         >>> )
         >>> f1, f2, f3 = pipeline.fit_predict(f1,f2,f3)
         """
-        from .MVForecaster import MVForecaster
-        from .util import break_mv_forecaster
         from .multiseries import keep_smallest_first_date
 
         if 'not_same_len_action' not in kwargs:
