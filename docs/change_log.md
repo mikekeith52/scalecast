@@ -1,6 +1,37 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.0] - 2023-04-13
+### Added
+- Added tbats model.
+- `MVForecaster` can now have Xvars added to it.
+- Added `multiseries.line_up_dates()` function.
+- New argument `test_again` added to `Forecaster.manual_forecast()` and `MVForecaster.manual_forecast()`. `auto_forecaster()` in the same objects has the same new argument.
+- `model` argument added to `Forecaster.save_feature_importance()` and doesn't have to be called right after a model is evaluated.
+- Added `verbose` args to `cross_validate()` and `util.find_optimal_transformation()` functions to offer more transparency around these processes.
+- Added `min_grid_size` argument to `Forecaster.limit_grid_size()` and `tune_test_forecast()`.
+### Changed
+- Distinction between level/non-level is no longer tracked within `Forecaster` and `MVForecaster` objects and all methods that facilitated with that have gone away (`diff()`, `integrate()`, etc). Use `SeriesTransformer` to gain the same plus more functionality.
+- Cross validation and tuning faster due to using more efficient objects.
+- Cross validation has more customization available.
+- RNNs and naive models can be optimized using grid search.
+- All forecasting functions rewritten to be more efficient by using more efficient objects and fewer loops.
+- Added `Forecaster.chop_from_front()` and `Forecaster.chop_from_back()` methods.
+- Less information stored in history.
+- Can only refer to series with default or user-selected names within `MVForecaster`.
+- The structure of `MVForecaster` has changed. `mvf.y` is a dictionary with series in it instead of being located in `mvf.series1['y']`. The old way was to keep better track of level/nonlevel series but that no longer exists.
+- test_only arg is gone in `Forecaster.manual_forecast()` in favor of `Forecaster.test()`, `MVForecaster.test()`. All out-of-sample methods facilited with `chop_from_front()` to split data and ensure no data leaks.
+- `MVForecaster.add_optimizer_func()` now accepts functions.
+- `MVForecaster.manual_forecast()` now accepts `Xvars` as an argument.
+- `normalizer` argument considered a hyperparameter where applicable and not given its own entry in history.
+- Got rid of several `Forecaster` methods that are never demonstrated in examples.
+- Got rid of `Forecaster.backtest()` and `MVForecaster.backtest()`. `Pipeline.backtest()` is a better alternative.
+### Fixed
+- The first element in m is taken if multiple are passed to `util.find_optimal_transformation()`. The code was taking the second.
+- Fixed the diffy arg in `Forecaaster.adf_test()`.
+- `cvkwargs` were not being passed to the `cross_validate()` function in `notebook.tune_test_forecast()`.
+- `util.find_optimal_transformation()` was only using first value of `m` for seasonal adjustments when multiple were passed.
+
 ## [0.17.20] - 2023-04-02
 ### Added
 ### Changed
@@ -23,9 +54,9 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 ### Added
 - Added `util.metrics.abias()` function.
 ### Changed
-- Revamped the RNN model. Now accepts exogenous regressors and other small changes that I believe will make it more accurate, as well as allow for more customization.
+- Revamped the RNN model. Now accepts exogenous regressors and other small changes that I believe will make it faster and more accurate, as well as allow for more customization.
 ### Fixed
-- Fixed the `Pipeline.backtest()` function which was adding too much space between consecutive training sets.
+- Fixed the `Pipeline.backtest()` function, which was adding too much space between consecutive training sets.
 - Fixed the train_only argument in `SeriesTransformer.DetrendTransform()` when `loess = True`.
 
 ## [0.17.15] - 2023-03-27

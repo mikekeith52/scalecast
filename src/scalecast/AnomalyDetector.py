@@ -106,7 +106,6 @@ class AnomalyDetector:
         >>> detector.EstimatorDetect(
         >>>    estimator='lstm',
         >>>    cilevel=.99,
-        >>>    test_only=True,
         >>>    lags=24,
         >>>    epochs=25,
         >>>    validation_split=.2,

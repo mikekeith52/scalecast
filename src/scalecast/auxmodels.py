@@ -68,6 +68,8 @@ class vecm:
             dates=self.dates[:X.shape[0]],
             freq = self.freq,
         ).fit()
+
+        self.fittedvalues = self.mod.fittedvalues
         
     def predict(self,X):
         """ Forecasts into an unknown horizon.
@@ -76,19 +78,8 @@ class vecm:
             X (ndarray): The future sereis values and future exognenous regressors.
                 MVForecaster will split this up appropriately without leaking.
         """
-        # testing
-        if X.shape[1] == self.Xdim + self.exogdim:
-            exog = X[:,self.n_series:]
-            exog = None if exog.shape[1] == 0 else exog
-        # true forecast
-        elif X.shape[1] == self.exogdim:
-            exog = None if X.shape[1] == 0 else X
-        else: # i don't see how this would ever happen but i'd like to know if it does
-            raise Exception(
-                'something went wrong. ' 
-                'please consider raising this issue on the scalecast issues tab: '
-                'https://github.com/mikekeith52/scalecast/issues'
-            )
+        # fvs
+        exog = X[:,self.n_series:] if X.shape[1] > self.n_series else None
         return self.mod.predict(steps=X.shape[0],exog_fc=exog)
 
 def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=False,**kwargs):
@@ -138,20 +129,17 @@ def mlp_stack(
     n_estimators=10,
     hidden_layer_sizes=(100,100,100),
     solver='lbfgs',
+    passthrough=False,
     call_me='mlp_stack',
     **kwargs,
 ):
     """ Applies a stacking model using a bagged MLP regressor as the final estimator and adds it to a `Forecaster` or `MVForecaster` object.
     See what it does: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html#StackingRegressor.
-    This function is not meant to be a model that allows for full customization but full customization is possible when using the 
-    `Forecaster` and `MVForecaster` objects.
-    Default values usually perform pretty well.
     Recommended to use at least four models in the stack.
 
     Args:
         f (Forecaster or MVForecaster): The object to add the model to.
         model_nicknames (list-like): The names of models previously evaluated within the object.
-            Must be sklearn api models.
         max_samples (float or int): Default 0.9.
             The number of samples to draw with replacement from training set to train each base estimator.
             If int, then draw max_samples samples.
@@ -169,22 +157,11 @@ def mlp_stack(
         call_me (str): Default 'mlp_stack'. The name of the resulting model.
         **kwargs: Passed to the `manual_forecast()` or `proba_forecast()` method.
 
-    Returns:
-        None
-
-    >>> from scalecast.util import pdr_load
     >>> from scalecast.auxmodels import mlp_stack
     >>> from scalecast import GridGenerator
-
     >>> GridGenerator.get_example_grids()
     >>> models = ('xgboost','lightgbm','knn','elasticnet')
-    >>> f = pdr_load('HOUSTNSA',start='1900-01-01',end='2021-06-01',future_dates=24)
-    >>> f.set_test_length(24)
-    >>> f.add_ar_terms(1)
-    >>> f.add_AR_terms((1,6))
-    >>> f.add_AR_terms((1,12))
-    >>> f.add_seasonal_regressors('month',raw=False,sincos=True)
-    >>> f.diff()
+    >>> f.auto_Xvar_select()
     >>> f.tune_test_forecast(models,cross_validate=True)
     >>> mlp_stack(f,model_nicknames=models) # saves a model called mlp_stack
     >>> f.export('model_summaries',models='mlp_stack')
@@ -212,10 +189,13 @@ def mlp_stack(
                     'Estimator'
                 ].values[0]
             ](
-                **results.loc[
-                    results['ModelNickname'] == m,
-                    'HyperParams'
-                ].values[0]
+                **{k:v
+                    for k,v in results.loc[
+                        results['ModelNickname'] == m,
+                        'HyperParams'
+                    ].values[0].items()
+                    if k != 'normalizer'
+                }
             )
         ) for m in model_nicknames
     ]

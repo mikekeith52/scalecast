@@ -273,7 +273,6 @@ def plot_reduction_errors(f, ax = None, figsize=(12,6)):
     >>> f.set_test_length(.2)
     >>> f.generate_future_dates(24)
     >>> f.add_ar_terms(24)
-    >>> f.integrate(critical_pval=.01)
     >>> f.add_seasonal_regressors('month',raw=False,sincos=True,dummy=True)
     >>> f.add_seasonal_regressors('year')
     >>> f.add_time_trend()
@@ -436,11 +435,14 @@ def _backtest_plot(
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)
 
-def break_mv_forecaster(mvf):
+def break_mv_forecaster(mvf,drop_all_Xvars = True):
     """ Breaks apart an MVForecaster object and returns as many Foreaster objects as series loaded into the object.
 
     Args:
         mvf (MVForecaster): The object to break apart.
+        drop_all_Xvars (bool): Default True. Whether to drop all Xvars during the conversion.
+            It's a good idea to leave this True because length mismatches can cause future univariate models
+            to error out.
 
     Returns:
         (tuple[Forecaster]): A sequence of at least two Forecaster objects
@@ -451,7 +453,7 @@ def break_mv_forecaster(mvf):
     >>> f1, f2 = break_mv_forecaster(mvf)
     """
     from .Forecaster import Forecaster
-    def convert_mv_hist(f, mvhist: dict, series_num: int):
+    def convert_mv_hist(f, mvhist: dict, series_name: str):
         hist = {}
         for k, v in mvhist.items():
             hist[k] = {}
@@ -462,28 +464,23 @@ def break_mv_forecaster(mvf):
                     hist[k][k2] = v2
                 elif isinstance(v2, dict):
                     try:
-                        hist[k][k2] = list(v2.values())[series_num]
+                        hist[k][k2] = v2[series_name]
                     except IndexError:
                         hist[k][k2] = []
-            hist[k]["TestOnly"] = False
-            hist[k]["LevelY"] = f.levely
         return hist
 
     mvf1 = mvf.deepcopy()
 
     set_len = (
-        len(mvf1.series1['y']) 
+        len(mvf1.y[mvf1.names[0]]) 
         if not mvf1.current_xreg 
         else len(list(mvf1.current_xreg.values())[0])
     )
     to_return = []
-    for s in range(mvf1.n_series):
+    for s in mvf1.names:
         f = Forecaster(
-            y=getattr(mvf1, f"series{s+1}")["y"].values[-set_len:],
+            y=mvf1.y[s].values[-set_len:],
             current_dates=mvf1.current_dates.values[-set_len:],
-            integration=getattr(mvf1, f"series{s+1}")["integration"],
-            levely=getattr(mvf1, f"series{s+1}")["levely"][-set_len:],
-            init_dates=getattr(mvf1, f"series{s+1}")["init_dates"][-set_len:],
             future_dates=len(mvf1.future_dates),
             current_xreg={k:v.copy() for k,v in mvf1.current_xreg.items()},
             future_xreg={k:v.copy() for k,v in mvf1.future_xreg.items()},
@@ -492,7 +489,14 @@ def break_mv_forecaster(mvf):
             cis = mvf1.cis,
             cilevel = mvf1.cilevel,
         )
-        f.history = convert_mv_hist(f, mvf1.history, s)
+        f.history = convert_mv_hist(
+            f=f, 
+            mvhist=mvf1.history, 
+            series_name=s,
+        )
+        if drop_all_Xvars:
+            f.drop_all_Xvars()
+
         to_return.append(f)
 
     return tuple(to_return)
@@ -526,12 +530,10 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
     >>> lag_order_aic = lag_order_res.aic # picks the best lag order according to aic
     """
     from statsmodels.tsa.vector_ar.var_model import VAR
-    data = np.array(
-        [getattr(mvf,f'series{i+1}')['y'].astype(float).values for i in range(mvf.n_series)],
-    ).T
+    data = np.array([v.astype(float).values.copy() for k, v in mvf.y.items()]).T
 
     if mvf.current_xreg:
-        exog = pd.DataFrame(mvf.current_xreg).values
+        exog = np.array(v.values.copy() for k, v in mvf.current_xreg.items())
     else:
         exog = None
 
@@ -542,9 +544,7 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
 
     model = VAR(data,exog=exog)
 
-    return model.select_order(
-        **kwargs,
-    )
+    return model.select_order(**kwargs)
 
 def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
     """ Returns the optimal cointigration rank for a multivariate process using the function from statsmodels: 
@@ -575,9 +575,7 @@ def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
     >>> rank = coint_res.rank # best rank
     """
     from statsmodels.tsa.vector_ar.vecm import select_coint_rank
-    data = np.array(
-        [getattr(mvf,f'series{i+1}')['y'].values for i in range(mvf.n_series)],
-    ).T
+    data = np.array([v.astype(float).values.copy() for k, v in mvf.y.items()]).T
     if train_only:
         data = data[:-mvf.test_length]
     
@@ -588,6 +586,7 @@ def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
         **kwargs,
     )
 
+@_developer_utils.log_warnings
 def find_statistical_transformation(
     f,
     goal=['stationary'],
@@ -748,6 +747,7 @@ def find_optimal_transformation(
     scale_type = ['Scale','MinMax'],
     m='auto',
     model = 'add',
+    verbose = False,
     **kwargs,
 ):
     """ Finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
@@ -757,7 +757,7 @@ def find_optimal_transformation(
 
     Args:
         f (Forecaster): The Forecaster object that contains the series that will be transformed.
-        estimator (str): One of `Forecaster.estimators`. The estimator to use to choose the best 
+        estimator (str): One of `Forecaster.can_be_tuned`. The estimator to use to choose the best 
             transformations with. The default will read whatever is set to f.estimator.
         monitor (str or callable): Default 'rmse'. The error metric to minimize.
             If str, must exist in `util.metrics` 
@@ -797,6 +797,7 @@ def find_optimal_transformation(
             If list, multiple seasonal differences can be tried and up to that many seasonal differences can be selected.
         model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
             The type of seasonal component. Only relevant for the 'seasonal_adj' option in try_order.
+        verbose (bool): Default False. Whether to print info about the transformers/reverters being tried.
         **kwargs: Passed to the `Forecaster.manual_forecast()` function and possible values change based on which
             estimator is used.
 
@@ -862,8 +863,10 @@ def find_optimal_transformation(
             series_length = train_length,
         )
         mets = backtest_metrics(res,mets=[monitor])
-        #print(re)
-        #print(mets)
+        if verbose:
+            print(f'Last transformer tried:\n{tr.transformers}')
+            print(f'Score ({monitor if isinstance(monitor,str) else monitor.__name__}): {mets.iloc[0,-1]}')
+            print('-'*50)
         return mets.iloc[0,-1]
 
     def neg_r2(metric):
@@ -883,7 +886,10 @@ def find_optimal_transformation(
     f.history = {}
 
     m = _developer_utils._convert_m(m,f.freq)
-    lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[1] if lags == 'auto' else lags
+    lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[0] if lags == 'auto' else lags
+
+    if verbose:
+        print(f'All transformation tries will use {lags} lags.')
 
     level_met = neg_r2(make_pipeline_fit_predict(f,[],[]))
 
@@ -948,7 +954,7 @@ def find_optimal_transformation(
             try:
                 transformer.append(('DiffTransform',1))
                 reverter.reverse(); reverter.append(('DiffRevert',1)); reverter.reverse()
-                comp_met = -comp_met if monitor == 'r2' else comp_met
+                comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
                 if comp_met < met:
                     met = comp_met
                     best_transformer = transformer[:]
@@ -976,7 +982,7 @@ def find_optimal_transformation(
                         reverter.reverse()
                         reverter += (
                             [('DiffRevert',mi)] if tr == 'first_seasonal_diff' 
-                            else [('DeseasonRevert',)]
+                            else [('DeseasonRevert',{'m':mi})]
                         )
                         reverter.reverse()
                         comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
@@ -1017,4 +1023,7 @@ def find_optimal_transformation(
     
     final_transformer = Pipeline.Transformer(transformers = final_transformer)
     final_reverter = Pipeline.Reverter(reverters = final_reverter,base_transformer = final_transformer)
+    if verbose:
+        print(f'Final Selection:\n{final_transformer.transformers}')
+    
     return final_transformer, final_reverter 

@@ -18,6 +18,10 @@ import importlib
 import warnings
 import logging
 import inspect
+import datetime
+import math
+import random
+from sklearn.preprocessing import PowerTransformer
 
 # descriptive errors
 
@@ -67,13 +71,13 @@ class Forecaster_parent:
         obj.__dict__ = copy.deepcopy(self.__dict__)
         return obj
 
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def __getstate__(self):
         self._logging()
         state = self.__dict__.copy()
         return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
 
     def _check_right_test_length_for_cis(self,cilevel):
         min_test_length = np.ceil(1/(1-cilevel))
@@ -123,6 +127,473 @@ class Forecaster_parent:
         """ Creates an object deepcopy.
         """
         return self.__deepcopy__()
+
+    def add_seasonal_regressors(
+        self, 
+        *args, 
+        raw=True, 
+        sincos=False, 
+        dummy=False, 
+        drop_first=False,
+        cycle_lens=None,
+    ):
+        """ Adds seasonal regressors. 
+        Can be in the form of Fourier transformed, dummy, or integer values.
+
+        Args:
+            *args (str): Values that return a series of int type from pandas.dt or pandas.dt.isocalendar().
+                See https://pandas.pydata.org/docs/reference/api/pandas.Series.dt.year.html.
+            raw (bool): Default True.
+                Whether to use the raw integer values.
+            sincos (bool): Default False.
+                Whether to use a Fourier transformation of the raw integer values.
+                The length of the cycle is derived from the max observed value unless cycle_lens is specified.
+            dummy (bool): Default False.
+                Whether to use dummy variables from the raw int values.
+            drop_first (bool): Default False.
+                Whether to drop the first observed dummy level.
+                Not relevant when dummy = False.
+            cycle_lens (dict): Optional. A dictionary that specifies a cycle length for each selected seasonality.
+                If this is not specified or a selected seasonality is not added to the dictionary as a key, the
+                cycle length will be selected automatically as the maximum value observed for the given seasonality.
+                Not relevant when sincos = False.
+
+        Returns:
+            None
+
+        >>> f.add_seasonal_regressors('year')
+        >>> f.add_seasonal_regressors(
+        >>>     'dayofyear',
+        >>>     'month',
+        >>>     'week',
+        >>>     'quarter',
+        >>>     raw=False,
+        >>>     sincos=True,
+        >>>     cycle_lens={'dayofyear':365.25},
+        >>> )
+        >>> f.add_seasonal_regressors('dayofweek',raw=False,dummy=True,drop_first=True)
+        """
+        #self._validate_future_dates_exist()
+        if not (raw | sincos | dummy):
+            raise ValueError("at least one of raw, sincos, dummy must be True")
+        for s in args:
+            try:
+                if s in ("week", "weekofyear"):
+                    _raw = getattr(self.current_dates.dt.isocalendar(), s)
+                else:
+                    _raw = getattr(self.current_dates.dt, s)
+            except AttributeError:
+                raise ValueError(
+                    f'cannot set "{s}". see possible values here: https://pandas.pydata.org/docs/reference/api/pandas.Series.dt.year.html'
+                )
+
+            try:
+                _raw.astype(int)
+            except ValueError:
+                raise ValueError(
+                    f"{s} must return an int. use dummy = True to get dummies"
+                )
+
+            if s in ("week", "weekofyear"):
+                _raw_fut = getattr(self.future_dates.dt.isocalendar(), s)
+            else:
+                _raw_fut = getattr(self.future_dates.dt, s)
+            if raw:
+                self.current_xreg[s] = _raw
+                self.future_xreg[s] = _raw_fut.to_list()
+            if sincos:
+                _cycles = (
+                    _raw.max() if cycle_lens is None 
+                    else _raw.max()  if s not in cycle_lens 
+                    else cycle_lens[s]
+                )
+                self.current_xreg[f"{s}sin"] = np.sin(np.pi * _raw / (_cycles / 2))
+                self.current_xreg[f"{s}cos"] = np.cos(np.pi * _raw / (_cycles / 2))
+                self.future_xreg[f"{s}sin"] = np.sin(
+                    np.pi * _raw_fut / (_cycles / 2)
+                ).to_list()
+                self.future_xreg[f"{s}cos"] = np.cos(
+                    np.pi * _raw_fut / (_cycles / 2)
+                ).to_list()
+            if dummy:
+                all_dummies = []
+                stg_df = pd.DataFrame({s: _raw.astype(str)})
+                stg_df_fut = pd.DataFrame({s: _raw_fut.astype(str)})
+                for c, v in (
+                    pd.get_dummies(stg_df, drop_first=drop_first)
+                    .to_dict(orient="series")
+                    .items()
+                ):
+                    self.current_xreg[c] = v
+                    all_dummies.append(c)
+                for c, v in (
+                    pd.get_dummies(stg_df_fut, drop_first=drop_first)
+                    .to_dict(orient="list")
+                    .items()
+                ):
+                    if c in all_dummies:
+                        self.future_xreg[c] = v
+                for c in [d for d in all_dummies if d not in self.future_xreg.keys()]:
+                    self.future_xreg[c] = [0] * len(self.future_dates)
+
+    def add_time_trend(self, called="t"):
+        """ Adds a time trend from 1 to length of the series + the forecast horizon as a current and future Xvar.
+
+        Args:
+            Called (str): Default 't'.
+                What to call the resulting variable.
+
+        Returns:
+            None
+
+        >>> f.add_time_trend() # adds time trend called 't'
+        """
+        #self._validate_future_dates_exist()
+        self.current_xreg[called] = pd.Series(range(1, len(self.y) + 1))
+        self.future_xreg[called] = list(
+            range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
+        )
+
+    def add_cycle(self, cycle_length, called=None):
+        """ Adds a regressor that acts as a seasonal cycle.
+        Use this function to capture non-normal seasonality.
+
+        Args:
+            cycle_length (int): How many time steps make one complete cycle.
+            called (str): Optional. What to call the resulting variable.
+                Two variables will be created--one for a sin transformation and the other for cos
+                resulting variable names will have "sin" or "cos" at the end.
+                Example, called = 'cycle5' will become 'cycle5sin', 'cycle5cos'.
+                If left unspecified, 'cycle{cycle_length}' will be used as the name.
+
+        Returns:
+            None
+
+        >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations called 'cycle13'
+        """
+        #self._validate_future_dates_exist()
+        if called is None:
+            called = f"cycle{cycle_length}"
+        full_sin = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
+            lambda x: np.sin(np.pi * x / (cycle_length / 2))
+        )
+        full_cos = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
+            lambda x: np.cos(np.pi * x / (cycle_length / 2))
+        )
+        self.current_xreg[called + "sin"] = pd.Series(full_sin.values[: len(self.y)])
+        self.current_xreg[called + "cos"] = pd.Series(full_cos.values[: len(self.y)])
+        self.future_xreg[called + "sin"] = list(full_sin.values[len(self.y) :])
+        self.future_xreg[called + "cos"] = list(full_cos.values[len(self.y) :])
+
+    def add_other_regressor(self, called, start, end):
+        """ Adds a dummy variable that is 1 during the specified time period, 0 otherwise.
+
+        Args:
+            called (str):
+                What to call the resulting variable.
+            start (str, datetime.datetime, or pd.Timestamp): Start date.
+                Must be parsable by pandas' Timestamp function.
+            end (str, datetime.datetime, or pd.Timestamp): End date.
+                Must be parsable by pandas' Timestamp function.
+
+        Returns:
+            None
+
+        >>> f.add_other_regressor('january_2021','2021-01-01','2021-01-31')
+        """
+        #self._validate_future_dates_exist()
+        self.current_xreg[called] = pd.Series(
+            [1 if (x >= pd.Timestamp(start)) & (x <= pd.Timestamp(end)) else 0 for x in self.current_dates]
+        )
+        self.future_xreg[called] = [
+            1 if (x >= pd.Timestamp(start)) & (x <= pd.Timestamp(end)) else 0 for x in self.future_dates
+        ]
+
+    def add_covid19_regressor(
+        self,
+        called="COVID19",
+        start=datetime.datetime(2020, 3, 15),
+        end=datetime.datetime(2021, 5, 13),
+    ):
+        """ Adds a dummy variable that is 1 during the time period that COVID19 effects are present for the series, 0 otherwise.
+        The default dates are selected to be optimized for the time-span where the economy was most impacted by COVID.
+
+        Args:
+            called (str): Default 'COVID19'.
+               What to call the resulting variable.
+            start (str, datetime.datetime, or pd.Timestamp): Default datetime.datetime(2020,3,15).
+                The start date (default is day Walt Disney World closed in the U.S.).
+                Must be parsable by pandas' Timestamp function.
+            end: (str, datetime.datetime, or pd.Timestamp): Default datetime.datetime(2021,5,13).
+               The end date (default is day the U.S. CDC first dropped the mask mandate/recommendation for vaccinated people).
+               Must be parsable by pandas' Timestamp function.
+
+        Returns:
+            None
+        """
+        #self._validate_future_dates_exist()
+        self.add_other_regressor(called=called, start=start, end=end)
+
+    def add_combo_regressors(self, *args, sep="_"):
+        """ Combines all passed variables by multiplying their values together.
+
+        Args:
+            *args (str): Names of Xvars that aleady exist in the object.
+            sep (str): Default '_'.
+                The separator between each term in arg to create the final variable name.
+
+        Returns:
+            None
+
+        >>> f.add_combo_regressors('t','monthsin') # multiplies these two together (called 't_monthsin')
+        >>> f.add_combo_regressors('t','monthcos') # multiplies these two together (called 't_monthcos')
+        """
+        #self._validate_future_dates_exist()
+        _developer_utils.descriptive_assert(
+            len(args) > 1,
+            ForecastError,
+            "Need to pass at least two variables to combine regressors.",
+        )
+        for i, a in enumerate(args):
+            _developer_utils.descriptive_assert(
+                not a.startswith("AR"),
+                ForecastError,
+                "No combining AR terms at this time -- it confuses the forecasting mechanism.",
+            )
+            if i == 0:
+                self.current_xreg[sep.join(args)] = self.current_xreg[a]
+                self.future_xreg[sep.join(args)] = self.future_xreg[a]
+            else:
+                self.current_xreg[sep.join(args)] = pd.Series(
+                    [
+                        a * b
+                        for a, b in zip(
+                            self.current_xreg[sep.join(args)], self.current_xreg[a]
+                        )
+                    ]
+                )
+                self.future_xreg[sep.join(args)] = [
+                    a * b
+                    for a, b in zip(
+                        self.future_xreg[sep.join(args)], self.future_xreg[a]
+                    )
+                ]
+
+    def add_poly_terms(self, *args, pwr=2, sep="^"):
+        """ raises all passed variables (no AR terms) to exponential powers (ints only).
+
+        Args:
+            *args (str): Names of Xvars that aleady exist in the object
+            pwr (int): Default 2.
+                The max power to add to each term in args (2 to this number will be added).
+            sep (str): default '^'.
+                The separator between each term in arg to create the final variable name.
+
+        Returns:
+            None
+
+        >>> f.add_poly_terms('t','year',pwr=3) # raises t and year to 2nd and 3rd powers (called 't^2', 't^3', 'year^2', 'year^3')
+        """
+        #self._validate_future_dates_exist()
+        for a in args:
+            _developer_utils.descriptive_assert(
+                not a.startswith("AR"),
+                ForecastError,
+                "No polynomial AR terms at this time -- it confuses the forecasting mechanism.",
+            )
+            for i in range(2, pwr + 1):
+                self.current_xreg[f"{a}{sep}{i}"] = self.current_xreg[a] ** i
+                self.future_xreg[f"{a}{sep}{i}"] = [x ** i for x in self.future_xreg[a]]
+
+    def add_exp_terms(self, *args, pwr, sep="^", cutoff=2, drop=False):
+        """ Raises all passed variables (no AR terms) to exponential powers (ints or floats).
+
+        Args:
+            *args (str): Names of Xvars that aleady exist in the object.
+            pwr (float): 
+                The power to raise each term to in args.
+                Can use values like 0.5 to perform square roots, etc.
+            sep (str): default '^'.
+                The separator between each term in arg to create the final variable name.
+            cutoff (int): default 2.
+                The resulting variable name will be rounded to this number based on the passed pwr.
+                For instance, if pwr = 0.33333333333 and 't' is passed as an arg to *args, the resulting name will be t^0.33 by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
+
+        Returns:
+            None
+
+        >>> f.add_exp_terms('t',pwr=.5) # adds square root t called 't^0.5'
+        """
+        #self._validate_future_dates_exist()
+        pwr = float(pwr)
+        for a in args:
+            _developer_utils.descriptive_assert(
+                not a.startswith("AR"),
+                ForecastError,
+                "No exponent AR terms at this time -- it confuses the forecasting mechanism.",
+            )
+            self.current_xreg[f"{a}{sep}{round(pwr,cutoff)}"] = (
+                self.current_xreg[a] ** pwr
+            )
+            self.future_xreg[f"{a}{sep}{round(pwr,cutoff)}"] = [
+                x ** pwr for x in self.future_xreg[a]
+            ]
+
+        if drop:
+            self.drop_Xvars(*args)
+
+    def add_logged_terms(self, *args, base=math.e, sep="", drop=False):
+        """ Logs all passed variables (no AR terms).
+
+        Args:
+            *args (str): Names of Xvars that aleady exist in the object.
+            base (float): Default math.e (natural log). The log base.
+                Must be math.e or int greater than 1.
+            sep (str): Default ''.
+                The separator between each term in arg to create the final variable name.
+                Resulting variable names will be like "log2t" or "lnt" by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
+
+        Returns:
+            None
+
+        >>> f.add_logged_terms('t') # adds natural log t callend 'lnt'
+        """
+        #self._validate_future_dates_exist()
+        for a in args:
+            _developer_utils.descriptive_assert(
+                not a.startswith("AR"),
+                ForecastError,
+                "No logged AR terms at this time -- it confuses the forecasting mechanism.",
+            )
+            if base == math.e:
+                pass
+            elif not (isinstance(base, int)):
+                raise ValueError(
+                    f"base must be math.e or an int greater than 1, got {base}."
+                )
+            elif base <= 1:
+                raise ValueError(
+                    f"base must be math.e or an int greater than 1, got {base}."
+                )
+
+            b = "ln" if base == math.e else "log" + str(base)
+            self.current_xreg[f"{b}{sep}{a}"] = pd.Series(
+                [math.log(x, base) for x in self.current_xreg[a]]
+            )
+            self.future_xreg[f"{b}{sep}{a}"] = [
+                math.log(x, base) for x in self.future_xreg[a]
+            ]
+
+        if drop:
+            self.drop_Xvars(*args)
+
+    def add_pt_terms(self, *args, method="box-cox", sep="_", drop=False):
+        """ Applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).
+
+        Args:
+            *args (str): Names of Xvars that aleady exist in the object.
+            method (str): One of {'box-cox','yeo-johnson'}, default 'box-cox'.
+                The type of transformation.
+                box-cox works for positive values only.
+                yeo-johnson is like a box-cox but can be used with 0s or negatives.
+                https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html.
+            sep (str): Default ''.
+                The separator between each term in arg to create the final variable name.
+                Resulting variable names will be like "box-cox_t" or "yeo-johnson_t" by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
+
+        Returns:
+            None
+
+        >>> f.add_pt_terms('t') # adds box cox of t called 'box-cox_t'
+        """
+        #self._validate_future_dates_exist()
+        pt = PowerTransformer(method=method, standardize=False)
+        for a in args:
+            _developer_utils.descriptive_assert(
+                not a.startswith("AR"),
+                ForecastError,
+                "no power-transforming AR terms at this time -- it confuses the forecasting mechanism",
+            )
+            reshaped_current = np.reshape(self.current_xreg[a].values, (-1, 1))
+            reshaped_future = np.reshape(self.future_xreg[a], (-1, 1))
+
+            self.current_xreg[f"{method}{sep}{a}"] = pd.Series(
+                [x[0] for x in pt.fit_transform(reshaped_current)]
+            )
+            self.future_xreg[f"{method}{sep}{a}"] = [
+                x[0] for x in pt.fit_transform(reshaped_future)
+            ]
+
+        if drop:
+            self.drop_Xvars(*args)
+
+    def drop_regressors(self, *args, error = 'raise'):
+        """ Drops regressors.
+
+        Args:
+            *args (str): The names of regressors to drop.
+            error (str): One of 'ignore','raise'. Default 'raise'.
+                What to do with the error if the Xvar is not found in the object.
+
+        Returns:
+            None
+
+        >>> f.add_time_trend()
+        >>> f.add_exp_terms('t',pwr=.5)
+        >>> f.drop_regressors('t','t^0.5')
+        """
+        for a in args:
+            if a not in self.current_xreg:
+                if error == 'raise':
+                    raise ForecastError(f'Cannot find {a} in Forecaster object.')
+                elif error == 'ignore':
+                    continue
+                else:
+                    raise ValueError(f'arg passed to error not recognized: {error}')
+            self.current_xreg.pop(a)
+            self.future_xreg.pop(a)
+
+    def drop_Xvars(self, *args, error = 'raise'):
+        """ Drops regressors.
+
+        Args:
+            *args (str): The names of regressors to drop.
+            error (str): One of 'ignore','raise'. Default 'raise'.
+                What to do with the error if the Xvar is not found in the object.
+
+        Returns:
+            None
+
+        >>> f.add_time_trend()
+        >>> f.add_exp_terms('t',pwr=.5)
+        >>> f.drop_Xvars('t','t^0.5')
+        """
+        self.drop_regressors(*args)
+
+    def drop_all_Xvars(self):
+        """ drops all regressors.
+        """
+        self.drop_Xvars(*self.get_regressor_names())
+
+    def pop(self, *args):
+        """ Deletes evaluated forecasts from the object's memory.
+
+        Args:
+            *args (str): Names of models matching what was passed to call_me when model was evaluated.
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> f.pop('mlr')
+        """
+        for a in args:
+            self.history.pop(a)
+
 
     def add_sklearn_estimator(self, imported_module, called):
         """ Adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
@@ -180,7 +651,7 @@ class Forecaster_parent:
         self,
         call_me=None,
         dynamic_testing=True,
-        test_only=False,
+        test_again=True,
     ):
         """ Auto forecasts with the best parameters indicated from the tuning process.
 
@@ -196,16 +667,6 @@ class Forecaster_parent:
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
                 The model will skip testing if the test_length attribute is set to 0.
-            test_only (bool): Default False.
-                Whether to stop the model after the testing process and not forecast into future periods.
-                The forecast info stored in the object's history will be equivalent to test-set predictions.
-                When True, any plot or export of forecasts into a future horizon will fail 
-                and not all methods will raise descriptive errors.
-                Will automatically change to True if object was initiated with require_future_dates = False.
-                Must always be False for multivariate forecasting.
-
-        Returns:
-            None
 
         >>> f.set_estimator('xgboost')
         >>> f.tune()
@@ -213,16 +674,89 @@ class Forecaster_parent:
         """
         if not hasattr(self, "best_params"):
             warnings.warn(
-                f"Since tune() or cross_validate() has not been called, {self.estimator} model will be run with default hyperparameters.",
+                "Since tune() or cross_validate() has not been called,"
+                f" {self.estimator} model will be run with default hyperparameters.",
                 category = Warning,
             )
             self.best_params = {}
         self.manual_forecast(
             call_me=call_me,
             dynamic_testing=dynamic_testing,
-            test_only=test_only,
+            test_again = test_again,
             **self.best_params,
         )
+
+    def manual_forecast(
+        self, call_me=None, dynamic_testing=True, test_again = True, bank_history = True, **kwargs
+    ):
+        """ Manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
+        See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
+
+        Args:
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
+            dynamic_testing (bool or int): Default True.
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            test_again (bool): Default True.
+                Whether to test the model before forecasting to a future horizon.
+                If test_length is 0, this is ignored. Set this to False if you tested the model manually by calling f.test()
+                and don't want to waste resources testing it again.
+            **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, 
+                normalizer, cap, and floor, in addition to any given model's specific hyperparameters.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
+
+        >>> f.set_estimator('lasso')
+        >>> f.manual_forecast(alpha=.5)
+        """
+        _developer_utils.descriptive_assert(
+            isinstance(call_me, str) | (call_me is None),
+            ValueError,
+            "call_me must be a str type or None.",
+        )
+
+        _developer_utils.descriptive_assert(
+            len(self.future_dates) > 0,
+            ForecastError,
+            "Before calling a model, please make sure you have generated future dates"
+            " by calling generate_future_dates(), set_last_future_date(), or ingest_Xvars_df(use_future_dates=True).",
+        )
+
+        self._clear_the_deck() # delete some attributes from last model
+        
+        self.dynamic_testing = dynamic_testing
+        self.call_me = self.estimator if call_me is None else call_me
+
+        if test_again and self.test_length > 0 and self.estimator != 'combo':
+            self.test(
+                **kwargs,
+                dynamic_testing=dynamic_testing,
+                call_me=call_me,
+            )
+        elif bank_history:
+            if self.call_me not in self.history.keys():
+                self.history[self.call_me] = {}
+
+        preds = (
+            self._forecast_sklearn(
+                fcster=self.estimator,
+                dynamic_testing=dynamic_testing,
+                **kwargs,
+            )
+            if self.estimator in self.sklearn_estimators
+            else getattr(self, f"_forecast_{self.estimator}")(
+                dynamic_testing=dynamic_testing, **kwargs
+            )
+        )
+        self.forecast = preds
+        if bank_history:
+            self._bank_history(**kwargs)
 
     def eval_cis(self,mode=True,cilevel=.95):
         """ Call this function to change whether or not the Forecaster sets confidence intervals on all evaluated models.
@@ -256,8 +790,17 @@ class Forecaster_parent:
         """
         from itertools import product
 
-        def expand_grid(d):
-            return pd.DataFrame([row for row in product(*d.values())], columns=d.keys())
+        def expand_grid(grid):
+            # returns a list of dictionaries
+            keys = grid.keys()
+            values = grid.values()
+
+            # Generate all possible combinations of hyperparameter values
+            combinations = product(*values)
+
+            # Convert combinations to list of dictionaries
+            hyperparameter_combinations = [dict(zip(keys, combination)) for combination in combinations]
+            return hyperparameter_combinations
 
         try:
             if isinstance(grid, str):
@@ -276,13 +819,15 @@ class Forecaster_parent:
         grid = expand_grid(grid)
         self.grid = grid
 
-    def limit_grid_size(self, n, random_seed=None):
+    def limit_grid_size(self, n, min_grid_size = 1, random_seed=None):
         """ Makes a grid smaller randomly.
 
         Args:
             n (int or float):
                 If int, randomly selects that many parameter combinations.
                 If float, must be less than 1 and greater 0, randomly selects that percentage of parameter combinations.
+            min_grid_size (int): Default 1.
+                The min number of hyperparameters to keep from the original grid if a float is passed to n.
             random_seed (int): Optional.
                 Set a seed to make results consistent.
 
@@ -299,14 +844,16 @@ class Forecaster_parent:
         if random_seed is not None:
             random.seed(random_seed)
 
-        if n >= 1:
-            self.grid = self.grid.sample(n=min(n, self.grid.shape[0])).reset_index(
-                drop=True
+        if (n < 1) & (n > 0):
+            n = len(self.grid) * n
+
+        n = int(
+            min(
+                len(self.grid),
+                max(min_grid_size,n),
             )
-        elif (n < 1) & (n > 0):
-            self.grid = self.grid.sample(frac=n).reset_index(drop=True)
-        else:
-            raise ValueError(f"argment passed to n not usable: {n}")
+        )
+        self.grid = random.sample(self.grid,n)
 
     def set_metrics(self,metrics):
         """ Set or change the evaluated metrics for all model testing and validation.
@@ -385,7 +932,8 @@ class Forecaster_parent:
                 ValueError,
                 f"n must be an int of at least 0 or float greater than 0 and less than 1, got {n} of type {type(n)}.",
             )
-            self.test_length = int(len(self.y) * n)
+            leny = len(self.y[self.names[0]]) if isinstance(self.y,dict) else len(self.y) 
+            self.test_length = int(leny * n)
 
     def set_validation_length(self, n=1):
         """ Sets the length of the validation set. This will never matter for models that are not tuned.
@@ -444,6 +992,7 @@ class Forecaster_parent:
                     "grid_evaluated",
                     "best_params",
                     "validation_metric_value",
+                    "actuals",
                 ):
                     if hasattr(self, attr):
                         delattr(self, attr)
@@ -472,6 +1021,424 @@ class Forecaster_parent:
         )
         self.grids_file = name
 
+    def generate_future_dates(self, n):
+        """ Generates a certain amount of future dates in same frequency as current_dates.
+
+        Args:
+            n (int): Greater than 0.
+                Number of future dates to produce.
+                This will also be the forecast length.
+
+        Returns:
+            None
+
+        >>> f.generate_future_dates(12) # 12 future dates to forecast out to
+        """
+        self.future_dates = pd.Series(
+            pd.date_range(
+                start=self.current_dates.values[-1], periods=n + 1, freq=self.freq
+            ).values[1:]
+        )
+
+    def set_last_future_date(self, date):
+        """ Generates future dates in the same frequency as current_dates that ends on a specified date.
+
+        Args:
+            date (datetime.datetime, pd.Timestamp, or str):
+                The date to end on. Must be parsable by pandas' Timestamp() function.
+
+        Returns:
+            None
+
+        >>> f.set_last_future_date('2021-06-01') # creates future dates up to this one in the expected frequency
+        """
+        self.future_dates = pd.Series(
+            pd.date_range(
+                start=self.current_dates.values[-1], end=date, freq=self.freq
+            ).values[1:]
+        )
+
+    def ingest_Xvars_df(
+        self, df, date_col="Date", drop_first=False, use_future_dates=False
+    ):
+        """ Ingests a dataframe of regressors and saves its Xvars to the object.
+        The user must specify a date column name in the dataframe being ingested.
+        All non-numeric values are dummied.
+        The dataframe should cover the entire future horizon stored within the Forecaster object, but can be padded with 0s
+        if testing only is desired.
+        Any columns in the dataframe that begin with "AR" will be confused with autoregressive terms and could cause errors.
+
+        Args:
+            df (DataFrame): The dataframe that is at least the length of the y array stored in the object plus the forecast horizon.
+            date_col (str): Default 'Date'.
+                The name of the date column in the dataframe.
+                This column must have the same frequency as the dates stored in the Forecaster object.
+            drop_first (bool): Default False.
+                Whether to drop the first observation of any dummied variables.
+                Irrelevant if passing all numeric values.
+            use_future_dates (bool): Default False.
+                Whether to use the future dates in the dataframe as the resulting future_dates attribute in the Forecaster object.
+
+        Returns:
+            None
+        """
+        _developer_utils.descriptive_assert(
+            df.shape[0] == len(df[date_col].unique()),
+            ValueError,
+            "Each date supplied must be unique.",
+        )
+        df_copy = df.copy()
+        df_copy[date_col] = pd.to_datetime(df_copy[date_col])
+        df_copy = df_copy.loc[df_copy[date_col] >= self.current_dates.values[0]]
+        df_copy = pd.get_dummies(df_copy, drop_first=drop_first)
+        current_df = df_copy.loc[df_copy[date_col].isin(self.current_dates)]
+        future_df = pd.DataFrame({date_col: self.future_dates.to_list()})
+        future_df = df_copy.loc[df_copy[date_col] > self.current_dates.values[-1]]
+        _developer_utils.descriptive_assert(
+            current_df.shape[0] == len(self.y),
+            ForecastError,
+            "Could not ingest Xvars dataframe."
+            " Make sure the dataframe spans the entire date range as y and is at least one observation to the future."
+            " Specify the date column name in the `date_col` argument.",
+        )
+
+        if not use_future_dates:
+            _developer_utils.descriptive_assert(
+                future_df.shape[0] >= len(self.future_dates),
+                ValueError,
+                "The future dates in the dataframe should be at least the same length as the future dates in the Forecaster object." 
+                " If you want to use the dataframe to set the future dates for the object, pass True to the use_future_dates argument.",
+            )
+        else:
+            self.future_dates = future_df[date_col]
+
+        for c in [c for c in future_df if c != date_col]:
+            self.future_xreg[c] = future_df[c].to_list()[: len(self.future_dates)]
+            self.current_xreg[c] = current_df[c]
+
+        for x, v in self.future_xreg.items():
+            self.future_xreg[x] = v[: len(self.future_dates)]
+            if not len(v) == len(self.future_dates) and not x.startswith('AR'):
+                warnings.warn(
+                    f"{x} is not the correct length in the future_dates attribute and this can cause errors when forecasting."
+                    f" Its length is {len(v)} and future_dates length is {len(self.future_dates)}.",
+                    category=Warning,
+                )
+
+    def export_validation_grid(self, model) -> pd.DataFrame:
+        """ Exports the validation grid from a model, converted to a pandas dataframe.
+        Raises an error if the model was not tuned.
+
+        Args:
+            model (str):
+                The name of them model to export for.
+                Matches what was passed to call_me when evaluating the model.
+        Returns:
+            (DataFrame): The resulting validation grid of the evaluated model passed to model arg.
+        """
+        hist = self.history[model]
+        df = pd.DataFrame(columns = list(hist['grid'][0].keys()))
+        for i, grid in enumerate(hist['grid']):
+            for k,v in grid.items():
+                df.loc[i,k] = v
+        for j, h in enumerate(hist['grid_evaluated'].T):
+            df[f'Fold{j}Metric'] = h
+        df['AverageMetric'] = np.mean(hist['grid_evaluated'],axis=1)
+        df['MetricEvaluated'] = hist['ValidationMetric']
+        if hasattr(self,'optimize_on'):
+            df['Optimized On'] = self.optimize_on
+        return df
+
+    def test(
+        self,
+        dynamic_testing=True,
+        call_me=None,
+        **kwargs,
+    ):
+        """ Tests the forecast estimator out-of-sample. Uses the test_length attribute to determine on how-many observations.
+        All test-set splits maintain temporal order.
+
+        Args:
+            dynamic_testing (bool or int): Default True.
+                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            call_me (str): Optional.
+                What to call the model when storing it in the object's history.
+                If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
+                Duplicated names will be overwritten with the most recently called model.
+            **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, 
+                normalizer, cap, and floor, in addition to any given model's specific hyperparameters.
+                See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
+
+        >>> f.set_estimator('lasso')
+        >>> f.test(alpha=.5)
+        """
+        if self.test_length == 0:
+            raise ValueError(
+                'Cannot test models when test_length is 0.'
+                ' Call f.set_test_length() to generate a test-set for this object.'
+            )
+
+        is_Forecaster = not isinstance(self.y,dict)
+        call_me = self.estimator if call_me is None else call_me
+        if call_me not in self.history:
+            self.history[call_me] = {}
+            already_existed = False
+        else:
+            already_existed = True
+
+        if is_Forecaster:
+            actuals = self.y.to_list()[-self.test_length:]
+        else:
+            actuals = [
+                self.y[k].to_list()[-self.test_length:]
+                for k in self.y
+            ]
+
+        f1 = self.deepcopy()
+        f1.chop_from_front(
+            self.test_length,
+            fcst_length = self.test_length,
+        )
+        f1.set_test_length(0)
+        f1.eval_cis(False)
+        f1.actuals = actuals
+        f1.manual_forecast(
+            dynamic_testing = dynamic_testing,
+            test_again = False, 
+            call_me = call_me, 
+            **kwargs,
+        )
+        fcst = f1.forecast
+
+        if not already_existed:
+            attrs_to_copy = (
+                'Estimator',
+                'Xvars',
+                'HyperParams',
+                'Lags',
+                'regr',
+                'X',
+            )
+            self.history[call_me] = {
+                k:(v if k in attrs_to_copy else None) for 
+                k, v in f1.history[call_me].items()
+            }
+        self.call_me = call_me
+        self.history[call_me]['TestSetLength'] = self.test_length
+        self.history[call_me]['TestSetPredictions'] = fcst
+        self.history[call_me]['TestSetActuals'] = ( 
+            actuals if is_Forecaster
+            else {k :actuals[i] for i, k in enumerate(fcst.keys())}
+        )
+
+        for met, func in self.metrics.items():
+            if is_Forecaster:
+                self.history[call_me]['TestSet' + met.upper()] = func(actuals,fcst)
+            else:
+                self.history[call_me]['TestSet' + met.upper()] = {
+                    k:func(actuals[i],fcst[k]) for i, k in enumerate(fcst.keys())
+                } # little awkward, but necessary for cross_validate to work more efficiently
+
+    def tune(self, dynamic_tuning=False,set_aside_test_set=True):
+        """ Tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
+        the estimator by default). This is akin to cross-validation with one fold and a test_length equal to f.validation_length.
+        Any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
+        The chosen parameters are stored in the best_params attribute.
+        The evaluated validation grid can be exported to a dataframe using f.export_validation_grid().
+
+        Args:
+            dynamic_tuning (bool or int): Default False.
+                Whether to dynamically/recursively test the forecast during the tuning process 
+                (meaning AR terms will be propagated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+            set_aside_test_set (bool): Default True. Whether to separate the test set specified in f.test_length during this process.
+
+        Returns:
+            None
+
+        >>> f.set_estimator('xgboost')
+        >>> f.tune()
+        >>> f.auto_forecast()
+        """
+        self.cross_validate(
+            k=1,
+            dynamic_tuning=dynamic_tuning,
+            test_length=self.validation_length,
+            set_aside_test_set = set_aside_test_set,
+        )
+
+    def cross_validate(
+        self, 
+        k=5, 
+        test_length = None,
+        train_length = None,
+        space_between_sets = None,
+        rolling=False, 
+        dynamic_tuning=False,
+        set_aside_test_set=True,
+        verbose=False,
+    ):
+        """ Tunes a model's hyperparameters using time-series cross validation. 
+        Monitors the metric specified in the valiation_metric attribute. 
+        Set an estimator before calling. 
+        Reads a grid for the estimator from a grids file unless a grid is ingested manually. 
+        The chosen parameters are stored in the best_params attribute.
+        All metrics from each iteration are stored in grid_evaluated. The rows in this matrix correspond to the element index in f.grid (a hyperparameter combo)
+        and the columns are the derived metrics across the k folds. Any hyperparameters that ever failed to evaluate will return N/A and are not considered.
+        The best parameter combo is determined by the best average derived matrix across all folds.
+        The temporal order of the series is always maintained in this process.
+        If a test_length is specified in the object, it will be set aside by default.
+        (Default) Normal cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Time-Series-Cross-Validation.
+        (Default) Rolling cv diagram: https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html#5-Fold-Rolling-Time-Series-Cross-Validation. 
+
+        Args:
+            k (int): Default 5. 
+                The number of folds. 
+                If 1, behaves as if the model were being tuned on a single held out set.
+            test_length (int): Optional. The size of each training set. 
+                By default, all available observations before each test set are used.
+            train_length (int): Optional. The size of each held-out-sample. 
+                By default, determined such that the last test set and train set are the same size.
+            space_between_sets (int): Optional. The space between each training set.
+                By default, uses the test_length.
+            rolling (bool): Default False. Whether to use a rolling method, meaning every train and test size is the same. 
+                This is ignored when either of train_length or test_length is specified.
+            dynamic_tuning (bool or int): Default False.
+                Whether to dynamically/recursively test the forecast during the tuning process 
+                (meaning AR terms will be propagated with predicted values).
+                If True, evaluates recursively over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+            set_aside_test_set (bool): Default True. Whether to separate the test set specified in f.test_length during this process.
+            verbose (bool): Default False. Whether to print out information about the test size, train size, and date ranges for each fold.
+
+        Returns:
+            None
+
+        >>> f.set_estimator('xgboost')
+        >>> f.cross_validate() # tunes hyperparam values
+        >>> f.auto_forecast() # forecasts with the best params
+        """
+        if not hasattr(self, "grid"):
+            self.ingest_grid(self.estimator)
+
+        is_Forecaster = not isinstance(self.y,dict)
+        rolling = bool(rolling)
+        k = int(k)
+        _developer_utils.descriptive_assert(k >= 1, ValueError, f"k must be at least 1, got {k}.")
+        f1 = self.deepcopy()
+        f1.eval_cis(False)
+        if not set_aside_test_set:
+            f1.set_test_length(0)
+        if is_Forecaster:
+            usable_obs = len(f1.y) - f1.test_length
+        else:
+            usable_obs = len(f1.y[f1.names[0]]) - f1.test_length
+        if test_length is None:
+            test_length = usable_obs // (k + 1)
+        if train_length is None:
+            train_length = test_length if rolling else train_length
+        if space_between_sets is None:
+            space_between_sets = test_length
+
+        grid = self.grid
+        func = self.metrics[self.validation_metric] # function to evaluate metric for each grid try
+        iters = len(grid)
+        metrics = np.zeros((iters,k)) # each row is a hyperparam try and column is a fold
+        for i in range(k):
+            val_chop = test_length + space_between_sets * i
+            ttl_chop = val_chop + f1.test_length
+            if -ttl_chop + test_length == 0 and i == 0: # -ttl_chop + test_length can equal 0 on the first iteration, in which case, we want the following behavior
+                if is_Forecaster:
+                    actuals = f1.y.to_list()[-ttl_chop:]
+                else:
+                    actuals = [
+                        f1.y[k].to_list()[-ttl_chop:]
+                        for k in f1.y
+                    ]
+            else: 
+                if is_Forecaster:
+                    actuals = f1.y.to_list()[-ttl_chop:(-ttl_chop + test_length)]
+                else:
+                    actuals = [
+                        f1.y[k].to_list()[-ttl_chop:(-ttl_chop + test_length)]
+                        for k in f1.y
+                    ]
+            err_message = f'Something went wrong with determining set lengths. Should be {test_length}.'
+            if is_Forecaster:
+                assert len(actuals) == test_length,err_message + f' Got {len(actuals)}.'
+            else:
+                assert np.all([len(a) == test_length for a in actuals]),err_message
+            f2 = f1.deepcopy()
+            f2.chop_from_front(ttl_chop,fcst_length=test_length)
+            f2.actuals = actuals
+            if train_length is not None:
+                f2.keep_smaller_history(train_length)
+            if verbose:
+                if i == 0:
+                    print(f'Num hyperparams to try for the {self.estimator} model: {len(grid)}.')
+                if is_Forecaster:
+                    print(
+                        f'Fold {i}: Train size: {len(f2.y)} ({f2.current_dates.min()} - {f2.current_dates.max()}). '
+                        f'Test Size: {len(f2.actuals)} ({f2.future_dates.min()} - {f2.future_dates.max()}). '
+                    )
+                else:
+                    print(
+                        f'Fold {i}: Train size: {len(f2.y[f2.names[0]])} ({f2.current_dates.min()} - {f2.current_dates.max()}). '
+                        f'Test Size: {len(f2.actuals[0])} ({f2.future_dates.min()} - {f2.future_dates.max()}). '
+                    )
+
+            for h, hp in enumerate(grid):
+                try:
+                    f2.manual_forecast(
+                        **hp,
+                        dynamic_testing=dynamic_tuning,
+                        test_again=False,
+                        bank_history=False,
+                    )
+                    if is_Forecaster:
+                        fcst = f2.forecast[:]
+                        evaluated_metric = func(actuals,fcst)
+                    else:
+                        fcst = [v[:] for k, v in f2.forecast.items()]
+                        evaluated_metrics = [func(a,f) for a, f in zip(actuals,fcst)]
+                        evaluated_metric = self.optimizer_funcs[self.optimize_on](evaluated_metrics) # mean, particular series, etc.
+                except (TypeError,ForecastError):
+                    raise
+                except Exception as e:
+                    #raise # good to uncomment when debugging
+                    evaluated_metric = np.nan
+                    logging.warning(
+                        f"Could not evaluate the paramaters: {hp}. error: {e}",
+                    )
+                metrics[h,i] = evaluated_metric
+
+        self.grid_evaluated = metrics
+        avg_mets = np.mean(metrics,axis=1) # any hps that ever evaluated na not in consideration
+        if np.all(np.isnan(avg_mets)):
+            warnings.warn(
+                f"None of the keyword/value combos stored in the grid could be evaluated for the {self.estimator} model."
+                " See the errors in warnings.log.",
+                category=Warning,
+            )
+            self.best_params = {}
+            self.validation_metric_value = np.nan
+        else:
+            best_hp_idx = np.nanargmin(avg_mets) if self.validation_metric != 'r2' else np.nanargmax(avg_mets)
+            self.best_params = grid[best_hp_idx]
+            self.validation_metric_value = avg_mets[best_hp_idx]
+        if verbose:
+            print(f'Chosen paramaters: {self.best_params}.')
+
     def _fit_normalizer(self, X, normalizer):
         _developer_utils.descriptive_assert(
             normalizer in self.normalizer,
@@ -498,6 +1465,7 @@ def _tune_test_forecast(
     limit_grid_size,
     suffix,
     error,
+    min_grid_size = 1,
     summary_stats = False,
     feature_importance = False,
     fi_method=None,
@@ -515,7 +1483,7 @@ def _tune_test_forecast(
         f.set_estimator(m)
         if limit_grid_size is not None:
             f.ingest_grid(m)
-            f.limit_grid_size(limit_grid_size)
+            f.limit_grid_size(n=limit_grid_size,min_grid_size=min_grid_size)
         if cross_validate:
             f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
         else:
@@ -542,4 +1510,4 @@ def _tune_test_forecast(
         if summary_stats:
             f.save_summary_stats()
         if feature_importance:
-            f.save_feature_importance(fi_method)
+            f.save_feature_importance(method=fi_method)

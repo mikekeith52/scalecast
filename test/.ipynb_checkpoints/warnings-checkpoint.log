@@ -1,0 +1,6 @@
+WARNING:root:Could not evaluate the paramaters: {'Xvars': 'all'}. error: tuple index out of range
+WARNING:root:Could not evaluate the paramaters: {'Xvars': 'all'}. error: tuple index out of range
+WARNING:root:Could not evaluate the paramaters: {'Xvars': 'all'}. error: tuple index out of range
+WARNING:root:The dynamic_testing arg is always set to True for the rnn model. This model uses direct forecasting with lags.
+WARNING:root:the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+WARNING:root:'urllib3.contrib.pyopenssl' module is deprecated and will be removed in a future release of urllib3 2.x. Read more in this issue: https://github.com/urllib3/urllib3/issues/2680

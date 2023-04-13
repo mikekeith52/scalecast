@@ -18,7 +18,6 @@ def main():
     detector.EstimatorDetect(
         estimator='lstm',
         cilevel=.99,
-        test_only=False,
         lags=24,
         epochs=25,
         validation_split=.2,

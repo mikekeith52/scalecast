@@ -32,3 +32,19 @@ def keep_smallest_first_date(*fs):
     first_date = max([min(f.current_dates) for f in fs])
     for f in fs:
         f.keep_smaller_history(first_date)
+
+def line_up_dates(*fs):
+    """ Trims all passed Forecaster objects so they all have the same dates.
+    
+    Args:
+        *fs (Forecaster objects): The objects to check and trim.
+
+    Returns:
+        None
+    """
+    keep_smallest_first_date(*fs)
+    size_needed = min(len(f.y) for f in fs)
+    for f in fs:
+        if len(f.y) > size_needed:
+            f.chop_from_front(len(f.y) - size_needed)
+

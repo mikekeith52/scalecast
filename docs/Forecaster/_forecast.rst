@@ -37,7 +37,7 @@ multivariate
 ---------------------------------------------------------------
 See also the `vecm model <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_.
 
-.. automethod:: src.scalecast.MVForecaster.MVForecaster._forecast
+.. automethod:: src.scalecast.MVForecaster.MVForecaster._forecast_sklearn
 
 >>> mvf.set_estimator('xgboost')
 >>> mvf.manual_forecast()
@@ -82,6 +82,13 @@ See also `mlp_stack <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmo
 >>> f.set_estimator('mlp')
 >>> f.manual_forecast()
 >>> f.regr # access the sklearn model properties
+
+tbats
+-------------
+.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_tbats
+
+>>> f.set_estimator('tbats')
+>>> f.manual_forecast() # above args are now available in this function
 
 theta
 -------------------------------------------------

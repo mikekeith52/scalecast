@@ -1,5 +1,6 @@
 scikit-learn
 statsmodels
+tbats
 scipy
 eli5
 numpy

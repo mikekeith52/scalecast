@@ -34,8 +34,7 @@ def weighted_series(x):
 
 def test_pickle():
     mvf = build_MVForecaster()
-    mvf.add_optimizer_func(weighted_series)
-    mvf.set_optimize_on('weighted_series')
+    mvf.set_optimize_on(weighted_series)
     mvf.add_optimizer_func(weighted_series,'weighted')
     mvf.set_optimize_on('weighted')
     with open('../../mvf.pckl','wb') as pckl:
@@ -47,9 +46,7 @@ def test_modeling():
         mvf.set_metrics(['rmse','r2'])
         mvf
         if tl > 0:
-            mvf.eval_cis(
-                cilevel = .9,
-            )
+            mvf.eval_cis(cilevel = .9)
 
         models = ('lasso','xgboost')
 
@@ -63,11 +60,15 @@ def test_modeling():
         mvf.tune_test_forecast(
             models,
             limit_grid_size=.2,
+            min_grid_size=4,
             cross_validate = True,
+            test_length = 36,
+            train_length = 500,
+            space_between_sets = 12,
             rolling = True,
             k = 2,
             dynamic_tuning = 24,
-            error = 'warn',
+            error = 'raise',
             suffix = '_cv',
         )
         mvf.set_estimator('vecm')

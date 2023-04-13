@@ -25,6 +25,7 @@ def test_pipeline():
         space_between_sets = 24,
         train_length = 500,
         test_length = 24,
+        verbose = True,
     )
     print(reverter)
     pipeline = Pipeline(

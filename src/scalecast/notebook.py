@@ -34,14 +34,13 @@ def results_vis(
         raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
 
     def display_user_selections(
-        ts_selection, mo_selection, lv_selection, ci_selection, me_selection
+        ts_selection, mo_selection, ci_selection, me_selection
     ):
         selected_data = f_dict[ts_selection]
         if plot_type == "forecast":
             selected_data.plot(
                 models=f"top_{mo_selection}",
                 order_by=me_selection,
-                level=lv_selection,
                 ci=ci_selection,
                 figsize=figsize,
             )
@@ -50,7 +49,6 @@ def results_vis(
                 models=f"top_{mo_selection}",
                 order_by=me_selection,
                 include_train=include_train,
-                level=lv_selection,
                 ci=ci_selection,
                 figsize=figsize,
             )
@@ -60,13 +58,12 @@ def results_vis(
     def on_button_clicked(b):
         mo_selection = mo_dd.value
         ts_selection = ts_dd.value
-        lv_selection = lv_dd.value
         ci_selection = ci_dd.value
         me_selection = me_dd.value
         with output:
             clear_output()
             display_user_selections(
-                ts_selection, mo_selection, lv_selection, ci_selection, me_selection
+                ts_selection, mo_selection, ci_selection, me_selection
             )
 
     all_models = []
@@ -76,7 +73,6 @@ def results_vis(
     mo_dd = widgets.Dropdown(
         options=range(1, len(all_models) + 1), description="No. Models"
     )
-    lv_dd = widgets.Dropdown(options=[False, True], description="View Level")
     ci_dd = widgets.Dropdown(
         options=[False, True], description="View Confidence Intervals"
     )
@@ -90,7 +86,7 @@ def results_vis(
     button = widgets.Button(description="Select Time Series")
     output = widgets.Output()
 
-    display(ts_dd, mo_dd, lv_dd, ci_dd, me_dd)
+    display(ts_dd, mo_dd, ci_dd, me_dd)
     display(button, output)
 
     button.on_click(on_button_clicked)
@@ -122,14 +118,13 @@ def results_vis_mv(
         raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
 
     def display_user_selections(
-        mo_selection, ts_selection, lv_selection, ci_selection, se_selection
+        mo_selection, ts_selection, ci_selection, se_selection
     ):
         selected_data = f_dict[ts_selection]
         if plot_type == "forecast":
             selected_data.plot(
                 models=mo_selection,
                 series=se_selection,
-                level=lv_selection,
                 ci=ci_selection,
                 figsize=figsize,
             )
@@ -137,7 +132,6 @@ def results_vis_mv(
             selected_data.plot_test_set(
                 models=mo_selection,
                 series=se_selection,
-                level=lv_selection,
                 ci=ci_selection,
                 include_train=include_train,
                 figsize=figsize,
@@ -148,13 +142,12 @@ def results_vis_mv(
     def on_button_clicked(b):
         mo_selection = mo_se.value
         ts_selection = ts_dd.value
-        lv_selection = lv_dd.value
         ci_selection = ci_dd.value
         se_selection = se_se.value
         with output:
             clear_output()
             display_user_selections(
-                mo_selection, ts_selection, lv_selection, ci_selection, se_selection
+                mo_selection, ts_selection, ci_selection, se_selection
             )
 
     all_models = []
@@ -170,7 +163,6 @@ def results_vis_mv(
     se_se = widgets.SelectMultiple(
         options=series, description="Series", selected=series
     )
-    lv_dd = widgets.Dropdown(options=[False, True], description="View Level")
     ci_dd = widgets.Dropdown(
         options=[False, True], description="View Confidence Intervals"
     )
@@ -179,7 +171,7 @@ def results_vis_mv(
     button = widgets.Button(description="Select Time Series")
     output = widgets.Output()
 
-    display(ts_dd, se_se, mo_se, lv_dd, ci_dd)
+    display(ts_dd, se_se, mo_se, ci_dd)
     display(button, output)
 
     button.on_click(on_button_clicked)
@@ -195,6 +187,7 @@ def tune_test_forecast(
     feature_importance=False,
     fi_method="pfi",
     limit_grid_size=None,
+    min_grid_size=1,
     suffix=None,
     error='raise',
     **cvkwargs,
@@ -228,6 +221,7 @@ def tune_test_forecast(
             Does not work for `MVForecaster` objects.
         limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
             See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
+        min_grid_size (int): Default 1. The smallest grid size to keep. Ignored if limit_grid_size is None.
         suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called
             later. If unspecified, each model can be called by its estimator name.
         error (str): One of 'ignore','raise','warn'; default 'raise'.
@@ -245,10 +239,12 @@ def tune_test_forecast(
         dynamic_tuning=dynamic_tuning,
         dynamic_testing=dynamic_testing,
         limit_grid_size=limit_grid_size,
+        min_grid_size=min_grid_size,
         suffix=suffix,
         error=error,
         summary_stats=summary_stats,
         feature_importance=feature_importance,
         fi_method=fi_method,
         tqdm = True,
+        **cvkwargs,
     )

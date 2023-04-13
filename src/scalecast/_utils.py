@@ -80,8 +80,4 @@ class _developer_utils:
             'TestSet' + m.upper() for m in metrics
         ] + [
             'InSample' + m.upper() for m in metrics
-        ] + [
-            'LevelTestSet' + m.upper() for m in metrics
-        ] + [
-            'LevelInSample' + m.upper() for m in metrics
         ] + ['ValidationMetricValue']

@@ -1,4 +1,4 @@
-__version__ = '0.17.20'
+__version__ = '0.18.0'
 
 from .util import metrics
 import inspect
@@ -52,11 +52,12 @@ __non_sklearn_estimators__ = [
     "rnn",
     "lstm",
     'naive',
+    "tbats",
     "theta",
     "combo",
 ]
 __estimators__ = __sklearn_estimators__ + __non_sklearn_estimators__
-__cannot_be_tuned__ = ["combo", "rnn", "lstm", "naive"]
+__cannot_be_tuned__ = ["combo"]
 __can_be_tuned__ = [m for m in __estimators__ if m not in __cannot_be_tuned__]
 
 # only methods with two arguments (a, f) can be used in validation
@@ -102,4 +103,4 @@ __series_colors__ = [
     "#9FE2BF",
 ] * 10
 # keywords that are passed to _bank_history() that I don't want to be recognized as hyperparams
-__not_hyperparams__ = ["Xvars", "normalizer", "tuned", "plot_loss", "plot_loss_test"]
+__not_hyperparams__ = ["Xvars", "tuned", "plot_loss", "plot_loss_test", "lags", "mvf"]

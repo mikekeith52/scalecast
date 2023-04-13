@@ -20,11 +20,11 @@ def main():
         for t in (
             'Deseason',
             'Detrend',
-            'Diff',
             'Log',
             'MinMax',
             'Scale',
             'Sqrt',
+            'Diff',
         ):
             f = getattr(transformer,f'{t}Transform')()
             forecaster(f)
@@ -38,6 +38,7 @@ def main():
         f = transformer.DetrendRevert()
         new_vals = np.round(f.y.to_list()[:2] + f.y.to_list()[-2:],2)
         comp_vals(orig_vals,new_vals,t)
+
 
 if __name__ == '__main__':
     main()

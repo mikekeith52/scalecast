@@ -225,6 +225,7 @@ class Pipeline_parent:
         test_length=None,
         cis=None,
         cilevel=None,
+        verbose=False,
         **kwargs,
     ) -> List[Dict[str,pd.DataFrame]]:
         """ Runs an out-of-sample backtest of the pipeline over a certain amount of iterations.
@@ -303,7 +304,7 @@ class Pipeline_parent:
                             results[-1]['Obs'].shape[0] - len(f[0].y)
                         ) + f[0].y.to_list() 
                     )
-        for i, _ in enumerate(_prepare_backtest_results[0]):
+        for i, fsi in enumerate(_prepare_backtest_results[0]):
             fs = self.fit_predict(*[ft[i][0] for ft in _prepare_backtest_results],**kwargs)
             if isinstance(fs,MVForecaster):
                 fs = break_mv_forecaster(fs)

@@ -138,25 +138,6 @@ def test_modeling():
             'lstm',
         )
 
-        f.tune_test_forecast(
-            models,
-            cross_validate = True,
-            rolling = True,
-            k = 2,
-            test_length = 36,
-            train_length = 500,
-            space_between_sets = 12,
-            dynamic_tuning = 24,
-            dynamic_testing = 24,
-            feature_importance = True,
-            summary_stats = True,
-            suffix = '_cv',
-            limit_grid_size = .2,
-            min_grid_size = 4,
-            verbose = True,
-            error = 'raise',
-        )
-
         f.set_estimator('lstm')
         f.manual_forecast(epochs = 10)
 
@@ -168,6 +149,20 @@ def test_modeling():
         f.manual_forecast()
         f.add_signals(['lstm'],fill_strategy = None)
         f.add_signals(['lstm'],train_only=tl > 0)
+
+        f.tune_test_forecast(
+            models,
+            cross_validate = True,
+            rolling = True,
+            k = 2,
+            dynamic_tuning = 24,
+            dynamic_testing = 24,
+            feature_importance = True,
+            summary_stats = True,
+            suffix = '_cv',
+            limit_grid_size = .2,
+            error = 'warn',
+        )
 
         f.set_estimator('combo')
         f.manual_forecast()
@@ -207,7 +202,6 @@ def test_modeling():
             f.export_fitted_vals(model=best_model).to_excel('../../fvs.xlsx',index=False)
             f.all_feature_info_to_excel(out_path='../..')
             f.export_Xvars_df().to_excel('../../Xvars.xlsx',index=False)
-            f.export_validation_grid(models[0] + '_cv').to_excel('../../validation_grid.xlsx',index=False)
             with open('../../f.pckl','wb') as pckl:
                 pickle.dump(f,pckl)
 

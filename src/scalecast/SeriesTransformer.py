@@ -43,7 +43,6 @@ class SeriesTransformer:
         >>> f = transformer.Transform(log10)
         """
         self.f.y = pd.Series(transform_func(self.f.y, **kwargs))
-        self.f.levely = list(transform_func(self.f.levely, **kwargs))
         return self.f
 
     def Revert(self, revert_func, exclude_models = [], **kwargs):
@@ -71,7 +70,6 @@ class SeriesTransformer:
         >>> f = transformer.Transform(log10)
         >>> f = transformer.Revert(log10_revert)
         """
-        self.f.levely = list(revert_func(self.f.levely, **kwargs))
         self.f.y = pd.Series(revert_func(self.f.y, **kwargs))
 
         for m, h in self.f.history.items():
@@ -86,37 +84,21 @@ class SeriesTransformer:
                 "LowerCI",
                 "TestSetActuals",
                 "FittedVals",
-                "LevelForecast", 
-                "LevelTestSetPreds", 
-                "LevelFittedVals",
-                "LevelLowerCI",
-                "LevelTSLowerCI",
-                "LevelUpperCI",
-                "LevelTSUpperCI",
             ):
-                try:
+                if k in h:
                     h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).fillna(method='ffill').to_list()
-                except KeyError:
-                    pass
-            h['LevelY'] = self.f.levely
+                elif not k.endswith('CI'):
+                    h[k] = []
             for met, func in self.f.metrics.items():
                 h['TestSet' + met.upper()] = _developer_utils._return_na_if_len_zero(
                     self.f.y.iloc[-len(h["TestSetPredictions"]) :], 
                     h["TestSetPredictions"], 
                     func,
                 )
-                h['LevelTestSet' + met.upper()] = _developer_utils._return_na_if_len_zero(
-                    self.f.y.iloc[-len(h["LevelTestSetPreds"]) :], 
-                    h["LevelTestSetPreds"], 
-                    func,
-                )
-                h['InSample' + met.upper()] = func(
+                h['InSample' + met.upper()] = _developer_utils._return_na_if_len_zero(
                     self.f.y.iloc[-len(h['FittedVals']) :], 
-                    h['FittedVals'], 
-                )
-                h['LevelInSample' + met.upper()] = func(
-                    self.f.y.iloc[-len(h['LevelFittedVals']) :], 
-                    h['LevelFittedVals'],
+                    h['FittedVals'],
+                    func,
                 )
 
         return self.f
@@ -179,7 +161,6 @@ class SeriesTransformer:
         """
         self.detrend_params = {
             'origy':self.f.y.copy(),
-            'origlevely':self.f.levely.copy(),
             'origdates':self.f.current_dates.copy()
         }
 
@@ -260,7 +241,6 @@ class SeriesTransformer:
             )
 
         self.f.y = pd.Series(self.f.y.values - self.detrend_params['fvs'],dtype=float)
-        self.f.levely = self.f.y.to_list()
         return self.f
 
     def DetrendRevert(self, exclude_models = []):
@@ -288,36 +268,28 @@ class SeriesTransformer:
         if not hasattr(self,'detrend_params'):
             raise ForecastError('Before reverting a trend, make sure DetrendTransform has already been called.')
 
-        self.f.levely = self.detrend_params['origlevely']
         self.f.y = self.detrend_params['origy']
         self.f.current_dates = self.detrend_params['origdates']
 
         fvs = {
-            "LevelTestSetPreds":self.detrend_params['fvs_test'],
             "TestSetPredictions":self.detrend_params['fvs_test'],
             "TestSetActuals":self.detrend_params['fvs_test'],
-            "LevelFittedVals":self.detrend_params['fvs'],
             "FittedVals":self.detrend_params['fvs'],
-            "LevelForecast":self.detrend_params['fvs_fut'],
             "Forecast":self.detrend_params['fvs_fut'],
             "TestSetUpperCI":self.detrend_params['fvs_test'],
             "TestSetLowerCI":self.detrend_params['fvs_test'],
             "UpperCI":self.detrend_params['fvs_fut'],
             "LowerCI":self.detrend_params['fvs_fut'],
-            "LevelLowerCI":self.detrend_params['fvs_fut'],
-            "LevelTSLowerCI":self.detrend_params['fvs_test'],
-            "LevelUpperCI":self.detrend_params['fvs_fut'],
-            "LevelTSUpperCI":self.detrend_params['fvs_test'],
         }
 
         for m, h in self.f.history.items():
             if m in exclude_models:
                 continue
             for k,v in fvs.items():
-                try:
+                if k in h:
                     h[k] = [i + fvs for i, fvs in zip(h[k],v)]
-                except KeyError:
-                    pass
+                elif not k.endswith('CI'):
+                    h[k] = []
 
         delattr(self,'detrend_params')
         return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
@@ -518,7 +490,6 @@ class SeriesTransformer:
         `Forecaster.add_lagged_terms()` if you want to use those before calling this function.
         Call `Forecaster.add_ar_terms()` and `Forecaster.add_AR_terms()` after calling this function.
         Call twice with the same value of m to take second differences.
-        If using this to take series differences, do not also use the native `Forecaster.diff()` function.
 
         Args:
             m (int): Default 1. The seasonal difference to take.
@@ -560,7 +531,6 @@ class SeriesTransformer:
     def DiffRevert(self, m=1, exclude_models = []):
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Calling this makes so that AR values become unusable and have to be re-added to the object.
-        If using this to revert differences, you should not also use the native Forecaster.diff() function.
 
         Args:
             m (int): Default 1. The seasonal difference to revert.
@@ -604,32 +574,27 @@ class SeriesTransformer:
         dates_orig = getattr(self, f"orig_dates_{m}_{n}")
 
         self.f.y = pd.Series(seasrevert(self.f.y, y_orig, m))
-        self.f.levely = self.f.y.to_list()
         self.f.current_dates = pd.Series(dates_orig)
 
         for mod, h in self.f.history.items():
             if mod in exclude_models:
                 continue
-            h["Forecast"] = list(seasrevert(h["Forecast"], self.f.y[-m:], m))[m:]
-            h["TestSetPredictions"] = list(
-                seasrevert(
-                    h["TestSetPredictions"],
-                    self.f.y.to_list()[-(m + self.f.test_length) : -self.f.test_length],
-                    m,
-                )
-            )[m:]
-            h["LevelY"] = self.f.levely[:]
-            h["LevelForecast"] = h["Forecast"][:]
-            h["LevelTestSetPreds"] = h["TestSetPredictions"][:]
-            h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
-
-            h['FittedVals'] = list(
-                seasrevert(h['FittedVals'],self.f.y.values[-len(h['FittedVals'])-m:], m)
-            )[m:]
-            h['LevelFittedVals'] = h['FittedVals'][:]
-            if "LevelUpperCI" not in self.f.history[mod].keys(): # no cis evaluated
+            if hasattr(h['Forecast'],'__len__'):
+                h["Forecast"] = list(seasrevert(h["Forecast"], self.f.y[-m:], m))[m:]
+                h['FittedVals'] = list(
+                    seasrevert(h['FittedVals'],self.f.y.values[-len(h['FittedVals'])-m:], m)
+                )[m:]
+            if hasattr(h['TestSetPredictions'],'__len__'):
+                h["TestSetPredictions"] = list(
+                    seasrevert(
+                        h["TestSetPredictions"],
+                        self.f.y.to_list()[-(m + self.f.test_length) : -self.f.test_length],
+                        m,
+                    )
+                )[m:]
+                h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
+            if np.isnan(self.f.history[mod]['CILevel']): # no cis evaluated
                 continue
-
             # undifference cis
             fcst = h["Forecast"]
             test_preds = h["TestSetPredictions"]
@@ -641,16 +606,6 @@ class SeriesTransformer:
                 "LowerCI",
                 "TestSetUpperCI",
                 "TestSetLowerCI",
-                m = mod,
-                ci_range = ci_range,
-                forecast = fcst,
-                tspreds = test_preds,
-            )
-            self.f._set_cis(
-                "LevelUpperCI",
-                "LevelLowerCI",
-                "LevelTSUpperCI",
-                "LevelTSLowerCI",
                 m = mod,
                 ci_range = ci_range,
                 forecast = fcst,
@@ -717,17 +672,20 @@ class SeriesTransformer:
             future_dates = len(self.f.future_dates)
         )
         f.set_estimator('naive')
-        f.manual_forecast(seasonal=True,m=m)
+        f.manual_forecast(
+            seasonal=True,
+            m=m,
+            test_again=False,
+            bank_history=False,
+        )
         params = {
             'model':model,
-            'levely':self.f.levely[:],
             'y':self.f.y.copy(),
             'current_seasonality':current_seasonality.to_list(),
             'future_seasonality':f.forecast,
         }
         setattr(self,f'deseason_params_{m}',params)
         self.f.y = deseasoned.reset_index().iloc[:,-1]
-        self.f.levely = deseasoned.reset_index().iloc[:,-1]
         return self.f
 
     def DeseasonRevert(self, m = None, exclude_models = []):
@@ -754,7 +712,6 @@ class SeriesTransformer:
             m = freq_to_period(self.f.freq)
         params = getattr(self,f'deseason_params_{m}')
         try:
-            self.f.levely = params['levely']
             self.f.y = params['y']
         except AttributeError:
             raise ForecastError(
@@ -762,34 +719,27 @@ class SeriesTransformer:
             )
 
         atts = {
-            "LevelTestSetPreds":params['current_seasonality'],
             "TestSetPredictions":params['current_seasonality'],
             "TestSetActuals":params['current_seasonality'],
-            "LevelFittedVals":params['current_seasonality'],
             "FittedVals":params['current_seasonality'],
-            "LevelForecast":params['future_seasonality'],
             "Forecast":params['future_seasonality'],
             "TestSetUpperCI":params['current_seasonality'],
             "TestSetLowerCI":params['current_seasonality'],
             "UpperCI":params['future_seasonality'],
             "LowerCI":params['future_seasonality'],
-            "LevelLowerCI":params['future_seasonality'],
-            "LevelTSLowerCI":params['current_seasonality'],
-            "LevelUpperCI":params['future_seasonality'],
-            "LevelTSUpperCI":params['current_seasonality'],
         }
 
         for mod, h in self.f.history.items():
             if mod in exclude_models:
                 continue
             for a, v in atts.items():
-                try:
+                if a in h:
                     h[a] = [
                         (i + s) if params['model'] in ('add','additive') 
                         else (i * s) for i, s in zip(h[a],v[-len(h[a]):])
                     ]
-                except KeyError:
-                    pass
+                elif not a.endswith('CI'):
+                    h[a] = []
 
         delattr(self, f"deseason_params_{m}")
         return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
