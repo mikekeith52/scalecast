@@ -34,6 +34,10 @@ export_model_summaries()
 
     model_summaries = export_model_summaries(f_dict,determine_best_by='LevelTestSetMAPE')
 
+line_up_dates()
+------------------------------
+.. autofunction:: src.scalecast.multiseries.line_up_dates
+
 keep_smallest_first_date()
 ------------------------------
 .. autofunction:: src.scalecast.multiseries.keep_smallest_first_date
