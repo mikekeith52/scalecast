@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.1] - 2023-04-14
+### Added
+- Added functions to create expanding dynamic intervals using the conformal framework with backtesting: `util.backtest_for_resid_matrix()`, `util.get_backtest_resid_matrix()`, and `util.overwrite_forecast_intervals()`.
+- Added a check for the correct estimator type with `Forecaster.auto_Xvar_select()`.
+### Changed
+### Fixed
+- Fixed `Forecaster.export_Xvars_df()`, which wasn't working correctly when exogenous regressors were added with `Forecaster.ingest_Xvars_df()`.
+
 ## [0.18.0] - 2023-04-13
 ### Added
 - Added tbats model.

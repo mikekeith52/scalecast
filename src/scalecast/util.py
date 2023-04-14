@@ -1027,3 +1027,108 @@ def find_optimal_transformation(
         print(f'Final Selection:\n{final_transformer.transformers}')
     
     return final_transformer, final_reverter 
+
+def backtest_for_resid_matrix(
+    *fs,
+    pipeline,
+    alpha = 0.05,
+    bt_n_iter = None,
+    jump_back = 1,
+):
+    """ Performs a backtest on one or more Forecaster objects using pipelines.
+    Specifically, performs a backtest so that a residual matrix to make dynamic intervals
+    can easily be obtained. (See util.get_backtest_resid_matrix() and util.overwrite_forecast_intervals()).
+
+    Args:
+        *fs (Forecaster): The objects that contain the evaluated forecasts.
+            Send one if univariate forecasting with the `Pipeline` class, 
+            more than one if multivariate forecasting with the `MVPipeline` class.
+        pipeline (Pipeline or MVPipeline): The pipeline to send fs through.
+        alpha (float): Default 0.05. The level that confidence intervals need to be evaluated at. 0.05 = 95%.
+        bt_n_iter (int): Optional. The number of iterations to backtest. If left unspecified, chooses 1/alpha, 
+            the minimum needed to set reliable conformal intervals.
+        jump_back (int): Default 1. The space between consecutive training sets in the backtest.
+
+
+    Returns:
+        (List[Dict[str,pd.DataFrame]]): The results from each model and backtest iteration.
+        Each dict element of the resulting list corresponds to the Forecaster objects in the order
+        they were passed (will be length 1 if univariate forecasting). Each key of each dict is either 'Actuals', 'Obs',
+        or the name of a model that got backtested. Each value is a DataFrame with the iteration values.
+        The 'Actuals' frame has the date information and are the actuals over each forecast horizon. 
+        The 'Obs' frame has the actual historical observations to make each forecast, back padded with NA values to make each array the same length.
+    """
+    bt_n_iter = int(round(1/alpha)) if bt_n_iter is None else bt_n_iter
+    if bt_n_iter < round(1/alpha):
+        raise ValueError(
+            'bt_n_iter must be at least 1/alpha.'
+            f' alpha is {alpha} and bt_n_iter is {bt_n_iter}.'
+            f' bt_n_iter must be at least {1/alpha:.0f} to successfully backtest {1-alpha:.0%} confidence intervals.'
+        )
+        
+    bt_results = pipeline.backtest(
+        *fs,
+        n_iter=bt_n_iter,
+        jump_back = jump_back,
+        test_length = 0,
+        cis = False,
+    )
+    
+    return bt_results
+
+def get_backtest_resid_matrix(backtest_results):
+    """ Converts results from a backtest pipeline into a matrix of residuals.
+    Each row in this residual is for a backtest iteration and the columns are a forecast step.
+
+    Args:
+        backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
+            Recommend to obtain this from running `util.backtest_for_resid_matrix()` and to pass
+            the results to `util.overwrite_forecast_intervals()`.
+
+    Returns:
+        (list[dict[str,numpy.ndarray]]): A list where each element corresponds to the given Forecaster object
+        in a backtest. The elements of the list are dictionaries where each key is an evaluated model name and
+        each value is a numpy matrix of the appropriate dimensions that can be used to determine a dynamic prediction interval.
+    """
+    mats = []
+    for btr in backtest_results:
+        mat = {
+            m:np.zeros((btr['Obs'].shape[1],btr['Actuals'].shape[0]))
+            for m in btr if m not in ('Actuals','Obs')
+        }
+        for m, v in btr.items():
+            if m in ('Actuals','Obs'):
+                continue
+            for i in range(mat[m].shape[0]):
+                mat[m][i,:] = btr['Actuals'][f'Iter{i}Vals'].values - v[f'Iter{i}Fcst'].values
+        mats.append(mat)
+    return mats
+
+def overwrite_forecast_intervals(*fs,backtest_resid_matrix,models=None,alpha = .05):
+    """ Overwrites naive forecast intervals stored in passed Forecaster objects with dynamic intervals.
+    Overwrites future predictions only; does not overwrite intervals for test-set prediction intervals.
+
+    Args:
+        *fs (Forecaster): The objects that contain the evaluated forecasts to overwrite confidence intervals.
+        backtest_resid_matrix (list): The output returned from `util.get_backtest_resid_matrix()`.
+        models (list): Optional. The models to overwrite intervals for. By default, overwrites all
+            models found in backtest_resid_matrix.
+        alpha (float): Default 0.05. The level that confidence intervals need to be evaluated at. 0.05 = 95%.
+            Use the same or larger value passed to backtest_for_resid_matrix() or else this will fail.
+    """
+    for f, matrix in zip(fs,backtest_resid_matrix):
+        i = 0
+        models = matrix.keys() if models is None else models
+        for m, mat in matrix.items():
+            if m not in models:
+                continue
+            elif i == 0 and mat.shape[0] < round(1/alpha):
+                raise ValueError(
+                    f'Not enough backtested observations to evaluate confidence intervals at the {1-alpha:.0%} level.'
+                    ' Please set alpha to whatever it was set to when running backtest_for_resid_matrix().'
+                )
+                i += 1
+            percentiles = np.percentile(np.abs(mat),100*(1-alpha),axis=0)
+            f.history[m]['UpperCI'] = np.array(f.history[m]['Forecast']) + percentiles
+            f.history[m]['LowerCI'] = np.array(f.history[m]['Forecast']) - percentiles
+            f.history[m]['CILevel'] = 1-alpha

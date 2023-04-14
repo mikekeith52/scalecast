@@ -1870,12 +1870,14 @@ class Forecaster(Forecaster_parent):
                     #https://stackoverflow.com/questions/60062818/difference-between-removing-duplicates-from-a-list-using-dict-and-set
                     Xvars_deduped.append(list(dict.fromkeys(xvar_set))) # dedupe and preserve order
             return Xvars_deduped
+        
+        estimator = self.estimator if estimator is None else estimator
+        _developer_utils._check_if_correct_estimator(estimator,self.sklearn_estimators)
 
         using_r2 = monitor.endswith("R2") or (
-            self.validation_metric == "r2" and monitor == "ValidationMetricValue"
+            self.validation_metric == "r2" 
+            and monitor == "ValidationMetricValue"
         )
-
-        estimator = self.estimator if estimator is None else estimator
 
         trend_metrics = {}
         seasonality_metrics = {}
@@ -2750,7 +2752,8 @@ class Forecaster(Forecaster_parent):
     def chop_from_back(self,n):
         """ Cuts y observations in the object from the back by counting forward from the beginning.
 
-        n (int): The number of observations to cut from the back.
+        Args:
+            n (int): The number of observations to cut from the back.
 
         >>> f.chop_from_back(10) # chops 10 observations off the back
         """
@@ -3415,28 +3418,23 @@ class Forecaster(Forecaster_parent):
             (DataFrame): A dataframe of Xvars and names/values stored in the object.
         """
         self._typ_set() if not hasattr(self, "estimator") else None
-        fut_df = pd.DataFrame()
-        for k, v in self.future_xreg.items():
-            if len(v) < len(self.future_dates):
-                fut_df[k] = v + [None] * (len(self.future_dates) - len(v))
-            else:
-                fut_df[k] = v[:]
-
         df = pd.concat(
             [
                 pd.concat(
                     [
                         pd.DataFrame({"DATE": self.current_dates.to_list()}),
-                        pd.DataFrame(self.current_xreg).reset_index(drop=True),
+                        pd.DataFrame({k: v.to_list() for k, v in self.current_xreg.items()}),
                     ],
                     axis=1,
                 ),
                 pd.concat(
-                    [pd.DataFrame({"DATE": self.future_dates.to_list()}), fut_df],
+                    [
+                        pd.DataFrame({"DATE": self.future_dates.to_list()}), 
+                        pd.DataFrame({k: v[:] for k, v in self.future_xreg.items()})
+                    ],
                     axis=1,
                 ),
             ],
-            ignore_index=True,
         )
         return df.dropna() if dropna else df
 
