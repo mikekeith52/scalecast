@@ -223,8 +223,7 @@ metrics = backtest_metrics(backtest_results)
 
 ### [Transforming and Reverting](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 - [Time Series Transformations (and Reverting) Made Easy](https://medium.com/towards-data-science/time-series-transformations-and-reverting-made-easy-f4f768c18f63)
-- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/transforming/series_transformer.html)
-- [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/transforming/medium_code.ipynb)
+- [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/transforming/medium_code.html)  
   
 ### Confidence Intervals
 - [Easy Distribution-Free Conformal Intervals for Time Series](https://medium.com/towards-data-science/easy-distribution-free-conformal-intervals-for-time-series-665137e4d907)
