@@ -226,8 +226,10 @@ metrics = backtest_metrics(backtest_results)
 - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/transforming/medium_code.html)  
   
 ### Confidence Intervals
-- [Easy Distribution-Free Conformal Intervals for Time Series](https://medium.com/towards-data-science/easy-distribution-free-conformal-intervals-for-time-series-665137e4d907)
-- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
+- [Easy Distribution-Free Conformal Intervals for Time Series](https://medium.com/towards-data-science/easy-distribution-free-conformal-intervals-for-time-series-665137e4d907)  
+- [Dynamic Conformal Intervals for any Time Series Model](https://towardsdatascience.com/dynamic-conformal-intervals-for-any-time-series-model-d1638aa48527)
+- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
+- [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/misc/cis-bt/cis-bt.html)
 
 ### Dynamic Validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
