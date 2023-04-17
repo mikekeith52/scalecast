@@ -793,8 +793,8 @@ def find_optimal_transformation(
         m (str, int, list[int]): Default 'auto'. The number of observations that counts one seasonal step.
             When 'auto', uses the M4 competition values: 
             for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
-            so pass your own values for other frequencies. If m == 1, no first seasonal difference will be tried.
-            If list, multiple seasonal differences can be tried and up to that many seasonal differences can be selected.
+            so pass your own values for other frequencies. When 1, no seasonal adjustments will be tried.
+            If list, multiple adjustments will be tried and up to that many adjustments can be selected.
         model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
             The type of seasonal component. Only relevant for the 'seasonal_adj' option in try_order.
         verbose (bool): Default False. Whether to print info about the transformers/reverters being tried.
