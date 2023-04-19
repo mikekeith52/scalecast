@@ -17,7 +17,6 @@ docs/conf.py
 docs/index.rst
 docs/make.bat
 docs/requirements.txt
-docs/.ipynb_checkpoints/requirements-checkpoint.txt
 docs/Forecaster/.DS_Store
 docs/Forecaster/AnomalyDetector.rst
 docs/Forecaster/Auxmodels.rst
@@ -32,7 +31,6 @@ docs/Forecaster/Pipeline.rst
 docs/Forecaster/SeriesTransformer.rst
 docs/Forecaster/Util.rst
 docs/Forecaster/_forecast.rst
-docs/Forecaster/.ipynb_checkpoints/ForecasterGlobals-checkpoint.ipynb
 docs/_static/RecurisveForecasting.png
 docs/_static/RecurisveForecastingdt2.png
 docs/_static/logo2.png
@@ -111,12 +109,6 @@ test/test_Pipeline.py
 test/test_SeriesTransformer.py
 test/test_all.py
 test/test_multiseries.py
-test/.ipynb_checkpoints/Grids-checkpoint.py
-test/.ipynb_checkpoints/tbats-checkpoint.ipynb
-test/.ipynb_checkpoints/test-checkpoint.ipynb
-test/.ipynb_checkpoints/test_Forecaster-checkpoint.py
-test/.ipynb_checkpoints/test_mv-checkpoint.ipynb
-test/.ipynb_checkpoints/warnings-checkpoint.log
 test/__pycache__/ExampleGrids.cpython-38.pyc
 test/__pycache__/ExampleGrids.cpython-39.pyc
 test/__pycache__/Grids.cpython-38.pyc

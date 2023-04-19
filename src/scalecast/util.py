@@ -533,7 +533,7 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
     data = np.array([v.astype(float).values.copy() for k, v in mvf.y.items()]).T
 
     if mvf.current_xreg:
-        exog = np.array(v.values.copy() for k, v in mvf.current_xreg.items())
+        exog = np.array(v.values.copy() for k, v in mvf.current_xreg.items()).T
     else:
         exog = None
 
@@ -747,6 +747,7 @@ def find_optimal_transformation(
     scale_type = ['Scale','MinMax'],
     m='auto',
     model = 'add',
+    return_train_only = False,
     verbose = False,
     **kwargs,
 ):
@@ -797,6 +798,10 @@ def find_optimal_transformation(
             If list, multiple adjustments will be tried and up to that many adjustments can be selected.
         model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
             The type of seasonal component. Only relevant for the 'seasonal_adj' option in try_order.
+        return_train_only (bool): Default False. Whether the returned selections should be set to train_only.
+            All tries are completely out-of-sample but the returned transformations will not hold out the
+            test-set in the Forecaster object when detrending, deseasoning, and scaling, so setting this to True
+            can prevent leakage.
         verbose (bool): Default False. Whether to print info about the transformers/reverters being tried.
         **kwargs: Passed to the `Forecaster.manual_forecast()` function and possible values change based on which
             estimator is used.
@@ -889,10 +894,11 @@ def find_optimal_transformation(
     lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[0] if lags == 'auto' else lags
 
     if verbose:
-        print(f'All transformation tries will use {lags} lags.')
+        print(f'Using {estimator} model to find the best transformation set on {num_test_sets} test sets, each {test_length} in length.')
+        if estimator in f.sklearn_estimators:
+            print(f'All transformation tries will be evaluated with {lags} lags.')
 
     level_met = neg_r2(make_pipeline_fit_predict(f,[],[]))
-
     final_transformer = []
     final_reverter = []
 
@@ -1023,6 +1029,21 @@ def find_optimal_transformation(
     
     final_transformer = Pipeline.Transformer(transformers = final_transformer)
     final_reverter = Pipeline.Reverter(reverters = final_reverter,base_transformer = final_transformer)
+
+    if return_train_only:
+        has_train_only = (
+            'DetrendTransform',
+            'DeseasonTransform',
+            'ScaleTransform',
+            'MinMaxTransform',
+        )
+        for i, t in enumerate(final_transformer.transformers):
+            if t[0] in has_train_only:
+                if len(t) == 1 or not isinstance(t[-1],dict):
+                    final_transformer.transformers[i] = t + ({'train_only':True},)
+                else:
+                    t[-1]['train_only'] = True
+
     if verbose:
         print(f'Final Selection:\n{final_transformer.transformers}')
     

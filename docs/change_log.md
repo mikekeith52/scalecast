@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.2] - 2023-04-19
+### Added
+- Added `MVForecaster.add_signals()` for multivariate stacking.
+- Added `Forecaster.add_series()` to make multivariate RNNs possible.
+- Added `return_train_only` in the `util.find_optimal_transformation()` function to add additional leaking-prevention measures to this function.
+- Added padding options in `Forecaster.ingest_Xvars_df()`.
+- Added `exclude_models` argument to `Reverter.fit_transform()`.
+### Changed
+- `SeriesTransformer` no longer deletes attributes after reverting, making the object more reusable.
+- `Reverter` objects always copy the passed `Forecaster` objects to make them more flexible and able to be used in more multivariate contexts.
+- Added `__copy__()` and `__deepcopy__()` methods to several objects.
+- Removed `Forecaster.add_diffed_terms()`.
+- Changed how `Forecaster.add_lagged_terms()` deals with the introduction of N/A values -- just warn instead of chopping observations.
+- Changed how `train_only` arguments are read in `SeriesTransformer` when there is no test_length in the `Forecaster` object. If test_length is 0, then `train_only` behaves as if it were False.
+### Fixed
+- Fixed how exogenous variables are read in `util.find_optimal_lag_order()`.
+- `train_only` was being ignored in `SeriesTransformer.DeseasonTransform()`.
+
 ## [0.18.1] - 2023-04-14
 ### Added
 - Added functions to create expanding dynamic intervals using the conformal framework with backtesting: `util.backtest_for_resid_matrix()`, `util.get_backtest_resid_matrix()`, and `util.overwrite_forecast_intervals()`.

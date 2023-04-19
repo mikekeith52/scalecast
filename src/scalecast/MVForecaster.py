@@ -56,7 +56,7 @@ class MVForecaster(Forecaster_parent):
             optimize_on (str): The way to aggregate the derived metrics when optimizing models across all series. 
                 This can be a function: 'mean', 'min', 'max', a custom function that takes a list of objects and returns an aggregate function (such as a weighted average) 
                 or a series name. Custom functions and weighted averages can also be added later
-                by calling mvf.add_optimizer_func() and then mvf.set_optimize_on().
+                by calling mvf.set_optimize_on().
             cis (bool): Default False. Whether to evaluate probabilistic confidence intervals for every model evaluated.
                 If setting to True, ensure you also set a test_length of at least 20 observations for 95% confidence intervals.
                 See eval_cis() and set_cilevel() methods and docstrings for more information.
@@ -70,7 +70,7 @@ class MVForecaster(Forecaster_parent):
             **kwargs: Become attributes.
         """
         super().__init__(
-            y = fs[0].y,
+            y = fs[0].y, # placeholder -- will be overwritten
             test_length = test_length,
             cis = cis,
             metrics = metrics,
@@ -93,7 +93,7 @@ class MVForecaster(Forecaster_parent):
                 )
 
         if len(set([f.freq for f in fs])) > 1:
-            raise ValueError("All date frequencies must be equal.")
+            raise ValueError("All date frequencies in passed Forecaster objects must be equal.")
         if len(fs) < 2:
             raise ValueError("Must pass at least two series.")
 
@@ -230,6 +230,51 @@ class MVForecaster(Forecaster_parent):
         """ Placeholder function.
         """
         return
+
+    def add_signals(
+        self,
+        model_nicknames, 
+        series = 'all', 
+        fill_strategy = 'actuals', 
+        train_only = False
+    ):
+        """ Adds the predictions from already-evaluated models as covariates that can be used for future evaluated models.
+        The names of the added variables will all begin with "signal_" and end with the given model nickname.
+
+        Args:
+            model_nicknames (list): The names of already-evaluated models with information stored in the history attribute.
+            fill_strategy (str or None): The strategy to fill NA values that are present at the beginning of a given model's fitted values.
+                Available options are: 'actuals' (default) which will replace nulls with actuals;
+                'bfill' which will backfill null values;
+                or None which will leave null values alone, which can cause errors in future evaluated models.
+            train_only (bool): Default False. Whether to add fitted values from the training set only.
+                The test-set predictions will be out-of-sample if this is True. The future unknown values are always out-of-sample.
+                Even when this is True, the future unknown values are taken from a model trained on the full set of
+                known observations.
+
+        >>> mvf.set_estimator('xgboost')
+        >>> f.manual_forecast()
+        >>> f.add_signals(model_nicknames = ['xgboost']) # adds regressors called 'signal_xgboost_{series1name}', ..., 'signal_xgboost_{seriesNname}'
+        """
+        series = self._parse_series(series)
+        for m in model_nicknames:
+            for s in series:
+                fcst = self.history[m]['Forecast'][s][:]
+                fvs = self.history[m]['FittedVals'][s][:]
+                num_fvs = len(fvs)
+                pad = (
+                    [
+                        np.nan if fill_strategy is None
+                        else fvs[0]
+                    ] * (len(self.y[s]) - num_fvs) 
+                    if fill_strategy != 'actuals' 
+                    else self.y[s].to_list()[:-num_fvs]
+                )
+                self.current_xreg[f'signal_{m}_{s}'] = pd.Series(pad + fvs)
+                if train_only:
+                    tsp = self.history[m]['TestSetPredictions'][s][:]
+                    self.current_xreg[f'signal_{m}_{s}'].iloc[-len(tsp):] = tsp
+                self.future_xreg[f'signal_{m}_{s}'] = fcst
 
     def chop_from_front(self,n,fcst_length=None):
         """ Cuts the amount of y observations in the object from the front counting backwards.
@@ -610,7 +655,7 @@ class MVForecaster(Forecaster_parent):
                     **kwargs,
                 )
         self.trained_models = trained_full # does not go to history
-        if hasattr(self,'actuals'):
+        if hasattr(self,'actuals'): # skip fitted values if only testing out-of-sample
             self.fitted_values = {k:[] for k in self.y}
         elif nolags:
             self.fitted_values = {
@@ -631,7 +676,7 @@ class MVForecaster(Forecaster_parent):
         )
 
     def _parse_normalizer(self, X_train, normalizer):
-        """ fits an appropriate scaler to training data that will then be applied to test and future data
+        """ fits an appropriate scaler to training data that will then be applied to future data
 
         Args:
             X_train (DataFrame): The independent values.

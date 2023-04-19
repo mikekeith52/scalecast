@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import warnings
 import logging
+import copy
 
 class SeriesTransformer:
     def __init__(self, f, deepcopy=True):
@@ -21,6 +22,18 @@ class SeriesTransformer:
 
     def __str__(self):
         return self.__repr__()
+
+    def __copy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        return obj
+
+    def __deepcopy__(self, memo={}):
+        obj = type(self).__new__(self.__class__)
+        memo[id(self)] = obj
+        for k, v in self.__dict__.items():
+            setattr(obj, k, copy.deepcopy(v, memo))
+        return obj
 
     def Transform(self, transform_func, **kwargs):
         """ Transforms the y attribute in the Forecaster object.
@@ -164,6 +177,8 @@ class SeriesTransformer:
             'origdates':self.f.current_dates.copy()
         }
 
+        train_only = train_only if self.f.test_length > 0 else False
+
         fmod = self.f.deepcopy()
         fmod.drop_all_Xvars()
         fmod.add_time_trend()
@@ -291,7 +306,7 @@ class SeriesTransformer:
                 elif not k.endswith('CI'):
                     h[k] = []
 
-        delattr(self,'detrend_params')
+        #delattr(self,'detrend_params')
         return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
         
     def LogTransform(self):
@@ -381,6 +396,7 @@ class SeriesTransformer:
         if hasattr(self, "orig_mean"):
             return
 
+        train_only = train_only if self.f.test_length > 0 else False
         stop_at = len(self.f.y) if not train_only else len(self.f.y) - self.f.test_length
 
         self.orig_mean = self.f.y.values[:stop_at].mean()
@@ -417,11 +433,11 @@ class SeriesTransformer:
 
         try:
             f = self.Revert(func, mean=self.orig_mean, std=self.orig_std, **kwargs)
-            delattr(self, "orig_mean")
-            delattr(self, "orig_std")
+            #delattr(self, "orig_mean")
+            #delattr(self, "orig_std")
             return f
         except AttributeError:
-            raise ValueError("cannot revert a series that was never scaled.")
+            raise ValueError("Cannot revert a series that was never scaled.")
 
     def MinMaxTransform(self,train_only=False):
         """ Transforms the y attribute in the Forecaster object using a min-max scale transformation.
@@ -442,6 +458,7 @@ class SeriesTransformer:
         if hasattr(self, "orig_min"):
             return
 
+        train_only = train_only if self.f.test_length > 0 else False
         stop_at = len(self.f.y) if not train_only else len(self.f.y) - self.f.test_length
 
         self.orig_min = self.f.y.values[:stop_at].min()
@@ -478,11 +495,11 @@ class SeriesTransformer:
 
         try:
             f = self.Revert(func, amin=self.orig_min, amax=self.orig_max, **kwargs)
-            delattr(self, "orig_min")
-            delattr(self, "orig_max")
+            #delattr(self, "orig_min")
+            #delattr(self, "orig_max")
             return f
         except AttributeError:
-            raise ValueError("cannot revert a series that was never scaled.")
+            raise ValueError("Cannot revert a series that was never scaled.")
 
     def DiffTransform(self, m=1):
         """ Takes differences or seasonal differences in the Forecaster object's y attribute.
@@ -611,8 +628,8 @@ class SeriesTransformer:
                 forecast = fcst,
                 tspreds = test_preds,
             )
-        delattr(self, f"orig_y_{m}_{n}")
-        delattr(self, f"orig_dates_{m}_{n}")
+        #delattr(self, f"orig_y_{m}_{n}")
+        #delattr(self, f"orig_dates_{m}_{n}")
         return self.Revert(lambda x: x, exclude_models = exclude_models)  # call here to assign correct test-set metrics
 
     def DeseasonTransform(
@@ -635,6 +652,7 @@ class SeriesTransformer:
                 if two_sided is False) considering this many (+1) closest points.
                 If set to 'freq', use `freq` closest points. Setting this parameter
                 results in no NaN values in trend or resid components.
+            train_only (bool): Default False. Whether to fit the seasonal decomposition model on the training set only.
             **kwargs: Passed to seasonal_decompose() function from statsmodels.
                 See https://www.statsmodels.org/dev/generated/statsmodels.tsa.seasonal.seasonal_decompose.html.
 
@@ -652,6 +670,7 @@ class SeriesTransformer:
             ValueError,
             f'The value passed to the model argument must be one of ("additive", "add", "multiplicative", "mul"), got {model}.'
         )
+        train_only = train_only if self.f.test_length > 0 else False
         if m is None:
             from statsmodels.tsa.tsatools import freq_to_period
             m = freq_to_period(self.f.freq)
@@ -659,6 +678,7 @@ class SeriesTransformer:
             model=model,
             extrapolate_trend=extrapolate_trend,
             period = m,
+            train_only=train_only,
             **kwargs,
         )
         deseasoned = (
@@ -669,7 +689,7 @@ class SeriesTransformer:
         f = Forecaster(
             y = current_seasonality,
             current_dates = current_seasonality.index,
-            future_dates = len(self.f.future_dates)
+            future_dates = len(self.f.future_dates) + (self.f.test_length if train_only else 0)
         )
         f.set_estimator('naive')
         f.manual_forecast(
@@ -681,11 +701,15 @@ class SeriesTransformer:
         params = {
             'model':model,
             'y':self.f.y.copy(),
-            'current_seasonality':current_seasonality.to_list(),
-            'future_seasonality':f.forecast,
+            'current_seasonality':current_seasonality.to_list() + f.forecast[:-len(self.f.future_dates)],
+            'future_seasonality':f.forecast[-len(self.f.future_dates):],
         }
         setattr(self,f'deseason_params_{m}',params)
-        self.f.y = deseasoned.reset_index().iloc[:,-1]
+        self.f.y = pd.Series(
+            self.f.y.values - np.array(params['current_seasonality']) if model in ('add','additive') 
+            else self.f.y.values / np.array(params['current_seasonality']),
+            dtype=float,
+        )
         return self.f
 
     def DeseasonRevert(self, m = None, exclude_models = []):
@@ -741,5 +765,5 @@ class SeriesTransformer:
                 elif not a.endswith('CI'):
                     h[a] = []
 
-        delattr(self, f"deseason_params_{m}")
+        #delattr(self, f"deseason_params_{m}")
         return self.Revert(lambda x: x)  # call here to assign correct test-set metrics

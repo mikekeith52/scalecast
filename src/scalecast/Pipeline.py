@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from typing import List, Tuple, Union, Dict
 import typing
+import copy
 
 class Transformer:
     def __init__(self,transformers: List[Tuple]):
@@ -53,6 +54,18 @@ class Transformer:
 
     def __str__(self):
         return self.__repr__()
+
+    def __copy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        return obj
+
+    def __deepcopy__(self, memo={}):
+        obj = type(self).__new__(self.__class__)
+        memo[id(self)] = obj
+        for k, v in self.__dict__.items():
+            setattr(obj, k, copy.deepcopy(v, memo))
+        return obj
 
     def fit_transform(self,f: Forecaster) -> Forecaster:
         """ Applies the transformation to the series stored in the Forecaster object.
@@ -147,11 +160,27 @@ class Reverter:
     def __str__(self):
         return self.__repr__()
 
-    def fit_transform(self,f: Forecaster) -> Forecaster:
+    def __copy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        return obj
+
+    def __deepcopy__(self, memo={}):
+        obj = type(self).__new__(self.__class__)
+        memo[id(self)] = obj
+        for k, v in self.__dict__.items():
+            setattr(obj, k, copy.deepcopy(v, memo))
+        return obj
+
+    def copy(self):
+        return self.__deepcopy__()
+
+    def fit_transform(self,f: Forecaster, exclude_models = []) -> Forecaster:
         """ Applies the revert function to the series stored in the Forecaster object.
 
         Args:
             f (Forecaster): The Forecaster object that stores the series that will be reverted.
+            exclude_models (list-like): Optional. Models to not revert.
 
         Returns:
             (Forecaster): A Forecaster object with the reverted series.
@@ -171,6 +200,7 @@ class Reverter:
             self.base_transformer if not hasattr(self.base_transformer,'base_transformer')
             else self.base_transformer.base_transformer
         )
+        base_transformer.f = f
         for reverter in self.reverters:
             if len(reverter) > 1:
                 args = [i for i in reverter[1:-1]]
@@ -180,10 +210,22 @@ class Reverter:
                 args = []
                 kwargs = {}
 
-            f = getattr(base_transformer,reverter[0])(*args,**kwargs)
+            f = getattr(base_transformer,reverter[0])(*args, **kwargs, exclude_models = exclude_models)
         return f
 
 class Pipeline_parent:
+    def __copy__(self):
+        obj = type(self).__new__(self.__class__)
+        obj.__dict__.update(self.__dict__)
+        return obj
+
+    def __deepcopy__(self, memo={}):
+        obj = type(self).__new__(self.__class__)
+        memo[id(self)] = obj
+        for k, v in self.__dict__.items():
+            setattr(obj, k, copy.deepcopy(v, memo))
+        return obj
+
     def _prepare_backtest(
         self,
         *fs,
@@ -524,12 +566,12 @@ class MVPipeline(Pipeline_parent):
         >>> )
         >>> f1, f2, f3 = pipeline.fit_predict(f1,f2,f3)
         """
-        from .multiseries import keep_smallest_first_date
+        from .multiseries import line_up_dates
 
         if 'not_same_len_action' not in kwargs:
-            keep_smallest_first_date(*fs)
+            line_up_dates(*fs)
         elif kwargs['not_same_len_action'] == 'trim':
-            keep_smallest_first_date(*fs)
+            line_up_dates(*fs)
 
         i = 0
         fs = list(fs)
@@ -544,11 +586,6 @@ class MVPipeline(Pipeline_parent):
                         i += 1
                     for idx, func in enumerate(zip(fs,func_list)):
                         if func[1] is not None:
-                            if i == 2: # reverting
-                                if hasattr(func[1].base_transformer,'base_transformer'):
-                                    func[1].base_transformer.base_transformer.f = func[0]
-                                else:
-                                    func[1].base_transformer.f = func[0]
                             fs[idx] = func[1].fit_transform(func[0])
                 else:
                     for f, func in zip(fs,func_list):

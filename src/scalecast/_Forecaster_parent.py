@@ -1058,8 +1058,118 @@ class Forecaster_parent:
             ).values[1:]
         )
 
+    def add_lagged_terms(self, *args, lags=1, upto=True, sep="_", drop = False):
+        """ Lags all passed variables (no AR terms) 1 or more times.
+
+        Args:
+            *args (str): Names of Xvars that aleady exist in the object.
+            lags (int): Greater than 0, default 1.
+                The number of times to lag each passed variable.
+            upto (bool): Default True.
+                Whether to add all lags up to the number passed to lags.
+                If you pass 6 to lags and upto is True, lags 1, 2, 3, 4, 5, 6 will all be added.
+                If you pass 6 to lags and upto is False, lag 6 only will be added.
+            sep (str): Default '_'.
+                The separator between each term in arg to create the final variable name.
+                Resulting variable names will be like "tlag_1" or "tlag_2" by default.
+            drop (bool): Default False.
+                Whether to drop the regressors passed to *args.
+
+        Returns:
+            None
+
+        >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t called 'tlag_1' - 'tlag_3'
+        >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only called 'tlag_6'
+        """
+        #self._validate_future_dates_exist()
+        lags = int(lags)
+        _developer_utils.descriptive_assert(
+            lags >= 1,
+            ValueError,
+            f"lags must be an int type greater than 0, got {lags}.",
+        )
+        for a in args:
+            _developer_utils.descriptive_assert(
+                not a.startswith("AR"),
+                ForecastError,
+                "Adding lagged AR terms makes no sense, add more AR terms instead.",
+            )
+            if upto:
+                for i in range(1, lags + 1):
+                    self.current_xreg[f"{a}lag{sep}{i}"] = self.current_xreg[a].shift(i)
+                    fx = (
+                        pd.Series(self.current_xreg[a].to_list() + self.future_xreg[a])
+                        .shift(i)
+                        .to_list()
+                    )
+                    self.future_xreg[f"{a}lag{sep}{i}"] = fx[-len(self.future_dates) :]
+            else:
+                self.current_xreg[f"{a}lag{sep}{lags}"] = self.current_xreg[a].shift(
+                    lags
+                )
+                fx = (
+                    pd.Series(self.current_xreg[a].to_list() + self.future_xreg[a])
+                    .shift(lags)
+                    .to_list()
+                )
+                self.future_xreg[f"{a}lag{sep}{lags}"] = fx[-len(self.future_dates) :]
+
+        ars = [int(x[2:]) for x in self.current_xreg if x.startswith('AR')]
+        ars = max(ars) if len(ars) else 0
+        if lags > ars:
+            if not isinstance(self.y,dict): # Forecaster
+                warnings.warn(
+                    f'With the introduction of {lags} lags, there are now more n/a observations than are introduced with {ars} '
+                    f'autoregressive terms. This can cause failures in models. Try running chop_from_back({lags-ars}) but be careful '
+                    'if series transformations were taken, especially, DiffTransform().',
+                    category = Warning,
+                )
+            else: # MVForecaster
+                warnings.warn(
+                    f'If models are run with fewer than {lags} lags, models can fail.',
+                    category = Warning,
+                )
+
+        if drop:
+            self.drop_Xvars(*args)
+
+    def add_series(
+        self,
+        series,
+        called,
+        first_date=None,
+        forward_pad=True,
+        back_pad=True
+    ):
+        """ Adds other series to the object as regressors. 
+        If the added series is less than the length of Forecaster.y + len(Forecaster.future_dates), 
+        it will padded with 0s by default.
+
+        Args:
+            series (list-like): The series to add as a regressor to the object.
+            called (str): Required. What to call the resulting regressor in the Forecaster object.
+            first_date (Datetime): Optional. The first date that corresponds with the added series.
+                If left unspecified, will assume its first date is the same as the first
+                date in the Forecaster object.
+                Must be datetime or otherwise able to be parsed by the pandas.Timestamp() function.
+            pad (bool): Default True. 
+                Whether to put 0s before and/or after the series if the series is too short.
+
+        >>> x = [1,2,3,4,5,6]
+        >>> f.add_series(series = x,called='x') # assumes first date is same as what is in f.current_dates
+        """
+        if first_date is None:
+            first_date = self.current_dates.min()
+
+        df = pd.DataFrame({
+            'Date':pd.date_range(start=first_date,periods=len(series),freq=self.freq).to_list(),
+            called:list(series),
+        })
+
+        self.ingest_Xvars_df(df,pad=True)
+
     def ingest_Xvars_df(
-        self, df, date_col="Date", drop_first=False, use_future_dates=False
+        self, df, date_col="Date", drop_first=False, use_future_dates=False, pad = False,
     ):
         """ Ingests a dataframe of regressors and saves its Xvars to the object.
         The user must specify a date column name in the dataframe being ingested.
@@ -1078,6 +1188,8 @@ class Forecaster_parent:
                 Irrelevant if passing all numeric values.
             use_future_dates (bool): Default False.
                 Whether to use the future dates in the dataframe as the resulting future_dates attribute in the Forecaster object.
+            pad (bool): Default False.
+                Whether to pad any missing values with 0s.
 
         Returns:
             None
@@ -1094,36 +1206,34 @@ class Forecaster_parent:
         current_df = df_copy.loc[df_copy[date_col].isin(self.current_dates)]
         future_df = pd.DataFrame({date_col: self.future_dates.to_list()})
         future_df = df_copy.loc[df_copy[date_col] > self.current_dates.values[-1]]
-        _developer_utils.descriptive_assert(
-            current_df.shape[0] == len(self.y),
-            ForecastError,
-            "Could not ingest Xvars dataframe."
-            " Make sure the dataframe spans the entire date range as y and is at least one observation to the future."
-            " Specify the date column name in the `date_col` argument.",
-        )
 
+        fpad_len = 0
+        bpad_len = 0
+        if current_df.shape[0] < len(self.y):
+            if pad:
+                fpad_len = len(self.y) - current_df.shape[0]
+            else:
+                raise ForecastError(
+                "Could not ingest Xvars dataframe."
+                " Make sure the dataframe spans the entire date range as y and is at least one observation to the future."
+                " Specify the date column name in the `date_col` argument.",
+                )
         if not use_future_dates:
-            _developer_utils.descriptive_assert(
-                future_df.shape[0] >= len(self.future_dates),
-                ValueError,
-                "The future dates in the dataframe should be at least the same length as the future dates in the Forecaster object." 
-                " If you want to use the dataframe to set the future dates for the object, pass True to the use_future_dates argument.",
-            )
+            if future_df.shape[0] < len(self.future_dates):
+                if pad:
+                    bpad_len = (len(self.future_dates)) - future_df.shape[0]
+                else:
+                    raise ForecastError(
+                        "The future dates in the dataframe should be at least the same"
+                        " length as the future dates in the Forecaster object." 
+                        " If you want to use the dataframe to set the future dates for the object,"
+                        " pass True to the use_future_dates argument.",
+                    )
         else:
             self.future_dates = future_df[date_col]
-
         for c in [c for c in future_df if c != date_col]:
-            self.future_xreg[c] = future_df[c].to_list()[: len(self.future_dates)]
-            self.current_xreg[c] = current_df[c]
-
-        for x, v in self.future_xreg.items():
-            self.future_xreg[x] = v[: len(self.future_dates)]
-            if not len(v) == len(self.future_dates) and not x.startswith('AR'):
-                warnings.warn(
-                    f"{x} is not the correct length in the future_dates attribute and this can cause errors when forecasting."
-                    f" Its length is {len(v)} and future_dates length is {len(self.future_dates)}.",
-                    category=Warning,
-                )
+            self.future_xreg[c] = future_df[c].to_list()[: len(self.future_dates)] + [0] * bpad_len
+            self.current_xreg[c] = pd.Series([0] * fpad_len + current_df[c].to_list(),dtype=float)
 
     def export_validation_grid(self, model) -> pd.DataFrame:
         """ Exports the validation grid from a model, converted to a pandas dataframe.
@@ -1165,7 +1275,7 @@ class Forecaster_parent:
                 If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
-                The model will skip testing if the test_length attribute is set to 0.
+                This will fail if the test_length attribute is 0.
             call_me (str): Optional.
                 What to call the model when storing it in the object's history.
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
