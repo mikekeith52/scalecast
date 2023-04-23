@@ -239,7 +239,7 @@ class MVForecaster(Forecaster_parent):
         train_only = False
     ):
         """ Adds the predictions from already-evaluated models as covariates that can be used for future evaluated models.
-        The names of the added variables will all begin with "signal_" and end with the given model nickname.
+        The names of the added variables will all begin with "signal_" and end with the given model nickname folowed by the series name.
 
         Args:
             model_nicknames (list): The names of already-evaluated models with information stored in the history attribute.
@@ -253,8 +253,8 @@ class MVForecaster(Forecaster_parent):
                 known observations.
 
         >>> mvf.set_estimator('xgboost')
-        >>> f.manual_forecast()
-        >>> f.add_signals(model_nicknames = ['xgboost']) # adds regressors called 'signal_xgboost_{series1name}', ..., 'signal_xgboost_{seriesNname}'
+        >>> mvf.manual_forecast()
+        >>> mvf.add_signals(model_nicknames = ['xgboost']) # adds regressors called 'signal_xgboost_{series1name}', ..., 'signal_xgboost_{seriesNname}'
         """
         series = self._parse_series(series)
         for m in model_nicknames:
