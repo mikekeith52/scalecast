@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.3] - 2023-04-22
+### Added
+### Changed
+### Fixed
+- Fixed the test-set length check when determining min length required for confidence intervals, which was not processing floating points precisely enough.
+
 ## [0.18.2] - 2023-04-19
 ### Added
 - Added `MVForecaster.add_signals()` for multivariate stacking.

@@ -80,7 +80,7 @@ class Forecaster_parent:
         return state
 
     def _check_right_test_length_for_cis(self,cilevel):
-        min_test_length = np.ceil(1/(1-cilevel))
+        min_test_length = round(1/(1-cilevel))
         if self.test_length < min_test_length:
             raise ValueError(
                 'Cannot evaluate confidence intervals at the '
