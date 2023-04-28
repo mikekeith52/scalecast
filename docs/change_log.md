@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.4] - 2023-04-28
+### Added
+### Changed
+- Took out `infer_datetime_format` args from pandas functions since they are deprecated.
+- Modified example grids.
+### Fixed
+
 ## [0.18.3] - 2023-04-22
 ### Added
 ### Changed

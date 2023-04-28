@@ -26,6 +26,7 @@ def test_pipeline():
         train_length = 500,
         test_length = 24,
         verbose = True,
+        return_train_only = True,
     )
     print(reverter)
     pipeline = Pipeline(

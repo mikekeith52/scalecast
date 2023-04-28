@@ -1293,18 +1293,13 @@ class Forecaster(Forecaster_parent):
         >>> f._typ_set() # sets all arrays to the correct format
         """
         self.y = pd.Series(self.y).dropna().astype(np.float64)
-        self.current_dates = pd.to_datetime(
-            pd.Series(list(self.current_dates)[-len(self.y) :]),
-            infer_datetime_format=True,
-        )
+        self.current_dates = pd.to_datetime(pd.Series(list(self.current_dates)[-len(self.y) :]))
         _developer_utils.descriptive_assert(
             len(self.y) == len(self.current_dates),
             ValueError,
             f"y and current_dates must be same size -- y is {len(self.y)} and current_dates is {len(self.current_dates)}.",
         )
-        self.future_dates = pd.to_datetime(
-            pd.Series(self.future_dates), infer_datetime_format=True
-        )
+        self.future_dates = pd.to_datetime(pd.Series(self.future_dates))
         for k, v in self.current_xreg.items():
             self.current_xreg[k] = pd.Series(list(v)[-len(self.y) :]).astype(np.float64)
             _developer_utils.descriptive_assert(
