@@ -198,7 +198,8 @@ metrics = backtest_metrics(backtest_results)
   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html)
 - Sklearn Multivariate
   - [Multiple Series? Forecast Them together with any Sklearn Model](https://towardsdatascience.com/multiple-series-forecast-them-together-with-any-sklearn-model-96319d46269)
-  - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html)
+  - [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html)
+  - [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html)  
 - RNN 
   - [Exploring the LSTM Neural Network Model for Time Series](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)
   - [LSTM Notebook](https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html)
