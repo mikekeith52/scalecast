@@ -765,7 +765,8 @@ class Forecaster(Forecaster_parent):
         Not all features from tensorflow are available, but many of the most common ones for time series models are.
         This function accepts lags and external regressors as inputs.
         The model is saved in the tf_model attribute and a summary can be called by calling Forecaster.tf_model.summary().
-        see example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html.
+        See the univariate example: https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html
+        and the multivariate example: https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html#8.-LSTM-Modeling.
 
         Args:
             dynamic_testing (bool): Default True.

@@ -427,7 +427,8 @@ class MVForecaster(Forecaster_parent):
         self, fcster, dynamic_testing = True, Xvars = 'all', normalizer="minmax", lags=1, **kwargs
     ):
         """ Runs the vector multivariate forecast start-to-finish. All Xvars stored in the object are used always. All sklearn estimators supported.
-        See example: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html.
+        See example1: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html
+        and example2: https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html.
 
         Args:
             fcster (str): One of `MVForecaster.estimators`. Scikit-learn estimators or APIs only. 

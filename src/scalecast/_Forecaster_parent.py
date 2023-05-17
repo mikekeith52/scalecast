@@ -1413,10 +1413,10 @@ class Forecaster_parent:
             k (int): Default 5. 
                 The number of folds. 
                 If 1, behaves as if the model were being tuned on a single held out set.
-            test_length (int): Optional. The size of each training set. 
-                By default, all available observations before each test set are used.
-            train_length (int): Optional. The size of each held-out-sample. 
+            test_length (int): Optional. The size of each held-out sample. 
                 By default, determined such that the last test set and train set are the same size.
+            train_length (int): Optional.  The size of each training set.
+                By default, all available observations before each test set are used.
             space_between_sets (int): Optional. The space between each training set.
                 By default, uses the test_length.
             rolling (bool): Default False. Whether to use a rolling method, meaning every train and test size is the same. 
