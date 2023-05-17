@@ -1035,7 +1035,8 @@ class Forecaster(Forecaster_parent):
         weights=None,
         splice_points=None,
     ):
-        """ Combines at least two previously evaluted forecasts to create a new model.
+        """ Combines at least previously evaluted forecasts to create a new model.
+        One-model combinations are supported to facilitate auto-selecting models.
         This model is always applied to previously evaluated models' test sets and cannot be tuned. 
         It will fail if models in the combination used different test lengths. 
         See the following explanation for the weighted-average model:
@@ -1106,11 +1107,9 @@ class Forecaster(Forecaster_parent):
         models = self._parse_models(models, determine_best_by)
         models = [m for m in models if m != self.call_me]
 
-        _developer_utils.descriptive_assert(
-            len(models) > 1,
-            ForecastError,
-            f"Need at least two models to average, got {len(models)}.",
-        )
+        if len(models) == 1:
+            how = 'simple'
+
         fcsts = pd.DataFrame({m: self.history[m]["Forecast"] for m in models})
         preds = pd.DataFrame({
             m: (

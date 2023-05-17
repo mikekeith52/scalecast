@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.5] - 2023-05-17
+### Added
+### Changed
+- The combo model can now accept one-model arguments to facilitate auto-selecting "best" models.
+### Fixed
+- Updated requirement version of lightgbm (#46)
+
 ## [0.18.4] - 2023-04-28
 ### Added
 ### Changed

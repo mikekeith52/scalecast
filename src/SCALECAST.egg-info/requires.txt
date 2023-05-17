@@ -9,6 +9,6 @@ scipy
 matplotlib
 seaborn
 xgboost
-lightgbm
+lightgbm==3.2.1
 catboost
 openpyxl

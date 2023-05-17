@@ -8,7 +8,7 @@ long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = '0.18.4',
+  version = '0.18.5',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,
@@ -39,7 +39,7 @@ setup(
     'matplotlib',
     'seaborn',
     'xgboost',
-    'lightgbm',
+    'lightgbm==3.2.1',
     'catboost',
     'openpyxl',
   ],
