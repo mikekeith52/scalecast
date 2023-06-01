@@ -189,12 +189,12 @@ def test_modeling():
             determine_best_by='ValidationMetricValue' if tl == 0 else 'TestSetSMAPE',
         )[0]
 
-        f.plot(ci=True)
+        f.plot(ci=True,exclude = ['mlr'])
         plt.savefig(f'../../plot_{tl}.png')
         plt.close()
 
         if tl != 0:
-            f.plot_test_set(ci=True,include_train=96)
+            f.plot_test_set(ci=True,exclude = ['mlr'],include_train=96)
             plt.savefig(f'../../plot_ts_{tl}.png')
             plt.close()
 

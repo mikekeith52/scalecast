@@ -2777,7 +2777,8 @@ class Forecaster(Forecaster_parent):
 
     def plot(
         self, 
-        models="all", 
+        models="all",
+        exclude = [],
         order_by=None, 
         ci=False,
         ax = None,
@@ -2790,6 +2791,8 @@ class Forecaster(Forecaster_parent):
                The forecasted models to plot.
                Can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
                If None or models/order_by combo invalid, will plot only actual values.
+            exclude (collection): Default []. Pass any models here that you don't want displayed.
+                Good to use in conjunction with models = 'top_{n}'. 
             order_by (str): Optional. One of Forecaster.determine_best_by.  
                 How to order the display of forecasts on the plots (from best-to-worst according to the selected metric).
             ci (bool): Default False.
@@ -2806,7 +2809,7 @@ class Forecaster(Forecaster_parent):
         >>> plt.show()
         """
         try:
-            models = self._parse_models(models, order_by)
+            models = [m for m in self._parse_models(models, order_by) if m not in exclude]
         except (ValueError, TypeError):
             models = None
 
@@ -2865,7 +2868,8 @@ class Forecaster(Forecaster_parent):
 
     def plot_test_set(
         self, 
-        models="all", 
+        models="all",
+        exclude = [],
         order_by=None, 
         include_train=True, 
         ci=False,
@@ -2878,6 +2882,8 @@ class Forecaster(Forecaster_parent):
             models (list-like or str): Default 'all'.
                The forecated models to plot.
                Can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
+            exclude (collection): Default []. Pass any models here that you don't want displayed.
+                Good to use in conjunction with models = 'top_{n}'. 
             order_by (str): Optional. One of Forecaster.determine_best_by.
                 How to order the display of forecasts on the plots (from best-to-worst according to the selected metric).
             include_train (bool or int): Default True.
@@ -2903,7 +2909,7 @@ class Forecaster(Forecaster_parent):
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
 
-        models = self._parse_models(models, order_by)
+        models = [m for m in self._parse_models(models, order_by) if m not in exclude]
         _developer_utils.descriptive_assert(
             np.all(['TestSetPredictions' in self.history[m].keys() for m in models]),
             ForecastError,
@@ -2969,7 +2975,8 @@ class Forecaster(Forecaster_parent):
 
     def plot_fitted(
         self, 
-        models="all", 
+        models="all",
+        exclude = [], 
         order_by=None, 
         ax = None,
         figsize=(12,6),
@@ -2980,6 +2987,8 @@ class Forecaster(Forecaster_parent):
             models (list-like,str): Default 'all'.
                The forecated models to plot.
                Can start with "top_" and the metric specified in order_by will be used to order the models appropriately.
+            exclude (collection): Default []. Pass any models here that you don't want displayed.
+                Good to use in conjunction with models = 'top_{n}'. 
             order_by (str): Optional. One of Forecaster.determine_best_by.
                 How to order the display of forecasts on the plots (from best-to-worst according to the selected metric).
             ax (Axis): Optional. The existing axis to write the resulting figure to.
@@ -2996,7 +3005,7 @@ class Forecaster(Forecaster_parent):
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
 
-        models = self._parse_models(models, order_by)
+        models = [m for m in self._parse_models(models, order_by) if m not in exclude]
         dates = self.current_dates.values
         actuals = self.y.values
 

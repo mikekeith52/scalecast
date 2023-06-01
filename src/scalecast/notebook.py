@@ -34,12 +34,13 @@ def results_vis(
         raise ValueError(f'plot_type must be "forecast" or "test", got {plot_type}')
 
     def display_user_selections(
-        ts_selection, mo_selection, ci_selection, me_selection
+        ts_selection, mo_selection, ex_selection, ci_selection, me_selection
     ):
         selected_data = f_dict[ts_selection]
         if plot_type == "forecast":
             selected_data.plot(
                 models=f"top_{mo_selection}",
+                exclude=ex_selection,
                 order_by=me_selection,
                 ci=ci_selection,
                 figsize=figsize,
@@ -47,6 +48,7 @@ def results_vis(
         else:
             selected_data.plot_test_set(
                 models=f"top_{mo_selection}",
+                exclude=ex_selection,
                 order_by=me_selection,
                 include_train=include_train,
                 ci=ci_selection,
@@ -57,13 +59,18 @@ def results_vis(
 
     def on_button_clicked(b):
         mo_selection = mo_dd.value
+        ex_selection = ex_se.value
         ts_selection = ts_dd.value
         ci_selection = ci_dd.value
         me_selection = me_dd.value
         with output:
             clear_output()
             display_user_selections(
-                ts_selection, mo_selection, ci_selection, me_selection
+                ts_selection, 
+                mo_selection, 
+                ex_selection, 
+                ci_selection, 
+                me_selection,
             )
 
     all_models = []
@@ -72,6 +79,9 @@ def results_vis(
     ts_dd = widgets.Dropdown(options=f_dict.keys(), description="Time Series:")
     mo_dd = widgets.Dropdown(
         options=range(1, len(all_models) + 1), description="No. Models"
+    )
+    ex_se = widgets.SelectMultiple(
+        options=all_models, description="Exclude"
     )
     ci_dd = widgets.Dropdown(
         options=[False, True], description="View Confidence Intervals"
@@ -86,7 +96,7 @@ def results_vis(
     button = widgets.Button(description="Select Time Series")
     output = widgets.Output()
 
-    display(ts_dd, mo_dd, ci_dd, me_dd)
+    display(ts_dd, mo_dd, ex_se, ci_dd, me_dd)
     display(button, output)
 
     button.on_click(on_button_clicked)
