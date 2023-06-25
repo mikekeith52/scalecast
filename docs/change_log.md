@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.7] - 2023-06-24
+### Added
+### Changed
+- Changed requirements to avoid a dask/lightgbm error when importing the Forecaster module (#46).
+### Fixed
+- Calling `auto_forecast()` without tuning a model first no longer raises an error when banking the model's history (#52).
+- RNN and LSTM models no longer raise errors with default CV parameters.
+
+
 ## [0.18.6] - 2023-06-01
 ### Added
 - Added `exclude` argument to `Forecaster.plot()`, `Forecaster.plot_test_set()`, and `Forecaster.plot_fitted()`.

@@ -679,6 +679,7 @@ class Forecaster_parent:
                 category = Warning,
             )
             self.best_params = {}
+            self.validation_metric_value = np.nan
         self.manual_forecast(
             call_me=call_me,
             dynamic_testing=dynamic_testing,
@@ -1533,6 +1534,14 @@ class Forecaster_parent:
                 metrics[h,i] = evaluated_metric
 
         self.grid_evaluated = metrics
+        if np.all(np.isnan(metrics[:,-1])):
+            warnings.warn(
+                f'The last CV fold will not be considered when choosing hyperparemeters for the {self.estimator} model, '
+                'as all parameters failed to return a metric. '
+                'This most frequently happens when default CV parameters were used with an RNN model.',
+                category=Warning,
+            )
+            metrics = metrics[:,:-1]
         avg_mets = np.mean(metrics,axis=1) # any hps that ever evaluated na not in consideration
         if np.all(np.isnan(avg_mets)):
             warnings.warn(

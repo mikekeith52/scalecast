@@ -124,6 +124,11 @@ def test_modeling():
             monitor = 'ValidationMetricValue' if tl == 0 else 'TestSetRMSE'
         )
 
+        f.set_estimator('lstm')
+        f.ingest_grid('lstm')
+        f.limit_grid_size(1)
+        f.cross_validate() # 0.18.7
+
         models = (
             'elasticnet',
             'prophet',
@@ -157,17 +162,11 @@ def test_modeling():
             error = 'raise',
         )
 
-        f.set_estimator('lstm')
-        f.manual_forecast(epochs = 10)
-
-        f.set_estimator('rnn')
-        f.manual_forecast(epochs = 10)
-
         f.set_estimator('mlr')
-        f.add_signals(['lstm'],fill_strategy = 'bfill')
+        f.add_signals(['lstm_cv'],fill_strategy = 'bfill')
         f.manual_forecast()
-        f.add_signals(['lstm'],fill_strategy = None)
-        f.add_signals(['lstm'],train_only=tl > 0)
+        f.add_signals(['lstm_cv'],fill_strategy = None)
+        f.add_signals(['lstm_cv'],train_only=tl > 0)
 
         f.set_estimator('combo')
         f.manual_forecast()

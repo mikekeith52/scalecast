@@ -97,7 +97,6 @@ test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
 test/VECMGrid.py
-test/error_20230517100516.log
 test/postbuild
 test/readme.md
 test/requirements.txt
