@@ -3049,7 +3049,7 @@ class Forecaster(Forecaster_parent):
         out_path="./",
         excel_name="results.xlsx",
     ) -> Union[Dict[str, pd.DataFrame], pd.DataFrame]:
-        """ Exports 1-all of 5 pandas DataFrames. Can write to excel with each DataFrame on a separate sheet.
+        """ Exports 1-all of 3 pandas DataFrames. Can write to excel with each DataFrame on a separate sheet.
         Will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
         Args:

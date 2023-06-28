@@ -1086,7 +1086,7 @@ class MVForecaster(Forecaster_parent):
         out_path="./",
         excel_name="results.xlsx",
     ):
-        """ Exports 1-all of 5 pandas dataframes. Can write to excel with each dataframe on a separate sheet.
+        """ Exports 1-all of 3 pandas dataframes. Can write to excel with each dataframe on a separate sheet.
         Will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
         Args:
