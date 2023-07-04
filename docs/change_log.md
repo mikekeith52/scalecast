@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.8] - 2023-07-03
+### Added
+### Changed
+- Made an explicit error message when the RNN model does not have enough observations to evaluate (#58).
+- Changed the title of the loss plot from the RNN model.
+### Fixed
+- Fixed how the prophet model creates its externals regressors dataframe to avoid a `ValueError` (#55).
+- Fixed an error with the RNN model when forecast horizon is 1.
+
 ## [0.18.7] - 2023-06-24
 ### Added
 ### Changed

@@ -535,7 +535,7 @@ class Forecaster(Forecaster_parent):
         )
         
         X = pd.DataFrame(
-            {k: v for k, v in self.current_xreg.items() if not k.startswith("AR")}
+            {k: v.to_list() for k, v in self.current_xreg.items() if not k.startswith("AR")}
         )
         p = pd.DataFrame(
             {
@@ -955,6 +955,20 @@ class Forecaster(Forecaster_parent):
         else:
             self.add_ar_terms(lags)
             Xvars = [k for k in self.current_xreg if k.startswith('AR') and int(k[2:]) <= lags]
+
+        needed_obs = lags + len(self.future_dates) + 1
+        if needed_obs > len(self.y):
+            suggested_lags = len(self.y) - len(self.future_dates) - 1
+            err_message = (
+                f'Not enough observations to run the {self.estimator} model! ' 
+                f'Need at least {needed_obs} obserations when using {lags} lags to predict a future horizon of {len(self.future_dates)}. '
+            )
+            if suggested_lags > 0:
+                err_message += f'Try reducing the number of lags to {len(self.y) - len(self.future_dates) - 1}.'
+            else:
+                err_message += 'Remember, testing the model subtracts that many observations from the total, so reducing the size of the test set may also be necessary.'
+
+            raise ValueError(err_message)
         
         forecast_length = len(self.future_dates)
         total_period = lags + forecast_length
@@ -970,7 +984,7 @@ class Forecaster(Forecaster_parent):
             ymin = ymin,
             ymax = ymax,
         )
-        X = X[1:-(forecast_length-1)]
+        X = X[1:-(forecast_length-1)] if forecast_length > 1 else X[1:]
         #print('last X train:',X[-1])
         #print('last y train:',y[-1])
         #print('fut:',fut[-1])
@@ -990,7 +1004,7 @@ class Forecaster(Forecaster_parent):
             fvs = [p * (ymax - ymin) + ymin for p in fvs]
             fcst = [p * (ymax - ymin) + ymin for p in fcst]
         if plot_loss:
-            plot_loss_rnn(hist, "model loss - full")
+            plot_loss_rnn(hist, f"{self.estimator} model loss")
         self.tf_model = model
         self.fitted_values = fvs
         return fcst

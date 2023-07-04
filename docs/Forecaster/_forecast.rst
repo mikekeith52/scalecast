@@ -35,7 +35,7 @@ lstm
 
 multivariate
 ---------------------------------------------------------------
-Although only scikit-learn estimators and the `vecm model <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_ can be used with the `MVForecaster` object, it is possible to make any estimator supported by scalecast that accepts external regressors multivariate. See, for exxample, `LSTM multivariate modeling <https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html#8.-LSTM-Modeling>`_.
+Although only scikit-learn estimators and the `vecm model <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_ can be used with the `MVForecaster` object, it is possible to make any estimator supported by scalecast that accepts external regressors multivariate. See, for example, `LSTM multivariate modeling <https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html#8.-LSTM-Modeling>`_.
 
 .. automethod:: src.scalecast.MVForecaster.MVForecaster._forecast_sklearn
 
