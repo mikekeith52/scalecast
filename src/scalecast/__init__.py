@@ -1,4 +1,4 @@
-__version__ = '0.18.8'
+__version__ = '0.18.9'
 
 from .util import metrics
 import inspect
@@ -20,6 +20,7 @@ from sklearn.preprocessing import (
     MinMaxScaler, 
     StandardScaler, 
     Normalizer,
+    RobustScaler,
 )
 
 def _none(x):
@@ -69,6 +70,7 @@ __normalizer__ = {
     "minmax":MinMaxScaler, 
     "normalize":Normalizer, 
     "scale":StandardScaler, 
+    "robust":RobustScaler,
     None:_none,
 }
 # i do it this way to make mvforecaster work a little better

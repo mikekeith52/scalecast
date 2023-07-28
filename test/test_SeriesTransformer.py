@@ -23,6 +23,7 @@ def main():
             'Log',
             'MinMax',
             'Scale',
+            'RobustScale',
             'Sqrt',
             'Diff',
         ):

@@ -1,4 +1,4 @@
-from ._utils import _developer_utils
+from ._utils import _developer_utils  
 from ._Forecaster_parent import ForecastError
 from .Forecaster import Forecaster
 import pandas as pd
@@ -6,6 +6,7 @@ import numpy as np
 import warnings
 import logging
 import copy
+from sklearn.preprocessing import RobustScaler
 
 class SeriesTransformer:
     def __init__(self, f, deepcopy=True):
@@ -438,6 +439,62 @@ class SeriesTransformer:
             return f
         except AttributeError:
             raise ValueError("Cannot revert a series that was never scaled.")
+
+    def RobustScaleTransform(self,train_only=False,**kwargs):
+        """ Transforms the y attribute in the Forecaster object using a robust scale transformation.
+        See the function from scikit-learn: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html#sklearn.preprocessing.RobustScaler.
+
+        Args:
+            train_only (bool): Default False.
+                Whether to fit the transformer on the training set only.
+            **kwargs: Passed to the scikit-learn function.
+        Returns:
+            (Forecaster): A Forecaster object with the transformed attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.RobustScaleTransform()
+        """
+
+        train_only = train_only if self.f.test_length > 0 else False
+        stop_at = len(self.f.y) if not train_only else len(self.f.y) - self.f.test_length
+
+        y = self.f.y.values[:stop_at].reshape(-1,1)
+
+        transformer = RobustScaler(**kwargs).fit(y)
+        self.rs_transformer = transformer
+
+        return self.Transform(_developer_utils._reshape_func_input,func=transformer.transform)
+
+    def RobustScaleRevert(self, **kwargs):
+        """ Reverts the y attribute in the Forecaster object, along with all model results.
+        Assumes the scale transformation has been called on the object at some point.
+        Revert function: array.std()*array[i]+array.mean().
+
+        Args:
+            **kwargs: Passed to Transformer.Revert() - 
+                arg `exclude_models` accepted here.
+
+        Returns:
+            (Forecaster): A Forecaster object with the reverted attributes.
+
+        >>> from scalecast.Forecaster import Forecaster
+        >>> from scalecast.SeriesTransformer import SeriesTransformer
+        >>> f = Forecaster(...)
+        >>> f.set_test_length(.2) # specify a test set to not leak data with this func
+        >>> transformer = SeriesTransformer(f)
+        >>> f = transformer.ScaleTransform(train_only=True)
+        >>> f = transformer.ScaleRevert()
+        """
+
+        if not hasattr(self,'rs_transformer'):
+            raise ValueError("Cannot revert a series that was never scaled with RobustScaleTransform.")
+
+        func = self.rs_transformer.inverse_transform
+
+        return self.Revert(_developer_utils._reshape_func_input,func=func,**kwargs)
 
     def MinMaxTransform(self,train_only=False):
         """ Transforms the y attribute in the Forecaster object using a min-max scale transformation.

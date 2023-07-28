@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.9] - 2023-07-27
+### Added
+- Added the `RobustScaler` transformer and added it to the default optimal transformation search.
+- Added `'robust'` as a valid normalizer argument when forecasting with scikit-learn esitmators.
+### Changed
+### Fixed
+
 ## [0.18.8] - 2023-07-03
 ### Added
 ### Changed

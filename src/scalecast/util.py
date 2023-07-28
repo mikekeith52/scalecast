@@ -744,7 +744,7 @@ def find_optimal_transformation(
     try_order = ['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale'],
     boxcox_lambdas = [-0.5,0,0.5],
     detrend_kwargs = [{'loess':True},{'poly_order':1},{'poly_order':2}],
-    scale_type = ['Scale','MinMax'],
+    scale_type = ['Scale','MinMax','RobustScale'],
     m='auto',
     model = 'add',
     return_train_only = False,
@@ -788,7 +788,7 @@ def find_optimal_transformation(
         detrend_kwargs (list-like[dict]): Default 
             [{'loess':True},{'poly_order':1},{'poly_order':2}].
             The types of detrending to try. Only up to one one detrender will be selected.
-        scale_type (list-like): Default ['Scale','MinMax']. The type of scaling to try.
+        scale_type (list-like): Default ['Scale','MinMax','RobustScale']. The type of scaling to try.
             Only up to one scaler will be selected.
             Must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
         m (str, int, list[int]): Default 'auto'. The number of observations that counts one seasonal step.
@@ -1036,6 +1036,7 @@ def find_optimal_transformation(
             'DeseasonTransform',
             'ScaleTransform',
             'MinMaxTransform',
+            'RobustScaleTransform',
         )
         for i, t in enumerate(final_transformer.transformers):
             if t[0] in has_train_only:

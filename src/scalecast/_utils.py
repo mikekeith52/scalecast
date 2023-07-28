@@ -81,3 +81,11 @@ class _developer_utils:
         ] + [
             'InSample' + m.upper() for m in metrics
         ] + ['ValidationMetricValue']
+
+    @staticmethod
+    def _reshape_func_input(x,func):
+        x = np.array(x).reshape(-1,1)
+        if x.shape[0] == 0:
+            return []
+        else:
+            return func(x)[:,0]
