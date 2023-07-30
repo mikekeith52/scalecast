@@ -223,7 +223,7 @@ def tune_test_forecast(
             Whether to save summary stats for the models that offer those.
             Does not work for `MVForecaster` objects.
         feature_importance (bool): Default False.
-            Whether to save permutation feature importance information for the models that offer those.
+            Whether to save feature importance information for the models that offer it.
             Does not work for `MVForecaster` objects.
         fi_method (str): One of {'pfi','shap'}. Default 'pfi'.
             The type of feature importance to save for the models that support it.
@@ -232,7 +232,7 @@ def tune_test_forecast(
         limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
             See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
         min_grid_size (int): Default 1. The smallest grid size to keep. Ignored if limit_grid_size is None.
-        suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called
+        suffix (str): Optional. A suffix to add to each model as it is evaluated to differentiate them when called
             later. If unspecified, each model can be called by its estimator name.
         error (str): One of 'ignore','raise','warn'; default 'raise'.
             What to do with the error if a given model fails.

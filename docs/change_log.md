@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.10]
+### Added
+- Added the `restore_series_length()` function (#62).
+### Changed
+- Changed how in-sample metrics are evaluated. If the series length currently in the object and the predictions are different lengths, the prediction-length is truncated so that an in-sample metric can still be evaluated.
+### Fixed
+- Fixed documentation typos.
+
 ## [0.18.9] - 2023-07-27
 ### Added
 - Added the `RobustScaler` transformer and added it to the default optimal transformation search.

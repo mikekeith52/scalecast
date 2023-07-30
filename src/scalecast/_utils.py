@@ -27,7 +27,11 @@ class _developer_utils:
 
     @staticmethod      
     def _return_na_if_len_zero(y,pred,func):
-        return np.nan if len(pred) == 0 else func(y,pred)
+        return (
+            np.nan 
+            if len(pred) == 0 else func(y,pred) 
+            if len(y) == len(pred) else func(y,pred[-len(y):])
+        )
 
     @staticmethod
     def _set_ci_step(f,s):

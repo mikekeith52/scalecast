@@ -1293,7 +1293,7 @@ class Forecaster(Forecaster_parent):
         return y
 
     def infer_freq(self):
-        """ uses pandas library to infer frequency of loaded dates.
+        """ Uses the pandas library to infer the frequency of the loaded dates.
         """
         if not hasattr(self, "freq"):
             self.freq = pd.infer_freq(self.current_dates)
@@ -1444,7 +1444,8 @@ class Forecaster(Forecaster_parent):
         When using pfi, feature scores are adjusted to account for colinearity, which is a known issue with this method, 
         by sorting by each feature's score and standard deviation, dropping variables first that have both a 
         low score and low standard deviation. By default, the validation-set error is used to avoid leakage 
-        and the variable set that most reduced the error is selected.
+        and the variable set that most reduced the error is selected. See the example:
+        https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html.
 
         Args:
             method (str): One of {'l1','pfi','shap'}. Default 'l1'.
@@ -1454,7 +1455,7 @@ class Forecaster(Forecaster_parent):
                 'pfi' uses permutation feature importance and is more computationally expensive
                 but can use any sklearn estimator.
                 'shap' uses shap feature importance, but it is not available for all sklearn models.
-                Method "pfi" or "shap" creates attributes in the object called pfi_dropped_vars and pfi_error_values that are lists
+                Method "pfi" or "shap" creates attributes in the object called `pfi_dropped_vars` and `pfi_error_values` that are lists
                 representing the error change with the corresponding dropped variable.
                 The pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
                 The first error is the initial error before any variables were dropped.
@@ -1462,13 +1463,13 @@ class Forecaster(Forecaster_parent):
                 The estimator to use to determine the best set of variables.
                 If method == 'l1', the `estimator` arg is ignored and is always lasso.
             keep_at_least (str or int): Default 1.
-                The fewest number of Xvars to keep if method == 'pfi'.
+                The fewest number of Xvars to keep if method != 'l1'.
                 'sqrt' keeps at least the sqare root of the number of Xvars rounded down.
                 This exists so that the keep_this_many keyword can use 'auto' as an argument.
             keep_this_many (str or int): Default 'auto'.
                 The number of Xvars to keep if method == 'pfi' or 'shap'.
                 "auto" keeps the number of xvars that returned the best error using the 
-                metric passed to monitor, but it is the most computationally expensive.
+                metric passed to `monitor`, but it is the most computationally expensive.
                 "sqrt" keeps the square root of the total number of observations rounded down.
             gird_search (bool): Default True.
                 Whether to run a grid search for optimal hyperparams on the validation set.
@@ -1493,7 +1494,7 @@ class Forecaster(Forecaster_parent):
             cross_validate (bool): Default False.
                 Whether to tune the model with cross validation. 
                 If False, uses the validation slice of data to tune.
-                IIf not monitoring ValidationMetricValue, you will want to leave this False.
+                If not monitoring ValidationMetricValue, you will want to leave this False.
             cvkwargs (dict): Default {}. Passed to the `cross_validate()` method.
             **kwargs: Passed to the `manual_forecast()` method and can include arguments related to 
                 a given model's hyperparameters or dynamic_testing.
@@ -1511,7 +1512,7 @@ class Forecaster(Forecaster_parent):
         >>> f.reduce_Xvars(overwrite=False) # reduce with lasso (but don't overwrite Xvars)
         >>> print(f.reduced_Xvars) # view results
         >>> f.reduce_Xvars(
-        >>>     method='pfi',
+        >>>     method='shap',
         >>>     estimator='gbt',
         >>>     keep_at_least=10,
         >>>     keep_this_many='auto',
@@ -2159,6 +2160,21 @@ class Forecaster(Forecaster_parent):
             )
         return final_metrics
 
+    def restore_series_length(self):
+        """ Restores the original y values and current dates in the object from before `keep_smaller_history()`
+        or `determine_best_series_length()` were called. If those methods were never called, this function
+        does nothing. Restoring a series' length automatically drops all stored regressors in the object.
+
+        >>> # write a pipeline
+        """
+        if not hasattr(self,'orig_attr'):
+            return
+
+        self.y = pd.Series(self.orig_attr['y'])
+        self.current_dates = pd.Series(self.orig_attr['cd'])
+        self.drop_all_Xvars()
+        delattr(self,'orig_attr')
+
     def determine_best_series_length(
         self,
         estimator = 'mlr',
@@ -2485,14 +2501,14 @@ class Forecaster(Forecaster_parent):
             summary_stats (bool): Default False.
                 Whether to save summary stats for the models that offer those.
             feature_importance (bool): Default False.
-                Whether to save permutation feature importance information for the models that offer those.
+                Whether to save feature importance information for the models that offer it.
             fi_method (str): One of {'pfi','shap'}. Default 'pfi'.
                 The type of feature importance to save for the models that support it.
                 Ignored if feature_importance is False.
             limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
             min_grid_size (int): Default 1. The smallest grid size to keep. Ignored if limit_grid_size is None.
-            suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called
+            suffix (str): Optional. A suffix to add to each model as it is evaluated to differentiate them when called
                 later. If unspecified, each model can be called by its estimator name.
             error (str): One of 'ignore','raise','warn'; default 'raise'.
                 What to do with the error if a given model fails.
@@ -2703,6 +2719,10 @@ class Forecaster(Forecaster_parent):
             ValueError,
             "n must be an int, datetime object, or str and there must be more than 2 observations to keep.",
         )
+        self.orig_attr = {
+            'y':self.y.values.copy(),
+            'cd':self.current_dates.values.copy(),
+        } # for reverting later
         self.y = self.y.iloc[-n:]
         self.current_dates = self.current_dates.iloc[-n:]
         self.current_xreg = {k:v.iloc[-n:].reset_index(drop=True) for k, v in self.current_xreg.items()}
@@ -2749,9 +2769,6 @@ class Forecaster(Forecaster_parent):
 
     def get_regressor_names(self):
         """ Gets the regressor names stored in the object.
-
-        Args:
-            None
 
         Returns:
             (list): Regressor names that have been added to the object.
@@ -3233,7 +3250,7 @@ class Forecaster(Forecaster_parent):
                 Matches what was passed to call_me when evaluating the model.
 
         Returns:
-            (DataFrame): The resulting summary stats of the evaluated model passed to model arg.
+            (DataFrame): The resulting summary stats of the evaluated model passed to `model`.
 
         >>> ss = f.export_summary_stats('arima')
         """
@@ -3249,7 +3266,7 @@ class Forecaster(Forecaster_parent):
                 Matches what was passed to call_me when evaluating the model.
 
         Returns:
-            (DataFrame): The resulting feature importances of the evaluated model passed to model arg.
+            (DataFrame): The resulting feature importances of the evaluated model passed to `model`.
 
         >>> fi = f.export_feature_importance('mlr')
         """

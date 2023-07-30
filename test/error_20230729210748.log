@@ -1,0 +1,440 @@
+ERROR:root:Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 358, in connect
+    self.sock = conn = self._new_conn()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7fd66c08a4f0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd66c08a4f0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_all.py", line 25, in <module>
+    mod = importlib.import_module(script)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_Forecaster.py", line 8, in <module>
+    df = pdr.get_data_fred(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/data.py", line 72, in get_data_fred
+    return FredReader(*args, **kwargs).read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 27, in read
+    return self._read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in _read
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in <listcomp>
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 41, in fetch_data
+    resp = self._read_url_as_StringIO(url)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 119, in _read_url_as_StringIO
+    response = self._get_response(url, params=params)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 155, in _get_response
+    response = self.session.get(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 565, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd66c08a4f0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+ERROR:root:Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 358, in connect
+    self.sock = conn = self._new_conn()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7fd65a5e2550>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=UTUR (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a5e2550>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_all.py", line 26, in <module>
+    mod.main()
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_MVForecaster.py", line 114, in main
+    test_pickle()
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_MVForecaster.py", line 36, in test_pickle
+    mvf = build_MVForecaster()
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_MVForecaster.py", line 10, in build_MVForecaster
+    s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-10-01')
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/data.py", line 72, in get_data_fred
+    return FredReader(*args, **kwargs).read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 27, in read
+    return self._read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in _read
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in <listcomp>
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 41, in fetch_data
+    resp = self._read_url_as_StringIO(url)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 119, in _read_url_as_StringIO
+    response = self._get_response(url, params=params)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 155, in _get_response
+    response = self.session.get(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 565, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=UTUR (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a5e2550>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+ERROR:root:Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 358, in connect
+    self.sock = conn = self._new_conn()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7fd65a5f12e0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a5f12e0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_all.py", line 25, in <module>
+    mod = importlib.import_module(script)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_AnomalyDetector.py", line 2, in <module>
+    from test_Forecaster import build_Forecaster
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_Forecaster.py", line 8, in <module>
+    df = pdr.get_data_fred(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/data.py", line 72, in get_data_fred
+    return FredReader(*args, **kwargs).read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 27, in read
+    return self._read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in _read
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in <listcomp>
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 41, in fetch_data
+    resp = self._read_url_as_StringIO(url)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 119, in _read_url_as_StringIO
+    response = self._get_response(url, params=params)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 155, in _get_response
+    response = self.session.get(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 565, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a5f12e0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+ERROR:root:Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 358, in connect
+    self.sock = conn = self._new_conn()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7fd65a5f1310>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=UNRATE (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a5f1310>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_all.py", line 26, in <module>
+    mod.main()
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_multiseries.py", line 9, in main
+    df = pdr.get_data_fred(sym, start = '1900-01-01')
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/data.py", line 72, in get_data_fred
+    return FredReader(*args, **kwargs).read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 27, in read
+    return self._read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in _read
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in <listcomp>
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 41, in fetch_data
+    resp = self._read_url_as_StringIO(url)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 119, in _read_url_as_StringIO
+    response = self._get_response(url, params=params)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 155, in _get_response
+    response = self.session.get(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 565, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=UNRATE (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a5f1310>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+ERROR:root:Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 358, in connect
+    self.sock = conn = self._new_conn()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7fd65a607460>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a607460>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_all.py", line 25, in <module>
+    mod = importlib.import_module(script)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_Pipeline.py", line 8, in <module>
+    from test_SeriesTransformer import forecaster
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_SeriesTransformer.py", line 1, in <module>
+    from test_Forecaster import build_Forecaster
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_Forecaster.py", line 8, in <module>
+    df = pdr.get_data_fred(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/data.py", line 72, in get_data_fred
+    return FredReader(*args, **kwargs).read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 27, in read
+    return self._read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in _read
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in <listcomp>
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 41, in fetch_data
+    resp = self._read_url_as_StringIO(url)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 119, in _read_url_as_StringIO
+    response = self._get_response(url, params=params)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 155, in _get_response
+    response = self.session.get(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 565, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a607460>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+ERROR:root:Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/socket.py", line 918, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 358, in connect
+    self.sock = conn = self._new_conn()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7fd65a607430>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/urllib3/util/retry.py", line 592, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a607430>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_all.py", line 25, in <module>
+    mod = importlib.import_module(script)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_SeriesTransformer.py", line 1, in <module>
+    from test_Forecaster import build_Forecaster
+  File "/Users/uger7/Documents/GitHub/scalecast/test/test_Forecaster.py", line 8, in <module>
+    df = pdr.get_data_fred(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/data.py", line 72, in get_data_fred
+    return FredReader(*args, **kwargs).read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 27, in read
+    return self._read()
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in _read
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 62, in <listcomp>
+    [fetch_data(url, n) for url, n in zip(urls, names)], axis=1, join="outer"
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/fred.py", line 41, in fetch_data
+    resp = self._read_url_as_StringIO(url)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 119, in _read_url_as_StringIO
+    response = self._get_response(url, params=params)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/pandas_datareader/base.py", line 155, in _get_response
+    response = self.session.get(
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/requests/adapters.py", line 565, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Max retries exceeded with url: /graph/fredgraph.csv?id=HOUSTNSA (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd65a607430>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+

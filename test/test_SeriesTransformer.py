@@ -1,11 +1,21 @@
 from test_Forecaster import build_Forecaster
 from scalecast.SeriesTransformer import SeriesTransformer
 import numpy as np
+import matplotlib.pyplot as plt
 
 def forecaster(f):
-    f.add_ar_terms(12)
-    f.set_estimator('elasticnet')
-    f.manual_forecast(alpha=.2)
+    for m in ['mlr','elasticnet']:
+        f.drop_all_Xvars()
+        f.set_estimator(m)
+        f.auto_Xvar_select(estimator=m)
+        f.determine_best_series_length(estimator=m)
+        f.tune()
+        f.auto_forecast()
+        f.restore_series_length()
+        f.plot_fitted()
+        plt.close()
+        f.plot()
+        plt.close()
 
 def comp_vals(orig_vals,new_vals,transformation):
     assert (orig_vals == new_vals).all(), f'{transformation} revert did not work'

@@ -1,4 +1,4 @@
-__version__ = '0.18.9'
+__version__ = '0.18.10'
 
 from .util import metrics
 import inspect

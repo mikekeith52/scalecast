@@ -367,7 +367,7 @@ class MVForecaster(Forecaster_parent):
             limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.limit_grid_size.
             min_grid_size (int): Default 1. The smallest grid size to keep. Ignored if limit_grid_size is None.
-            suffix (str): Optional. A suffix to add to each model as it is evaluate to differentiate them when called later. 
+            suffix (str): Optional. A suffix to add to each model as it is evaluated to differentiate them when called later. 
                 If unspecified, each model can be called by its estimator name.
             error (str): One of 'ignore','raise','warn'. Default 'raise'.
                 What to do with the error if a given model fails.
