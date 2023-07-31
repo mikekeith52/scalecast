@@ -1,7 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.18.10]
+## [0.18.11] - 2023-07-31
+### Added
+### Changed
+### Fixed
+- Fixed an issue where Prophet was not adding additional regressors correctly (#63).
+
+## [0.18.10] - 2023-07-30
 ### Added
 - Added the `restore_series_length()` function (#62).
 ### Changed
