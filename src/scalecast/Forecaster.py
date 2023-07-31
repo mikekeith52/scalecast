@@ -558,10 +558,9 @@ class Forecaster(Forecaster_parent):
         X["y"] = self.y.to_list()
         X["ds"] = self.current_dates.to_list()
         p["ds"] = self.future_dates.to_list()
-        model = Prophet(**kwargs)
-        for x in Xvars:
-            model.add_regressor(x)
         regr = Prophet(**kwargs)
+        for x in Xvars:
+            regr.add_regressor(x)
         regr.fit(X)
         fcst = regr.predict(p)
 
