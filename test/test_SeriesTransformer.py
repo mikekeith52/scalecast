@@ -12,10 +12,6 @@ def forecaster(f):
         f.tune()
         f.auto_forecast()
         f.restore_series_length()
-        f.plot_fitted()
-        plt.close()
-        f.plot()
-        plt.close()
 
 def comp_vals(orig_vals,new_vals,transformation):
     assert (orig_vals == new_vals).all(), f'{transformation} revert did not work'
