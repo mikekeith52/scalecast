@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.13]
+## Added
+- Added `util.Forecaster_with_missing_vals()` function (#66).
+### Changed
+### Fixed
+
 ## [0.18.12] - 2023-08-01
 ### Added
 - Added callbacks to the prophet model (#65).

@@ -3,6 +3,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 import warnings
+import random
 from sklearn.metrics import (
     r2_score,
     mean_squared_error,
@@ -1049,6 +1050,209 @@ def find_optimal_transformation(
         print(f'Final Selection:\n{final_transformer.transformers}')
     
     return final_transformer, final_reverter 
+
+def Forecaster_with_missing_vals(
+    y,
+    current_dates,
+    desired_frequency = None,
+    fill_strategy = 0.0,
+    impute_value_pool = None,
+    replace_impute_value_pool_draws = False,
+    m = None,
+    impute_lookback = None,
+    add_stochastic_shock = False,
+    shock_value_pool = None,
+    replace_shock_value_pool_draws = False,
+    sock_std = None,
+    shock_lookback = None,
+    random_seed = None,
+    **kwargs,
+):
+    """ Imputes missing values in a given time series such that the result has a user-specified 
+    date frequency and/or no remaining null values.
+
+    Args:
+        y (collection): An array of all observed values. Can include NAs for dates in which the values
+            are unknown.
+        current_dates (collection): An array of all observed dates. 
+            Must be same length as y and in the same sequence. 
+        desired_frequency (str): The desired frequency of the resulting Forecaster object.
+            If this is left unspecified and a frequency cannot be inferred, an error will be raised.
+        fill_strategy (float or str): Default 0.0. 
+            If str, must be one of 
+            {'linear_interp', 'moving_average', 'moving_seasonal_average', 'impute_pool'}.
+            If not one of those values, will be passed to the `df.fillna()` method from pandas.
+            Therefore, the default fills with 0.
+        m (int): Optional. The number of steps that count one seasonal cycle if using a seasonal fill strategy.
+            If left unspecified, will attempt to be inferred.
+        impute_value_pool (collection): Optional. The pool of values to use when fill_strategy = 'impute_pool'.
+        replace_impute_value_pool_draws (bool): Default False. Whether to reuse draws from the value pool specified
+            in `impute_value_pool`. If that is left unspecified, this is ignored.
+        impute_lookback (int): Required when `fill_strategy in ('moving_average','moving_seasonal_average)`.
+            The lookback to use when imputing a moving average
+            to missing values. If using 'moving_seaosnal_average', make sure you include one full seasonal cycle
+            in the lookback.
+        add_stochastic_shock (bool): Default False. Whether to add random noise to the imputed values.
+        shock_value_pool (collection): Optional. The pool of values to randomly choose from when adding a shock.
+            Specifying this argument overrides any of the subsequent shock-related arguments 
+            (shock_std, shock_lookback, etc.).
+        replace_shock_value_pool_draws (bool): Default False. Whether to reuse draws from the value pool specified
+            in `shock_value_pool`. If that is left unspecified, this is ignored.
+        shock_std (float): Optional. The standard deviation to use when adding a shock to the values.
+            Assumes a normal distribution where the mean is the value imputed.
+        shock_lookback (int): Optional. Must be greater than 1 if specified.
+            If adding a stochastic shock, the lookback period before the missing obs
+            to use to add the shock, assuming a normal distribution with the standard deviation from the lookback.
+            If this is larger than the number of observations before a given missing observation, will use all
+            observations before the missing one. If this and all the other shock-related arguments
+            are left unspeficied, uses all observations before each missing one to find the 
+            standard deviation. If the first one or two observations are missing, no shock is given to them.
+        **kwargs: Passed to the Forecaster object (https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.__init__)
+
+    Returns (Forecaster):
+        A Forecaster object with missing dates/values filled in.
+
+    >>> # using the function with null values in y
+    >>> Forecaster_with_missing_vals(
+    >>>    y = [1,2,np.nan,4],
+    >>>    current_dates=['2020-01-01','2020-01-02','2020-01-03','2020-01-04'],
+    >>>    fill_strategy = 'linear_interp',
+    >>> ) # replaces missing val with 3
+    >>> # using the function with missing dates
+    >>> Forecaster_with_missing_vals(
+    >>>    y = [1,2,4],
+    >>>    current_dates=['2020-01-01','2020-01-02','2020-01-04'], # missing '2020-01-03'
+    >>>    desired_frequency = 'D', # tell it to use daily frequency
+    >>>    fill_strategy = 'linear_interp',
+    >>> ) # adds 3 to the 2nd index position in y and adds '2020-01-03' to 2nd index position in current_dates
+    """
+    from .Forecaster import Forecaster
+    if random_seed is not None:
+        random.seed(random_seed)
+
+    valid_strategies = [
+        'linear_interp',
+        'moving_average', 
+        'moving_seasonal_average', 
+        'impute_pool',
+    ]
+
+    ts_df = pd.DataFrame({
+        'Date':pd.to_datetime(current_dates),
+        'y':pd.Series(y),
+    })
+    if desired_frequency is not None:
+        full_ts_df = pd.DataFrame({
+            'Date':pd.date_range(
+                start=ts_df['Date'].values[0],
+                end=ts_df['Date'].values[-1],
+                freq = desired_frequency,
+            )
+        })
+        ts_df = full_ts_df.merge(
+            ts_df, on = 'Date', how = 'left',
+        )
+    ts_df['missing'] = ts_df['y'].isnull().astype(int)
+    if ts_df['missing'].sum() > 0:
+        if fill_strategy not in valid_strategies and not add_stochastic_shock:
+            ts_df.fillna(fill_strategy,inplace=True)
+        else:
+            ts_df['missing_number'] = (
+                ts_df['missing'] == 1 
+                & ts_df['missing'].shift() == 0
+            ).astype(int).cumsum()
+            ts_df['missing_number'] = ts_df[['missing','missing_number']].apply(
+                lambda x: x[1] if x[0] == 1 else 0,
+                axis = 1,
+            )
+
+            if fill_strategy in [valid_strategies[0],valid_strategies[2]]: # li, sma
+                ts_df['m'] = 0
+                ts_df['b'] = 0
+                ts_df['x'] = 0
+
+                dfs = []
+                for cn in ts_df['missing_number'].unique():
+                    if cn == 0:
+                        dfs.append(ts_df.loc[ts_df['missing_number'] == cn])
+                    
+                    ts_df_tmp = ts_df.loc[ts_df['missing_number'] == cn]
+                    ts_df_tmp['x'] = 1
+                    ts_df_tmp['x'] = ts_df_tmp['x'].cumsum()
+                    y1 = ts_df.loc[ts_df_tmp.index[0] - 1]
+                    y2 = ts_df.loc[ts_df_tmp.index[-1] + 1]
+                    ts_df_tmp['m'] = (y2-y1) / ts_df_tmp.shape[0]
+                    ts_df_tmp['b'] = y1
+                    dfs.append(ts_df_tmp)
+                ts_df = pd.concat(dfs)
+            
+            for i, v in ts_df.iterrows():
+                if np.isnan(v['y']):
+                    if fill_strategy == valid_strategies[0]: # li
+                        ts_df.loc[i,'y'] = v['m'] * v['x'] + v['b'] # y = mx + b :)
+                    
+                    elif fill_strategy in (valid_strategies[1],valid_strategies[2]): # ma, sma
+                        ma_pool = ts_df.loc[
+                            (ts_df['Date'] < v['Date']) 
+                            & (ts_df['missing_number'] < v['missing_number'])
+                        ]
+
+                        if fill_strategy == valid_strategies[2]: # sma
+                            if m is None:
+                                from statsmodels.tsa.tsatools import freq_to_period
+                                m = freq_to_period(ts_df['Date'].freq)
+                            if impute_lookback is None:
+                                impute_lookback = ma_pool.shape[0]
+                            else:
+                                ma_pool = ma_pool.iloc[-int(impute_lookback):]
+                            if m < impute_lookback:
+                                raise warnings.warn(
+                                    'Not enough observations to impute missing value with '
+                                    'a seaonal moving average for date {}. '
+                                    'Defaulting to a normal moving average.'.format(v['Date']),
+                                    category = Warning,
+                                )
+                                fill_strategy = valid_strategies[1]
+
+                        if fill_strategy == valid_strategies[1]: # ma
+                            ts_df.loc[i,'y'] = ma_pool['y'].mean()
+                        else: # sma
+                            # really need to check this
+                            ts_df.loc[i,'y'] = np.mean(
+                                [i for i in ma_pool['y'].shift(m - v['x'] - 1) if i % m == 0]
+                            )
+                    
+                    elif fill_strategy == valid_strategies[3]: # pool
+                        ts_df.loc[i,'y'] = np.random.choice(
+                            impute_value_pool,replace=replace_impute_value_pool_draws
+                        )
+                    else:
+                        ts_df.loc[i,'y'] = float(fill_strategy)
+                    
+                    if add_stochastic_shock:
+                        if shock_value_pool is not None:
+                            ts_df.loc[i,'y'] += np.random.choice(
+                                shock_value_pool,
+                                replace=replace_shock_value_pool_draws,
+                            )
+                        else:
+                            if shock_std is None:
+                                sock_std_df = ts_df.loc[
+                                    (ts_df['Date'] < v['Date']) 
+                                    & (ts_df['missing_number'] < v['missing_number']),
+                                    'y',
+                                ]
+                                if shock_lookback is not None:
+                                    shock_std_df = sock_std_df.iloc[-int(shock_lookback):]
+                                shock_std = shock_std_df['y'].std()
+                            
+                            ts_df.loc[i,'y'] = np.random.normal(ts_df.loc[i,'y'], shock_std)
+
+    return Forecaster(
+        y = ts_df['y'],
+        current_dates = ts_df['Date'],
+        **kwargs,
+    )
 
 def backtest_for_resid_matrix(
     *fs,

@@ -8,6 +8,7 @@ setup.cfg
 setup.py
 _static/logo2.png
 _static/results.png
+dist/SCALECAST-0.18.12.tar.gz
 docs/.DS_Store
 docs/.readthedocs.yaml
 docs/0.17
@@ -98,6 +99,7 @@ test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
 test/VECMGrid.py
+test/error_20230802070858.log
 test/postbuild
 test/readme.md
 test/requirements.txt
