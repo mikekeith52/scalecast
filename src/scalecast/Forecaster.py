@@ -508,6 +508,7 @@ class Forecaster(Forecaster_parent):
         dynamic_testing=True,
         cap=None,
         floor=None,
+        callback_func=None,
         **kwargs,
     ):
         """ Forecasts with the Prophet model from the prophet library.
@@ -522,6 +523,7 @@ class Forecaster(Forecaster_parent):
                 Specific to Prophet when using logistic growth -- the largest amount the model is allowed to evaluate to.
             floor (float): Optional.
                 Specific to Prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to.
+            calllback_func (callable): Optional. The callback to use to modify the model, such as with different fourier terms.
             **kwargs: Passed to the Prophet() function from prophet. 
                 See https://facebook.github.io/prophet/docs/quick_start.html#python-api.
         """
@@ -561,6 +563,11 @@ class Forecaster(Forecaster_parent):
         regr = Prophet(**kwargs)
         for x in Xvars:
             regr.add_regressor(x)
+        
+        # before fitting the model we can modify the regressor object
+        if callable(callback_func): 
+            callback_func(regr) # if we need arguments we can use closure
+
         regr.fit(X)
         fcst = regr.predict(p)
 
@@ -1811,7 +1818,6 @@ class Forecaster(Forecaster_parent):
                                 sincos='sincos' in seasonality_repr[s],
                                 dummy='dummy' in seasonality_repr[s],
                                 drop_first='drop_first' in seasonality_repr[s],
-
                             )
                         else:
                             f.add_seasonal_regressors(

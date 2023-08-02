@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.12] - 2023-08-01
+### Added
+- Added callbacks to the prophet model (#65).
+- Added `fourier_order` as a parameter in the `Forecaster.add_seasonal_regressors()` and `Forecaster.add_cycle()` methods.
+### Changed
+### Fixed
+
 ## [0.18.11] - 2023-07-31
 ### Added
 ### Changed
@@ -97,7 +104,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - Added tbats model.
 - `MVForecaster` can now have Xvars added to it.
 - Added `multiseries.line_up_dates()` function.
-- New argument `test_again` added to `Forecaster.manual_forecast()` and `MVForecaster.manual_forecast()`. `auto_forecaster()` in the same objects has the same new argument.
+- New argument `test_again` added to `Forecaster.manual_forecast()` and `MVForecaster.manual_forecast()`. `auto_forecast()` in the same objects has the same new argument.
 - `model` argument added to `Forecaster.save_feature_importance()` and doesn't have to be called right after a model is evaluated.
 - Added `verbose` args to `cross_validate()` and `util.find_optimal_transformation()` functions to offer more transparency around these processes.
 - Added `min_grid_size` argument to `Forecaster.limit_grid_size()` and `tune_test_forecast()`.
@@ -116,7 +123,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - `MVForecaster.manual_forecast()` now accepts `Xvars` as an argument.
 - `normalizer` argument considered a hyperparameter where applicable and not given its own entry in history.
 - Got rid of several `Forecaster` methods that are never demonstrated in examples.
-- Got rid of `Forecaster.backtest()` and `MVForecaster.backtest()`. `Pipeline.backtest()` is a better alternative.
+- Got rid of `Forecaster.backtest()` and `MVForecaster.backtest()`. `Pipeline.backtest()` and `MVPipeline.backtest()` are better alternatives.
 ### Fixed
 - The first element in m is taken if multiple are passed to `util.find_optimal_transformation()`. The code was taking the second.
 - Fixed the diffy arg in `Forecaaster.adf_test()`.

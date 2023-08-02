@@ -56,6 +56,10 @@ prophet
 
 >>> f.set_estimator('prophet')
 >>> f.manual_forecast() # above args are now available in this function
+>>> # using callbacks
+>>> def add_seasonregr(m):
+>>>       m.add_seasonality(name='monthly', period=30.5, fourier_order=5)
+>>> f.manual_forecast(callback_func = add_seasonregr) # change a fourier order for seasonal regressors
 
 rnn
 --------------------------------------------------

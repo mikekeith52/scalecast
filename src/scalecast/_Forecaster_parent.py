@@ -136,6 +136,7 @@ class Forecaster_parent:
         dummy=False, 
         drop_first=False,
         cycle_lens=None,
+        fourier_order = 2.0,
     ):
         """ Adds seasonal regressors. 
         Can be in the form of Fourier transformed, dummy, or integer values.
@@ -157,6 +158,9 @@ class Forecaster_parent:
                 If this is not specified or a selected seasonality is not added to the dictionary as a key, the
                 cycle length will be selected automatically as the maximum value observed for the given seasonality.
                 Not relevant when sincos = False.
+            fourier_order (float): Default 2.0. The fourier order to apply to terms that are added using `sincos = True`.
+                This number is the number of complete cycles in that given seasonal period. 2 captures the fundamental frequency
+                and its first harmonic. Higher orders will capture more complex seasonality, but may lead to overfitting.
 
         Returns:
             None
@@ -207,13 +211,13 @@ class Forecaster_parent:
                     else _raw.max()  if s not in cycle_lens 
                     else cycle_lens[s]
                 )
-                self.current_xreg[f"{s}sin"] = np.sin(np.pi * _raw / (_cycles / 2))
-                self.current_xreg[f"{s}cos"] = np.cos(np.pi * _raw / (_cycles / 2))
+                self.current_xreg[f"{s}sin"] = np.sin(np.pi * _raw / (_cycles / fourier_order))
+                self.current_xreg[f"{s}cos"] = np.cos(np.pi * _raw / (_cycles / fourier_order))
                 self.future_xreg[f"{s}sin"] = np.sin(
-                    np.pi * _raw_fut / (_cycles / 2)
+                    np.pi * _raw_fut / (_cycles / fourier_order)
                 ).to_list()
                 self.future_xreg[f"{s}cos"] = np.cos(
-                    np.pi * _raw_fut / (_cycles / 2)
+                    np.pi * _raw_fut / (_cycles / fourier_order)
                 ).to_list()
             if dummy:
                 all_dummies = []
@@ -254,12 +258,15 @@ class Forecaster_parent:
             range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
         )
 
-    def add_cycle(self, cycle_length, called=None):
+    def add_cycle(self, cycle_length, fourier_order = 2.0, called=None):
         """ Adds a regressor that acts as a seasonal cycle.
         Use this function to capture non-normal seasonality.
 
         Args:
             cycle_length (int): How many time steps make one complete cycle.
+            fourier_order (float): Default 2.0. The fourier order to apply.
+                This number is the number of complete cycles in that given seasonal period. 2 captures the fundamental frequency
+                and its first harmonic. Higher orders will capture more complex seasonality, but may lead to overfitting.
             called (str): Optional. What to call the resulting variable.
                 Two variables will be created--one for a sin transformation and the other for cos
                 resulting variable names will have "sin" or "cos" at the end.
@@ -275,10 +282,10 @@ class Forecaster_parent:
         if called is None:
             called = f"cycle{cycle_length}"
         full_sin = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
-            lambda x: np.sin(np.pi * x / (cycle_length / 2))
+            lambda x: np.sin(np.pi * x / (cycle_length / fourier_order))
         )
         full_cos = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
-            lambda x: np.cos(np.pi * x / (cycle_length / 2))
+            lambda x: np.cos(np.pi * x / (cycle_length / fourier_order))
         )
         self.current_xreg[called + "sin"] = pd.Series(full_sin.values[: len(self.y)])
         self.current_xreg[called + "cos"] = pd.Series(full_cos.values[: len(self.y)])
