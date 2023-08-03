@@ -4,8 +4,10 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 ## [0.18.13]
 ## Added
 - Added `util.Forecaster_with_missing_vals()` function (#66).
+- Added `Forecaster.round()` method.
 ### Changed
 ### Fixed
+- Fixed banking history for failed models. Empty dictionaries no longer saved to `Forecaster.history` nor `MVForecaster.history`. There were instances where plotting was failing as a result.
 
 ## [0.18.12] - 2023-08-01
 ### Added

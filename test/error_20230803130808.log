@@ -1,0 +1,657 @@
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/76cvszrh.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/uqdft0ia.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=27467', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/76cvszrh.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/uqdft0ia.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelto3krt64/prophet_model-20230803130329.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/zafvvv6u.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/pm662lvr.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=73142', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/zafvvv6u.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/pm662lvr.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelu03okzid/prophet_model-20230803130329.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h7a4hef3.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_dongt_8.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=52276', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h7a4hef3.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_dongt_8.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelupuerl2w/prophet_model-20230803130329.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5y1kcpty.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/mbq2tc12.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=74286', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5y1kcpty.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/mbq2tc12.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model1cpfiqiw/prophet_model-20230803130329.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/fvict9mg.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/y2lpy2u6.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=80627', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/fvict9mg.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/y2lpy2u6.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelweyopvqu/prophet_model-20230803130329.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/egchaabj.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/59_7awvh.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=24101', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/egchaabj.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/59_7awvh.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model1gcpi11f/prophet_model-20230803130330.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/mrhiq8hh.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/0rfwy2q5.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=85424', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/mrhiq8hh.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/0rfwy2q5.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeluqlr0c1y/prophet_model-20230803130330.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/x9u04lc2.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/thny01lg.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=99282', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/x9u04lc2.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/thny01lg.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelzfp_puz2/prophet_model-20230803130330.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/kwwm0p70.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/tda2xqtb.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=87136', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/kwwm0p70.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/tda2xqtb.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeldwj6f5ti/prophet_model-20230803130330.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/djjd_5ti.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/b49k5mfs.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=31108', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/djjd_5ti.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/b49k5mfs.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model3tuej3ww/prophet_model-20230803130330.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/jyt_zo2n.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/elwcq6j1.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=16818', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/jyt_zo2n.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/elwcq6j1.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modely60nidbo/prophet_model-20230803130330.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/n3umat5u.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ar85ej1c.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=71472', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/n3umat5u.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ar85ej1c.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeldx9yyju3/prophet_model-20230803130330.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xf1stzht.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/sfuljp94.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=8965', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xf1stzht.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/sfuljp94.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model8v2wmswd/prophet_model-20230803130331.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/gzng5r2r.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1opxzdxc.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=53753', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/gzng5r2r.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1opxzdxc.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeloism1kih/prophet_model-20230803130331.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/g9_3ovgr.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/clg_enwg.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=58266', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/g9_3ovgr.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/clg_enwg.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelupae15y4/prophet_model-20230803130331.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/4gsgqdat.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/mc7hdwge.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=46313', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/4gsgqdat.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/mc7hdwge.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelm3nvblgb/prophet_model-20230803130331.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/qilc8g90.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/b0vgmatq.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=19474', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/qilc8g90.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/b0vgmatq.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model0080qea1/prophet_model-20230803131602.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ljiqb66g.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/c4vh2s85.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=61263', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ljiqb66g.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/c4vh2s85.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelb9m1mu4x/prophet_model-20230803131602.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/c2jzl38n.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hlkuvex5.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=46554', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/c2jzl38n.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hlkuvex5.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model5dg6m2xp/prophet_model-20230803131602.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/msd5olpe.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5u0otjn3.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=75608', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/msd5olpe.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5u0otjn3.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model20pu37ct/prophet_model-20230803131602.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/jhecmw1u.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/0kbo4_xp.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=38481', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/jhecmw1u.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/0kbo4_xp.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelj1x2tstz/prophet_model-20230803131602.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/0beauhnv.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/2cs82tjw.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=30017', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/0beauhnv.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/2cs82tjw.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model86_swxux/prophet_model-20230803131602.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ehjqq8b5.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/w2qugjys.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=13277', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ehjqq8b5.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/w2qugjys.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelosbfzoc5/prophet_model-20230803131603.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5qrqrfj1.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/sp5zkhpw.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=83999', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5qrqrfj1.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/sp5zkhpw.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelcupkpoeh/prophet_model-20230803131603.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/6db1zks6.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/evhrjvx9.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=40646', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/6db1zks6.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/evhrjvx9.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelrmj627s3/prophet_model-20230803131603.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/nc62bsia.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/x00b_ysm.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=39459', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/nc62bsia.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/x00b_ysm.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model1ngaekp1/prophet_model-20230803131603.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/lchtxmq8.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/l34xosxx.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=25482', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/lchtxmq8.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/l34xosxx.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelqu21bhdz/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_j5r30jo.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/eg6dc0yv.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=25940', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_j5r30jo.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/eg6dc0yv.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model9zt85w_q/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/6jgtetbw.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/une77vat.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=37341', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/6jgtetbw.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/une77vat.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelvgqb4lxc/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/zwqk1hse.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/s2sqnjpp.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=18886', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/zwqk1hse.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/s2sqnjpp.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model1wdbxkem/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/nwja4ga1.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7s5rqbmd.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=79523', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/nwja4ga1.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7s5rqbmd.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelgeq4jzw4/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9q7ryqca.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/gmnax5eu.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=25520', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9q7ryqca.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/gmnax5eu.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model4fww0_kl/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/cl3t28vj.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ltlapnxf.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=8329', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/cl3t28vj.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ltlapnxf.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model6f4dn1ob/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Stale NFS file handle
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h208tau_.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/etzjoh7i.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=54374', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h208tau_.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/etzjoh7i.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeltnmq9e9y/prophet_model-20230803131604.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1nbe6mk8.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_ferz789.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=14361', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1nbe6mk8.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_ferz789.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model3w_y4tyv/prophet_model-20230803133541.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ty3ehwul.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/8ic9pcpf.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=75955', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ty3ehwul.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/8ic9pcpf.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelx2w1xdn9/prophet_model-20230803133541.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9qrojqzz.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/v6w_r9e9.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=62304', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9qrojqzz.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/v6w_r9e9.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeljwagyajy/prophet_model-20230803133544.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xwolcui7.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/dw1hd5qe.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=66719', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xwolcui7.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/dw1hd5qe.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelqgcj2013/prophet_model-20230803133544.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/768jeig3.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/e3nc8xhe.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=78168', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/768jeig3.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/e3nc8xhe.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelbp6n5rm_/prophet_model-20230803133547.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/nz31r71m.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/cng2kkjj.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=42163', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/nz31r71m.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/cng2kkjj.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelw6ut9l3q/prophet_model-20230803133547.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/r05ix3xn.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xea_1_jg.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=26204', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/r05ix3xn.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xea_1_jg.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modell94ncksx/prophet_model-20230803133550.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ocjtz_qj.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/t3w38gq4.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=11391', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ocjtz_qj.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/t3w38gq4.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model4vdl84kf/prophet_model-20230803133551.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/u8i58flw.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/w6o94jas.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=98453', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/u8i58flw.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/w6o94jas.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modell2zd5phg/prophet_model-20230803133554.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/b_j00sgx.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/354ye8_i.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=51450', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/b_j00sgx.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/354ye8_i.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelolahrp17/prophet_model-20230803133554.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hh5i_hw4.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/n54p8tg2.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=76713', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hh5i_hw4.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/n54p8tg2.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model508oj8md/prophet_model-20230803133557.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/rvvy6_cz.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ot3wc1a9.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=10558', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/rvvy6_cz.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ot3wc1a9.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model7xj79jfd/prophet_model-20230803133557.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/2d841oye.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5lfwmkrj.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=35465', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/2d841oye.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5lfwmkrj.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model7fpzkn42/prophet_model-20230803133646.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xcthmx2q.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7a4nj05n.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=75673', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xcthmx2q.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7a4nj05n.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelup10zewo/prophet_model-20230803133648.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/38cua7xr.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7x9n8oaz.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=94046', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/38cua7xr.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7x9n8oaz.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeluvoh4ni_/prophet_model-20230803133650.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vxvyqsh7.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/acvelt4u.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=36513', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vxvyqsh7.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/acvelt4u.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelqh6gx84t/prophet_model-20230803133653.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/jleev4rl.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1e24x92b.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=5783', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/jleev4rl.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1e24x92b.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelpynnbpl3/prophet_model-20230803133655.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/j1bpqzfr.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/bp27862b.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=69180', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/j1bpqzfr.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/bp27862b.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelbvvhacyj/prophet_model-20230803133657.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hej4nkc3.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/x03qx3zf.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=92758', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hej4nkc3.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/x03qx3zf.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelk6r64s2i/prophet_model-20230803133700.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vg6bo_cz.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/e7tjrjlk.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=49133', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vg6bo_cz.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/e7tjrjlk.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelh9ufr786/prophet_model-20230803133702.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/crmf4h0u.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/z2pj7_du.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=447', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/crmf4h0u.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/z2pj7_du.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model0b3w000e/prophet_model-20230803133705.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/t2k98l9z.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vbdrts3s.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=37438', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/t2k98l9z.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vbdrts3s.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelbv56n65v/prophet_model-20230803133707.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/asls0582.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hlvdyp7g.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=13933', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/asls0582.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/hlvdyp7g.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model51b5ojc1/prophet_model-20230803133707.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/39ipqd_d.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/juosi37f.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=39347', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/39ipqd_d.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/juosi37f.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelxyasvlxa/prophet_model-20230803133710.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xi5u47po.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/gcecetxv.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=79604', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xi5u47po.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/gcecetxv.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelcpi2kotq/prophet_model-20230803133710.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9zlp67d2.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/pm70mkud.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=4124', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9zlp67d2.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/pm70mkud.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modela2v_6ixg/prophet_model-20230803133713.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ne6w0fyc.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h1cj6kie.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=91454', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ne6w0fyc.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h1cj6kie.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeld4vd4is6/prophet_model-20230803133713.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/drfmooo0.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/j2g8hk3k.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=21783', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/drfmooo0.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/j2g8hk3k.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelw1wqjot3/prophet_model-20230803133716.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vsdi8ddv.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9phx1dj7.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=83990', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/vsdi8ddv.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9phx1dj7.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelz5xox4_o/prophet_model-20230803133716.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7hzn61fv.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/4pbxsa98.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=60296', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/7hzn61fv.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/4pbxsa98.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modeltij5zmzk/prophet_model-20230803133719.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5guq703y.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/w0n1rhrw.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=98115', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5guq703y.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/w0n1rhrw.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model9fph5v3u/prophet_model-20230803133719.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_arbu8n1.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ig7fq9e2.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=72752', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_arbu8n1.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ig7fq9e2.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelkdhfhzr4/prophet_model-20230803133722.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/f57z8cup.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/yqqsolnq.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=74735', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/f57z8cup.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/yqqsolnq.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model3dev1x5f/prophet_model-20230803133722.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1298l5pa.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xxlpjd4p.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=80661', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1298l5pa.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/xxlpjd4p.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model7u6nnzq_/prophet_model-20230803133725.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/s_8yydov.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1almj6gs.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=7907', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/s_8yydov.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/1almj6gs.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelnovx5gv_/prophet_model-20230803133726.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9d71hsd3.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ovxm3xmq.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=71360', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/9d71hsd3.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/ovxm3xmq.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_model7gp1ur1r/prophet_model-20230803133729.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h7i_ky8s.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/rvvnbxs2.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=82498', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/h7i_ky8s.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/rvvnbxs2.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelzvjyydl9/prophet_model-20230803133729.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_sk8ffs4.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5ln131d8.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=54311', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/_sk8ffs4.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/5ln131d8.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelc0nq23l8/prophet_model-20230803133732.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/wbo0t2ay.json
+DEBUG:cmdstanpy:input tempfile: /var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/d7w7bw7p.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['/Users/uger7/opt/anaconda3/envs/scalecast-env/lib/python3.8/site-packages/prophet/stan_model/prophet_model.bin', 'random', 'seed=70880', 'data', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/wbo0t2ay.json', 'init=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/d7w7bw7p.json', 'output', 'file=/var/folders/fy/sqs6tqlj7930n5fpnhhjqq3w0000gn/T/tmpazkl0t1h/prophet_modelyvr2dka3/prophet_model-20230803133732.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing

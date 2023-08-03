@@ -8,6 +8,10 @@ metrics
 .. autoclass:: src.scalecast.util.metrics
    :members:
 
+Forecaster_with_missing_vals()
+-----------------------------------
+.. autofunction:: src.scalecast.util.Forecaster_with_missing_vals
+
 backtest_for_resid_matrix()
 ------------------------------
 .. autofunction:: src.scalecast.util.backtest_for_resid_matrix

@@ -751,17 +751,22 @@ class Forecaster_parent:
             if self.call_me not in self.history.keys():
                 self.history[self.call_me] = {}
 
-        preds = (
-            self._forecast_sklearn(
-                fcster=self.estimator,
-                dynamic_testing=dynamic_testing,
-                **kwargs,
+        try:
+            preds = (
+                self._forecast_sklearn(
+                    fcster=self.estimator,
+                    dynamic_testing=dynamic_testing,
+                    **kwargs,
+                )
+                if self.estimator in self.sklearn_estimators
+                else getattr(self, f"_forecast_{self.estimator}")(
+                    dynamic_testing=dynamic_testing, **kwargs
+                )
             )
-            if self.estimator in self.sklearn_estimators
-            else getattr(self, f"_forecast_{self.estimator}")(
-                dynamic_testing=dynamic_testing, **kwargs
-            )
-        )
+        except:
+            if self.call_me in self.history:
+                self.history.pop(self.call_me)
+            raise
         self.forecast = preds
         if bank_history:
             self._bank_history(**kwargs)
