@@ -1071,7 +1071,7 @@ def Forecaster_with_missing_vals(
 ):
     """ Imputes missing values in a given time series such that the result has a user-specified 
     date frequency and/or no remaining null values. If you pass no missing values through this function,
-    it will not raise an errors.
+    it will not raise errors.
 
     Args:
         y (collection): An array of all observed values. Can include NAs for dates in which the values
@@ -1090,7 +1090,7 @@ def Forecaster_with_missing_vals(
         m (int): Optional. The number of steps that count one seasonal cycle if using a seasonal fill strategy.
             If left unspecified, will attempt to be inferred. If it cannot be inferred, will raise an error.
         impute_value_pool (collection): Optional. The pool of values to use when `fill_strategy = 'impute_pool'`.
-        impute_lookback (int): Required when `fill_strategy in ('moving_average','moving_seasonal_average)`.
+        impute_lookback (int): Required when `fill_strategy in ('moving_average','moving_seasonal_average')`.
             The lookback to use when imputing a moving average to missing values. If using 'moving_seaosnal_average', 
             make sure to include at least one full seasonal cycle in the lookback. Must be 1 or greater. If there are not enough
             observations to create a seasonal fill, will use all available observations for a normal moving average and raise a warning.
