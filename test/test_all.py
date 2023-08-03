@@ -12,6 +12,7 @@ script_files = [ # comment out scripts to skip testing
     'test_multiseries',
     'test_Pipeline',
     'test_SeriesTransformer',
+    'test_util',
     #'test_ChangepointDetector', # kats is giving me problems and I don't want to deal with it right now
 ]
 

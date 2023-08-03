@@ -3396,3 +3396,16 @@ class Forecaster(Forecaster_parent):
         )
         df["Residuals"] = df["Actuals"] - df["FittedVals"]
         return df
+
+    def round(self,decimals=0):
+        """ Rounds the values saved to `Forecaster.y`.
+
+        Args:
+            decimals (int): The number of digits to round off to. Passed to `np.round(decimals)`.
+
+        Returns (Forecaster): 
+            A copy of the object.
+        """
+
+        self.y = np.round(self.y,decimals=decimals)
+        return self

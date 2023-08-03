@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.13]
+## Added
+- Added `util.Forecaster_with_missing_vals()` function (#66).
+- Added `Forecaster.round()` method.
+### Changed
+### Fixed
+- Fixed banking history for failed models. Empty dictionaries no longer saved to `Forecaster.history` nor `MVForecaster.history`. There were instances where plotting was failing as a result.
+
 ## [0.18.12] - 2023-08-01
 ### Added
 - Added callbacks to the prophet model (#65).
