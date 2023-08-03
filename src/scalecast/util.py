@@ -1110,7 +1110,7 @@ def Forecaster_with_missing_vals(
             standard deviation. If the first observation(s) is missing, no noise is given to it.
         cannot_be_below (float): Optional. A minimum value that the final imputation cannot drop below.
         cannot_be_above (float): Optional. A maximum value that the final imputation cannot be above.
-        first_ob_strategy (str): Default 'ignore'. What to do if the first observation(s) is null. Default will drop.
+        first_ob_strategy (str): Default 'drop'. What to do if the first observation(s) is null. Default will drop.
             Other options include 'ignore', which could cause unexpected results depending on the employed strategy.
             Can also start with 'fill_', where the next digits will be used to create a static fill 
             ('fill_0' fills with 0, for example).
