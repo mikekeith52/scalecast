@@ -1320,13 +1320,14 @@ def backtest_for_resid_matrix(
 ):
     """ Performs a backtest on one or more Forecaster objects using pipelines.
     Specifically, performs a backtest so that a residual matrix to make dynamic intervals
-    can easily be obtained. (See util.get_backtest_resid_matrix() and util.overwrite_forecast_intervals()).
+    can easily be obtained. (See `util.get_backtest_resid_matrix()` and 
+    `util.overwrite_forecast_intervals()`).
 
     Args:
         *fs (Forecaster): The objects that contain the evaluated forecasts.
             Send one if univariate forecasting with the `Pipeline` class, 
             more than one if multivariate forecasting with the `MVPipeline` class.
-        pipeline (Pipeline or MVPipeline): The pipeline to send fs through.
+        pipeline (Pipeline or MVPipeline): The pipeline to send `*fs` through.
         alpha (float): Default 0.05. The level that confidence intervals need to be evaluated at. 0.05 = 95%.
         bt_n_iter (int): Optional. The number of iterations to backtest. If left unspecified, chooses 1/alpha, 
             the minimum needed to set reliable conformal intervals.
@@ -1335,18 +1336,20 @@ def backtest_for_resid_matrix(
 
     Returns:
         (List[Dict[str,pd.DataFrame]]): The results from each model and backtest iteration.
-        Each dict element of the resulting list corresponds to the Forecaster objects in the order
+        Each dict element of the resulting list corresponds to the `Forecaster` objects in the order
         they were passed (will be length 1 if univariate forecasting). Each key of each dict is either 'Actuals', 'Obs',
         or the name of a model that got backtested. Each value is a DataFrame with the iteration values.
         The 'Actuals' frame has the date information and are the actuals over each forecast horizon. 
-        The 'Obs' frame has the actual historical observations to make each forecast, back padded with NA values to make each array the same length.
+        The 'Obs' frame has the actual historical observations to make each forecast, 
+        back padded with NA values to make each array the same length.
     """
     bt_n_iter = int(round(1/alpha)) if bt_n_iter is None else bt_n_iter
     if bt_n_iter < round(1/alpha):
         raise ValueError(
             'bt_n_iter must be at least 1/alpha.'
             f' alpha is {alpha} and bt_n_iter is {bt_n_iter}.'
-            f' bt_n_iter must be at least {1/alpha:.0f} to successfully backtest {1-alpha:.0%} confidence intervals.'
+            f' bt_n_iter must be at least {1/alpha:.0f} to successfully '
+            f' backtest {1-alpha:.0%} confidence intervals.'
         )
         
     bt_results = pipeline.backtest(
