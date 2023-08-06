@@ -44,6 +44,12 @@ def test_add_terms():
     f.add_ar_terms(12)
     assert 'AR12' in f.get_regressor_names(), 'regressor AR12 not added'
 
+    f.drop_all_Xvars()
+    f.add_ar_terms([12,24])
+    assert 'AR12' in f.get_regressor_names(), 'regressor AR12 not added'
+    assert 'AR24' in f.get_regressor_names(), 'regressor AR24 not added'
+    assert 'AR1' not in f.get_regressor_names(), 'regressor AR1 found when should not be'
+
     f.add_time_trend()
     assert 't' in f.get_regressor_names(), 'regressor t not added'
 
@@ -187,6 +193,13 @@ def test_modeling():
         best_model = f.order_fcsts(
             determine_best_by='ValidationMetricValue' if tl == 0 else 'TestSetSMAPE',
         )[0]
+
+
+        f.add_ar_terms([25])
+        for m in ('prophet','silverkite'):
+            f.set_estimator(m)
+            f.manual_forecast(Xvars=['AR25'],call_me = m + '_dir')
+            f.manual_forecast(Xvars='all',call_me = m + '_dir_allreg')
 
         f.plot(ci=True,exclude = ['mlr'])
         plt.savefig(f'../../plot_{tl}.png')

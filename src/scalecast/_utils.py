@@ -93,3 +93,14 @@ class _developer_utils:
             return []
         else:
             return func(x)[:,0]
+
+    @staticmethod
+    def _select_reg_for_direct_forecasting(f):
+        return {
+            k:v.to_list() 
+            for k, v in f.current_xreg.items() 
+            if (
+                np.isnan(f.future_xreg[k]).sum() == 0 
+                and len(f.future_xreg[k]) == len(f.future_dates)
+            )
+        }
