@@ -199,9 +199,10 @@ class Forecaster(Forecaster_parent):
     def _set_summary_stats(self):
         """ for every model where summary stats are available, saves them to a pandas dataframe where index is the regressor name
         """
-        results_summary = self.regr.summary()
-        results_as_html = results_summary.tables[1].as_html()
-        self.summary_stats = pd.read_html(results_as_html, header=0, index_col=0)[0]
+        if not hasattr(self,'summary_stats'):
+            results_summary = self.regr.summary()
+            results_as_html = results_summary.tables[1].as_html()
+            self.summary_stats = pd.read_html(results_as_html, header=0, index_col=0)[0]
 
     def _bank_fi_to_history(self):
         """ for every model where ELI5 permutation feature importance can be extracted, saves that info to a pandas dataframe wehre index is the regressor name
@@ -212,8 +213,7 @@ class Forecaster(Forecaster_parent):
     def _bank_summary_stats_to_history(self):
         """ saves summary stats (where available) to history
         """
-        call_me = self.call_me
-        self.history[call_me]["summary_stats"] = self.summary_stats
+        self.history[self.call_me]["summary_stats"] = self.summary_stats
 
     def _warn_about_dynamic_testing(self,dynamic_testing,does_not_use_lags=False,uses_direct=False):
         if dynamic_testing is not True:
@@ -465,23 +465,14 @@ class Forecaster(Forecaster_parent):
 
         self._warn_about_dynamic_testing(dynamic_testing=dynamic_testing)
         y = self.y.values.copy()
-        Xvars = (
-            [x for x in self.current_xreg.keys() if not x.startswith("AR")]
-            if Xvars == "all"
-            else [x for x in Xvars if not x.startswith("AR")]
-            if Xvars is not None
-            else Xvars
-        )
-        current_X = (
-            np.array([self.current_xreg[x].values.copy() for x in Xvars]).T 
-            if Xvars is not None 
-            else None
-        )
-        future_X = (
-            np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T 
-            if Xvars is not None 
-            else None
-        )
+        possible_Xvars = _developer_utils._select_reg_for_direct_forecasting(self)
+        Xvars = self._parse_Xvars_not_sklearn_nor_rnn(Xvars=Xvars,possible_Xvars=possible_Xvars)
+        if len(Xvars) > 0:
+            current_X = (np.array([possible_Xvars[x] for x in Xvars if not x.startswith('AR')]).T)
+            future_X = (np.array([np.array(self.future_xreg[x][:]) for x in current_X]).T)
+        else:
+            current_X, future_X = None, None
+        
         regr = ARIMA(
             y,
             exog=current_X,
@@ -517,6 +508,8 @@ class Forecaster(Forecaster_parent):
         Args:
             Xvars (list-like, str, or None): Default None. The regressors to predict with.
                 None means no Xvars used (unlike sklearn models).
+                AR terms can be accepted in this function if they are further lagged than the forecast horizon
+                (for example, if predicting 2 periods into the future, lags 2 and greater can be used).
             dynamic_testing (bool): Default True.
                 Always set to True for Prophet like all scalecast models that don't use lags.
             cap (float): Optional.
@@ -536,22 +529,17 @@ class Forecaster(Forecaster_parent):
             does_not_use_lags=True,
         )
         
-        X = pd.DataFrame(
-            {k: v.to_list() for k, v in self.current_xreg.items() if not k.startswith("AR")}
-        )
+        possible_Xvars = _developer_utils._select_reg_for_direct_forecasting(self)
+        X = pd.DataFrame(possible_Xvars)
         p = pd.DataFrame(
             {
-                k: v[-len(self.future_dates) :]
-                for k, v in self.future_xreg.items()
-                if not k.startswith("AR")
+                c: self.future_xreg[c][:]
+                for c in X
             }
         )
-        Xvars = (
-            [x for x in self.current_xreg.keys() if not x.startswith("AR")]
-            if Xvars == "all"
-            else [x for x in Xvars if not x.startswith("AR")]
-            if Xvars is not None
-            else []
+        Xvars = self._parse_Xvars_not_sklearn_nor_rnn(
+            Xvars = Xvars,
+            possible_Xvars = possible_Xvars.keys()
         )
         if cap is not None:
             X["cap"] = cap
@@ -559,6 +547,8 @@ class Forecaster(Forecaster_parent):
             X["floor"] = floor
         X["y"] = self.y.to_list()
         X["ds"] = self.current_dates.to_list()
+        X = X.dropna()
+        
         p["ds"] = self.future_dates.to_list()
         regr = Prophet(**kwargs)
         for x in Xvars:
@@ -579,7 +569,7 @@ class Forecaster(Forecaster_parent):
     
     @_developer_utils.log_warnings
     def _forecast_silverkite(
-        self, dynamic_testing=True, Xvars=None, **kwargs
+        self, dynamic_testing=True, Xvars=None, cv_max_splits = 0, **kwargs
     ):
         """ Forecasts with the silverkite model from LinkedIn greykite library.
         See the example: https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html.
@@ -589,6 +579,10 @@ class Forecaster(Forecaster_parent):
                 Always True for silverkite. It can use lags but they are always far enough in the past to allow a direct forecast.
             Xvars (list-like, str, or None): The regressors to predict with.
                 None means no Xvars used (unlike sklearn models).
+                AR terms can be accepted in this function if they are further lagged than the forecast horizon
+                (for example, if predicting 2 periods into the future, lags 2 and greater can be used).
+            cv_max_splits (int): Default 0. The number of cross-validation folds to use to optimize the model.
+                This is separate from cross validation native to scalecast. It is native to the greykite library.
             **kwargs: Passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
         """
         from greykite.framework.templates.autogen.forecast_config import (
@@ -606,23 +600,13 @@ class Forecaster(Forecaster_parent):
             does_not_use_lags=False,
             uses_direct=True,
         )
-        
-        Xvars = (
-            [x for x in self.current_xreg.keys() if not x.startswith("AR")]
-            if Xvars == "all"
-            else [x for x in Xvars if not x.startswith("AR")]
-            if Xvars is not None
-            else []
+
+        Xvars = self._parse_Xvars_not_sklearn_nor_rnn(
+            Xvars=Xvars,
+            possible_Xvars = _developer_utils._select_reg_for_direct_forecasting(self).keys()
         )
 
-        def _forecast_sk(df, Xvars, validation_length, test_length, forecast_length):
-            test_length = test_length if test_length > 0 else -(df.shape[0] + 1)
-            validation_length = (
-                validation_length if validation_length > 0 else -(df.shape[0] + 1)
-            )
-            pred_df = df.iloc[:-test_length, :].dropna() if self.test_length > 0 else df.dropna()
-            if validation_length > 0:
-                pred_df.loc[:-validation_length, "y"] = None
+        def _forecast_sk(df, Xvars, forecast_length):
             metadata = MetadataParam(time_col="ts", value_col="y", freq=self.freq)
             components = ModelComponentsParam(
                 regressors={"regressor_cols": Xvars} if Xvars is not None else None,
@@ -630,12 +614,12 @@ class Forecaster(Forecaster_parent):
             )
             forecaster = SKForecaster()
             result = forecaster.run_forecast_config(
-                df=pred_df,
+                df=df,
                 config=ForecastConfig(
                     forecast_horizon=forecast_length,
                     metadata_param=metadata,
                     evaluation_period_param=EvaluationPeriodParam(
-                        cv_max_splits=0
+                        cv_max_splits=cv_max_splits,
                     ),  # makes it very much faster
                 ),
             )
@@ -654,8 +638,8 @@ class Forecaster(Forecaster_parent):
         reg_df = pd.DataFrame(
             {x: self.current_xreg[x].to_list() + self.future_xreg[x] for x in Xvars}
         )
-        df = pd.concat([ts_df, reg_df], axis=1)
-        result = _forecast_sk(df, Xvars, 0, 0, fcst_length)
+        df = pd.concat([ts_df, reg_df], axis=1).dropna(subset=reg_df.columns.to_list())
+        result = _forecast_sk(df=df, Xvars=Xvars, forecast_length=fcst_length)
         self.summary_stats = result[1].set_index("Pred_col")
         self.fitted_values = result[0][:-fcst_length] if return_fitted else []
         self.Xvars = Xvars
@@ -1235,6 +1219,17 @@ class Forecaster(Forecaster_parent):
                 _developer_utils._return_na_if_len_zero(y, pred, func)
             )
 
+    def _parse_Xvars_not_sklearn_nor_rnn(self,Xvars,possible_Xvars):
+        return (
+            [x for x in possible_Xvars]
+            if Xvars == "all"
+            else [Xvars] if isinstance(Xvars,str) and Xvars in possible_Xvars
+            else [x for x in Xvars if x in possible_Xvars]
+            if Xvars is not None
+            else []
+        )
+
+
     def _parse_models(self, models, determine_best_by):
         """ takes a collection of models and orders them best-to-worst based on a given metric and returns the ordered list (of str type).
 
@@ -1377,24 +1372,30 @@ class Forecaster(Forecaster_parent):
         """ Adds auto-regressive terms.
 
         Args:
-            n (int): The number of lags to add to the object (1 to this number will be added).
+            n (int or collection[int]): If int, the number of lags to add to the object (1 to this number will be added by default).
+                If collection, will add the lags specified in the collection (`[2,4]` will add lags 2 and 4).
+                To add only lag 10, pass `[10]`. To add 10 lags, pass `10`.
 
         Returns:
             None
 
-        >>> f.add_ar_terms(4) # adds four lags of y (called 'AR1' - 'AR4') to predict with
+        >>> f.add_ar_terms(4) # adds four lags of y called 'AR1' - 'AR4' to predict with
+        >>> f.add_ar_terms([4]) # adds the fourth lag called 'AR4' to predict with
         """
         #self._validate_future_dates_exist()
-        n = int(n)
-
         if n == 0:
             return
 
-        _developer_utils.descriptive_assert(
-            n >= 0, ValueError, f"n must be greater than or equal to 0, got {n}."
-        )
+        if not hasattr(n,'__len__'):
+            iterable = range(1,int(n)+1)
+        else:
+            iterable = [int(i) for i in n]
+
         fcst_length = len(self.future_dates)
-        for i in range(1, n + 1):
+        for i in iterable:
+            _developer_utils.descriptive_assert(
+                i >= 1, ValueError, f"All lag orders must be greater than or equal to 1, found {i}."
+            )
             self.current_xreg[f"AR{i}"] = pd.Series(self.y).shift(i)
             self.future_xreg[f"AR{i}"] = (
                 self.y.to_list()[-i:]
