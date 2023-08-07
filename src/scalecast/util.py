@@ -307,10 +307,11 @@ def backtest_metrics(
     Args:
         backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
         models (collection): The names of the models to display metrics for. Default displays all models.
-        mets (list): Default ['rmse']. A list of metrics to calculate.
-            If the element is str type, must be taked from the `util.metrics` class 
-            where the only two accepted arguments are a and f.
-            If the element in the list is callable, must be a function that only accepts two arguments and returns a float.
+        mets (list[str or callable]): Default ['rmse']. A list of metrics to calculate.
+            If the element is str type, must be taken from the `util.metrics` class 
+            where the only two accepted arguments are `a` and `f`.
+            If the element in the list is callable, must be a function that only accepts two arguments (first actuals second forecast) 
+            and returns a float.
         mase (bool): Default False.
             Whether to also calculate mase. Must specify seasonality in m.
         msis (bool): Default False.
@@ -1125,8 +1126,8 @@ def Forecaster_with_missing_vals(
         random_seed (int): Optional. A random seed to set for reproducible results.
         **kwargs: Passed to the Forecaster object (https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.__init__)
 
-    Returns (Forecaster):
-        A Forecaster object with missing dates/values filled in.
+    Returns:
+         (Forecaster): A Forecaster object with missing dates/values filled in.
 
     >>> # using the function with null values in y
     >>> Forecaster_with_missing_vals(
