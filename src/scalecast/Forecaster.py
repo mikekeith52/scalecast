@@ -1011,11 +1011,10 @@ class Forecaster(Forecaster_parent):
 
             Args:
                 seasonal (bool): Default False. Whether to use a seasonal naive model.
-                m (str or int): Default 'auto'. Ignored when seasonal is False.
-                    The number of observations that counts one seasonal step.
-                    When 'auto', uses the M4 competition values: 
-                    for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
-                    so pass your own values for other frequencies.
+                m (int or str): Default 'auto'. The number of observations that counts one seasonal step.
+                    Ignored when seasonal_lags = 0.
+                    When 'auto', uses the M4 competition values:
+                    for Hourly: 24, Monthly: 12, Quarterly: 4. Everything else gets inferred if possible.
                 **kwargs: Not used but added to the model so it doesn't fail.
             """
             self.dynamic_testing = True

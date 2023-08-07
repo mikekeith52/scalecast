@@ -159,8 +159,7 @@ class SeriesTransformer:
             m (int or str): Default 'auto'. The number of observations that counts one seasonal step.
                 Ignored when seasonal_lags = 0.
                 When 'auto', uses the M4 competition values:
-                for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
-                so pass your own values for other frequencies.
+                for Hourly: 24, Monthly: 12, Quarterly: 4. Everything else gets inferred if possible.
             fit_intercept (bool): Default True. Whether to fit an intercept in the model.
             train_only (bool): Default False. Whether to fit the LOESS or OLS model on the training set only.
 
@@ -729,8 +728,7 @@ class SeriesTransformer:
         )
         train_only = train_only if self.f.test_length > 0 else False
         if m is None:
-            from statsmodels.tsa.tsatools import freq_to_period
-            m = freq_to_period(self.f.freq)
+            m = _developer_utils._convert_m('auto',self.f.freq)
         decomp_res = self.f.seasonal_decompose(
             model=model,
             extrapolate_trend=extrapolate_trend,

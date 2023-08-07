@@ -105,7 +105,8 @@ rnn = {
 }
 
 silverkite = {
-    'changepoints':range(5),
+    'changepoints':[2,None],
+    'cv_max_splits':[0,3],
 }
 
 sgd={

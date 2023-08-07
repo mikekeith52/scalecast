@@ -3,6 +3,7 @@ import logging
 import warnings
 import numpy as np
 from scipy import stats
+from statsmodels.tsa.tsatools import freq_to_period
 
 class _developer_utils:
     @staticmethod
@@ -73,7 +74,10 @@ class _developer_utils:
                 elif freq.startswith('H'):
                     return 24
                 else:
-                    return 1
+                    try:
+                        return freq_to_period(freq)
+                    except:
+                        return 1
             else:
                 return 1
         return m

@@ -294,6 +294,7 @@ def plot_reduction_errors(f, ax = None, figsize=(12,6)):
 
 def backtest_metrics(
     backtest_results: list,
+    models = None,
     mets = ['rmse'],
     mase = False, 
     msis = False,
@@ -305,6 +306,7 @@ def backtest_metrics(
     
     Args:
         backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
+        models (collection): The names of the models to display metrics for. Default displays all models.
         mets (list): Default ['rmse']. A list of metrics to calculate.
             If the element is str type, must be taked from the `util.metrics` class 
             where the only two accepted arguments are a and f.
@@ -335,15 +337,20 @@ def backtest_metrics(
     labels = names if names is not None else [f'Series{i}' for i in range(len(backtest_results))]
     res_dict = {k:None for k in labels}
     mets_str = [m if isinstance(m,str) else m.__name__ for m in mets]
+    actuals_obs = ['Actuals','Obs']
+    if models is None:
+        models = [m for m in backtest_results[0].keys() if m not in actuals_obs]
+    elif isinstance(models,str):
+        models = [models]
     for h, s in enumerate(backtest_results):
-        for i, m in enumerate(s):
+        for i, m in enumerate(actuals_obs + models):
             if i == 0:
                 a_df = s[m][[c for c in s[m] if c.endswith('Vals')]]
                 results = pd.DataFrame(
                     columns = [f'Iter{i}' for i in range(a_df.shape[1])],
                     index = pd.MultiIndex.from_product(
                             [
-                                [m for m in backtest_results[0] if m not in ('Actuals','Obs')],
+                                models[:],
                                 mets_str + ([] if not mase else ['mase']) + ([] if not msis else ['msis']),
                             ],
                             names = ['Model','Metric']
@@ -792,10 +799,10 @@ def find_optimal_transformation(
         scale_type (list-like): Default ['Scale','MinMax','RobustScale']. The type of scaling to try.
             Only up to one scaler will be selected.
             Must exist a `SeriesTranformer.{scale_type}Transform()` function for this to work.
-        m (str, int, list[int]): Default 'auto'. The number of observations that counts one seasonal step.
-            When 'auto', uses the M4 competition values: 
-            for Hourly: 24, Monthly: 12, Quarterly: 4. everything else gets 1 (no seasonality assumed)
-            so pass your own values for other frequencies. When 1, no seasonal adjustments will be tried.
+        m (int or str): Default 'auto'. The number of observations that counts one seasonal step.
+            Ignored when seasonal_lags = 0.
+            When 'auto', uses the M4 competition values:
+            for Hourly: 24, Monthly: 12, Quarterly: 4. Everything else gets inferred if possible.
             If list, multiple adjustments will be tried and up to that many adjustments can be selected.
         model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
             The type of seasonal component. Only relevant for the 'seasonal_adj' option in try_order.
@@ -867,6 +874,7 @@ def find_optimal_transformation(
             jump_back = space_between_sets,
             fcst_length = test_length,
             series_length = train_length,
+            cis = False,
         )
         mets = backtest_metrics(res,mets=[monitor])
         if verbose:
@@ -1246,8 +1254,7 @@ def Forecaster_with_missing_vals(
                         if fill_strategy == valid_strategies[2]: # sma
                             if v['missing_number'] == 1:
                                 if m is None:
-                                    from statsmodels.tsa.tsatools import freq_to_period
-                                    m = freq_to_period(pd.infer_freq(ts_df['Date']))
+                                    m = _developer_utils._convert_m('auto',pd.infer_freq(ts_df['Date']))
                             if impute_lookback_i is None:
                                 impute_lookback_i = ma_pool.shape[0]
                             else:

@@ -47,7 +47,6 @@ class Forecaster_parent:
         self.set_test_length(test_length)
         self.validation_length = 1
         self.validation_metric = metrics[0]
-        self.cis = cis
         self.cilevel = 0.95
         self.current_xreg = {} # Series
         self.future_xreg = {} # lists
@@ -56,6 +55,7 @@ class Forecaster_parent:
         self.set_estimator("mlr")
         for key, value in kwargs.items():
             setattr(self, key, value)
+        self.eval_cis(mode = cis, cilevel = self.cilevel)
 
     def __copy__(self):
         if hasattr(self,'tf_model'):
