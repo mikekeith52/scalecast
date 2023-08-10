@@ -3403,8 +3403,8 @@ class Forecaster(Forecaster_parent):
         Args:
             decimals (int): The number of digits to round off to. Passed to `np.round(decimals)`.
 
-        Returns (Forecaster): 
-            A copy of the object.
+        Returns: 
+             (Forecaster): A copy of the object.
         """
 
         self.y = np.round(self.y,decimals=decimals)

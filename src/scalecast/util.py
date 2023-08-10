@@ -1130,13 +1130,13 @@ def Forecaster_with_missing_vals(
          (Forecaster): A Forecaster object with missing dates/values filled in.
 
     >>> # using the function with null values in y
-    >>> Forecaster_with_missing_vals(
+    >>> f = Forecaster_with_missing_vals(
     >>>    y = [1,2,np.nan,4],
     >>>    current_dates=['2020-01-01','2020-01-02','2020-01-03','2020-01-04'],
     >>>    fill_strategy = 'linear_interp',
     >>> ) # replaces missing val with 3
     >>> # using the function with missing dates
-    >>> Forecaster_with_missing_vals(
+    >>> f = Forecaster_with_missing_vals(
     >>>    y = [1,2,4],
     >>>    current_dates=['2020-01-01','2020-01-02','2020-01-04'], # missing '2020-01-03'
     >>>    desired_frequency = 'D', # tell it to use daily frequency
