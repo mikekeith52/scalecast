@@ -1,8 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.18.16] - 2023-08-10
+### Added
+### Changed
+### Fixed
+- Fixed an issue where `impute_lookback=None` was not working with `fill_strategy='moving_seasonal_average'` (#70).
+
 ## [0.18.15] - 2023-08-07
-## Added
+### Added
 - Added `models` argument to `util.backtest_metrics`.
 ### Changed
 - Seasonality is inferred with more functions.
@@ -11,7 +17,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - Made a more descriptive error when `Forecaster`/`MVForecaster` objects are initiated `cis=True` and an insufficient test size.
 
 ## [0.18.14] - 2023-08-06
-## Added
+### Added
 ### Changed
 - `Forecaster.add_ar_terms()` now accepts collections as arguments and will add individual lags to the object according to what is passed there.
 - Prophet and Silverkite models now accept direct autoregressive forecasting by passing lagged variables ('AR...') to the `Xvars` arguments in the models. As long as the lag order is the same or greater than the forecast horizon, lags are accepted.
@@ -19,7 +25,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 ### Fixed
 
 ## [0.18.13] - 2023-08-03
-## Added
+### Added
 - Added `util.Forecaster_with_missing_vals()` function (#66).
 - Added `Forecaster.round()` method.
 ### Changed

@@ -1241,7 +1241,7 @@ def Forecaster_with_missing_vals(
                     elif fill_strategy in (valid_strategies[1],valid_strategies[2]): # ma, sma
                         if v['missing_number'] > 0:
                             _developer_utils.descriptive_assert(
-                                impute_lookback >= 1, 
+                                impute_lookback is None or impute_lookback >= 1, 
                                 ValueError, 
                                 f'impute_lookback must be 1 or greater, got {impute_lookback}.'
                             )
