@@ -20,7 +20,7 @@ f = Forecaster(
     metrics = ['rmse','mape','mae','r2'], # what metrics to evaluate over the validation/test sets?
 )
 ```
-Uniform ML modeling (with models from a diverse set of libraries, including scikit-learn, statsmodels, and tensorflow), reporting, and data visualizations are offered through the `Forecaster` and `MVForecaster` interfaces. Data storage and processing then becomes easy as all applicable data, predictions, and many derived metrics are contained in a few objects with much customization available through different modules. [Feature requests and issue reporting](https://github.com/mikekeith52/scalecast/issues/new) are welcome!  
+Uniform ML modeling (with models from a diverse set of libraries, including scikit-learn, statsmodels, and tensorflow), reporting, and data visualizations are offered through the `Forecaster` and `MVForecaster` interfaces. Data storage and processing then becomes easy as all applicable data, predictions, and many derived metrics are contained in a few objects with much customization available through different modules. [Feature requests and issue reporting](https://github.com/mikekeith52/scalecast/issues/new) are welcome! Don't forget to leave a star!⭐  
 
 ## Documentation  
 - [Read the Docs](https://scalecast.readthedocs.io/en/latest/)  
