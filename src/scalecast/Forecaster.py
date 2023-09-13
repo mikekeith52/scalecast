@@ -222,6 +222,55 @@ class Forecaster(Forecaster_parent):
             warning += " This model uses direct forecasting with lags." if uses_direct else ''
             warnings.warn(warning,category=Warning)
             self.dynamic_testing = True
+
+    def _fit_sklearn(self,normalizer):
+        self.scaler = self._fit_normalizer(current_X, normalizer)
+        X = self._scale(self.scaler, current_X)
+        self.X = X # for feature importance setting
+        regr.fit(X, y)
+
+    def _predict_sklearn(
+        self,
+        regr,
+        steps,
+        y,
+        normalizer,
+        Xvars, # list of names to get correct positions
+        dynamic_testing = True,
+    ):
+        current_X = np.array([self.current_xreg[x].values[obs_to_drop:].copy() for x in Xvars]).T
+        future_X = np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T
+        self.Xvars = Xvars
+        
+        has_ars = len([x for x in Xvars if x.startswith('AR')]) > 0
+
+        if has_ars:
+            actuals = self.actuals if hasattr(self,'actuals') else []
+            peeks = [a if (i+1)%dynamic_testing == 0 else np.nan for i, a in enumerate(actuals)]
+
+            series = self.y.to_list() # this is used to add peeking to the models
+            preds = [] # this is used to produce the real predictions
+            for i in range(steps):
+                p = self._scale(self.scaler,future_X[i,:].reshape(1,len(Xvars)))
+                pred = regr.predict(p)[0]
+                preds.append(pred)
+                if hasattr(self,'actuals') and (i+1) % dynamic_testing == 0:
+                    series.append(peeks[i])
+                else:
+                    series.append(pred)
+
+                if i == (steps-1):
+                    break
+
+                for pos, x in enumerate(Xvars):
+                    if x.startswith('AR'):
+                        ar = int(x[2:])
+                        future_X[i+1,pos] = series[-ar]
+        else:
+            p = self._scale(self.scaler,future_X)
+            preds = regr.predict(p)
+
+        return list(preds)
     
     @_developer_utils.log_warnings
     def _forecast_sklearn(
@@ -249,52 +298,6 @@ class Forecaster(Forecaster_parent):
                 The scaling technique to apply to the data. One of `Forecaster.normalizer`. 
             **kwargs: Treated as model hyperparameters and passed to the applicable sklearn estimator.
         """
-        def evaluate_model(
-            regr,
-            steps,
-            y,
-            scaler,
-            current_X,
-            future_X,
-            dynamic_testing,
-            Xvars, # list of names to get correct positions
-        ):
-            # apply the normalizer fit on training data only
-            X = self._scale(scaler, current_X)
-            self.X = X # for feature importance setting
-            regr.fit(X, y)
-
-            has_ars = len([x for x in Xvars if x.startswith('AR')]) > 0
-
-            if has_ars:
-                actuals = self.actuals if hasattr(self,'actuals') else []
-                peeks = [a if (i+1)%dynamic_testing == 0 else np.nan for i, a in enumerate(actuals)]
-
-                series = self.y.to_list() # this is used to add peeking to the models
-                preds = [] # this is used to produce the real predictions
-                for i in range(steps):
-                    p = self._scale(scaler,future_X[i,:].reshape(1,len(Xvars)))
-                    pred = regr.predict(p)[0]
-                    preds.append(pred)
-                    if hasattr(self,'actuals') and (i+1) % dynamic_testing == 0:
-                        series.append(peeks[i])
-                    else:
-                        series.append(pred)
-
-                    if i == (steps-1):
-                        break
-
-                    for pos, x in enumerate(Xvars):
-                        if x.startswith('AR'):
-                            ar = int(x[2:])
-                            future_X[i+1,pos] = series[-ar]
-            else:
-                p = self._scale(scaler,future_X)
-                preds = regr.predict(p)
-
-            return list(preds)
-
-        
         _developer_utils.descriptive_assert(
             len(self.current_xreg.keys()) > 0,
             ForecastError,
@@ -320,27 +323,60 @@ class Forecaster(Forecaster_parent):
         obs_to_drop = max(ars) if len(ars) > 0 else 0
         y = self.y.values[obs_to_drop:].copy()
 
-        current_X = np.array([self.current_xreg[x].values[obs_to_drop:].copy() for x in Xvars]).T
-        future_X = np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T
-
         # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
         self.regr = self.sklearn_imports[fcster](**kwargs)
-        self.scaler = self._fit_normalizer(current_X, normalizer)
-        self.Xvars = Xvars
         
-        preds = evaluate_model(
+        preds = self._predict_sklearn(
             regr = self.regr,
             steps = steps,
             y = y,
-            current_X = current_X,
-            future_X = future_X,
-            scaler = self.scaler,
+            normalizer = normalizer,
+            Xvars = Xvars,
             dynamic_testing = dynamic_testing,
-            Xvars = self.Xvars,
         )
 
         self.fitted_values = list(self.regr.predict(self.X)) if return_fitted else []
         return preds
+
+    def predict(self,model,steps=None,dates=None,model_type='sklearn'):
+        """ Makes predictions using an already-trained model over any given forecast horizon, 
+        as long as the horizon is not further in the past than what is loaded in the Forecaster object.
+        
+        Args:
+            model (str): The model nickname of the already-evaluated model.
+            steps (int): Optional. The number of future steps to forecast over. If this not specified, `dates` must be specified.
+                If this is specified, `dates` is ignored.
+            dates (colllection): Optional. An array of dates to predict over. Must be in the same frequency as what is loaded in the Forecaster object. 
+                If the dates are in the trained model's sample, fitted values will be returned. If no fitted values are available, NAs returned.
+                If this is not specified, `steps` must be specified. If `steps` is specified, this is ignored.
+            model_type (str): The type of model that needs to be predicted. Right now, only 'sklearn' is supported but others will be added.
+
+        Returns:
+            (np.array): The predictions corresponding with the passed dates.
+        """
+        _developer_utils.descriptive_assert(
+            steps is not None or dates is not None,
+            ValueError,
+            'One of `steps` or `dates` must be specified.'
+        )
+        if steps is None:
+            dates = pd.to_datetime(dates).reset_index(drop=True)
+            _developer_utils.descriptive_assert(
+                dates.freq == self.freq,
+                ValueError,
+                'The frequency of the passed dates must be the same as the frequency in the Forecaster object. '
+                f'The frequency of the passed dates is {dates.freq} and the frequency in the Forecaster object is {self.freq}.'
+            )
+            fd = pd.date_range(start = f.current_dates.max(),end=dates.max(),freq=self.freq).to_list()[1:]
+            steps = len(fd)
+
+        if model_type == 'sklearn':
+            regr = self.history[model]['regr']
+            Xvars = self.history[model]['Xvars']
+            normalizer = 'minmax' if 'normalizer' not in self.history[model]['HyperParams'] else self.history[model]['HyperParams']['normalizer']
+            preds = 
+
+            pass
 
     @_developer_utils.log_warnings
     def _forecast_theta(
