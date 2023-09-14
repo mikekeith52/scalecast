@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.0]
+### Added
+- Added `Forecaster.transfer_predict()` method. Only univariate sklearn models supported for now.
+- Added `carry_fit_models` attribute in `Forecaster` object that can be changed when object is initialized.
+### Changed
+- Changed how many history attributes are stored for each evaluated model, making the `Forecaster` object more memory efficient.
+- Refactored forecasting code for sklearn models so that model evaluation is more efficient.
+### Fixed
+- Fixed an issue with combo modeling where defaults were not working when a previous model had been run test only.
+
 ## [0.18.16] - 2023-08-10
 ### Added
 ### Changed

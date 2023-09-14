@@ -40,6 +40,7 @@ class Forecaster(Forecaster_parent):
         test_length = 0,
         cis = False,
         metrics = ['rmse','mape','mae','r2'],
+        carry_fit_models = True,
         **kwargs
     ):
         """ 
@@ -64,6 +65,9 @@ class Forecaster(Forecaster_parent):
                 The first element of this list will be set as the default validation metric, but that can be changed.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported.
+            carry_fit_models (bool): Default True.
+                Whether to store the regression model for each fitted model in history.
+                Setting this to False can save memory.
             **kwargs: Become attributes. 
         """
         super().__init__(
@@ -80,6 +84,7 @@ class Forecaster(Forecaster_parent):
         self.future_dates = pd.Series([], dtype="datetime64[ns]")
         self.init_dates = list(current_dates)
         self.grids_file = 'Grids'
+        self.carry_fit_models = carry_fit_models
         self._typ_set()  # ensures that the passed values are the right types
         if future_dates is not None:
             self.generate_future_dates(future_dates)
@@ -173,8 +178,11 @@ class Forecaster(Forecaster_parent):
                 self.y.iloc[-len(self.fitted_values) :], self.fitted_values, func
             )
 
-        for attr in ("regr", "X", "models", "weights"):
+        for attr in ("regr", "models", "weights"):
             if hasattr(self, attr):
+                if attr == 'regr' and not self.carry_fit_models:
+                    continue
+
                 self.history[call_me][attr] = getattr(self, attr)
         
         if self.cis is True and len(self.history[call_me]['TestSetPredictions']) > 0: #and 'TestSetPredictions' in self.history[call_me].keys():
@@ -223,28 +231,32 @@ class Forecaster(Forecaster_parent):
             warnings.warn(warning,category=Warning)
             self.dynamic_testing = True
 
-    def _fit_sklearn(self,normalizer):
+    def _fit_sklearn(self,regr,current_X):
+        self.X = self._scale(self.scaler, current_X)
+        regr.fit(self.X, y)
+
+    def _generate_X_sklearn(self,normalizer,Xvars):
+        current_X = np.array([self.current_xreg[x].values[obs_to_drop:].copy() for x in Xvars]).T
+        future_X = np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T
         self.scaler = self._fit_normalizer(current_X, normalizer)
-        X = self._scale(self.scaler, current_X)
-        self.X = X # for feature importance setting
-        regr.fit(X, y)
+        self.Xvars = Xvars
+        return current_X, future_X
 
     def _predict_sklearn(
         self,
         regr,
-        steps,
-        y,
-        normalizer,
-        Xvars, # list of names to get correct positions
+        future_X,
+        steps = None,
         dynamic_testing = True,
     ):
-        current_X = np.array([self.current_xreg[x].values[obs_to_drop:].copy() for x in Xvars]).T
-        future_X = np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T
-        self.Xvars = Xvars
-        
+        Xvars = self.Xvars
         has_ars = len([x for x in Xvars if x.startswith('AR')]) > 0
 
-        if has_ars:
+        if (dynamic_testing == 1 and not np.any(np.isnan(future_X))) or not has_ars:
+            p = self._scale(self.scaler,future_X)
+            preds = regr.predict(p)
+        else:
+            # handle peeking
             actuals = self.actuals if hasattr(self,'actuals') else []
             peeks = [a if (i+1)%dynamic_testing == 0 else np.nan for i, a in enumerate(actuals)]
 
@@ -266,9 +278,6 @@ class Forecaster(Forecaster_parent):
                     if x.startswith('AR'):
                         ar = int(x[2:])
                         future_X[i+1,pos] = series[-ar]
-        else:
-            p = self._scale(self.scaler,future_X)
-            preds = regr.predict(p)
 
         return list(preds)
     
@@ -310,73 +319,99 @@ class Forecaster(Forecaster_parent):
             f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}.",
         )
         return_fitted = not hasattr(self,'actuals') # save resources by not generating fitted values when only testing out of sample
-        steps = len(self.future_dates)
         dynamic_testing = (
             1 if dynamic_testing is False 
             else steps + 1 if dynamic_testing is True
             else dynamic_testing
         )
         Xvars = list(self.current_xreg.keys()) if Xvars == 'all' or Xvars is None else list(Xvars)[:]
-        # list of integers, each one representing the n/a values in each AR term
-        ars = [int(x[2:]) for x in Xvars if x.startswith("AR")]
-        # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
-        obs_to_drop = max(ars) if len(ars) > 0 else 0
-        y = self.y.values[obs_to_drop:].copy()
-
-        # get a list of Xvars, the y array, the X matrix, and the test size (can be different depending on if tuning or testing)
+        # arrays of variables to fit/make predictions
+        current_X, future_X = self._generate_X_sklearn(normalizer=normalizer,Xvars=Xvars)
+        # grab the model from the list of imports
         self.regr = self.sklearn_imports[fcster](**kwargs)
-        
+        # fit the model
+        self._fit_sklearn(self.regr,current_X)
+        # make the predictions
         preds = self._predict_sklearn(
             regr = self.regr,
-            steps = steps,
-            y = y,
-            normalizer = normalizer,
-            Xvars = Xvars,
+            future_X = future_X,
+            steps = len(self.future_dates),
             dynamic_testing = dynamic_testing,
         )
-
         self.fitted_values = list(self.regr.predict(self.X)) if return_fitted else []
         return preds
 
-    def predict(self,model,steps=None,dates=None,model_type='sklearn'):
-        """ Makes predictions using an already-trained model over any given forecast horizon, 
-        as long as the horizon is not further in the past than what is loaded in the Forecaster object.
+    def transfer_predict(
+        self,
+        transfer_from,
+        model,
+        model_type='sklearn',
+        return_series = False,
+        dates = [],
+        save_to_history = True,
+    ):
+        """ Makes predictions using an already-trained model over any given forecast horizon.
+        Will use the already-trained model from a passed Forecaster object to create 
         
         Args:
-            model (str): The model nickname of the already-evaluated model.
-            steps (int): Optional. The number of future steps to forecast over. If this not specified, `dates` must be specified.
-                If this is specified, `dates` is ignored.
-            dates (colllection): Optional. An array of dates to predict over. Must be in the same frequency as what is loaded in the Forecaster object. 
-                If the dates are in the trained model's sample, fitted values will be returned. If no fitted values are available, NAs returned.
-                If this is not specified, `steps` must be specified. If `steps` is specified, this is ignored.
-            model_type (str): The type of model that needs to be predicted. Right now, only 'sklearn' is supported but others will be added.
+            transfer_from (Forecaster): The Forecaster object that contains the already-fitted model.
+            model (str): The model nickname of the already-evaluated model stored in the `Forecaster`
+                object passed to `transfer_from`.
+            model_type (str): The type of model that needs to be predicted. 
+                Right now, only 'sklearn' is supported but others will be added.
+            return_series (bool): Default False. Whether to return a pandas series with the
+                date as an index of the values. If the `dates` argument is not specified, this
+                will include all dates in the `Forecaster` instance that the method is called from.
+            dates (collection): Optional. The dates to limit the predictions for.
+                Ignored if return_series is not specified. If the passed dates are not in the
+                same frequency as the dates stored in the Forecaster object, returns nulls for
+                the off-frequency dates.
+            save_to_history (bool): Default True. Whether to save the transferred predictions as if
+                they were a model being run using a `_forecast()` method.
 
         Returns:
-            (np.array): The predictions corresponding with the passed dates.
+            None.
         """
-        _developer_utils.descriptive_assert(
-            steps is not None or dates is not None,
-            ValueError,
-            'One of `steps` or `dates` must be specified.'
-        )
-        if steps is None:
-            dates = pd.to_datetime(dates).reset_index(drop=True)
-            _developer_utils.descriptive_assert(
-                dates.freq == self.freq,
-                ValueError,
-                'The frequency of the passed dates must be the same as the frequency in the Forecaster object. '
-                f'The frequency of the passed dates is {dates.freq} and the frequency in the Forecaster object is {self.freq}.'
-            )
-            fd = pd.date_range(start = f.current_dates.max(),end=dates.max(),freq=self.freq).to_list()[1:]
-            steps = len(fd)
-
+        f = transfer_from.deepcopy()
         if model_type == 'sklearn':
-            regr = self.history[model]['regr']
-            Xvars = self.history[model]['Xvars']
-            normalizer = 'minmax' if 'normalizer' not in self.history[model]['HyperParams'] else self.history[model]['HyperParams']['normalizer']
-            preds = 
+            regr = f.history[model]['regr']
+            Xvars = f.history[model]['Xvars']
+            hyperparams = self.history[model]['HyperParams']
+            normalizer = (
+                'minmax' if 'normalizer' not in hyperparams
+                else hyperparams['normalizer']
+            )
+            current_X, future_X = self._generate_X_sklearn(normalizer=normalizer,Xvars=Xvars)
+            preds = self._predict_sklearn(
+                regr = regr,
+                future_X = future_X,
+                steps = len(self.future_dates),
+            )
 
-            pass
+            fitted_values = []
+            if (
+                save_to_history or 
+                (
+                    return_series and (
+                        not len(dates) or 
+                        len([d for d in dates if d self.current_dates])
+                    )
+                )
+            ):
+                fitted_values = self._predict_sklearn(
+                    regr = regr,
+                    future_X = current_X,
+                    dynamic_testing = 1,
+                )
+            
+        if save_to_history:
+            self.fitted_values = fitted_values
+            self._bank_history(**hyperparams)
+        if return_series:
+            if len(dates) == 0:
+                dates = self.current_dates.to_list() + self.future_dates.to_list()
+            else:
+                dates = list(dates)
 
     @_developer_utils.log_warnings
     def _forecast_theta(
@@ -1145,7 +1180,7 @@ class Forecaster(Forecaster_parent):
             | (weights is not None)
         )
         models = self._parse_models(models, determine_best_by)
-        models = [m for m in models if m != self.call_me]
+        models = [m for m in models if m != self.call_me and 'Forecast' in self.history[m]]
 
         if len(models) == 1:
             how = 'simple'
@@ -2578,17 +2613,15 @@ class Forecaster(Forecaster_parent):
             **cvkwargs,
         )
 
-    def save_feature_importance(self, model = None, method="pfi", on_error="warn"):
+    def save_feature_importance(self, method="pfi", on_error="warn"):
         """ Saves feature info for models that offer it (sklearn models).
-        Call after evaluating the model you want it for.
+        Call after evaluating the model you want it for and before changing the estimator.
         This method saves a dataframe listing the feature as the index and its score. This dataframe can be recalled using
         the `export_feature_importance()` method. Scores for the pfi method are the average decrease in accuracy
         over 10 permutations for each feature. For shap, it is determined as the average score applied to each
         feature in each observation.
 
         Args:
-            model (str): Optional. The model's nickname to save information for.
-                By default, uses the last evaluated or tested model.
             method (str): One of {'pfi','shap'}.
                 The type of feature importance to set.
                 'pfi' supported for all sklearn model types. 
@@ -2604,7 +2637,7 @@ class Forecaster(Forecaster_parent):
         >>>
         >>> f.set_estimator('xgboost')
         >>> f.manual_forecast()
-        >>> f.save_feature_importance('shap') # shap
+        >>> f.save_feature_importance(method='shap') # shap
         >>> f.export_feature_importance('xgboost')
         """
         _developer_utils.descriptive_assert(
@@ -2614,10 +2647,10 @@ class Forecaster(Forecaster_parent):
         )
         fail = False
         try:
-            model = self.call_me if model is None else model
-            regr = self.history[model]['regr']
-            X = self.history[model]['X']
-            Xvars = self.history[model]['Xvars']
+            model = self.call_me
+            regr = self.regr
+            X = self.X
+            Xvars = self.Xvars
             if method == "pfi":
                 import eli5
                 from eli5.sklearn import PermutationImportance

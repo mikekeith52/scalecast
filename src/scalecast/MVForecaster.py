@@ -74,6 +74,7 @@ class MVForecaster(Forecaster_parent):
             test_length = test_length,
             cis = cis,
             metrics = metrics,
+            carry_fit_models = carry_fit_models,
             **kwargs,
         )
         for f in fs:
