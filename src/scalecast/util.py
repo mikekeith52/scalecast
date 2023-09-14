@@ -555,6 +555,50 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
 
     return model.select_order(**kwargs)
 
+def infer_apply_Xvar_selection(infer_from,apply_to,return_copy=False):
+    """ Attempts to infer what Xvars have been added to one Forecaster object and applies the guess to another Forecaster object.
+    If using default fourier seasonal terms, linear or log trend terms, and autoregressive terms only, with default namin, 
+    this will guess all variables successfully. Other variables (such as through `Forecaster.add_Xvars_df()`) will not be added. 
+    Any variables that cannot be inferred will be raised in a warning.
+
+    Args:
+        infer_from (Forecaster): The `Forecaster` object to infer the Xvars from.
+        apply_to (Forecaster): The `Forecaster` object to apply the guess to.
+        return_copy (bool): Default False. Whether to create a copy of the `Forecaster` object passed to `apply_to`.
+            Default will add Xvars to the instance passed to `apply_to`.
+
+    Returns:
+        (Forecaster): The Forecaster object with the inferred variables added to it.
+
+    >>> f2 = infer_apply_Xvar_selection(infer_from=f1,apply_to=f2)
+    """
+    if return_copy:
+        apply_to = apply_to.deepcopy()
+    
+    not_guessed = []
+    for k in infer_from.current_xreg.keys():
+        if k.startswith('AR'):
+            apply_to.add_ar_terms([int(k.split('AR')[-1])])
+        elif k.endswith('sin'):
+            apply_to.add_seasonal_regressors(k.split('sin')[0],sincos=True,raw=False)
+        elif k.endswith('cos'):
+            continue
+        elif k == 't' or k == 'lnt':
+            apply_to.add_time_trend()
+            if k == 'lnt':
+                apply_to.add_logged_terms('t',drop=True)
+        else:
+            not_guessed.append(k)
+
+    if len(not_guessed):
+        warnings.warn(
+            f'The inference was unable to guess the following variables: {not_guessed}.'
+            ' All others have been added to the Forecaster object passed to the `apply_to` argument.',
+            category=Warning,
+        )
+
+    return apply_to
+
 def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
     """ Returns the optimal cointigration rank for a multivariate process using the function from statsmodels: 
     https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.select_coint_rank.html

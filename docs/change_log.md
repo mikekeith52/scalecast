@@ -3,11 +3,13 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 
 ## [0.19.0]
 ### Added
-- Added `Forecaster.transfer_predict()` method. Only univariate sklearn models supported for now.
+- Added `Forecaster.transfer_predict()` method. Only univariate sklearn models supported for now (#77).
 - Added `carry_fit_models` attribute in `Forecaster` object that can be changed when object is initialized.
+- Added `util.infer_apply_Xvar_selection()` function.
 ### Changed
 - Changed how many history attributes are stored for each evaluated model, making the `Forecaster` object more memory efficient.
 - Refactored forecasting code for sklearn models so that model evaluation is more efficient.
+- Changed the `max_ar = 'auto'` behavior in `Forecaster.auto_Xvar_select()`.
 ### Fixed
 - Fixed an issue with combo modeling where defaults were not working when a previous model had been run test only.
 

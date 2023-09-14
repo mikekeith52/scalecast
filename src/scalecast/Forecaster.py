@@ -231,11 +231,18 @@ class Forecaster(Forecaster_parent):
             warnings.warn(warning,category=Warning)
             self.dynamic_testing = True
 
-    def _fit_sklearn(self,regr,current_X):
+    def _fit_sklearn(self,regr,current_X,obs_to_drop=0):
         self.X = self._scale(self.scaler, current_X)
+        y = self.y.to_list()[obs_to_drop:]
         regr.fit(self.X, y)
 
-    def _generate_X_sklearn(self,normalizer,Xvars):
+    def _get_obs_to_drop(self,Xvars):
+        # list of integers, each one representing the n/a values in each AR term
+        ars = [int(x[2:]) for x in Xvars if x.startswith("AR")]
+        # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
+        return max(ars) if len(ars) > 0 else 0
+
+    def _generate_X_sklearn(self,normalizer,Xvars,obs_to_drop=0):
         current_X = np.array([self.current_xreg[x].values[obs_to_drop:].copy() for x in Xvars]).T
         future_X = np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T
         self.scaler = self._fit_normalizer(current_X, normalizer)
@@ -251,6 +258,9 @@ class Forecaster(Forecaster_parent):
     ):
         Xvars = self.Xvars
         has_ars = len([x for x in Xvars if x.startswith('AR')]) > 0
+
+        if steps == 0:
+            return []
 
         if (dynamic_testing == 1 and not np.any(np.isnan(future_X))) or not has_ars:
             p = self._scale(self.scaler,future_X)
@@ -318,6 +328,7 @@ class Forecaster(Forecaster_parent):
             ValueError,
             f"dynamic_testing expected bool or non-negative int type, got {dynamic_testing}.",
         )
+        steps = len(self.future_dates)
         return_fitted = not hasattr(self,'actuals') # save resources by not generating fitted values when only testing out of sample
         dynamic_testing = (
             1 if dynamic_testing is False 
@@ -325,17 +336,23 @@ class Forecaster(Forecaster_parent):
             else dynamic_testing
         )
         Xvars = list(self.current_xreg.keys()) if Xvars == 'all' or Xvars is None else list(Xvars)[:]
+        # figure out how many AR terms should cause dropping from the front
+        obs_to_drop = self._get_obs_to_drop(Xvars=Xvars)
         # arrays of variables to fit/make predictions
-        current_X, future_X = self._generate_X_sklearn(normalizer=normalizer,Xvars=Xvars)
+        current_X, future_X = self._generate_X_sklearn(normalizer=normalizer,Xvars=Xvars,obs_to_drop=obs_to_drop)
         # grab the model from the list of imports
         self.regr = self.sklearn_imports[fcster](**kwargs)
         # fit the model
-        self._fit_sklearn(self.regr,current_X)
+        self._fit_sklearn(
+            regr=self.regr,
+            current_X=current_X,
+            obs_to_drop=obs_to_drop,
+        )
         # make the predictions
         preds = self._predict_sklearn(
             regr = self.regr,
             future_X = future_X,
-            steps = len(self.future_dates),
+            steps = steps,
             dynamic_testing = dynamic_testing,
         )
         self.fitted_values = list(self.regr.predict(self.X)) if return_fitted else []
@@ -349,6 +366,7 @@ class Forecaster(Forecaster_parent):
         return_series = False,
         dates = [],
         save_to_history = True,
+        call_me = None,
     ):
         """ Makes predictions using an already-trained model over any given forecast horizon.
         Will use the already-trained model from a passed Forecaster object to create 
@@ -368,6 +386,9 @@ class Forecaster(Forecaster_parent):
                 the off-frequency dates.
             save_to_history (bool): Default True. Whether to save the transferred predictions as if
                 they were a model being run using a `_forecast()` method.
+            call_me (str): Optional. What to call the resulting model.
+                If save_to_history is False, this is ignored.
+                If not specified, inherits the name passed to `model`.
 
         Returns:
             None.
@@ -376,12 +397,13 @@ class Forecaster(Forecaster_parent):
         if model_type == 'sklearn':
             regr = f.history[model]['regr']
             Xvars = f.history[model]['Xvars']
-            hyperparams = self.history[model]['HyperParams']
+            hyperparams = f.history[model]['HyperParams']
             normalizer = (
                 'minmax' if 'normalizer' not in hyperparams
                 else hyperparams['normalizer']
             )
-            current_X, future_X = self._generate_X_sklearn(normalizer=normalizer,Xvars=Xvars)
+            obs_to_drop = self._get_obs_to_drop(Xvars=Xvars)
+            current_X, future_X = self._generate_X_sklearn(normalizer=normalizer,Xvars=Xvars,obs_to_drop=obs_to_drop)
             preds = self._predict_sklearn(
                 regr = regr,
                 future_X = future_X,
@@ -394,7 +416,7 @@ class Forecaster(Forecaster_parent):
                 (
                     return_series and (
                         not len(dates) or 
-                        len([d for d in dates if d self.current_dates])
+                        len([d for d in dates if d in self.current_dates])
                     )
                 )
             ):
@@ -405,7 +427,11 @@ class Forecaster(Forecaster_parent):
                 )
             
         if save_to_history:
+            self.call_me = call_me if call_me is not None else model
+            self.forecast = preds
             self.fitted_values = fitted_values
+            self.dynamic_testing = np.nan
+            self.history[self.call_me] = {}
             self._bank_history(**hyperparams)
         if return_series:
             if len(dates) == 0:
@@ -1810,7 +1836,7 @@ class Forecaster(Forecaster_parent):
             irr_cycles (list[int]): Optional. 
                 Add any irregular cycle lengths to a list as integers to search for using this method.
             max_ar ('auto' or int): The highest lag order to search for.
-                If 'auto', will use the greater of 10 or the test-set length as the lag order.
+                If 'auto', will use the greater of the forecast length or the test-set length as the lag order.
                 If a larger number than available observations is placed here, the AR search will stop early.
                 Set to 0 to skip searching for lag terms.
             test_already_added (bool): Default True.
@@ -2170,7 +2196,7 @@ class Forecaster(Forecaster_parent):
         best_seasonality = parse_best_metrics(seasonality_metrics)
         
         if max_ar == 'auto' or max_ar > 0:
-            max_ar = max(10,f.test_length) if max_ar == 'auto' else max_ar
+            max_ar = max(len(f.future_dates),f.test_length) if max_ar == 'auto' else max_ar
             for i in range(1,max_ar+1):
                 try:
                     f1 = f.deepcopy()

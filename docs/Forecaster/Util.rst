@@ -44,6 +44,10 @@ get_backtest_resid_matrix()
 -----------------------------------
 .. autofunction:: src.scalecast.util.get_backtest_resid_matrix
 
+infer_apply_Xvar_selection()
+--------------------------------
+.. autofunction:: src.scalecast.util.infer_apply_Xvar_selection
+
 overwrite_forecast_intervals()
 -----------------------------------
 .. autofunction:: src.scalecast.util.overwrite_forecast_intervals
