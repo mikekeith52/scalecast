@@ -172,6 +172,18 @@ f1, f2, f3 = pipeline.fit_predict(f1, f2, f3)
 backtest_results = pipeline.backtest(f1, f2, f3)
 metrics = backtest_metrics(backtest_results)
 ```
+8. **Transfer Learning (new with 0.19.0):** Train a model in one `Forecaster` object and use that model to make predictions on the data in a separate `Forecaster` object.
+```python
+f = Forecaster(...)
+f.auto_Xvar_select()
+f.set_estimator('xgboost')
+f.cross_validate()
+f.auto_forecast()
+
+f_new = Forecaster(...) # different series than f
+f_new = infer_apply_Xvar_selection(infer_from=f,apply_to=f_new)
+f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost model from f to f_new
+```
 
 ## Installation
 - Only the base package is needed to get started:  

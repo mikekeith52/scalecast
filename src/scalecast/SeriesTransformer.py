@@ -666,7 +666,7 @@ class SeriesTransformer:
                     )
                 )[m:]
                 h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
-            if np.isnan(self.f.history[mod]['CILevel']): # no cis evaluated
+            if np.isnan(self.f.history[mod]['CILevel']) or 'TestSetUpperCI' not in h: # no cis evaluated
                 continue
             # undifference cis
             fcst = h["Forecast"]
@@ -675,14 +675,18 @@ class SeriesTransformer:
             test_resids = np.abs([p - a for p, a in zip(test_preds,test_actuals)])
             ci_range = np.percentile(test_resids, 100 * self.f.cilevel)
             self.f._set_cis(
-                "UpperCI",
-                "LowerCI",
                 "TestSetUpperCI",
                 "TestSetLowerCI",
                 m = mod,
                 ci_range = ci_range,
-                forecast = fcst,
-                tspreds = test_preds,
+                preds = test_preds,
+            )
+            self.f._set_cis(
+                "UpperCI",
+                "LowerCI",
+                m = mod,
+                ci_range = ci_range,
+                preds = fcst,
             )
         #delattr(self, f"orig_y_{m}_{n}")
         #delattr(self, f"orig_dates_{m}_{n}")

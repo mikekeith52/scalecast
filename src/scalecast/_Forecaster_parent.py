@@ -674,6 +674,10 @@ class Forecaster_parent:
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
                 The model will skip testing if the test_length attribute is set to 0.
+            test_again (bool): Default True.
+                Whether to test the model before forecasting to a future horizon.
+                If test_length is 0, this is ignored. Set this to False if you tested the model manually by calling f.test()
+                and don't want to waste resources testing it again.
 
         >>> f.set_estimator('xgboost')
         >>> f.tune()
