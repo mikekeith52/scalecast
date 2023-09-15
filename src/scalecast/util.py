@@ -557,7 +557,7 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
 
 def infer_apply_Xvar_selection(infer_from,apply_to,return_copy=False):
     """ Attempts to infer what Xvars have been added to one Forecaster object and applies the guess to another Forecaster object.
-    If using default fourier seasonal terms, linear or log trend terms, and autoregressive terms only, with default namin, 
+    If using default fourier seasonal terms, linear or log trend terms, and autoregressive terms only, with defaults, 
     this will guess all variables successfully. Other variables (such as through `Forecaster.add_Xvars_df()`) will not be added. 
     Any variables that cannot be inferred will be raised in a warning.
 
