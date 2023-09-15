@@ -8,7 +8,7 @@ long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = '0.18.16',
+  version = '0.19.0',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,
@@ -28,7 +28,7 @@ setup(
   url = 'https://github.com/mikekeith52/scalecast',
   keywords = ['FORECAST', 'SCALE', 'DYNAMIC', 'MACHINE LEARNING', 'APPLIED'],
   install_requires = [
-    'scikit-learn',
+    'scikit-learn<1.3.0',
     'statsmodels',
     'tbats',
     'scipy',

@@ -1,6 +1,7 @@
 tensorflow==2.11.0
 darts==0.23.1
 prophet==1.1.2
+holidays==0.24
 greykite==0.2.0
 shap==0.41.0
 pmdarima==2.0.2

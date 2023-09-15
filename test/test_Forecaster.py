@@ -1,7 +1,7 @@
 import pandas_datareader as pdr
 from scalecast.Forecaster import Forecaster
 from scalecast.auxmodels import mlp_stack, auto_arima
-from scalecast.util import plot_reduction_errors, metrics
+from scalecast.util import plot_reduction_errors, metrics, infer_apply_Xvar_selection
 import matplotlib.pyplot as plt
 import pickle
 
@@ -223,11 +223,42 @@ def test_modeling():
             with open('../../f.pckl','wb') as pckl:
                 pickle.dump(f,pckl)
 
+def test_transfer_modeling():
+    df_new = pdr.get_data_fred(
+        'HOUSTNSA',
+        start = '1959-01-01',
+        end = '2023-06-30',
+    )
+    f = Forecaster(    
+        y = df.iloc[:,0],
+        current_dates = df.index,
+        future_dates = 24,
+    )
+    f_new = Forecaster(
+        y = df_new.iloc[:,0],
+        current_dates = df_new.index,
+        future_dates = 24,
+    )
+    f.auto_Xvar_select()
+    f.manual_forecast()
+    f_new = infer_apply_Xvar_selection(infer_from=f,apply_to=f_new)
+    f_new.transfer_predict(transfer_from=f,model='mlr')
+    print(
+        f_new.transfer_predict(
+            transfer_from=f,
+            model='mlr',
+            dates=['2022-12-01','2023-01-01','2017-01-01'],
+            save_to_history=False,
+            return_series=True,
+        )
+    )
+
 def main():
     test_add_terms()
     test_feature_selection_reduction()
     test_pickle()
     test_modeling()
+    test_transfer_modeling()
 
 if __name__ == '__main__':
     main()
