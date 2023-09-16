@@ -32,7 +32,6 @@ docs/Forecaster/Pipeline.rst
 docs/Forecaster/SeriesTransformer.rst
 docs/Forecaster/Util.rst
 docs/Forecaster/_forecast.rst
-docs/Forecaster/.ipynb_checkpoints/ForecasterGlobals-checkpoint.ipynb
 docs/_static/RecurisveForecasting.png
 docs/_static/RecurisveForecastingdt2.png
 docs/_static/logo2.png
@@ -53,6 +52,8 @@ src/scalecast/Pipeline.py
 src/scalecast/SeriesTransformer.py
 src/scalecast/_Forecaster_parent.py
 src/scalecast/__init__.py
+src/scalecast/_sklearn_models_uni.py
+src/scalecast/_tf_models.py
 src/scalecast/_utils.py
 src/scalecast/auxmodels.py
 src/scalecast/multiseries.py
@@ -98,7 +99,6 @@ test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
 test/VECMGrid.py
-test/error_20230806220804.log
 test/postbuild
 test/readme.md
 test/requirements.txt

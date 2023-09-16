@@ -583,10 +583,13 @@ def infer_apply_Xvar_selection(infer_from,apply_to,return_copy=False):
             apply_to.add_seasonal_regressors(k.split('sin')[0],sincos=True,raw=False)
         elif k.endswith('cos'):
             continue
-        elif k == 't' or k == 'lnt':
+        elif k in ('t', 'lnt','t^2'):
             apply_to.add_time_trend()
             if k == 'lnt':
                 apply_to.add_logged_terms('t',drop=True)
+            elif k == 't^2':
+                apply_to.add_poly_terms('t')
+                apply_to.drop_Xvars('t')
         else:
             not_guessed.append(k)
 

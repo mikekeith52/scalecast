@@ -10,6 +10,21 @@ from ._Forecaster_parent import (
     ForecastError,
     _tune_test_forecast,
 )
+from ._sklearn_models_uni import (
+    _fit_sklearn,
+    _get_obs_to_drop,
+    _generate_X_sklearn,
+    _predict_sklearn,
+)
+from ._tf_models import (
+    _process_y_tf,
+    _get_compiled_model_tf,
+    _process_X_tf,
+    _plot_loss_rnn,
+    _finish_process_X_tf,
+    _get_preds_tf,
+    _get_fvs_tf,
+)
 import typing
 from typing import Union, Tuple, Dict
 import importlib
@@ -230,66 +245,6 @@ class Forecaster(Forecaster_parent):
             warning += " This model uses direct forecasting with lags." if uses_direct else ''
             warnings.warn(warning,category=Warning)
             self.dynamic_testing = True
-
-    def _fit_sklearn(self,regr,current_X,obs_to_drop=0):
-        self.X = self._scale(self.scaler, current_X)
-        y = self.y.to_list()[obs_to_drop:]
-        regr.fit(self.X, y)
-
-    def _get_obs_to_drop(self,Xvars):
-        # list of integers, each one representing the n/a values in each AR term
-        ars = [int(x[2:]) for x in Xvars if x.startswith("AR")]
-        # if using ARs, instead of foregetting those obs, ignore them with sklearn forecasts (leaves them available for other types of forecasts)
-        return max(ars) if len(ars) > 0 else 0
-
-    def _generate_X_sklearn(self,normalizer,Xvars,obs_to_drop=0):
-        current_X = np.array([self.current_xreg[x].values[obs_to_drop:].copy() for x in Xvars]).T
-        future_X = np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T
-        self.scaler = self._fit_normalizer(current_X, normalizer)
-        self.Xvars = Xvars
-        return current_X, future_X
-
-    def _predict_sklearn(
-        self,
-        regr,
-        future_X,
-        steps = None,
-        dynamic_testing = True,
-    ):
-        Xvars = self.Xvars
-        has_ars = len([x for x in Xvars if x.startswith('AR')]) > 0
-
-        if steps == 0:
-            return []
-
-        if (dynamic_testing == 1 and not np.any(np.isnan(future_X))) or not has_ars:
-            p = self._scale(self.scaler,future_X)
-            preds = regr.predict(p)
-        else:
-            # handle peeking
-            actuals = self.actuals if hasattr(self,'actuals') else []
-            peeks = [a if (i+1)%dynamic_testing == 0 else np.nan for i, a in enumerate(actuals)]
-
-            series = self.y.to_list() # this is used to add peeking to the models
-            preds = [] # this is used to produce the real predictions
-            for i in range(steps):
-                p = self._scale(self.scaler,future_X[i,:].reshape(1,len(Xvars)))
-                pred = regr.predict(p)[0]
-                preds.append(pred)
-                if hasattr(self,'actuals') and (i+1) % dynamic_testing == 0:
-                    series.append(peeks[i])
-                else:
-                    series.append(pred)
-
-                if i == (steps-1):
-                    break
-
-                for pos, x in enumerate(Xvars):
-                    if x.startswith('AR'):
-                        ar = int(x[2:])
-                        future_X[i+1,pos] = series[-ar]
-
-        return list(preds)
     
     @_developer_utils.log_warnings
     def _forecast_sklearn(
@@ -337,19 +292,21 @@ class Forecaster(Forecaster_parent):
         )
         Xvars = list(self.current_xreg.keys()) if Xvars == 'all' or Xvars is None else list(Xvars)[:]
         # figure out how many AR terms should cause dropping from the front
-        obs_to_drop = self._get_obs_to_drop(Xvars=Xvars)
+        obs_to_drop = _get_obs_to_drop(Xvars=Xvars)
         # arrays of variables to fit/make predictions
-        current_X, future_X = self._generate_X_sklearn(normalizer=normalizer,Xvars=Xvars,obs_to_drop=obs_to_drop)
+        current_X, future_X = _generate_X_sklearn(f=self,normalizer=normalizer,Xvars=Xvars,obs_to_drop=obs_to_drop)
         # grab the model from the list of imports
         self.regr = self.sklearn_imports[fcster](**kwargs)
         # fit the model
-        self._fit_sklearn(
+        _fit_sklearn(
+            f=self,
             regr=self.regr,
             current_X=current_X,
             obs_to_drop=obs_to_drop,
         )
         # make the predictions
-        preds = self._predict_sklearn(
+        preds = _predict_sklearn(
+            f=self,
             regr = self.regr,
             future_X = future_X,
             steps = steps,
@@ -379,7 +336,7 @@ class Forecaster(Forecaster_parent):
             model (str): The model nickname of the already-evaluated model stored in the `Forecaster`
                 object passed to `transfer_from`.
             model_type (str): Default 'sklearn'. The type of model that needs to be predicted. 
-                Right now, only 'sklearn' is supported but others will be added.
+                Right now, only 'sklearn' and 'tf' are supported but others will be added.
             return_series (bool): Default False. Whether to return a pandas series with the
                 date as an index of the values. If the `dates` argument is not specified, this
                 will include all dates in the `Forecaster` instance that the method is called from.
@@ -399,12 +356,13 @@ class Forecaster(Forecaster_parent):
         >>> f.manual_forecast(call_me='mlr')
         >>> f_new.transfer_predict(transfer_from=f,model='mlr')
         """
-        f = transfer_from.deepcopy()
+        f = transfer_from
         
         if len(dates):
             dates = [pd.Timestamp(d) for d in dates]
 
         if model_type == 'sklearn':
+            #f = f.deepcopy()
             regr = f.history[model]['regr']
             Xvars = f.history[model]['Xvars']
             hyperparams = f.history[model]['HyperParams']
@@ -412,13 +370,15 @@ class Forecaster(Forecaster_parent):
                 'minmax' if 'normalizer' not in hyperparams
                 else hyperparams['normalizer']
             )
-            obs_to_drop = self._get_obs_to_drop(Xvars=Xvars)
-            current_X, future_X = self._generate_X_sklearn(
+            obs_to_drop = _get_obs_to_drop(Xvars=Xvars)
+            current_X, future_X = _generate_X_sklearn(
+                f=self,
                 normalizer=normalizer,
                 Xvars=Xvars,
                 obs_to_drop=obs_to_drop,
             )
-            preds = self._predict_sklearn(
+            preds = _predict_sklearn(
+                f=self,
                 regr = regr,
                 future_X = future_X,
                 steps = len(self.future_dates),
@@ -434,12 +394,45 @@ class Forecaster(Forecaster_parent):
                     )
                 )
             ):
-                fitted_values = self._predict_sklearn(
+                fitted_values = _predict_sklearn(
+                    f=self,
                     regr = regr,
                     future_X = current_X,
                     dynamic_testing = 1,
                 )
-            
+        elif model_type == 'tf':
+            try:
+                tf_model = f.tf_model
+            except AttributeError:
+                raise AttributeError(
+                    'The object passed to `transfer_from` does not have an attribute called tf_model, '
+                    'so the transfer cannot complete. After fitting the tensforflow model, '
+                    'you can save the model as a file by calling f.save_tf_model() and load it later with f.load_tf_model().'
+                )
+            Xvars = f.history[model]['Xvars'] if f.history[model]['Xvars'] is not None else []
+            hyperparams = f.history[model]['HyperParams']
+            X, fut = _process_X_tf(
+                f=self,
+                Xvars=Xvars,
+                lags=(
+                    hyperparams['lags'] if 'lags' in hyperparams 
+                    else (
+                        max([int(i.split('AR')[-1]) for i in Xvars if i.startswith('AR')]) 
+                        if len([i for i in Xvars if i.startswith('AR')])
+                        else 1
+                    )
+                ),
+                forecast_length=len(self.future_dates),
+                ymin=self.y.min(),
+                ymax=self.y.max(),
+                scale_X=hyperparams['scale_X'],
+                scale_y=hyperparams['scale_y'],
+            )
+            X, n_timesteps, fut = _finish_process_X_tf(X=X,fut=fut,forecast_length=len(self.future_dates))
+            preds = tf_model.predict(fut)
+            preds = _get_preds_tf(tf_model=tf_model,fut=fut,scale_y=hyperparams['scale_y'],ymax=ymax,ymin=ymin)
+            fvs = _get_fvs_tf(tf_model=tf_model,X=X,scale_y=hyperparams['scale_y'],ymax=ymax,ymin=ymin)
+
         if save_to_history:
             self.call_me = call_me if call_me is not None else model
             self.forecast = preds
@@ -987,131 +980,12 @@ class Forecaster(Forecaster_parent):
                 The results will automatically return unscaled.
             **kwargs: Passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
         """
-        def plot_loss_rnn(history, title):
-            plt.plot(history.history["loss"], label="train_loss")
-            if "val_loss" in history.history.keys():
-                plt.plot(history.history["val_loss"], label="val_loss")
-            plt.title(title)
-            plt.xlabel("epoch")
-            plt.legend(loc="upper right")
-            plt.show()
-        
-        def get_compiled_model(y):
-            from tensorflow.keras.models import Sequential
-            from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
-            import tensorflow.keras.optimizers
-            if isinstance(optimizer, str):
-                local_optimizer = eval(f"tensorflow.keras.optimizers.{optimizer}")(
-                    learning_rate=learning_rate
-                )
-            else:
-                local_optimizer = optimizer
-            for i, kv in enumerate(layers_struct):
-                layer = locals()[kv[0]]
-
-                if i == 0:
-                    if kv[0] in ("LSTM", "SimpleRNN"):
-                        kv[1]["return_sequences"] = len(layers_struct) > 1
-                    model = Sequential(
-                        [layer(**kv[1], input_shape=(n_timesteps, 1),)]
-                    )
-                else:
-                    if kv[0] in ("LSTM", "SimpleRNN"):
-                        kv[1]["return_sequences"] = not i == (len(layers_struct) - 1)
-                        if kv[1]["return_sequences"]:
-                            kv[1]["return_sequences"] = (
-                                layers_struct[i + 1][0] != "Dense"
-                            )
-
-                    model.add(layer(**kv[1]))
-            model.add(Dense(y.shape[1]))  # output layer
-
-            # compile model
-            model.compile(optimizer=local_optimizer, loss=loss)
-            return model
-
-        def process_y(
-            y,
-            lags,
-            total_period,
-        ):
-            ymin = y.min()
-            ymax = y.max()
-
-            if scale_y:
-                ylist = [(yi - ymin) / (ymax - ymin) for yi in y]
-            else:
-                ylist = [yi for yi in y]
-
-            idx_end = len(y)
-            idx_start = idx_end - total_period
-            y_new = []
-
-            while idx_start > 0:
-                y_line = ylist[idx_start + lags : idx_start + total_period]
-                y_new.append(y_line)
-                idx_start -= 1
-
-            return (
-                np.array(y_new[::-1]),
-                ymin,                      # for scaling lags
-                ymax,
-            )
-
-        def process_X(
-            Xvars,
-            lags,
-            forecast_length,
-            ymin,
-            ymax,
-        ):
-            def minmax_scale(x):
-                return (x - ymin) / (ymax - ymin)
-
-            X_lags = np.array([
-                v.to_list() + self.future_xreg[k][:1] 
-                for k,v in self.current_xreg.items() 
-                if k in Xvars and k.startswith('AR')
-            ]).T
-            X_other = np.array([
-                v.to_list() + self.future_xreg[k][:1] 
-                for k,v in self.current_xreg.items() 
-                if k in Xvars and not k.startswith('AR')
-            ]).T
-
-            X_lags_new = X_lags[lags:]
-            X_other_new = X_other[lags:]
-            
-            # scale lags
-            if len(X_lags_new) > 0 and scale_y:
-                X_lags_new = np.vectorize(minmax_scale)(X_lags_new)
-            # scale other regressors
-            if len(X_other_new) > 0 and scale_X:
-                X_other_train = X_other_new[:-1]
-                scaler = self._fit_normalizer(X_other_train,'minmax')
-                X_other_new = self._scale(scaler,X_other_new)
-                
-            # combine
-            if len(X_lags_new) > 0 and len(X_other_new) > 0:
-                X = np.concatenate([X_lags_new,X_other_new],axis=1)
-            elif len(X_lags_new) > 0:
-                X = X_lags_new
-            else:
-                X = X_other_new
-
-            fut = X[-1:]
-            X = X[:-1]
-
-            return X, fut
-
         _developer_utils.descriptive_assert(
             len(layers_struct) >= 1,
             ValueError,
             f"Must pass at least one layer to layers_struct, got {layers_struct}.",
         )
-
         return_fitted = not hasattr(self,'actuals')
-
         self._warn_about_dynamic_testing(
             dynamic_testing=dynamic_testing,
             does_not_use_lags=False,
@@ -1144,39 +1018,36 @@ class Forecaster(Forecaster_parent):
         
         forecast_length = len(self.future_dates)
         total_period = lags + forecast_length
-        y, ymin, ymax = process_y(
+        y, ymin, ymax = _process_y_tf(
             y = self.y.values.copy(),
             lags = lags,
             total_period = total_period, 
+            scale_y = scale_y,
         )
-        X, fut = process_X(
+        X, fut = _process_X_tf(
+            f=self,
             Xvars = Xvars,
             lags = lags,
             forecast_length = forecast_length,
             ymin = ymin,
             ymax = ymax,
+            scale_X = scale_X,
+            scale_y = scale_y,
         )
-        X = X[1:-(forecast_length-1)] if forecast_length > 1 else X[1:]
-        #print('last X train:',X[-1])
-        #print('last y train:',y[-1])
-        #print('fut:',fut[-1])
-        n_timesteps = X.shape[1]
-        X = X.reshape(X.shape[0], X.shape[1], 1)
-        fut = fut.reshape(fut.shape[0], fut.shape[1], 1)
-        model = get_compiled_model(y)
+        X, n_timesteps, fut = _finish_process_X_tf(X=X,fut=fut,forecast_length=forecast_length)
+        model = _get_compiled_model_tf(
+            y=y,
+            optimizer=optimizer,
+            layers_struct=layers_struct,
+            learning_rate=learning_rate,
+            loss=loss,
+            n_timesteps=n_timesteps,
+        )
         hist = model.fit(X, y, **kwargs)
-        fcst = model.predict(fut)
-        if return_fitted:
-            fvs = model.predict(X)
-            fvs =  [p[0] for p in fvs[:-1]] + [p for p in fvs[-1]] 
-        else:
-            fvs = []
-        fcst = [p for p in fcst[0]]
-        if scale_y:
-            fvs = [p * (ymax - ymin) + ymin for p in fvs]
-            fcst = [p * (ymax - ymin) + ymin for p in fcst]
+        fcst = _get_preds_tf(tf_model=model,fut=fut,scale_y=scale_y,ymax=ymax,ymin=ymin)
+        fvs = _get_fvs_tf(tf_model=model,X=X,scale_y=scale_y,ymax=ymax,ymin=ymin) if return_fitted else []
         if plot_loss:
-            plot_loss_rnn(hist, f"{self.estimator} model loss")
+            _plot_loss_rnn(hist, f"{self.estimator} model loss")
         self.tf_model = model
         self.fitted_values = fvs
         return fcst
@@ -2723,6 +2594,37 @@ class Forecaster(Forecaster_parent):
             fi_method=fi_method,
             **cvkwargs,
         )
+
+    def save_tf_model(self,name='model.h5'):
+        """ Saves a fitted tensorflow (RNN/LSTM) model as a file.
+        Call this after fitting a tensorflow model and before changing the estimator.
+
+        Args:
+            name (str): Default 'model.h5'. The name of the resulting file. 
+                A file directory with a file name is also accepted here.
+
+        >>> f.set_estimator('rnn')
+        >>> f.manual_forecast()
+        >>> f.save_tf_model('path/to/model.h5')
+        """
+        self.tf_model.save(name)
+
+    def load_tf_model(self,name='model.h5'):
+        """ Loads a fitted tensorflow (RNN/LSTM) model and attaches it to the `Forecaster` object
+        in the tf_model attribute.
+
+        Args:
+            name (str): Default 'model.h5'. The name of the file to load. 
+                A file directory with a file name is also accepted here.
+
+        >>> f.set_estimator('rnn')
+        >>> f.manual_forecast()
+        >>> f.save_tf_model('path/to/model.h5')
+        >>> del f.tf_model # deletes the attribute to save memory
+        >>> f.load_tf_model('path/to/model.h5')
+        """
+        import tensorflow as tf
+        self.tf_model = tf.keras.models.load_model(name)
 
     def save_feature_importance(self, method="pfi", on_error="warn"):
         """ Saves feature info for models that offer it (sklearn models).
