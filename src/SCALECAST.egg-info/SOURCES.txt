@@ -1,4 +1,5 @@
 .DS_Store
+.gitignore
 CODE_OF_CONDUCT.md
 Contributing.md
 MANIFEST
@@ -99,6 +100,7 @@ test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
 test/VECMGrid.py
+test/error_20230915070924.log
 test/postbuild
 test/readme.md
 test/requirements.txt
