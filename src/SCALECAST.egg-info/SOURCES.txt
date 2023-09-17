@@ -53,6 +53,8 @@ src/scalecast/Pipeline.py
 src/scalecast/SeriesTransformer.py
 src/scalecast/_Forecaster_parent.py
 src/scalecast/__init__.py
+src/scalecast/_sklearn_models_uni.py
+src/scalecast/_tf_models.py
 src/scalecast/_utils.py
 src/scalecast/auxmodels.py
 src/scalecast/multiseries.py

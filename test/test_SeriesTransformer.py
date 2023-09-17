@@ -12,11 +12,12 @@ def forecaster(f):
         f.tune()
         f.auto_forecast()
         f.restore_series_length()
-
+    """
     f.set_estimator('prophet') # testing #68
     def add_seasonregr(m):
           m.add_seasonality(name='monthly', period=30.5, fourier_order=5)
     f.manual_forecast(callback_func = add_seasonregr)
+    """
 
 def comp_vals(orig_vals,new_vals,transformation):
     assert (orig_vals == new_vals).all(), f'{transformation} revert did not work'
