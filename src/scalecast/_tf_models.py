@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def _process_y_tf(y,lags,total_period,scale_y):
     ymin = y.min()
@@ -143,6 +144,25 @@ def _plot_loss_rnn(history, title):
     plt.xlabel("epoch")
     plt.legend(loc="upper right")
     plt.show()
+
+def _convert_lstm_args_to_rnn(**kwargs):
+    new_kwargs = {
+        k: v
+        for k, v in kwargs.items()
+        if k not in ("lstm_layer_sizes", "dropout", "activation")
+    }
+    new_kwargs["layers_struct"] = [
+        (
+            "LSTM",
+            {
+                "units": v,
+                "activation": kwargs["activation"],
+                "dropout": kwargs["dropout"][i],
+            },
+        )
+        for i, v in enumerate(kwargs["lstm_layer_sizes"])
+    ]
+    return new_kwargs
 
 
 

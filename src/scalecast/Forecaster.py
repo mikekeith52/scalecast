@@ -24,6 +24,7 @@ from ._tf_models import (
     _finish_process_X_tf,
     _get_preds_tf,
     _get_fvs_tf,
+    _convert_lstm_args_to_rnn,
 )
 import typing
 from typing import Union, Tuple, Dict
@@ -324,6 +325,7 @@ class Forecaster(Forecaster_parent):
         dates = [],
         save_to_history = True,
         call_me = None,
+        regr = None,
     ):
         """ Makes predictions using an already-trained model over any given forecast horizon.
         Will use the already-trained model from a passed Forecaster object to create a new model
@@ -342,13 +344,15 @@ class Forecaster(Forecaster_parent):
                 will include all dates in the `Forecaster` instance that the method is called from.
             dates (collection): Optional. The dates to limit the predictions for.
                 Ignored if return_series is not specified. If the passed dates are not in the
-                same frequency as the dates stored in the Forecaster object, returns nulls for
-                the off-frequency dates.
+                same frequency as the dates stored in the Forecaster object, an `IndexError` is raised.
             save_to_history (bool): Default True. Whether to save the transferred predictions as if
                 they were a model being run using a `_forecast()` method.
             call_me (str): Optional. What to call the resulting model.
                 If save_to_history is False, this is ignored.
                 If not specified, inherits the name passed to `model`.
+            regr: Optional. The model to make predictions with. If not supplied,
+                the model will be searched for in the `Forecaster` passed
+                to `transfer_from`.
 
         Returns:
             (Pandas Series or None): The date-indexed series if return_series is True. 
@@ -361,11 +365,14 @@ class Forecaster(Forecaster_parent):
         if len(dates):
             dates = [pd.Timestamp(d) for d in dates]
 
+        Xvars = f.history[model]['Xvars']
+        hyperparams = f.history[model]['HyperParams']
+
+        self.Xvars = Xvars
+
         if model_type == 'sklearn':
             #f = f.deepcopy()
-            regr = f.history[model]['regr']
-            Xvars = f.history[model]['Xvars']
-            hyperparams = f.history[model]['HyperParams']
+            regr = f.history[model]['regr'] if regr is None else regr
             normalizer = (
                 'minmax' if 'normalizer' not in hyperparams
                 else hyperparams['normalizer']
@@ -401,37 +408,45 @@ class Forecaster(Forecaster_parent):
                     dynamic_testing = 1,
                 )
         elif model_type == 'tf':
-            try:
-                tf_model = f.tf_model
-            except AttributeError:
-                raise AttributeError(
-                    'The object passed to `transfer_from` does not have an attribute called tf_model, '
-                    'so the transfer cannot complete. After fitting the tensforflow model, '
-                    'you can save the model as a file by calling f.save_tf_model() and load it later with f.load_tf_model().'
-                )
-            Xvars = f.history[model]['Xvars'] if f.history[model]['Xvars'] is not None else []
-            hyperparams = f.history[model]['HyperParams']
+            if regr is None:
+                try:
+                    regr = f.tf_model
+                except AttributeError:
+                    raise AttributeError(
+                        'The object passed to `transfer_from` does not have an attribute called tf_model and nothing was passed to the `regr` argument, '
+                        'so the transfer cannot complete. After fitting the tensforflow model, '
+                        'you can save the model as a file by calling f.save_tf_model() and load it later with f.load_tf_model().'
+                    )
+            if Xvars is None:
+                lags = 1
+                self.add_ar_terms(1)
+                Xvars = ['AR1']
+            else:
+                lags = [int(x[2:]) for x in Xvars if x.startswith('AR')]
+                if len(lags):
+                    lags = max(lags)
+                    self.add_ar_terms(lags)
+                else:
+                    lags = 0
+            self.Xvars = Xvars
+
+            scale_X = True if 'scale_X' not in hyperparams else hyperparams['scale_X']
+            scale_y = True if 'scale_y' not in hyperparams else hyperparams['scale_y']
+            ymin = f.y.min()
+            ymax = f.y.max()
             X, fut = _process_X_tf(
                 f=self,
                 Xvars=Xvars,
-                lags=(
-                    hyperparams['lags'] if 'lags' in hyperparams 
-                    else (
-                        max([int(i.split('AR')[-1]) for i in Xvars if i.startswith('AR')]) 
-                        if len([i for i in Xvars if i.startswith('AR')])
-                        else 1
-                    )
-                ),
+                lags=lags,
                 forecast_length=len(self.future_dates),
-                ymin=self.y.min(),
-                ymax=self.y.max(),
-                scale_X=hyperparams['scale_X'],
-                scale_y=hyperparams['scale_y'],
+                ymin=ymin,
+                ymax=ymax,
+                scale_X=scale_X,
+                scale_y=scale_y,
             )
             X, n_timesteps, fut = _finish_process_X_tf(X=X,fut=fut,forecast_length=len(self.future_dates))
-            preds = tf_model.predict(fut)
-            preds = _get_preds_tf(tf_model=tf_model,fut=fut,scale_y=hyperparams['scale_y'],ymax=ymax,ymin=ymin)
-            fvs = _get_fvs_tf(tf_model=tf_model,X=X,scale_y=hyperparams['scale_y'],ymax=ymax,ymin=ymin)
+            preds = _get_preds_tf(tf_model=regr,fut=fut,scale_y=scale_y,ymax=ymax,ymin=ymin)
+            fitted_values = _get_fvs_tf(tf_model=regr,X=X,scale_y=scale_y,ymax=ymax,ymin=ymin)
 
         if save_to_history:
             self.call_me = call_me if call_me is not None else model
@@ -837,16 +852,17 @@ class Forecaster(Forecaster_parent):
     ):
         """ Forecasts with a long-short term memory neural network from TensorFlow.
         Only regressor options are the series' own history (specified in the `lags` argument).
-        The rnn estimator can employ an LSTM and use exegenous regressors.
         Always uses a minmax scaler on the inputs and outputs. The resulting point forecasts are unscaled.
         The model is saved in the tf_model attribute and a summary can be called by calling Forecaster.tf_model.summary().
-        See the example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html.
+        See the example: https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html. 
+        See the rnn model: https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#rnn.
             
         Args:
             dynamic_testing (bool): Default True.
                 Always True for lstm. The model uses a direct forecast.
             lags (int): Must be greater than 0. Default 1.
                 The number of lags to train the model with.
+                However many lags are placed here will also be added to the `Forecaster` object as AR Xvars.
             lstm_layer_sizes (list-like): Default (8,).
                 The size of each lstm layer to add.
                 The first element is for the input layer.
@@ -875,26 +891,7 @@ class Forecaster(Forecaster_parent):
                 The resulting plot looks better if epochs > 1 passed to **kwargs.
             **kwargs: Passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
         """
-        def convert_lstm_args_to_rnn(**kwargs):
-            new_kwargs = {
-                k: v
-                for k, v in kwargs.items()
-                if k not in ("lstm_layer_sizes", "dropout", "activation")
-            }
-            new_kwargs["layers_struct"] = [
-                (
-                    "LSTM",
-                    {
-                        "units": v,
-                        "activation": kwargs["activation"],
-                        "dropout": kwargs["dropout"][i],
-                    },
-                )
-                for i, v in enumerate(kwargs["lstm_layer_sizes"])
-            ]
-            return new_kwargs
-
-        new_kwargs = convert_lstm_args_to_rnn(
+        new_kwargs = _convert_lstm_args_to_rnn(
             dynamic_testing=dynamic_testing,
             lags=lags,
             lstm_layer_sizes=lstm_layer_sizes,
@@ -937,16 +934,17 @@ class Forecaster(Forecaster_parent):
             dynamic_testing (bool): Default True.
                 Always True for rnn. The model uses a direct forecast.
             Xvars (list-like): Default None. The Xvars to train the models with. 
-                By default, all regressors added to the Forecaster object will be used.
+                By default, all regressors added to the `Forecaster` object are used.
             lags (int): Alternative to Xvars. If wanting to train with lags only, specify this argument. If specified,
                 Xvars is ignored.
+                However many lags are placed here will also be added to the `Forecaster` object as AR Xvars.
             layers_struct (list[tuple[str,dict[str,Union[float,str]]]]): Default [('SimpleRNN',{'units':8,'activation':'tanh'})].
                 Each element in the list is a tuple with two elements.
                 First element of the list is the input layer (input_shape set automatically).
                 First element of the tuple in the list is the type of layer ('SimpleRNN','LSTM', or 'Dense').
                 Second element is a dict.
                 In the dict, key is a str representing hyperparameter name: 'units','activation', etc.
-                Val is hyperparameter value.
+                The value is the hyperparameter value.
                 See here for options related to SimpleRNN: https://www.tensorflow.org/api_docs/python/tf/keras/layers/SimpleRNN.
                 For LSTM: https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM.
                 For Dense: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense.
@@ -995,8 +993,12 @@ class Forecaster(Forecaster_parent):
             np.random.seed(random_seed)
         if lags is None:
             Xvars = list(self.current_xreg.keys()) if Xvars is None or Xvars == 'all' else Xvars
-            lags = len([x for x in Xvars if x.startswith('AR')])
-            if len(Xvars) == 0:
+            lags = [int(x[2:]) for x in Xvars if x.startswith('AR')]
+            if len(lags):
+                lags = max(lags)
+            else:
+                lags = 0
+            if not len(Xvars):
                 raise ForecastError(f"Need at least 1 Xvar to forecast with the {self.estimator} model.")
         else:
             self.add_ar_terms(lags)
@@ -1048,6 +1050,7 @@ class Forecaster(Forecaster_parent):
         fvs = _get_fvs_tf(tf_model=model,X=X,scale_y=scale_y,ymax=ymax,ymin=ymin) if return_fitted else []
         if plot_loss:
             _plot_loss_rnn(hist, f"{self.estimator} model loss")
+        self.Xvars = Xvars
         self.tf_model = model
         self.fitted_values = fvs
         return fcst

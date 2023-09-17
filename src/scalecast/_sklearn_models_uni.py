@@ -1,3 +1,5 @@
+import numpy as np
+
 def _fit_sklearn(f,regr,current_X,obs_to_drop=0):
     f.X = f._scale(f.scaler, current_X)
     y = f.y.to_list()[obs_to_drop:]

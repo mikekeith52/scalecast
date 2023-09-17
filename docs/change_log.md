@@ -1,7 +1,19 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.19.0]
+## [0.19.1] - 2023-09-16
+### Added
+- Added transfer learning for RNN and LSTM models.
+- Added more Xvars to infer in the `util.infer_apply_Xvar_selection()` function.
+- Added `regr` argument to `Forecaster.transfer_predict()`.
+- Added `Forecater.save_tf_model()` and `Forecaster.load_tf_model()` functions.
+### Changed
+- Transferred models store Xvar info in history.
+### Fixed
+- Fixed an issue with RNN models where AR terms that were not sequential were not counted correctly.
+- Fixed an issue where Xvars were not being recorded correctly in history for RNN models.
+
+## [0.19.0] - 2023-09-15
 ### Added
 - Added `Forecaster.transfer_predict()` method. Only univariate sklearn models supported for now (#77).
 - Added `Forecaster.transfer_cis()` method.
