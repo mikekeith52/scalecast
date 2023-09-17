@@ -9,6 +9,7 @@ setup.cfg
 setup.py
 _static/logo2.png
 _static/results.png
+dist/SCALECAST-0.19.0.tar.gz
 docs/.DS_Store
 docs/.readthedocs.yaml
 docs/0.17
@@ -79,6 +80,8 @@ src/scalecast/__pycache__/_Forecaster_parent.cpython-38.pyc
 src/scalecast/__pycache__/_Forecaster_parent.cpython-39.pyc
 src/scalecast/__pycache__/__init__.cpython-38.pyc
 src/scalecast/__pycache__/__init__.cpython-39.pyc
+src/scalecast/__pycache__/_sklearn_models_uni.cpython-38.pyc
+src/scalecast/__pycache__/_tf_models.cpython-38.pyc
 src/scalecast/__pycache__/_utils.cpython-38.pyc
 src/scalecast/__pycache__/_utils.cpython-39.pyc
 src/scalecast/__pycache__/_version.cpython-38.pyc
@@ -100,7 +103,7 @@ test/ExampleGrids.py
 test/Grids.py
 test/MVGrids.py
 test/VECMGrid.py
-test/error_20230915070924.log
+test/error_20230916200916.log
 test/postbuild
 test/readme.md
 test/requirements.txt
