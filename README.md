@@ -259,6 +259,10 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
 - [May the Forecasts Be with You](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
 - [Introductory Notebook Section](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html#Scaled-Automated-Forecasting)
 
+### Transfer Learning
+- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/transfer_learning/transfer_learning.html)
+- [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/transfer_learning/transfer_learning_tf.html)
+
 ### Anomaly Detection
 - [Anomaly Detection for Time Series with Monte Carlo Simulations](https://towardsdatascience.com/anomaly-detection-for-time-series-with-monte-carlo-simulations-e43c77ba53c?source=email-85177a9cbd35-1658325190052-activity.collection_post_approved)
 - [Notebook1](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
