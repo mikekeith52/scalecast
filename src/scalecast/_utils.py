@@ -108,3 +108,28 @@ class _developer_utils:
                 and len(f.future_xreg[k]) == len(f.future_dates)
             )
         }
+
+class NamedBoxCox:
+    def __init__(self,name,transform):
+        self.name = name
+        self.transform = transform
+
+    def __call__(self,x,lmbda):
+        if self.transform:
+            return [(i**lmbda - 1) / lmbda for i in x] if lmbda != 0 else [np.log(i) for i in x]
+        else:
+            return [(i*lmbda + 1)**(1/lmbda) for i in x] if lmbda != 0 else [np.exp(i) for i in x]
+
+    def __repr__(self):
+        return self.name
+
+boxcox_tr = NamedBoxCox(name='BoxcoxTransform',transform=True)
+boxcox_re = NamedBoxCox(name='BoxcoxRevert',transform=False)
+
+"""
+def boxcox_tr(x,lmbda):
+    return [(i**lmbda - 1) / lmbda for i in x] if lmbda != 0 else [np.log(i) for i in x]
+
+def boxcox_re(x,lmbda):
+    return [(i*lmbda + 1)**(1/lmbda) for i in x] if lmbda != 0 else [np.exp(i) for i in x]
+"""

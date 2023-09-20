@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.2] - 2023-09-21
+### Added
+- Added `set_aside_test_set` argument to the `util.find_optimal_transformation()` function to prevent leakage.
+- Added the `util.gen_rnn_grid()` function.
+- Tensorflow models now save the `ymin` and `ymax` attributes in history to facilitate transfer learning.
+### Changed
+- Changed where `boxcox_tr()` and `bocxcox_re()` functions are located in `src` so that `Transformer` and `Reverter` objects can more easily be pickled and the output when printed is more descriptive.
+- Changed the lightgbm default grid to suppress output.
+### Fixed
+- Added `**kwargs` in `util.backtest_for_resid_matrix()` to make pipelines that require kwargs work.
+
 ## [0.19.1] - 2023-09-16
 ### Added
 - Added transfer learning for RNN and LSTM models.

@@ -10,7 +10,11 @@ from sklearn.metrics import (
     mean_absolute_percentage_error,
     mean_absolute_error,
 )
-from ._utils import _developer_utils
+from ._utils import (
+    _developer_utils, 
+    boxcox_tr, 
+    boxcox_re,
+)
 
 class metrics:
     @staticmethod
@@ -803,6 +807,7 @@ def find_optimal_transformation(
     scale_type = ['Scale','MinMax','RobustScale'],
     m='auto',
     model = 'add',
+    set_aside_test_set=False,
     return_train_only = False,
     verbose = False,
     **kwargs,
@@ -854,6 +859,9 @@ def find_optimal_transformation(
             If list, multiple adjustments will be tried and up to that many adjustments can be selected.
         model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
             The type of seasonal component. Only relevant for the 'seasonal_adj' option in try_order.
+        set_asid_test_set (bool): Default False. 
+            Whether to separate the test set specified in f.test_length during this process.
+            Setting this to True prevents leakage when testing the forecasts out-of-sample.
         return_train_only (bool): Default False. Whether the returned selections should be set to train_only.
             All tries are completely out-of-sample but the returned transformations will not hold out the
             test-set in the Forecaster object when detrending, deseasoning, and scaling, so setting this to True
@@ -939,10 +947,14 @@ def find_optimal_transformation(
     if test_length<=0:
         raise ValueError(
             'The argument test_length must be above 0 and is the number of future dates in the Forecaster object by default.'
-            f' The value received is {test_length}.'
+            f' The value received is {test_length}. '
+            "This can happen if you used the default test_length argument and didn't add future dates to the passed `Forecaster`."
         )
 
     f = f.deepcopy()
+    if set_aside_test_set:
+        f.chop_from_front(f.test_length)
+    
     f.set_metrics([monitor])
     f.drop_all_Xvars()
     f.history = {}
@@ -963,10 +975,6 @@ def find_optimal_transformation(
 
     for tr in try_order:
         if tr == 'boxcox':
-            def boxcox_tr(x,lmbda):
-                return [(i**lmbda - 1) / lmbda for i in x] if lmbda != 0 else [np.log(i) for i in x]
-            def boxcox_re(x,lmbda):
-                return [(i*lmbda + 1)**(1/lmbda) for i in x] if lmbda != 0 else [np.exp(i) for i in x]
             for i, lmbda in enumerate(boxcox_lambdas):
                 transformer = final_transformer[:]
                 reverter = final_reverter[:]
@@ -1372,6 +1380,7 @@ def backtest_for_resid_matrix(
     alpha = 0.05,
     bt_n_iter = None,
     jump_back = 1,
+    **kwargs,
 ):
     """ Performs a backtest on one or more Forecaster objects using pipelines.
     Specifically, performs a backtest so that a residual matrix to make dynamic intervals
@@ -1387,6 +1396,7 @@ def backtest_for_resid_matrix(
         bt_n_iter (int): Optional. The number of iterations to backtest. If left unspecified, chooses 1/alpha, 
             the minimum needed to set reliable conformal intervals.
         jump_back (int): Default 1. The space between consecutive training sets in the backtest.
+        **kwargs: Passed to `Pipeline.backtest()`.
 
 
     Returns:
@@ -1406,15 +1416,14 @@ def backtest_for_resid_matrix(
             f' bt_n_iter must be at least {1/alpha:.0f} to successfully '
             f' backtest {1-alpha:.0%} confidence intervals.'
         )
-        
     bt_results = pipeline.backtest(
         *fs,
         n_iter=bt_n_iter,
         jump_back = jump_back,
         test_length = 0,
         cis = False,
+        **kwargs,
     )
-    
     return bt_results
 
 def get_backtest_resid_matrix(backtest_results):
@@ -1473,3 +1482,84 @@ def overwrite_forecast_intervals(*fs,backtest_resid_matrix,models=None,alpha = .
             f.history[m]['UpperCI'] = np.array(f.history[m]['Forecast']) + percentiles
             f.history[m]['LowerCI'] = np.array(f.history[m]['Forecast']) - percentiles
             f.history[m]['CILevel'] = 1-alpha
+
+def gen_rnn_grid(
+    layer_tries=5,
+    min_layer_size=1,
+    max_layer_size=3,
+    layer_cell_pool=['LSTM'],
+    units_pool=[8,16,32,64],
+    activation_pool=['relu','tanh'],
+    dropout_pool=[0],
+    uniform_layer_cells=True,
+    uniform_units=True,
+    uniform_activations=True,
+    uniform_dropout=True,
+    verbose=0,
+    random_seed = None,
+    **kwargs,
+):
+    """ Randomly generates an RNN grid for tuning hyperparameters.
+    The resulting grid may be very large, so it is generally a good idea to use `Forecaster.limit_grid_size`
+    to make it feasible to use with tuning/cross validation.
+
+    Args:
+        layer_tries (int): Default 5. How many layer tries to place into the grid.
+        min_layer_size (int): Default 1. The smallest possible hidden layer structure will be this size.
+        max_layer_size (int): Default 3. The largest possible hidden layer structure will be this size.
+        layer_cell_pool (collection['LSTM'|'SimpleRNN']): Default ['LSTM']. The possible cell types to try.
+        units_pool (collection[int]): Default [8,16,32,64]: The possible unit size for each cell.
+        activation_pool (collection[str|tf.Activation]): Default ['relu','tanh']. The possible activation functions to try.
+        dropout_pool (collection): Default [0]. The possible dropout values to add to each layer.
+        uniform_layer_cells (bool): Default True. Whether each cell should be the same in all layers.
+        uniform_units (bool): Default True. Whether each layer should have the same unit sizes.
+        uniform_activations (bool): Default True. Whether each layer should have the same activation function.
+        uniform_dropout (bool): Default True. Whether each layer should have the same dropout value.
+        verbose (int): Default 0. The verbosity of the resulting models. 1 for fully verbose, 2 for medium verbose, 0 for no verbosity.
+        random_seed (int): Optional. Set a random seed for consistent results.
+        **kwargs: Other keyword arguments to add to each hyperparameter. 
+            Can include callbacks for early stopping, optimizer, lags, etc. 
+            If wanting to try multiple values for a given keyword, pass a list/collection type.
+            See: https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html#rnn
+
+    Returns:
+        (Dict): The resulting hyperparamter grid.
+
+    >>>
+    """
+    if random_seed is not None:
+        np.random.seed(random_seed)
+    hps = {}
+    hps['verbose'] = [verbose]
+    for k,v in kwargs.items():
+        hps[k] = [v] if not hasattr(v,'__len__') else v
+
+    pool_choices = {
+        'uniform_layer_cells':'layer_cell_pool',
+        'uniform_units':'units_pool',
+        'uniform_activations':'activation_pool',
+        'uniform_dropout':'dropout_pool',
+    }
+
+    hps['layers_struct'] = []
+    for i in range(layer_tries):
+        layer = tuple()
+        pool_values = {}
+        for k, v in pool_choices.items():
+            pool_values[v] = locals()[v]
+            if locals()[k] and len(locals()[v]) > 1:
+                pool_values[v] = [np.random.choice(locals()[v])]
+
+        for h in range(np.random.choice(np.arange(min_layer_size,max_layer_size+1))):
+            layer += (
+                np.random.choice(pool_values['layer_cell_pool']),
+                {
+                    'units':np.random.choice(pool_values['units_pool']),
+                    'activation':np.random.choice(pool_values['activation_pool']),
+                    'dropout':np.random.choice(pool_values['dropout_pool']),
+                },
+            )
+
+        hps['layers_struct'].append([layer])
+
+    return hps

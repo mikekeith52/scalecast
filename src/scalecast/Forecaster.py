@@ -191,7 +191,7 @@ class Forecaster(Forecaster_parent):
                 self.y.iloc[-len(self.fitted_values) :], self.fitted_values, func
             )
 
-        for attr in ("regr", "models", "weights"):
+        for attr in ("regr", "models", "weights", "ymin", "ymax"):
             if hasattr(self, attr):
                 if attr == 'regr' and not self.carry_fit_models:
                     continue
@@ -432,8 +432,8 @@ class Forecaster(Forecaster_parent):
 
             scale_X = True if 'scale_X' not in hyperparams else hyperparams['scale_X']
             scale_y = True if 'scale_y' not in hyperparams else hyperparams['scale_y']
-            ymin = f.y.min()
-            ymax = f.y.max()
+            ymin = f.history[model]['ymin']
+            ymax = f.history[model]['ymax']
             X, fut = _process_X_tf(
                 f=self,
                 Xvars=Xvars,
@@ -1026,6 +1026,8 @@ class Forecaster(Forecaster_parent):
             total_period = total_period, 
             scale_y = scale_y,
         )
+        self.ymin = ymin # needs to be saved here for transfer learning
+        self.ymax = ymax
         X, fut = _process_X_tf(
             f=self,
             Xvars = Xvars,

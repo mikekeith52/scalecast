@@ -112,6 +112,8 @@ class Forecaster_parent:
             "weights",
             "tf_model",
             "scaler",
+            "ymin",
+            "ymax",
         ):
             try:
                 delattr(self, attr)
@@ -1386,7 +1388,8 @@ class Forecaster_parent:
                 If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
-            set_aside_test_set (bool): Default True. Whether to separate the test set specified in f.test_length during this process.
+            set_aside_test_set (bool): Default True. 
+                Whether to separate the test set specified in f.test_length during this process.
 
         Returns:
             None

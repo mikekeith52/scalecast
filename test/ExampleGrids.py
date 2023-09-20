@@ -41,6 +41,7 @@ lightgbm = {
     'boosting_type':['gbdt','dart','goss'],
     'max_depth':[1,2,3],
     'learning_rate':[0.001,0.01,0.1],
+    'verbosity':[-1],
 }
 
 lstm = {
