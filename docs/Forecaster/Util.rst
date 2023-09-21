@@ -40,6 +40,10 @@ find_statistical_transformation()
 -----------------------------------
 .. autofunction:: src.scalecast.util.find_statistical_transformation
 
+gen_rnn_grid()
+---------------------
+.. autofunction:: src.scalecast.util.gen_rnn_grid
+
 get_backtest_resid_matrix()
 -----------------------------------
 .. autofunction:: src.scalecast.util.get_backtest_resid_matrix
