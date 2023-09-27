@@ -13,3 +13,4 @@ lightgbm>=3.2.1
 dask>=2023.3.2
 catboost
 openpyxl
+pillow>=10.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
