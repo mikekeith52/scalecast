@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.3] - 2023-10-02
+### Added
+- Added `'verbose':[-1]` to lightgbm grids.
+### Changed
+- Refactored code and changed library version requirements to eliminate warnings that were originating from the seaborn (#49) and pandas libraries.
+### Fixed
+
 ## [0.19.2] - 2023-09-21
 ### Added
 - Added `set_aside_test_set` argument to the `util.find_optimal_transformation()` function to prevent leakage.

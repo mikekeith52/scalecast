@@ -1149,7 +1149,7 @@ def Forecaster_with_missing_vals(
         fill_strategy (float or str): Default 0.0. 
             If str, must be one of 
             {'linear_interp', 'moving_average', 'moving_seasonal_average', 'impute_pool'}.
-            If not one of those values, will be passed to the `df.fillna()` or `df.fillna(method=...)` method from pandas
+            If not one of those values, will be passed to the `df.fillna()` method from pandas
             (valid values include 'ffill' and 'bfill'). Therefore, the default fills with 0.
         m (int): Optional. The number of steps that count one seasonal cycle if using a seasonal fill strategy.
             If left unspecified, will attempt to be inferred. If it cannot be inferred, will raise an error.
@@ -1238,7 +1238,7 @@ def Forecaster_with_missing_vals(
             try:
                 ts_df.fillna(float(fill_strategy),inplace=True)
             except ValueError:
-                ts_df.fillna(method=fill_strategy,inplace=True)
+                ts_df = getattr(ts_df,fill_strategy)
         else:
             ts_df['missing_number'] = (
                 (ts_df['missing'] == 1) 

@@ -100,7 +100,7 @@ class SeriesTransformer:
                 "FittedVals",
             ):
                 if k in h:
-                    h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).fillna(method='ffill').to_list()
+                    h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).ffill().to_list()
                 elif not k.endswith('CI'):
                     h[k] = []
             for met, func in self.f.metrics.items():
