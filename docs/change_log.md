@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.4] - 2023-10-27
+### Added
+- Added more feature importance options, all sourced through the shap library.
+### Changed
+- shap is now a requirement and eli5 is not.
+- Changed `Forecaster.reduce_Xvars()` to use only shap feature importance to rank features.
+- Removed `fi_method` argument from `tune_test_forecast()`.
+### Fixed
+- Fixed how a pandas function was called that was raising a warning.
+- Fixed feature importance to use shap only with TreeExplainer, PermutationExplainer, and other explainers (#85). See the [docs](https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.save_feature_importance) The eli5 package appears to be deprecated.
+
 ## [0.19.3] - 2023-10-02
 ### Added
 - Added `'verbose':[-1]` to lightgbm grids.

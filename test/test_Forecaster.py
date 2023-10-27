@@ -88,8 +88,6 @@ def test_add_terms():
 def test_feature_selection_reduction():
     f = build_Forecaster(test_length = 0)
     f.set_grids_file('ExampleGrids')
-    f.auto_Xvar_select(estimator='elasticnet')
-    f.reduce_Xvars(estimator='elasticnet',method='pfi')
 
     f.auto_Xvar_select(estimator='xgboost')
     f.reduce_Xvars(estimator='xgboost',method='shap')
@@ -99,7 +97,7 @@ def test_feature_selection_reduction():
     plt.close()
 
     f.auto_Xvar_select(estimator='lasso')
-    f.reduce_Xvars(method='l1')
+    f.reduce_Xvars(method='pfi')
 
 def test_pickle():
     f = build_Forecaster()

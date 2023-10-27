@@ -46,6 +46,7 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose, STL
 from sklearn.model_selection import train_test_split
+import shap
 
 class Forecaster(Forecaster_parent):
     def __init__(
@@ -195,7 +196,6 @@ class Forecaster(Forecaster_parent):
             if hasattr(self, attr):
                 if attr == 'regr' and not self.carry_fit_models:
                     continue
-
                 self.history[call_me][attr] = getattr(self, attr)
         
         if self.cis is True and len(self.history[call_me]['TestSetPredictions']) > 0: #and 'TestSetPredictions' in self.history[call_me].keys():
@@ -232,6 +232,7 @@ class Forecaster(Forecaster_parent):
         """ for every model where ELI5 permutation feature importance can be extracted, saves that info to a pandas dataframe wehre index is the regressor name
         """
         call_me = self.call_me
+        self.history[call_me]['feature_importance_explainer'] = self.explainer
         self.history[call_me]["feature_importance"] = self.feature_importance
 
     def _bank_summary_stats_to_history(self):
@@ -1486,7 +1487,7 @@ class Forecaster(Forecaster_parent):
 
     def reduce_Xvars(
         self,
-        method="l1",
+        method="PermutationExplainer",
         estimator="lasso",
         keep_at_least=1,
         keep_this_many="auto",
@@ -1496,38 +1497,33 @@ class Forecaster(Forecaster_parent):
         monitor="ValidationMetricValue",
         overwrite=True,
         cross_validate=False,
+        masker = None,
         cvkwargs={},
         **kwargs,
     ):
-        """ Reduces the regressor variables stored in the object. The following methods are available:
-        l1 which uses a simple l1 penalty and Lasso regressor; pfi that stands for 
-        permutation feature importance; and shap. pfi and shap offer more flexibility to view how removing
-        variables one-at-a-time, according to which variable is evaluated as least helpful to the
-        model after each model evaluation, affects a given error metric for any scikit-learn model.
+        """ Reduces the regressor variables stored in the object. Any feature importance type available with
+        `f.save_feature_importance()` can be used to rank features in this process.
+        Features are reduced one-at-a-time, according to which one ranked the lowest.
         After each variable reduction, the model is re-run and feature importance re-evaluated. 
-        When using pfi, feature scores are adjusted to account for colinearity, which is a known issue with this method, 
-        by sorting by each feature's score and standard deviation, dropping variables first that have both a 
-        low score and low standard deviation. By default, the validation-set error is used to avoid leakage 
-        and the variable set that most reduced the error is selected. See the example:
+        By default, the validation-set error is used to avoid leakage 
+        and the variable set that most reduced the error is selected. The following attributes:
+        `pfi_dropped_vars` and `pfi_error_values`, which are lists representing the error change with the 
+        corresponding dropped variable, are created and stored in the `Forecaster` object.
+        See the example:
         https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html.
 
         Args:
-            method (str): One of {'l1','pfi','shap'}. Default 'l1'.
-                The reduction method. 
-                'l1' uses a lasso regressor and grid searches for the optimal alpha on the validation set
-                unless an alpha value is passed to the hyperparams arg and grid_search arg is False.
-                'pfi' uses permutation feature importance and is more computationally expensive
-                but can use any sklearn estimator.
-                'shap' uses shap feature importance, but it is not available for all sklearn models.
-                Method "pfi" or "shap" creates attributes in the object called `pfi_dropped_vars` and `pfi_error_values` that are lists
+            method (str): One of `try_order` defaults in `Forecater.save_feature_importance()`. 
+                Default 'PermutationExplainer'.
+                The method for scoring features.
+                Method 'shap' creates attributes in the object called `pfi_dropped_vars` and `pfi_error_values` that are lists
                 representing the error change with the corresponding dropped variable.
                 The pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
                 The first error is the initial error before any variables were dropped.
             estimator (str): One of Forecaster.sklearn_estimators. Default 'lasso'.
                 The estimator to use to determine the best set of variables.
-                If method == 'l1', the `estimator` arg is ignored and is always lasso.
             keep_at_least (str or int): Default 1.
-                The fewest number of Xvars to keep if method != 'l1'.
+                The fewest number of Xvars to keep..
                 'sqrt' keeps at least the sqare root of the number of Xvars rounded down.
                 This exists so that the keep_this_many keyword can use 'auto' as an argument.
             keep_this_many (str or int): Default 'auto'.
@@ -1550,7 +1546,6 @@ class Forecaster(Forecaster_parent):
             dynamic_tuning (bool or int): Default False.
                 Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
             monitor (str): One of Forecaster.determine_best_by. Default 'ValidationSetMetric'.
-                Ignored when pfi == 'l1'.
                 The metric to be monitored when making reduction decisions. 
             overwrite (bool): Default True.
                 If False, the list of selected Xvars are stored in an attribute called reduced_Xvars.
@@ -1559,6 +1554,8 @@ class Forecaster(Forecaster_parent):
                 Whether to tune the model with cross validation. 
                 If False, uses the validation slice of data to tune.
                 If not monitoring ValidationMetricValue, you will want to leave this False.
+            masker (shap.maskers): Optional.
+                Pass your own masker to this function if desired. Default will use shap.maskers.Independent with default arguments.
             cvkwargs (dict): Default {}. Passed to the `cross_validate()` method.
             **kwargs: Passed to the `manual_forecast()` method and can include arguments related to 
                 a given model's hyperparameters or dynamic_testing.
@@ -1576,7 +1573,7 @@ class Forecaster(Forecaster_parent):
         >>> f.reduce_Xvars(overwrite=False) # reduce with lasso (but don't overwrite Xvars)
         >>> print(f.reduced_Xvars) # view results
         >>> f.reduce_Xvars(
-        >>>     method='shap',
+        >>>     method='TreeExplainer',
         >>>     estimator='gbt',
         >>>     keep_at_least=10,
         >>>     keep_this_many='auto',
@@ -1587,13 +1584,8 @@ class Forecaster(Forecaster_parent):
         >>> ) # reduce with gradient boosted tree estimator and overwrite with result
         >>> print(f.reduced_Xvars) # view results
         """
-        _developer_utils.descriptive_assert(
-            method in ("l1", "pfi", "shap"),
-            ValueError,
-            f'method must be one of "pfi", "l1", "shap", got {method}.',
-        )
         f = self.deepcopy()
-        f.set_estimator(estimator if method in ("pfi", "shap") else "lasso")
+        f.set_estimator(estimator)
         _developer_utils._check_if_correct_estimator(f.estimator,self.sklearn_estimators)
         if grid_search:
             if not use_loaded_grid and f.grids_file + ".py" not in os.listdir('.'):
@@ -1612,80 +1604,89 @@ class Forecaster(Forecaster_parent):
 
         self.reduction_hyperparams = f.best_params.copy()
 
-        if method == "l1":
-            coef_fi_lasso = pd.DataFrame(
-                {
-                    x: [np.abs(co)]
-                    for x, co in zip(f.history["lasso"]["Xvars"], f.history[estimator]['regr'].coef_,)
-                },
-                index=["feature"],
-            ).T
-            self.reduced_Xvars = coef_fi_lasso.loc[
-                coef_fi_lasso["feature"] != 0
-            ].index.to_list()
-        else:
-            f.save_feature_importance(method=method, on_error="raise")
+        if method == 'pfi':
+            warnings.warn(
+                f'"pfi" is no longer accepted as an argument for the'
+                ' `method` argument. Defaulting to "PermutationExplainer" to match'
+                ' the old "pfi" argument methodology.',
+                category = Warning,
+            )
+            method = 'PermutationExplainer'
+        elif method == 'shap':
+            warnings.warn(
+                f'"shap" is no longer accepted as an argument for the'
+                ' `method` argument. Defaulting to "TreeExplainer" to match'
+                ' the old "shap" argument methodology.',
+                category = Warning,
+            )
+            method = 'TreeExplainer'
+        elif method == 'l1':
+            warnings.warn(
+                f'"l1" is no longer accepted as an argument for the'
+                ' `method` argument. Defaulting to "LinearExplainer" to match'
+                ' the old "l1" argument methodology (as best as possible).',
+                category = Warning,
+            )
+            method = 'LinearExplainer'
+
+        f.save_feature_importance(
+            method='shap',
+            try_order=[method],
+            on_error="raise"
+        )
+
+        fi_df = f.export_feature_importance(estimator)
+        using_r2 = monitor.endswith("R2") or (
+            f.validation_metric == "r2" and monitor == "ValidationMetricValue"
+        )
+
+        features = fi_df.index.to_list()
+        init_error = f.history[estimator][monitor]
+        init_error = -init_error if using_r2 else init_error
+
+        dropped = []
+        errors = [init_error]
+
+        sqrt = int(len(f.y) ** 0.5)
+        keep_this_many_new = (
+            1
+            if keep_this_many == "auto"
+            else sqrt
+            if keep_this_many == "sqrt"
+            else keep_this_many
+        )
+        keep_at_least_new = sqrt if keep_at_least == "sqrt" else keep_at_least
+
+        stop_at = max(keep_this_many_new, keep_at_least_new)
+        drop_this_many = len(f.current_xreg) - stop_at
+
+        for _ in range(drop_this_many):
+            dropped.append(features[-1])
+            features = features[:-1]
+            f.grid[0]["Xvars"] = features
+            if not cross_validate:
+                f.tune(dynamic_tuning=dynamic_tuning, set_aside_test_set = False)
+            else:
+                f.cross_validate(dynamic_tuning=dynamic_tuning, set_aside_test_set = False, **cvkwargs)
+            f.auto_forecast(test_again=False)
+            new_error = f.history[estimator][monitor]
+            new_error = -new_error if using_r2 else new_error
+            errors.append(new_error)
+
+            f.save_feature_importance(try_order=[method], on_error="raise")
             fi_df = f.export_feature_importance(estimator)
-            using_r2 = monitor.endswith("R2") or (
-                f.validation_metric == "r2" and monitor == "ValidationMetricValue"
-            )
-
-            if method == "pfi":
-                fi_df["weight"] = np.abs(fi_df["weight"])
-                fi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
-
             features = fi_df.index.to_list()
-            init_error = f.history[estimator][monitor]
-            init_error = -init_error if using_r2 else init_error
 
-            dropped = []
-            errors = [init_error]
-
-            sqrt = int(len(f.y) ** 0.5)
-            keep_this_many_new = (
-                1
-                if keep_this_many == "auto"
-                else sqrt
-                if keep_this_many == "sqrt"
-                else keep_this_many
-            )
-            keep_at_least_new = sqrt if keep_at_least == "sqrt" else keep_at_least
-
-            stop_at = max(keep_this_many_new, keep_at_least_new)
-            drop_this_many = len(f.current_xreg) - stop_at
-
-            for _ in range(drop_this_many):
-                dropped.append(features[-1])
-                features = features[:-1]
-                f.grid[0]["Xvars"] = features
-                if not cross_validate:
-                    f.tune(dynamic_tuning=dynamic_tuning, set_aside_test_set = False)
-                else:
-                    f.cross_validate(dynamic_tuning=dynamic_tuning, set_aside_test_set = False, **cvkwargs)
-                f.auto_forecast(test_again=False)
-                new_error = f.history[estimator][monitor]
-                new_error = -new_error if using_r2 else new_error
-                errors.append(new_error)
-
-                f.save_feature_importance(method=method, on_error="raise")
-                fi_df = f.export_feature_importance(estimator)
-
-                if method == "pfi":
-                    fi_df["weight"] = np.abs(fi_df["weight"])
-                    fi_df.sort_values(["weight", "std"], ascending=False, inplace=True)
-
-                features = fi_df.index.to_list()
-
-            optimal_drop = (
-                errors.index(min(errors))
-                if keep_this_many == "auto"
-                else drop_this_many
-            )
-            self.reduced_Xvars = [
-                x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]
-            ]
-            self.pfi_dropped_vars = dropped
-            self.pfi_error_values = [-e for e in errors] if using_r2 else errors
+        optimal_drop = (
+            errors.index(min(errors))
+            if keep_this_many == "auto"
+            else drop_this_many
+        )
+        self.reduced_Xvars = [
+            x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]
+        ]
+        self.pfi_dropped_vars = dropped
+        self.pfi_error_values = [-e for e in errors] if using_r2 else errors
 
         if overwrite:
             self.current_xreg = {
@@ -2534,7 +2535,6 @@ class Forecaster(Forecaster_parent):
         dynamic_testing=True,
         summary_stats=False,
         feature_importance=False,
-        fi_method="pfi",
         limit_grid_size=None,
         min_grid_size=1,
         suffix=None,
@@ -2565,9 +2565,6 @@ class Forecaster(Forecaster_parent):
                 Whether to save summary stats for the models that offer those.
             feature_importance (bool): Default False.
                 Whether to save feature importance information for the models that offer it.
-            fi_method (str): One of {'pfi','shap'}. Default 'pfi'.
-                The type of feature importance to save for the models that support it.
-                Ignored if feature_importance is False.
             limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
             min_grid_size (int): Default 1. The smallest grid size to keep. Ignored if limit_grid_size is None.
@@ -2596,7 +2593,6 @@ class Forecaster(Forecaster_parent):
             error=error,
             summary_stats=summary_stats,
             feature_importance=feature_importance,
-            fi_method=fi_method,
             **cvkwargs,
         )
 
@@ -2631,59 +2627,122 @@ class Forecaster(Forecaster_parent):
         import tensorflow as tf
         self.tf_model = tf.keras.models.load_model(name)
 
-    def save_feature_importance(self, method="pfi", on_error="warn"):
+    def save_feature_importance(
+            self, 
+            method="shap", 
+            on_error="warn", 
+            try_order = [
+                'PermutationExplainer',
+                'TreeExplainer',
+                'LinearExplainer',
+                'GPUTreeExplainer',
+                'AdditiveExplainer',
+                'KernelExplainer',
+                'SamplingExplainer',
+            ], 
+            masker = None,
+            verbose = False,
+        ):
         """ Saves feature info for models that offer it (sklearn models).
         Call after evaluating the model you want it for and before changing the estimator.
         This method saves a dataframe listing the feature as the index and its score. This dataframe can be recalled using
-        the `export_feature_importance()` method. Scores for the pfi method are the average decrease in accuracy
-        over 10 permutations for each feature. For shap, it is determined as the average score applied to each
-        feature in each observation.
+        the `export_feature_importance()` method. When method is 'shap', the resulting socres
+        are determined as the average score applied to each feature in each observation.
 
         Args:
-            method (str): One of {'pfi','shap'}.
-                The type of feature importance to set.
-                'pfi' supported for all sklearn model types. 
-                'shap' for xgboost, lightgbm and some others.
+            method (str): Default 'shap'.
+                As of scalecast 0.19.4, shap is the only method available, as pfi is deprecated.
+                The shap method is only available for a subset of scikit-learn estimators, usually tree-based.
             on_error (str): One of {'warn','raise','ignore'}. Default 'warn'.
                 If the last model called doesn't support feature importance,
                 'warn' will log a warning. 'raise' will raise an error.
+            try_order (list): The order of explainers to try. 
+                If one fails, will try setting with the next one. This should be able to set feature importance on
+                all kinds of sklearn models.
+                What each of them do can be found in the shap documentation: 
+                https://shap-lrjball.readthedocs.io/en/latest/index.html
+            masker (shap.maskers): Optional.
+                Pass your own masker if desired and you are using the PermutationExplainer or LinearExplainer. 
+                Default will use shap.maskers.Independent with default arguments.
+            verbose (bool): Default True.
+                Whether to print out information about which explainers were tried/chosen.
+                The chosen explainer is saved in Forecaster.history[estimator]['feature_importance_explainer'].
 
-        >>> f.set_estimator('mlr')
-        >>> f.manual_forecast()
-        >>> f.save_feature_importance() # pfi
-        >>> f.export_feature_importance('mlr')
-        >>>
         >>> f.set_estimator('xgboost')
         >>> f.manual_forecast()
-        >>> f.save_feature_importance(method='shap') # shap
-        >>> f.export_feature_importance('xgboost')
+        >>> f.save_feature_importance()
+        >>> fi = f.export_feature_importance('xgboost') # returns a dataframe
         """
         _developer_utils.descriptive_assert(
-            method in ("pfi", "shap"),
+            method in ("shap",),
             ValueError,
-            f'kind must be one of "pfi","shap", got {method}.',
+            f'`method` must be "shap", got "{method}".',
         )
+        required_args = {
+            # name of explainer: [required method, required arg]
+            'PermutationExplainer':['predict','masker'],
+            'TreeExplainer':[None,None],
+            'LinearExplainer':[None,'masker'],
+            'GPUTreeExplainer':[None,None],
+            'KernelExplainer':['predict','data'],
+            'SamplingExplainer':['predict','data'],
+            'AdditiveExplainer':['predict','masker'],
+            # fe:
+            #'GradientExplainer':
+            #'PartitionExplainer':
+            #'DeepExplainer':
+        }
         fail = False
-        try:
-            model = self.call_me
-            regr = self.regr
-            X = self.X
-            Xvars = self.Xvars
-            if method == "pfi":
-                import eli5
-                from eli5.sklearn import PermutationImportance
-                perm = PermutationImportance(regr).fit(
-                    X, self.y.values[: X.shape[0]],
-                )
-                self.feature_importance = eli5.explain_weights_df(
-                    perm, 
-                    feature_names=Xvars,
-                ).set_index("feature")
-            else:
-                import shap
-                explainer = shap.TreeExplainer(regr)
+        if self.estimator not in self.sklearn_estimators:
+            fail = True
+            error = f'Feature importance only works for sklearn estimators, not {self.estimator}.'
+        else:
+            try:
+                _developer_utils._check_if_correct_estimator(self.estimator,self.sklearn_estimators)
+                model = self.call_me
+                regr = self.regr
+                X = self.X
+                Xvars = self.Xvars
+
+                if masker is None:
+                    masker = shap.maskers.Independent(data = X)
+
+                for t in try_order:
+                    if t not in required_args:
+                        raise ValueError(
+                            f'{t} is not an available explainer and all explainers tried before it failed.'
+                        )
+                    if verbose:
+                        print(f'Trying to set feature importance with {t}.')
+                    
+                    args = required_args[t]
+
+                    if args[0] is None:
+                        inp1 = regr
+                    elif args[0] == 'predict':
+                        inp1 = regr.predict
+                    
+                    if args[1] is None:
+                        inp2 = []
+                    elif args[1] == 'data':
+                        inp2 = [X]
+                    elif args[1] == 'masker':
+                        inp2 = [masker]
+
+                    try:
+                        explainer = getattr(shap,t)(inp1,*inp2)
+                        if verbose:
+                            print(f'{t} successful!')
+                    except Exception as e:
+                        error = str(e)
+                        continue
+                    break
+                    
+                if 'explainer' not in locals():
+                    raise TypeError(error)
+                
                 shap_values = explainer.shap_values(X)
-                shap_df = pd.DataFrame(shap_values, columns=self.Xvars)
+                shap_df = pd.DataFrame(shap_values, columns=Xvars)
                 shap_fi = (
                     pd.DataFrame(
                         {
@@ -2695,11 +2754,11 @@ class Forecaster(Forecaster_parent):
                     .set_index("feature")
                     .sort_values("weight", ascending=False)
                 )
+                self.explainer = t
                 self.feature_importance = shap_fi
-        except Exception as e:
-            fail = True
-            error = e
-
+            except Exception as e:
+                fail = True
+                error = e
         if fail:
             if on_error == "warn":
                 warnings.warn(
@@ -2708,7 +2767,7 @@ class Forecaster(Forecaster_parent):
                     category = Warning,
                 )
             elif on_error == "raise":
-                raise TypeError(str(error))
+                raise Exception(error)
             elif on_error != 'ignore':
                 raise ValueError(f"Value passed to on_error not recognized: {on_error}.")
             return

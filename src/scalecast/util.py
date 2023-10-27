@@ -1248,7 +1248,7 @@ def Forecaster_with_missing_vals(
                 )
             ).astype(int).cumsum()
             ts_df['missing_number'] = ts_df[['missing','missing_number']].apply(
-                lambda x: x[1] if x[0] == 1 else 0,
+                lambda x: x.iloc[1] if x.iloc[0] == 1 else 0,
                 axis = 1,
             )
 

@@ -193,7 +193,6 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
   - `pip install darts`  
   - `pip install prophet`  
   - `pip install greykite` (for the silverkite model)  
-  - `pip install shap` (SHAP feature importance)  
   - `pip install kats` (changepoint detection)  
   - `pip install pmdarima` (auto arima)  
   - `pip install tqdm` (progress bar for notebook)  

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SCALECAST
-Version: 0.19.3
+Version: 0.19.4
 Summary: The practitioner's time series forecasting library
 Home-page: https://github.com/mikekeith52/scalecast
 Author: Michael Keith
@@ -9,7 +9,7 @@ License: MIT
 Project-URL: GitHub, https://github.com/mikekeith52/scalecast
 Project-URL: Read the Docs, https://scalecast.readthedocs.io/en/latest/
 Project-URL: Examples, https://scalecast-examples.readthedocs.io/en/latest/
-Keywords: FORECAST,SCALE,DYNAMIC,MACHINE LEARNING,APPLIED
+Keywords: FORECASTING,DEEP LEARNING,TIME SERIES,MACHINE LEARNING,EASY
 Description-Content-Type: text/markdown
 License-File: license.txt
 
@@ -208,7 +208,6 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
   - `pip install darts`  
   - `pip install prophet`  
   - `pip install greykite` (for the silverkite model)  
-  - `pip install shap` (SHAP feature importance)  
   - `pip install kats` (changepoint detection)  
   - `pip install pmdarima` (auto arima)  
   - `pip install tqdm` (progress bar for notebook)  

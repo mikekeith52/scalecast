@@ -1606,7 +1606,6 @@ def _tune_test_forecast(
     min_grid_size = 1,
     summary_stats = False,
     feature_importance = False,
-    fi_method=None,
     tqdm = False,
     **cvkwargs,
 ):
@@ -1648,4 +1647,4 @@ def _tune_test_forecast(
         if summary_stats:
             f.save_summary_stats()
         if feature_importance:
-            f.save_feature_importance(method=fi_method)
+            f.save_feature_importance()

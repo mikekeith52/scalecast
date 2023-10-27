@@ -195,7 +195,6 @@ def tune_test_forecast(
     dynamic_testing=True,
     summary_stats=False,
     feature_importance=False,
-    fi_method="pfi",
     limit_grid_size=None,
     min_grid_size=1,
     suffix=None,
@@ -225,10 +224,6 @@ def tune_test_forecast(
         feature_importance (bool): Default False.
             Whether to save feature importance information for the models that offer it.
             Does not work for `MVForecaster` objects.
-        fi_method (str): One of {'pfi','shap'}. Default 'pfi'.
-            The type of feature importance to save for the models that support it.
-            Ignored if feature_importance is False.
-            Does not work for `MVForecaster` objects.
         limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
             See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
         min_grid_size (int): Default 1. The smallest grid size to keep. Ignored if limit_grid_size is None.
@@ -254,7 +249,6 @@ def tune_test_forecast(
         error=error,
         summary_stats=summary_stats,
         feature_importance=feature_importance,
-        fi_method=fi_method,
         tqdm = True,
         **cvkwargs,
     )

@@ -10,7 +10,6 @@ setup.py
 _static/logo2.png
 _static/results.png
 docs/.DS_Store
-docs/.readthedocs.yaml
 docs/0.17
 docs/Makefile
 docs/about.rst

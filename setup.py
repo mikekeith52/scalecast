@@ -8,7 +8,7 @@ long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = '0.19.3',
+  version = '0.19.4',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,
@@ -26,13 +26,12 @@ setup(
     'Examples': 'https://scalecast-examples.readthedocs.io/en/latest/',
   },
   url = 'https://github.com/mikekeith52/scalecast',
-  keywords = ['FORECAST', 'SCALE', 'DYNAMIC', 'MACHINE LEARNING', 'APPLIED'],
+  keywords = ['FORECASTING','DEEP LEARNING','TIME SERIES','MACHINE LEARNING','EASY'],
   install_requires = [
     'scikit-learn>=1.3.1',
     'statsmodels',
     'tbats',
     'scipy',
-    'eli5',
     'numpy',
     'pandas',
     'scipy',
@@ -43,5 +42,6 @@ setup(
     'dask>=2023.3.2',
     'catboost',
     'openpyxl',
+    'shap',
   ],
 )
