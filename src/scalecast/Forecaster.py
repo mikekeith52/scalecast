@@ -2645,8 +2645,8 @@ class Forecaster(Forecaster_parent):
         """ Saves feature info for models that offer it (sklearn models).
         Call after evaluating the model you want it for and before changing the estimator.
         This method saves a dataframe listing the feature as the index and its score. This dataframe can be recalled using
-        the `export_feature_importance()` method. When method is 'shap', the resulting socres
-        are determined as the average score applied to each feature in each observation.
+        the `export_feature_importance()` method. The importance scores
+        are determined as the average shap score applied to each feature in each observation.
 
         Args:
             method (str): Default 'shap'.
@@ -2656,12 +2656,12 @@ class Forecaster(Forecaster_parent):
                 'warn' will log a warning. 'raise' will raise an error.
             try_order (list): The order of explainers to try. 
                 If one fails, will try setting with the next one. This should be able to set feature importance on
-                all kinds of sklearn models.
-                What each of them do can be found in the shap documentation: 
+                any sklearn model.
+                What each Explainer does can be found in the shap documentation: 
                 https://shap-lrjball.readthedocs.io/en/latest/index.html
             masker (shap.maskers): Optional.
                 Pass your own masker if desired and you are using the PermutationExplainer or LinearExplainer. 
-                Default will use shap.maskers.Independent with default arguments.
+                Default will use shap.maskers.Independent masker with default arguments.
             verbose (bool): Default True.
                 Whether to print out information about which explainers were tried/chosen.
                 The chosen explainer is saved in Forecaster.history[estimator]['feature_importance_explainer'].
