@@ -2636,7 +2636,6 @@ class Forecaster(Forecaster_parent):
                 'TreeExplainer',
                 'LinearExplainer',
                 'GPUTreeExplainer',
-                'AdditiveExplainer',
                 'KernelExplainer',
                 'SamplingExplainer',
             ], 
@@ -2652,7 +2651,6 @@ class Forecaster(Forecaster_parent):
         Args:
             method (str): Default 'shap'.
                 As of scalecast 0.19.4, shap is the only method available, as pfi is deprecated.
-                The shap method is only available for a subset of scikit-learn estimators, usually tree-based.
             on_error (str): One of {'warn','raise','ignore'}. Default 'warn'.
                 If the last model called doesn't support feature importance,
                 'warn' will log a warning. 'raise' will raise an error.
@@ -2686,8 +2684,8 @@ class Forecaster(Forecaster_parent):
             'GPUTreeExplainer':[None,None],
             'KernelExplainer':['predict','data'],
             'SamplingExplainer':['predict','data'],
-            'AdditiveExplainer':['predict','masker'],
             # fe:
+            #'AdditiveExplainer':['predict','masker'],
             #'GradientExplainer':
             #'PartitionExplainer':
             #'DeepExplainer':
@@ -2731,6 +2729,7 @@ class Forecaster(Forecaster_parent):
 
                     try:
                         explainer = getattr(shap,t)(inp1,*inp2)
+                        shap_values = explainer.shap_values(X)
                         if verbose:
                             print(f'{t} successful!')
                     except Exception as e:
@@ -2741,7 +2740,6 @@ class Forecaster(Forecaster_parent):
                 if 'explainer' not in locals():
                     raise TypeError(error)
                 
-                shap_values = explainer.shap_values(X)
                 shap_df = pd.DataFrame(shap_values, columns=Xvars)
                 shap_fi = (
                     pd.DataFrame(
