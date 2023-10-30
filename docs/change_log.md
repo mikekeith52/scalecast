@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.5] - 2023-10-30
+### Added
+- Added `fi_try_order` as an argument in `tune_test_forecast()`.
+### Changed
+### Fixed
+- Got rid of the `AdditiveExplainer` and `GPUTreeExplainer` in `Forecaster.save_feature_importance()` which do not work with feature importance as it is currently set up.
+
 ## [0.19.4] - 2023-10-27
 ### Added
 - Added more feature importance options, all sourced through the shap library.

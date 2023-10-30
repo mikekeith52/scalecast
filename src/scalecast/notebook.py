@@ -195,6 +195,7 @@ def tune_test_forecast(
     dynamic_testing=True,
     summary_stats=False,
     feature_importance=False,
+    fi_try_order=None,
     limit_grid_size=None,
     min_grid_size=1,
     suffix=None,
@@ -224,6 +225,11 @@ def tune_test_forecast(
         feature_importance (bool): Default False.
             Whether to save feature importance information for the models that offer it.
             Does not work for `MVForecaster` objects.
+        fi_try_order (list): Optional.
+            If the `feature_importance` argument is `True`, what feature importance methods to try? If using a combination
+            of tree-based and linear models, for example, it might be good to pass ['TreeExplainer','LinearExplainer']. The default
+            will use whatever is specifiec by default in `Forecaster.save_feature_importance()`, which usually ends up being
+            the `PermutationExplainer`.
         limit_grid_size (int or float): Optional. Pass an argument here to limit each of the grids being read.
             See https://scalecast.readthedocs.io/en/latest/Forecaster/Forecaster.html#src.scalecast.Forecaster.Forecaster.limit_grid_size.
         min_grid_size (int): Default 1. The smallest grid size to keep. Ignored if limit_grid_size is None.
@@ -249,6 +255,7 @@ def tune_test_forecast(
         error=error,
         summary_stats=summary_stats,
         feature_importance=feature_importance,
+        fi_try_order = fi_try_order,
         tqdm = True,
         **cvkwargs,
     )
