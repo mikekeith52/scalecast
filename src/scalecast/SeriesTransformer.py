@@ -470,7 +470,6 @@ class SeriesTransformer:
     def RobustScaleRevert(self, **kwargs):
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Assumes the scale transformation has been called on the object at some point.
-        Revert function: array.std()*array[i]+array.mean().
 
         Args:
             **kwargs: Passed to Transformer.Revert() - 
