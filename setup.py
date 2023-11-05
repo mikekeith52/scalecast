@@ -43,5 +43,6 @@ setup(
     'catboost',
     'openpyxl',
     'shap',
+    'threadpoolctl>=3.0',
   ],
 )
