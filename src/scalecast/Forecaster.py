@@ -46,7 +46,6 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose, STL
 from sklearn.model_selection import train_test_split
-import shap
 
 class Forecaster(Forecaster_parent):
     def __init__(
@@ -659,8 +658,8 @@ class Forecaster(Forecaster_parent):
         possible_Xvars = _developer_utils._select_reg_for_direct_forecasting(self)
         Xvars = self._parse_Xvars_not_sklearn_nor_rnn(Xvars=Xvars,possible_Xvars=possible_Xvars)
         if len(Xvars) > 0:
-            current_X = (np.array([possible_Xvars[x] for x in Xvars if not x.startswith('AR')]).T)
-            future_X = (np.array([np.array(self.future_xreg[x][:]) for x in current_X]).T)
+            current_X = np.array([possible_Xvars[x] for x in Xvars if not x.startswith('AR')]).T
+            future_X = np.array([np.array(self.future_xreg[x].copy()) for x in Xvars if not x.startswith('AR')]).T
         else:
             current_X, future_X = None, None
         
@@ -2677,6 +2676,8 @@ class Forecaster(Forecaster_parent):
         >>> f.save_feature_importance()
         >>> fi = f.export_feature_importance('xgboost') # returns a dataframe
         """
+        import shap
+        
         _developer_utils.descriptive_assert(
             method in ("shap",),
             ValueError,

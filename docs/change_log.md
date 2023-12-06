@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.6] - 2023-12-04
+### Added
+### Changed
+### Fixed
+- Fixed how ARIMA model was reading future xreg values.
+
 ## [0.19.5] - 2023-10-30
 ### Added
 - Added `fi_try_order` as an argument in `tune_test_forecast()`.

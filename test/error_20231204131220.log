@@ -1,0 +1,417 @@
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:Adding TBB (C:\Users\michaelkeith\AppData\Local\anaconda3\envs\scalecast-env\lib\site-packages\prophet\stan_model\cmdstan-2.26.1\stan\lib\stan_math\lib\tbb) to PATH
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\2vuheqtr.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\qj853_y1.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=73508', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\2vuheqtr.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\qj853_y1.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modely72memcx\\prophet_model-20231204131512.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\h_874gy4.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\oj5fi6mk.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=62382', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\h_874gy4.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\oj5fi6mk.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelqgjttk3f\\prophet_model-20231204131512.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\17m2e93s.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\r1bui_vc.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=87997', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\17m2e93s.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\r1bui_vc.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelmzlrrcld\\prophet_model-20231204131513.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\tk_g6854.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\fyg8t1sf.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=86576', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\tk_g6854.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\fyg8t1sf.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelx1pliip_\\prophet_model-20231204131513.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\unov0psx.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\x_geyv0q.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=41213', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\unov0psx.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\x_geyv0q.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelnqqyi1ku\\prophet_model-20231204131513.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\xi3ck4nb.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\dncph4y9.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=61022', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\xi3ck4nb.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\dncph4y9.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modeloih_nroh\\prophet_model-20231204131513.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\7fimz645.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\tcxq0i2n.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=68511', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\7fimz645.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\tcxq0i2n.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model388eo1qo\\prophet_model-20231204131514.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\3dikcowc.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\5gw7jo94.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=21319', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\3dikcowc.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\5gw7jo94.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model8rj_ge48\\prophet_model-20231204131514.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\q4xp8_80.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\7bqxvuit.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=96803', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\q4xp8_80.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\7bqxvuit.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelsgxn909s\\prophet_model-20231204131514.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\1ciz_edk.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\b18rx349.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=45871', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\1ciz_edk.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\b18rx349.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model72ntezb0\\prophet_model-20231204131514.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\uus_uzsc.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\a959qjg1.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=890', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\uus_uzsc.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\a959qjg1.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modeltg3k7x8o\\prophet_model-20231204131514.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\m8sb14av.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\l0i0dv7u.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=71608', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\m8sb14av.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\l0i0dv7u.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelv9ogxcqz\\prophet_model-20231204131515.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\nzvf1e1e.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\w161o19b.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=92523', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\nzvf1e1e.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\w161o19b.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelqxdrtip6\\prophet_model-20231204131515.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\h4_9usmn.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\x4gwrf7c.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=28299', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\h4_9usmn.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\x4gwrf7c.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modell8lm8zf_\\prophet_model-20231204131515.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\1_3uqki3.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\b21cdo7h.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=26149', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\1_3uqki3.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\b21cdo7h.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model8uoxfv5i\\prophet_model-20231204131515.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\srd90hic.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\t4xa6fse.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=97542', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\srd90hic.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\t4xa6fse.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model2i1vntco\\prophet_model-20231204131515.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\1q7b3r05.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\zerpona0.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=17176', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\1q7b3r05.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\zerpona0.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelhutujukk\\prophet_model-20231204133754.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\1ysjj0q8.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\870jinu1.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=17021', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\1ysjj0q8.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\870jinu1.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modeljncuridm\\prophet_model-20231204133755.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\4ilnr6vd.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\2rfez_xe.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=44525', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\4ilnr6vd.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\2rfez_xe.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelcbmbjzk1\\prophet_model-20231204133924.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\5eiujdmp.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\9t9q8a7h.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=39793', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\5eiujdmp.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\9t9q8a7h.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelsnqwcndg\\prophet_model-20231204133924.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\_4kij5to.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\cqni1i8x.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=1712', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\_4kij5to.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\cqni1i8x.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model9rx_15l3\\prophet_model-20231204133924.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\qm39u2jv.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\f3ijpt19.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=87265', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\qm39u2jv.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\f3ijpt19.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model86iw5mlv\\prophet_model-20231204133924.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\qpcet165.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\yczg_t67.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=80500', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\qpcet165.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\yczg_t67.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelvt9pv_be\\prophet_model-20231204133925.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\cfn3gtki.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\e7llzv7a.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=87700', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\cfn3gtki.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\e7llzv7a.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelp_qabjxt\\prophet_model-20231204133925.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\jzlm6drk.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\sgcybgyw.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=34714', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\jzlm6drk.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\sgcybgyw.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelefpzmm0x\\prophet_model-20231204133925.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\kc7yd8qm.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\w2o67kqt.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=68286', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\kc7yd8qm.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\w2o67kqt.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelz5j11iuy\\prophet_model-20231204133925.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\8o97uo8b.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\_w0t6za0.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=99362', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\8o97uo8b.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\_w0t6za0.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelqqcaweb3\\prophet_model-20231204133926.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\475p3nym.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\jyf4iv6z.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=89932', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\475p3nym.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\jyf4iv6z.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modeledth9edo\\prophet_model-20231204133926.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\gi6xkjhd.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\hhqq5vic.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=67083', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\gi6xkjhd.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\hhqq5vic.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelpy1cbcuu\\prophet_model-20231204133926.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\t0k1ahre.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\habb6xti.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=60579', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\t0k1ahre.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\habb6xti.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelv8o96o0e\\prophet_model-20231204133926.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\5fiycjwk.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\n9f8i4ei.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=55976', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\5fiycjwk.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\n9f8i4ei.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelay_69jvn\\prophet_model-20231204133927.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\z9irkpni.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\my7kqd18.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=98715', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\z9irkpni.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\my7kqd18.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelzo3enr3x\\prophet_model-20231204133927.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\hvy8sl_1.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\f6ezoehq.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=11099', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\hvy8sl_1.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\f6ezoehq.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelnyc7jqgy\\prophet_model-20231204133927.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+ERROR:cmdstanpy:Chain [1] error: error during processing Unknown error
+WARNING:prophet.models:Optimization terminated abnormally. Falling back to Newton.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\epuiwtk7.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\ay1l7s6o.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=98647', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\epuiwtk7.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\ay1l7s6o.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelbhe368yy\\prophet_model-20231204133927.csv', 'method=optimize', 'algorithm=newton', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\ozrfd_t6.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\5x3ltn_a.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=11023', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\ozrfd_t6.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\5x3ltn_a.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelcvke4tus\\prophet_model-20231204140423.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\eyy3y0v6.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\sjxum50j.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=29482', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\eyy3y0v6.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\sjxum50j.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modelzxhxuy6t\\prophet_model-20231204140423.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\6umb2g6b.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\1yskc3q7.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=26013', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\6umb2g6b.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\1yskc3q7.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_model9725eq4a\\prophet_model-20231204140424.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+DEBUG:cmdstanpy:cmd: where.exe tbb.dll
+cwd: None
+DEBUG:cmdstanpy:TBB already found in load path
+INFO:prophet:Disabling weekly seasonality. Run prophet with weekly_seasonality=True to override this.
+INFO:prophet:Disabling daily seasonality. Run prophet with daily_seasonality=True to override this.
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\l3iz00xm.json
+DEBUG:cmdstanpy:input tempfile: C:\Users\MICHAE~1\AppData\Local\Temp\1\tmp2127fi7y\9m_o3r24.json
+DEBUG:cmdstanpy:idx 0
+DEBUG:cmdstanpy:running CmdStan, num_threads: None
+DEBUG:cmdstanpy:CmdStan args: ['C:\\Users\\michaelkeith\\AppData\\Local\\anaconda3\\envs\\scalecast-env\\Lib\\site-packages\\prophet\\stan_model\\prophet_model.bin', 'random', 'seed=84251', 'data', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\l3iz00xm.json', 'init=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\9m_o3r24.json', 'output', 'file=C:\\Users\\MICHAE~1\\AppData\\Local\\Temp\\1\\tmp2127fi7y\\prophet_modeld4q65026\\prophet_model-20231204140424.csv', 'method=optimize', 'algorithm=lbfgs', 'iter=10000']
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing

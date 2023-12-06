@@ -165,5 +165,5 @@ class ChangepointDetector:
                     start=cp.start_time, end=cp.end_time, called=f"cp{i+1}"
                 )
             else:
-                raise ValueError(f'end arg expected None or "auto", got {end}')
+                raise ValueError(f'end arg expected None or "auto", got {end}.')
         return f

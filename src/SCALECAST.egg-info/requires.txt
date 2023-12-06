@@ -13,3 +13,4 @@ dask>=2023.3.2
 catboost
 openpyxl
 shap
+threadpoolctl>=3.0

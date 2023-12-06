@@ -125,11 +125,3 @@ class NamedBoxCox:
 
 boxcox_tr = NamedBoxCox(name='BoxcoxTransform',transform=True)
 boxcox_re = NamedBoxCox(name='BoxcoxRevert',transform=False)
-
-"""
-def boxcox_tr(x,lmbda):
-    return [(i**lmbda - 1) / lmbda for i in x] if lmbda != 0 else [np.log(i) for i in x]
-
-def boxcox_re(x,lmbda):
-    return [(i*lmbda + 1)**(1/lmbda) for i in x] if lmbda != 0 else [np.exp(i) for i in x]
-"""
