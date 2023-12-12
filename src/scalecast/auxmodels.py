@@ -13,6 +13,7 @@ class vecm:
         """ Initializes a Vector Error Correction Model.
         Uses the statsmodels implementation: https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html.
         See it used with scalecast: https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html.
+        It only works when the `lags` argument is set to 0 or None and the `normalizer` argument is set to None.
 
         Args:
             k_ar_diff (int): The number of lags from each series to use in the model.

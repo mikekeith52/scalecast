@@ -1,5 +1,11 @@
 from .__init__ import __colors__, __series_colors__, __not_hyperparams__
 from ._utils import _developer_utils
+from ._sklearn_models_mv import (
+    _prepare_data_mv,
+    _scale_mv,
+    _train_mv,
+    _predict_mv,
+)
 from ._Forecaster_parent import (
     Forecaster_parent,
     ForecastError,
@@ -32,6 +38,7 @@ class MVForecaster(Forecaster_parent):
         optimize_on = 'mean',
         cis = False,
         metrics=['rmse','mape','mae','r2'],
+        carry_fit_models = False,
         **kwargs,
     ):
         """ 
@@ -67,6 +74,9 @@ class MVForecaster(Forecaster_parent):
                 The first element of this list will be set as the default validation metric, but that can be changed.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported.
+            carry_fit_models (bool): Default False.
+                Whether to store the regression model for each fitted model in history.
+                Setting this to False can save memory.
             **kwargs: Become attributes.
         """
         super().__init__(
@@ -163,6 +173,7 @@ class MVForecaster(Forecaster_parent):
                 f"merge_future_dates must be one of ('longest','shortest'), got {merge_future_dates}."
             )
         self.set_test_length(test_length)
+        self.carry_fit_models = carry_fit_models
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -230,6 +241,144 @@ class MVForecaster(Forecaster_parent):
         """ Placeholder function.
         """
         return
+
+    def transfer_predict(
+        self,
+        transfer_from,
+        model,
+        model_type='sklearn',
+        return_df=False,
+        series=None,
+        dates = [],
+        save_to_history = True,
+        call_me = None,
+        regr = None,
+    ):
+        """ Makes predictions using an already-trained model over any given forecast horizon.
+        Will use the already-trained model from a passed MVForecaster object to create a new model
+        in the `MVForecaster` object from which the method is called. Or the option is available to not
+        save a new model but return the predictions in a pandas DataFrame object. Confidence intervals cannot
+        be transferred from this method but can be from the `transfer_cis()` method.
+
+        Args:
+            transfer_from (MVForecaster): The MVForecaster object that contains the already-fitted model.
+            model (str): The model nickname of the already-evaluated model stored in the `MVForecaster`
+                object passed to `transfer_from`.
+            model_type (str): Default 'sklearn'. The type of model that needs to be predicted. 
+                Right now, only 'sklearn' is supported. The scalecast VECM model is also supported but the 
+                model_type argument will still be 'sklearn' in those cases.
+            return_df (bool): Default False. Whether to return a pandas DataFrame with the
+                date as an index. If the `dates` argument is not specified, this
+                will include all dates in the `MVForecaster` instance that the method is called from.
+            series (list): Optional. The series in the MVForecaster object to return predictions for.
+                By default, all series will have forecasts generated.
+            dates (collection): Optional. The dates to limit the predictions for.
+                Ignored if return_df is not specified. If the passed dates are not in the
+                same frequency as the dates stored in the Forecaster object, an `IndexError` is raised.
+            save_to_history (bool): Default True. Whether to save the transferred predictions as if
+                they were a model being run using a `_forecast()` method.
+            call_me (str): Optional. What to call the resulting model.
+                If save_to_history is False, this is ignored.
+                If not specified, inherits the name passed to `model`.
+            regr (dict or scalecast.auxmodels.vecm class): Optional. The model(s) to make predictions with. If not supplied,
+                the model will be searched for in the `MVForecaster` passed to `transfer_from`.
+                The keys in the dictionary should match the names of the series in the `MVForecaster` object.
+
+        Returns:
+            (Pandas DataFrame or None): The date-indexed DataFrame if return_series is True. 
+
+        >>> mvf.manual_forecast(call_me='mlr')
+        >>> mvf_new.transfer_predict(transfer_from=mvf,model='mlr')
+        """
+        mvf = transfer_from
+
+        if len(dates):
+            dates = [pd.Timestamp(d) for d in dates]
+
+        Xvars = mvf.history[model]['Xvars']
+        hyperparams = mvf.history[model]['HyperParams']
+        lags = mvf.history[model]['Lags']
+        nolags = lags is None
+
+        self.Xvars = Xvars
+
+        if model_type == 'sklearn':
+            #f = f.deepcopy()
+            regr = mvf.history[model]['regr'] if regr is None else regr
+            series = (
+                list(self.y.keys()) if series is None 
+                else series if hasattr(series,'__len__') and not isinstance(series,str) 
+                else [series]
+            )
+            normalizer = (
+                None if nolags
+                else 'minmax' if 'normalizer' not in hyperparams
+                else hyperparams['normalizer']
+            )
+            observed, future, Xvars = _prepare_data_mv(self,Xvars=Xvars[:],lags=lags)
+            self.scaler = self._parse_normalizer(observed.copy(),normalizer)
+            self.trained_models = regr
+            preds = _predict_mv(
+                mvf=self,
+                trained_models=regr, 
+                future=future, 
+                dynamic_testing=True,
+                nolags=nolags,
+                Xvars = Xvars,
+            )
+            fitted_values = []
+            if (
+                save_to_history or 
+                (
+                    return_df and (
+                        not len(dates) or 
+                        len([d for d in dates if d in [pd.Timestamp(d) for d in self.current_dates]])
+                    )
+                )
+            ):
+                if nolags:
+                    fitted_values = {
+                        k:list(regr.fittedvalues[:,i])
+                        for i, k in enumerate(self.y.keys())
+                    }
+                else:
+                    fitted_values = _predict_mv(
+                        mvf=self,
+                        trained_models=regr, 
+                        future=observed, 
+                        nolags=nolags,
+                        dynamic_testing=False,
+                    )
+        if save_to_history:
+            self.call_me = call_me if call_me is not None else model
+            self.forecast = preds
+            self.fitted_values = fitted_values
+            self.dynamic_testing = np.nan
+            self.history[self.call_me] = {}
+            self._bank_history(**hyperparams)
+        if return_df:
+            all_dates = (
+                [pd.Timestamp(d) for d in self.current_dates] + 
+                [pd.Timestamp(d) for d in self.future_dates.to_list()]
+            )
+            all_values = {}
+            for k in series:
+                all_values[k] = (
+                    [np.nan] * (
+                        len(self.current_dates) + 
+                        len(self.future_dates) - 
+                        len(fitted_values[k]) - 
+                        len(preds[k])
+                    ) + 
+                    fitted_values[k] + 
+                    preds[k]
+                )
+            
+            all_df = pd.DataFrame(data=all_values,index=all_dates).dropna()
+            if len(dates) == 0:
+                return all_df
+
+            return all_df.loc[list(dates)]
 
     def add_signals(
         self,
@@ -459,174 +608,6 @@ class MVForecaster(Forecaster_parent):
         >>> mvf.manual_forecast(lags={'y1':2,'y2':3}) # 2 lags added for first series, 3 lags for second
         >>> mvf.manual_forecast(lags={'series1':[1,3],'series2':3}) # first and third lag for first series, 3 lags for second
         """
-
-        def prepare_data(Xvars,lags):
-            observed = np.array([self.current_xreg[x].values.copy() for x in Xvars]).T
-            future = np.array([np.array(self.future_xreg[x][:]) for x in Xvars]).T
-
-            ylen = len(self.y[self.names[0]])
-            if len(observed.shape) > 1:
-                no_other_xvars = False
-                observed_future = np.concatenate([observed,future],axis=0)
-            else:
-                no_other_xvars = True
-                observed_future = np.array([0]*(ylen + len(self.future_dates))).reshape(-1,1) # column of 0s
-                observed = np.array([0]*ylen).reshape(-1,1)
-
-            err_message = f'Cannot accept this lags argument: {lags}.'
-
-            if nolags: # vecm
-                observedy = np.array(
-                    [v.to_list() for k, v in self.y.items()]
-                ).T
-                futurey = np.zeros((len(self.future_dates),self.n_series))
-                if no_other_xvars:
-                    observed = observedy
-                    future = futurey
-                else:
-                    observed = np.concatenate([observedy,observed],axis=1)
-                    future = np.concatenate([futurey,future],axis=1)
-                return observed, future, None
-            elif isinstance(lags, (float,int)):
-                lags = int(lags)
-                max_lag = lags
-                lag_matrix = np.zeros((observed_future.shape[0],max_lag*self.n_series))
-                pos = 0
-                for i in range(self.n_series):
-                    for j in range(lags):
-                        Xvars.append('LAG_' + self.names[i] + "_" + str(j+1)) # UTUR_1 for first lag to keep track of position
-                        lag_matrix[:,pos] = (
-                            [np.nan] * (j+1)
-                            + self.y[self.names[i]].to_list() 
-                            + [np.nan] * (lag_matrix.shape[0] - ylen - (j+1)) # pad with nas
-                        )[:lag_matrix.shape[0]] 
-                        pos += 1
-            elif isinstance(lags, dict):
-                total_lags = 0
-                for k, v in lags.items():
-                    if hasattr(v,'__len__') and not isinstance(v,str):
-                        total_lags += len(v)
-                    elif isinstance(v,(float,int)):
-                        total_lags += v
-                    else:
-                        raise ValueError(err_message)
-                lag_matrix = np.zeros((observed_future.shape[0],total_lags))
-                pos = 0
-                max_lag = 1
-                for k,v in lags.items():
-                    if hasattr(v,'__len__') and not isinstance(v,str):
-                        for i in v:
-                            lag_matrix[:,pos] = (
-                                [np.nan] * i
-                                + self.y[k].to_list()
-                                + [np.nan]
-                                * (lag_matrix.shape[0] - ylen - i)
-                            )[:lag_matrix.shape[0]] 
-                            Xvars.append('LAG_' + k + "_" + str(i))
-                            pos+=1
-                        max_lag = max(max_lag,max(v))
-                    elif isinstance(v,(float,int)):
-                        for i in range(v):
-                            lag_matrix[:,pos] = (
-                                [np.nan] * (i+1)
-                                + self.y[k].to_list()
-                                + [np.nan]
-                                * (lag_matrix.shape[0] - ylen - (i+1))
-                            )[:lag_matrix.shape[0]] 
-                            Xvars.append('LAG_' + k + "_" + str(i+1))
-                            pos+=1
-                        max_lag = max(max_lag,v)
-            elif hasattr(lags,'__len__') and not isinstance(lags,str):
-                lag_matrix = np.zeros((observed_future.shape[0],len(lags)*self.n_series))
-                pos = 0
-                max_lag = max(lags)
-                for i in range(self.n_series):
-                    for v in lags:
-                        Xvars.append('LAG_' + self.names[i] + "_" + str(v))
-                        lag_matrix[:,pos] = (
-                            [np.nan] * v
-                            + self.y[self.names[i]].to_list()
-                            + [np.nan] * (lag_matrix.shape[0] - ylen - v)
-                        )[:lag_matrix.shape[0]]
-                        pos+=1
-            else:
-                raise ValueError(err_message)
-
-            observed_future = np.concatenate([observed_future,lag_matrix],axis=1)
-            start_col = 1 if no_other_xvars else 0
-            future = observed_future[observed.shape[0]:,start_col:]
-            observed = observed_future[max_lag:observed.shape[0],start_col:]
-            return observed, future, Xvars
-
-        def scale(scaler, X) -> np.ndarray:
-            """ uses scaler parsed from _parse_normalizer() function to transform matrix passed to X.
-
-            Args:
-                scaler (MinMaxScaler, Normalizer, StandardScaler, PowerTransformer, or None): 
-                    the fitted scaler or None type
-                X (ndarray or DataFrame):
-                    the matrix to transform
-
-            Returns:
-                (ndarray): The scaled x values.
-            """
-            if scaler is not None:
-                return scaler.transform(X)
-            else:
-                return X
-
-        def train(X, y, normalizer, **kwargs):
-            self.scaler = self._parse_normalizer(X, normalizer)
-            X = scale(self.scaler, X)
-            regr = self.sklearn_imports[fcster](**kwargs)
-            # below added for vecm model -- could be expanded for others as well
-            extra_kws_map = {
-                'dates':self.current_dates.values.copy(),
-                'n_series':self.n_series,
-            }
-            if hasattr(regr,'_scalecast_set'):
-                for att in regr._scalecast_set:
-                    setattr(regr,att,extra_kws_map[att])
-            
-            regr.fit(X, y)
-            return regr
-
-        def evaluate(trained_models, future, dynamic_testing, Xvars = None):
-            if nolags:
-                future = scale(self.scaler, future)
-                p = trained_models.predict(future)
-                preds = {k:list(p[:,i]) for i, k in enumerate(self.y)}
-            elif dynamic_testing is False:
-                preds = {}
-                future = scale(self.scaler, future)
-                for series, regr in trained_models.items():
-                    preds[series] = list(regr.predict(future))
-            else:
-                preds = {series: [] for series in trained_models.keys()}
-                series = {
-                    k:v.to_list()
-                    for k,v in self.y.items()
-                }
-                for i in range(future.shape[0]):
-                    fut = scale(self.scaler,future[i,:].reshape(1,-1))
-                    for s, regr in trained_models.items():
-                        snum = list(self.y.keys()).index(s)
-                        pred = regr.predict(fut)[0]
-                        preds[s].append(pred)
-                        if (i < len(future) - 1):
-                            if ((i+1) % dynamic_testing == 0) and (hasattr(self,'actuals')):
-                                series[s].append(self.actuals[snum][i])
-                            else:
-                                series[s].append(pred)
-                    if (i < len(future) - 1):
-                        for x in Xvars:
-                            if x.startswith('LAG_'):
-                                idx = Xvars.index(x)
-                                s = x.split('_')[1]
-                                lagno = int(x.split('_')[-1])
-                                future[i+1,idx] = series[s][-lagno]
-            return preds
-
         steps = len(self.future_dates)
         dynamic_testing = (
             steps + 1 
@@ -634,28 +615,36 @@ class MVForecaster(Forecaster_parent):
             else 1 if dynamic_testing is False 
             else dynamic_testing
         )
-        Xvars = list(self.current_xreg.keys()) if Xvars == 'all' else [] if Xvars is None else list(Xvars)[:]
+        Xvars = (
+            list(self.current_xreg.keys()) if Xvars == 'all' 
+            else [] if Xvars is None 
+            else list(Xvars)[:]
+        )
         self.Xvars = Xvars
         nolags = lags is None or not lags
-        observed, future, Xvars = prepare_data(Xvars=Xvars[:],lags=lags)
+        observed, future, Xvars = _prepare_data_mv(self,Xvars=Xvars[:],lags=lags)
         
         if nolags:
-            trained_full = train(
+            self.scaler = self._parse_normalizer(observed.copy(), None)
+            trained_full = _train_mv(
+                mvf=self,
                 X=observed.copy(),
                 y=None,
-                normalizer=None,
+                fcster=fcster,
                 **kwargs,
             )
         else:
             trained_full = {}
+            self.scaler = self._parse_normalizer(observed.copy(), normalizer)
             for k, v in self.y.items():
-                trained_full[k] = train(
+                trained_full[k] = _train_mv(
+                    mvf=self,
                     X=observed,
                     y=v.values[-observed.shape[0] :].copy(),
-                    normalizer=normalizer,
+                    fcster=fcster,
                     **kwargs,
                 )
-        self.trained_models = trained_full # does not go to history
+        self.trained_models = trained_full
         if hasattr(self,'actuals'): # skip fitted values if only testing out-of-sample
             self.fitted_values = {k:[] for k in self.y}
         elif nolags:
@@ -664,15 +653,19 @@ class MVForecaster(Forecaster_parent):
                 for i, k in enumerate(self.y.keys())
             }
         else:
-            self.fitted_values = evaluate(
+            self.fitted_values = _predict_mv(
+                mvf=self,
                 trained_models=trained_full, 
                 future=observed, 
                 dynamic_testing=False,
+                nolags=nolags,
             )
-        return evaluate(
+        return _predict_mv(
+            mvf=self,
             trained_models=trained_full, 
             future=future, 
             dynamic_testing=dynamic_testing,
+            nolags=nolags,
             Xvars = Xvars,
         )
 
@@ -703,13 +696,11 @@ class MVForecaster(Forecaster_parent):
         scaler.fit(X_train)
         return scaler
 
-    def _set_cis(self,*attrs,m,ci_range,forecast,tspreds):
+    def _set_cis(self,*attrs,m,ci_range,preds):
         for i, attr in enumerate(attrs):
             self.history[m][attr] = {
                 k:p + (ci_range[k] if i%2 == 0 else (ci_range[k]*-1))
-                for k,p in (
-                    forecast.items() if i <= 1 else tspreds.items()
-                )
+                for k,p in preds.items()
             }
 
     def _bank_history(self, **kwargs):
@@ -735,6 +726,8 @@ class MVForecaster(Forecaster_parent):
         self.history[call_me]['FittedVals'] = self.fitted_values
         self.history[call_me]['DynamicallyTested'] = self.dynamic_testing
         self.history[call_me]['CILevel'] = self.cilevel if self.cis else np.nan
+        if self.carry_fit_models:
+            self.history[call_me]['regr'] = self.trained_models
         for attr in ('TestSetPredictions','TestSetActuals'):
             if attr not in self.history[call_me]:
                 self.history[call_me][attr] = {n:[] for n in self.names}
@@ -763,12 +756,16 @@ class MVForecaster(Forecaster_parent):
             self._set_cis(
                 "UpperCI",
                 "LowerCI",
+                m = call_me,
+                ci_range = ci_range,
+                preds = fcst,
+            )
+            self._set_cis(
                 "TestSetUpperCI",
                 "TestSetLowerCI",
                 m = call_me,
                 ci_range = ci_range,
-                forecast = fcst,
-                tspreds = test_preds,
+                preds = test_preds,
             )
 
     def set_best_model(self, model=None, determine_best_by=None):

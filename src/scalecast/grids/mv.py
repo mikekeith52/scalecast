@@ -4,6 +4,7 @@ catboost = {
     'depth': [4, 6, 8],
     'l2_leaf_reg': [1, 3, 5, 7, 9],
     'lags':[1,3,6],
+    'verbose':[0],
 }
 
 elasticnet = {

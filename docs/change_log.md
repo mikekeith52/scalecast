@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.7] - 2023-12-12
+### Added
+- Added multivariate transfer learning
+### Changed
+- `must_keep` in `Forecaster.auto_Xvar_select` can now be str type and will maintain the expected behavior.
+### Fixed
+
 ## [0.19.6] - 2023-12-04
 ### Added
 ### Changed

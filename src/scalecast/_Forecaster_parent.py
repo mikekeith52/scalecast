@@ -260,6 +260,73 @@ class Forecaster_parent:
             range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
         )
 
+    def transfer_cis(
+        self,
+        transfer_from,
+        model,
+        transfer_to_model=None,
+        transfer_test_set_cis='infer'
+    ):
+        """ Transfers the confidence intervals from a model forecast in a passed `Forecaster` or `MVForecaster` object.
+
+        Args:
+            transfer_from (Forecaster or MVForecaster): The object that contains the model from which intervals
+                should be transferred.
+            model (str): The model nickname of the already-evaluated model stored in `transfer_from`.
+            transfer_to_model (str): Optional. The nickname of the model to which the intervals should be transferred.
+                If not specified, inherits the name passed to `model`.
+            transfer_test_set_cis (bool or str): Default 'infer'. Whether to pass intervals for test-set predictions.
+                If 'infer', the decision is made based on whether the inheriting `MVForecaster` object has
+                test-set predictions evaluated.
+
+        Returns:
+            None.
+
+        >>> f.manual_forecast(call_me='mlr')
+        >>> f_new.transfer_predict(transfer_from=f,model='mlr')
+        >>> f_new.transfer_cis(transfer_from=f,model='mlr')
+        """
+        transfer_to_model = model if transfer_to_model is None else transfer_to_model
+        self.history[transfer_to_model]['CILevel'] = transfer_from.history[model]['CILevel']
+        try:
+            ci_range = (
+                transfer_from.history[model]['UpperCI'][-1] - 
+                transfer_from.history[model]['Forecast'][-1]
+            ) # assume default naive confidence interval
+        except KeyError: # mvforecaster
+            ci_range = {
+                k:v[-1] - transfer_from.history[model]['Forecast'][k][-1]
+                for k, v in transfer_from.history[model]['UpperCI'].items()
+            }
+        self._set_cis(
+            "UpperCI",
+            "LowerCI",
+            m = transfer_to_model,
+            ci_range = ci_range,
+            preds = self.history[transfer_to_model]["Forecast"],
+        )
+        
+        if transfer_test_set_cis == 'infer':
+            transfer_test_set_cis = (
+                'TestSetPredictions' in self.history[transfer_to_model] 
+                and len(self.history[transfer_to_model]['TestSetPredictions'])
+            )
+        
+        if transfer_test_set_cis:
+            self._set_cis(
+                "TestSetUpperCI",
+                "TestSetLowerCI",
+                m = transfer_to_model,
+                ci_range = ci_range,
+                preds = self.history[transfer_to_model]["TestSetPredictions"],
+            )
+            if not len(self.history[transfer_to_model]["TestSetPredictions"]):
+                warnings.warn(
+                    'Test set predictions could not be found in the Forecaster object receiving the transfer.'
+                    ' Therefore, no test-set confidence intervals were transferred.',
+                    category=Warning,
+                )
+
     def add_cycle(self, cycle_length, fourier_order = 2.0, called=None):
         """ Adds a regressor that acts as a seasonal cycle.
         Use this function to capture non-normal seasonality.

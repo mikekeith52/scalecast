@@ -566,9 +566,9 @@ def infer_apply_Xvar_selection(infer_from,apply_to,return_copy=False):
     Any variables that cannot be inferred will be raised in a warning.
 
     Args:
-        infer_from (Forecaster): The `Forecaster` object to infer the Xvars from.
-        apply_to (Forecaster): The `Forecaster` object to apply the guess to.
-        return_copy (bool): Default False. Whether to create a copy of the `Forecaster` object passed to `apply_to`.
+        infer_from (Forecaster or MVForecaster): The object to infer the Xvars from.
+        apply_to (Forecaster or MVForecaster): The object to apply the guess to.
+        return_copy (bool): Default False. Whether to create a copy of the object passed to `apply_to`.
             Default will add Xvars to the instance passed to `apply_to`.
 
     Returns:

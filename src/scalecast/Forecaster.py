@@ -330,7 +330,7 @@ class Forecaster(Forecaster_parent):
         """ Makes predictions using an already-trained model over any given forecast horizon.
         Will use the already-trained model from a passed Forecaster object to create a new model
         in the `Forecaster` object from which the method is called. Or the option is available to not
-        save a new model but return the predictions in a pandas series object. Confidence intervals cannot
+        save a new model but return the predictions in a pandas Series object. Confidence intervals cannot
         be transferred from this method but can be from the `transfer_cis()` method.
         
         Args:
@@ -339,7 +339,7 @@ class Forecaster(Forecaster_parent):
                 object passed to `transfer_from`.
             model_type (str): Default 'sklearn'. The type of model that needs to be predicted. 
                 Right now, only 'sklearn' and 'tf' are supported but others will be added.
-            return_series (bool): Default False. Whether to return a pandas series with the
+            return_series (bool): Default False. Whether to return a pandas Series with the
                 date as an index of the values. If the `dates` argument is not specified, this
                 will include all dates in the `Forecaster` instance that the method is called from.
             dates (collection): Optional. The dates to limit the predictions for.
@@ -466,71 +466,6 @@ class Forecaster(Forecaster_parent):
                 return all_series
 
             return all_series.loc[list(dates)]
-
-    def transfer_cis(
-        self,
-        transfer_from,
-        model,
-        transfer_to_model=None,
-        transfer_test_set_cis='infer'
-    ):
-        """ Transfers the confidence intervals from a model forecast in a passed `Forecaster` object.
-
-        Args:
-            transfer_from (Forecaster): The Forecaster object that contains the model from which intervals
-                should be transferred.
-            model (str): The model nickname of the already-evaluated model stored in the `Forecaster`
-                object passed to `transfer_from`.
-            transfer_to_model (str): Optional. The nickname of the model to which the intervals should be transferred.
-                If not specified, inherits the name passed to `model`.
-            transfer_test_set_cis (bool or str): Default 'infer'. Whether to pass intervals for test-set predictions.
-                If 'infer', the decision is made based on whether the inheriting `Forecaster` object has
-                test-set predictions evaluated.
-
-        Returns:
-            None.
-
-        >>> f.manual_forecast(call_me='mlr')
-        >>> f_new.transfer_predict(transfer_from=f,model='mlr')
-        >>> f_new.transfer_cis(transfer_from=f,model='mlr')
-        """
-        transfer_to_model = model if transfer_to_model is None else transfer_to_model
-        self.history[transfer_to_model]['CILevel'] = transfer_from.history[model]['CILevel']
-        self._set_cis(
-            "UpperCI",
-            "LowerCI",
-            m = transfer_to_model,
-            ci_range = (
-                transfer_from.history[model]['UpperCI'][-1] - 
-                transfer_from.history[model]['Forecast'][-1]
-            ), # assume default naive confidence interval
-            preds = self.history[transfer_to_model]["Forecast"],
-        )
-        
-        if transfer_test_set_cis == 'infer':
-            transfer_test_set_cis = (
-                'TestSetPredictions' in self.history[transfer_to_model] 
-                and len(self.history[transfer_to_model]['TestSetPredictions'])
-            )
-        
-        if transfer_test_set_cis:
-            self._set_cis(
-                "TestSetUpperCI",
-                "TestSetLowerCI",
-                m = transfer_to_model,
-                ci_range = (
-                    transfer_from.history[model]['UpperCI'][-1] - 
-                    transfer_from.history[model]['Forecast'][-1]
-                ), # assume default naive confidence interval
-                preds = self.history[transfer_to_model]["TestSetPredictions"],
-            )
-            if not len(self.history[transfer_to_model]["TestSetPredictions"]):
-                warnings.warn(
-                    'Test set predictions could not be found in the Forecaster object receiving the transfer.'
-                    ' Therefore, no test-set confidence intervals were transferred.',
-                    category=Warning,
-                )
-        
 
     @_developer_utils.log_warnings
     def _forecast_theta(
@@ -1957,10 +1892,11 @@ class Forecaster(Forecaster_parent):
         irr_cycles_metrics = {}
         ar_metrics = {}
         final_metrics = {}
-
         seas_to_try = []
 
         regressors_already_added = self.get_regressor_names()
+        if isinstance(must_keep,str):
+            must_keep = [must_keep]
         must_keep = [x for x in must_keep if x in regressors_already_added]
         f = self.deepcopy()
         f.drop_all_Xvars()
