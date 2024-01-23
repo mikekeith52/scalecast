@@ -859,7 +859,7 @@ def find_optimal_transformation(
             If list, multiple adjustments will be tried and up to that many adjustments can be selected.
         model (str): Default 'add'. One of {"additive", "add", "multiplicative", "mul"}.
             The type of seasonal component. Only relevant for the 'seasonal_adj' option in try_order.
-        set_asid_test_set (bool): Default False. 
+        set_aside_test_set (bool): Default False. 
             Whether to separate the test set specified in f.test_length during this process.
             Setting this to True prevents leakage when testing the forecasts out-of-sample.
         return_train_only (bool): Default False. Whether the returned selections should be set to train_only.

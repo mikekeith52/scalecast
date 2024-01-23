@@ -401,12 +401,18 @@ class Forecaster(Forecaster_parent):
                     )
                 )
             ):
-                fitted_values = _predict_sklearn(
-                    f=self,
-                    regr = regr,
-                    future_X = current_X,
-                    dynamic_testing = 1,
-                )
+                try:
+                    fitted_values = _predict_sklearn(
+                        f=self,
+                        regr = regr,
+                        future_X = current_X,
+                        dynamic_testing = 1,
+                    )
+                except:
+                    warnings.warn(
+                        f'Could not calculate fitted values for {model} model.',
+                        category = Warning,
+                    )
         elif model_type == 'tf':
             if regr is None:
                 try:

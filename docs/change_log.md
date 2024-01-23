@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.8] - 2024-01-22
+### Added
+### Changed
+### Fixed
+- Fixed `notebook.results_vis()` function when the dictionary keys are not strings.
+- Transfer learning no longer fails when fitted values cannot be generated -- still investigating the root cause of this issue.
+
 ## [0.19.7] - 2023-12-12
 ### Added
 - Added multivariate transfer learning

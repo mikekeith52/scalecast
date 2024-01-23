@@ -54,7 +54,7 @@ def results_vis(
                 ci=ci_selection,
                 figsize=figsize,
             )
-        plt.title(ts_selection + " Forecast Results", size=16)
+        plt.title(str(ts_selection) + " Forecast Results", size=16)
         plt.show()
 
     def on_button_clicked(b):
