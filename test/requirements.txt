@@ -1,4 +1,4 @@
-tensorflow==2.11.0
+tensorflow==2.12.0rc1
 darts==0.23.1
 prophet==1.1.2
 holidays==0.24
