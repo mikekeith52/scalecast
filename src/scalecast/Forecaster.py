@@ -1446,7 +1446,8 @@ class Forecaster(Forecaster_parent):
         Features are reduced one-at-a-time, according to which one ranked the lowest.
         After each variable reduction, the model is re-run and feature importance re-evaluated. 
         By default, the validation-set error is used to avoid leakage 
-        and the variable set that most reduced the error is selected. The following attributes:
+        and the variable set that most reduced the error is selected. The pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
+        The first error is the initial error before any variables were dropped. The following attributes:
         `pfi_dropped_vars` and `pfi_error_values`, which are lists representing the error change with the 
         corresponding dropped variable, are created and stored in the `Forecaster` object.
         See the example:
@@ -1456,10 +1457,6 @@ class Forecaster(Forecaster_parent):
             method (str): One of `try_order` defaults in `Forecater.save_feature_importance()`. 
                 Default 'PermutationExplainer'.
                 The method for scoring features.
-                Method 'shap' creates attributes in the object called `pfi_dropped_vars` and `pfi_error_values` that are lists
-                representing the error change with the corresponding dropped variable.
-                The pfi_error_values attr is one greater in length than pfi_dropped_vars attr because 
-                The first error is the initial error before any variables were dropped.
             estimator (str): One of Forecaster.sklearn_estimators. Default 'lasso'.
                 The estimator to use to determine the best set of variables.
             keep_at_least (str or int): Default 1.
@@ -1757,7 +1754,7 @@ class Forecaster(Forecaster_parent):
             dynamic_tuning (bool or int): Default False.
                 Whether to dynamically tune the model or, if int, how many forecast steps to dynamically tune it.
             cvkwargs (dict): Default {}. Passed to the cross_validate() method.
-            **kwargs: {assed to manual_forecast() method and can include arguments related to 
+            **kwargs: Passed to manual_forecast() method and can include arguments related to 
                 a given model's hyperparameters or dynamic_testing.
                 Do not pass Xvars.
 
@@ -2169,8 +2166,6 @@ class Forecaster(Forecaster_parent):
         """ Restores the original y values and current dates in the object from before `keep_smaller_history()`
         or `determine_best_series_length()` were called. If those methods were never called, this function
         does nothing. Restoring a series' length automatically drops all stored regressors in the object.
-
-        >>> # write a pipeline
         """
         if not hasattr(self,'orig_attr'):
             return
