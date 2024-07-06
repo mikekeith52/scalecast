@@ -90,7 +90,7 @@ def test_feature_selection_reduction():
     f.set_grids_file('ExampleGrids')
 
     f.auto_Xvar_select(estimator='xgboost')
-    f.reduce_Xvars(estimator='xgboost',method='shap')
+    f.reduce_Xvars(estimator='gbt',method='shap')
 
     plot_reduction_errors(f)
     plt.savefig('../../reduction_errors.png')

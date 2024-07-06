@@ -1525,7 +1525,16 @@ def gen_rnn_grid(
     Returns:
         (Dict): The resulting hyperparamter grid.
 
-    >>>
+    >>> def forecaster(f):
+    >>>     f.set_estimator('rnn')
+    >>>     f.add_ar_terms(12)
+    >>>     f.add_seasonal_regressors('month',raw=False,sincos=True)
+    >>>     for i in range(10):
+    >>>         grid = gen_rnn_grid()
+    >>>         f.ingest_grid(grid)
+    >>>         f.limit_grid_size(10)
+    >>>         f.cross_validate(test_length=24,k=3)
+    >>>         f.auto_forecast(call_me=f'lstm_{i}')
     """
     if random_seed is not None:
         np.random.seed(random_seed)

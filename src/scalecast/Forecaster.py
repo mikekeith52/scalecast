@@ -26,6 +26,7 @@ from ._tf_models import (
     _get_fvs_tf,
     _convert_lstm_args_to_rnn,
 )
+import sys
 import typing
 from typing import Union, Tuple, Dict
 import importlib
@@ -472,6 +473,40 @@ class Forecaster(Forecaster_parent):
                 return all_series
 
             return all_series.loc[list(dates)]
+
+    def synthesize_models(self,models='all',determine_best_by=None,call_me='synthesized',cilevel=.95):
+        """ Creates a model that is an average of other models with confidence intervals determined by forming normal distributions around each point prediction.
+
+        Args:
+            models (list-like or str): Default 'all'. Which models to consider.
+                Can start with top ('top_5').
+            determine_best_by (str): Optional. Combine with `call_me = 'top_{n}'`. One of Forecaster.determine_best_by.
+            call_me (str): The name of the resulting model. Default 'synthesized'.
+            cilevel (float): The confidence level for the resulting confidence interval. Default .95.
+        """
+        models = self._parse_models(models,determine_best_by)
+        if len(models) < 3:
+            raise ValueError('Please pass at least three models to the synthesize() method.')
+
+        z_score = stats.norm.ppf((1 + cilevel) / 2)
+
+        f = self.deepcopy()
+        f.eval_cis(mode=False)
+        f.set_estimator('combo')
+        f.manual_forecast(models=models,call_me=call_me)
+        st_errors = np.array([self.history[m]['Forecast'] for m in models]).std(axis=0) / np.sqrt(len(models))
+        
+        f.history[call_me]['UpperCI'] = np.array(f.history[call_me]['Forecast']) + z_score * st_errors
+        f.history[call_me]['LowerCI'] = np.array(f.history[call_me]['Forecast']) - z_score * st_errors
+        f.history[call_me]['CILevel'] = cilevel
+
+        test_st_errors = np.array([self.history[m]['TestSetPredictions'] for m in models]).std(axis=0) / np.sqrt(len(models))
+        if len(test_st_errors):
+            f.history[call_me]['TestSetUpperCI'] = np.array(f.history[call_me]['TestSetPredictions']) + z_score * test_st_errors
+            f.history[call_me]['TestSetLowerCI'] = np.array(f.history[call_me]['TestSetPredictions']) - z_score * test_st_errors
+
+        self.history[call_me] = f.history[call_me]
+        print('⚡Models Synthesized⚡')
 
     @_developer_utils.log_warnings
     def _forecast_theta(
@@ -2673,18 +2708,18 @@ class Forecaster(Forecaster_parent):
 
                     try:
                         explainer = getattr(shap,t)(inp1,*inp2)
-                        shap_values = explainer.shap_values(X)
+                        shap_values = explainer(X)
                         if verbose:
                             print(f'{t} successful!')
                     except Exception as e:
                         error = str(e)
                         continue
                     break
-                    
+                
                 if 'explainer' not in locals():
                     raise TypeError(error)
                 
-                shap_df = pd.DataFrame(shap_values, columns=Xvars)
+                shap_df = pd.DataFrame(shap_values.values, columns=Xvars)
                 shap_fi = (
                     pd.DataFrame(
                         {
