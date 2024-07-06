@@ -270,3 +270,14 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
 ## Contributing
 - [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)
 - Want something that's not listed? Open an [issue](https://github.com/mikekeith52/scalecast/issues/new)!  
+
+## Citation
+```
+@misc{scalecast,
+  title = {{scalecast}},
+  author = {Michael Keith},
+  year = {2024},
+  version = {0.19.8},
+  url = {https://scalecast.readthedocs.io/en/latest/},
+}
+```
