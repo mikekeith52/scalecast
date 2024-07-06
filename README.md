@@ -277,7 +277,7 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
   title = {{scalecast}},
   author = {Michael Keith},
   year = {2024},
-  version = {0.19.8},
+  version = {<your version>},
   url = {https://scalecast.readthedocs.io/en/latest/},
 }
 ```
