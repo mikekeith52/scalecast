@@ -3,8 +3,10 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 
 ## [0.19.9] - 2024-07-06
 ### Added
+- Added `Forecaster.synthesize_models()`
 ### Changed
 ### Fixed
+- Made compatible with more recent versions of the shap and xgboost packages
 
 ## [0.19.8] - 2024-01-22
 ### Added
