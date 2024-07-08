@@ -201,7 +201,18 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
   - `jupyter nbextension enable --py widgetsnbextension` (widgets for notebook)  
   - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets for Lab)  
 
-## Articles and Links
+## Papers that use scalecast
+- [Post-covid customer service behavior forecasting using machine learning techniques](https://digital-library.theiet.org/content/conferences/10.1049/icp.2023.0947)
+- [Application of ANN and traditional ML algorithms in modelling compost production under different climatic conditions](https://link.springer.com/article/10.1007/s00521-023-08404-4)
+- [Reservoir Computing Solutions for Streamflow Modeling and Prediction in Real World Scenarios](https://scholarsarchive.byu.edu/studentpub_uht/273/)
+- [LSTM-based recurrent neural network provides effective short term flu forecasting](https://link.springer.com/article/10.1186/s12889-023-16720-6)
+- [IMPLEMENTING AN ENERGY TRADING STRATEGY USING FORECASTING OF ENERGY PRICES AND PRODUCTION](https://webthesis.biblio.polito.it/29175/)
+- [Modelamiento predictivo del número de visitantes en un centro comercial](https://repository.eafit.edu.co/items/ffd6e4fe-9a68-49d5-b74b-47311db99f04)
+
+## Udemy Course
+[Scalecast: Machine Learning & Deep Learning](https://www.udemy.com/course/uniform-ml-dl/?couponCode=LETSLEARNNOWPP)
+
+## Blog posts and notebooks
 
 ### [Forecasting with Different Model Types](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
 - Sklearn Univariate
@@ -270,17 +281,6 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
 ## Contributing
 - [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)
 - Want something that's not listed? Open an [issue](https://github.com/mikekeith52/scalecast/issues/new)!  
-
-## Papers that use scalecast
-- [Post-covid customer service behavior forecasting using machine learning techniques](https://digital-library.theiet.org/content/conferences/10.1049/icp.2023.0947)
-- [Application of ANN and traditional ML algorithms in modelling compost production under different climatic conditions](https://link.springer.com/article/10.1007/s00521-023-08404-4)
-- [Reservoir Computing Solutions for Streamflow Modeling and Prediction in Real World Scenarios](https://scholarsarchive.byu.edu/studentpub_uht/273/)
-- [LSTM-based recurrent neural network provides effective short term flu forecasting](https://link.springer.com/article/10.1186/s12889-023-16720-6)
-- [IMPLEMENTING AN ENERGY TRADING STRATEGY USING FORECASTING OF ENERGY PRICES AND PRODUCTION](https://webthesis.biblio.polito.it/29175/)
-- [Modelamiento predictivo del número de visitantes en un centro comercial](https://repository.eafit.edu.co/items/ffd6e4fe-9a68-49d5-b74b-47311db99f04)
-
-## Udemy Course
-(Scalecast: Machine Learning & Deep Learning)[https://www.udemy.com/course/uniform-ml-dl/?couponCode=LETSLEARNNOWPP]
 
 ## How to cite scalecast
 ```
