@@ -1,4 +1,4 @@
-tensorflow==2.11.0
+tensorflow==2.12.0
 darts==0.23.1
 prophet==1.1.2
 holidays==0.24
@@ -6,3 +6,4 @@ greykite==0.2.0
 shap==0.41.0
 pmdarima==2.0.2
 pandas_datareader==0.10.0
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
