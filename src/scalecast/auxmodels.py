@@ -202,7 +202,7 @@ def mlp_stack(
     ]
 
     final_estimator = BaggingRegressor(
-        base_estimator = MLPRegressor(
+        estimator = MLPRegressor(
             hidden_layer_sizes=hidden_layer_sizes,
             solver=solver,
         ),

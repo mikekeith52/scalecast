@@ -1,2 +1,6 @@
 */warnings.log
 */.ipynb_checkpoints
+.DS_Store
+src/.DS_Store
+*.pyc
+/test/catboost_info
