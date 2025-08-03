@@ -1,8 +1,12 @@
 tensorflow==2.11.0
 darts==0.23.1
 prophet==1.1.2
-holidays==0.24
+holidays==0.45
 greykite==0.2.0
 shap==0.41.0
 pmdarima==2.0.2
 pandas_datareader==0.10.0
+numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability
+scikit-learn>=1.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
+setuptools>=78.1.1 # not directly required, pinned by Snyk to avoid a vulnerability
+urllib3>=2.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
