@@ -5,3 +5,5 @@ src/.DS_Store
 *.pyc
 /test/catboost_info
 *.pyc
+.DS_Store
+src/.DS_Store
