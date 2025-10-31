@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.11] - 2025-10-30
+### Added
+### Changed
+### Fixed
+- Removed broken requirements
+
 ## [0.19.10] - 2024-10-14
 ### Added
 ### Changed

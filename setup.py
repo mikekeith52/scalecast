@@ -8,7 +8,7 @@ long_description = open('README.md', 'r', encoding="UTF-8").read()
 
 setup(
   name = 'SCALECAST',
-  version = '0.19.10',
+  version = '0.19.11',
   license='MIT',
   description="The practitioner's time series forecasting library",
   long_description=long_description,
@@ -30,7 +30,6 @@ setup(
   install_requires = [
     'scikit-learn>=1.3.1',
     'statsmodels',
-    'tbats',
     'scipy',
     'numpy',
     'pandas',
@@ -42,7 +41,6 @@ setup(
     'dask>=2023.3.2',
     'catboost',
     'openpyxl',
-    'shap',
     'threadpoolctl>=3.0',
   ],
 )
