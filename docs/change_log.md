@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.19.12] - 2026-02-01
+### Added
+### Changed
+- Modernized setup using pyproject.toml
+- Setting up dependabot
+### Fixed
+
 ## [0.19.11] - 2025-10-30
 ### Added
 ### Changed

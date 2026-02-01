@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SCALECAST"
+dynamic = ["version"]
+description = "The practitioner's time series forecasting library"
+readme = "README.md"
+license = { text = "MIT" }
+
+authors = [
+  { name = "Michael Keith", email = "mikekeith52@gmail.com" }
+]
+
+keywords = [
+  "FORECASTING",
+  "DEEP LEARNING",
+  "TIME SERIES",
+  "MACHINE LEARNING",
+  "EASY"
+]
+
+requires-python = ">=3.11"
+
+dependencies = [
+  "scikit-learn~=1.5",
+  "statsmodels~=0.14",
+  "scipy~=1.13",
+  "numpy~=1.26",
+  "pandas~=2.3",
+  "matplotlib~=3.9",
+  "seaborn~=0.13",
+  "xgboost~=1.6",
+  "lightgbm>=3.2.1",
+  "dask~=2023.3",
+  "catboost~=1.1",
+  "openpyxl~=3.1",
+  "threadpoolctl~=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mikekeith52/scalecast"
+GitHub = "https://github.com/mikekeith52/scalecast"
+Documentation = "https://scalecast.readthedocs.io/en/latest/"
+Examples = "https://scalecast-examples.readthedocs.io/en/latest/"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+scalecast = ["grids/*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "scalecast.__version__" }
