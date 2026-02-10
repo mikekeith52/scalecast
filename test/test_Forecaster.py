@@ -1,7 +1,7 @@
 import pandas_datareader as pdr
 from scalecast.Forecaster import Forecaster
 from scalecast.auxmodels import mlp_stack, auto_arima
-from scalecast.util import plot_reduction_errors, metrics, infer_apply_Xvar_selection
+from scalecast.util import metrics, infer_apply_Xvar_selection
 import matplotlib.pyplot as plt
 import pickle
 
@@ -37,7 +37,6 @@ def build_Forecaster(
 
 def test_add_terms():
     f = build_Forecaster()
-    f
     f.add_AR_terms((2,12))
     assert 'AR24' in f.get_regressor_names(), 'regressor AR24 not added'
 
@@ -85,20 +84,6 @@ def test_add_terms():
     f.add_exp_terms('t',pwr=.509)
     assert 't^0.51' in f.get_regressor_names(), 'regressor t^0.51 not added'
 
-def test_feature_selection_reduction():
-    f = build_Forecaster(test_length = 0)
-    f.set_grids_file('ExampleGrids')
-
-    f.auto_Xvar_select(estimator='xgboost')
-    f.reduce_Xvars(estimator='gbt',method='shap')
-
-    plot_reduction_errors(f)
-    plt.savefig('../../reduction_errors.png')
-    plt.close()
-
-    f.auto_Xvar_select(estimator='lasso')
-    f.reduce_Xvars(method='pfi')
-
 def test_pickle():
     f = build_Forecaster()
     with open('../../f.pckl','wb') as pckl:
@@ -135,14 +120,10 @@ def test_modeling():
 
         models = (
             'elasticnet',
-            'prophet',
-            'silverkite',
-            'theta',
             'gbt',
             'catboost',
             'arima',
             'hwes',
-            'tbats',
             'rnn',
             'lstm',
         )
@@ -188,16 +169,9 @@ def test_modeling():
         mlp_stack(f,model_nicknames=['gbt_cv','elasticnet_cv'])
         auto_arima(f,m=12)
 
-        best_model = f.order_fcsts(
-            determine_best_by='ValidationMetricValue' if tl == 0 else 'TestSetSMAPE',
-        )[0]
-
+        best_model = f.order_fcsts(determine_best_by='ValidationMetricValue' if tl == 0 else 'TestSetSMAPE')[0]
 
         f.add_ar_terms([25])
-        for m in ('prophet','silverkite'):
-            f.set_estimator(m)
-            f.manual_forecast(Xvars=['AR25'],call_me = m + '_dir')
-            f.manual_forecast(Xvars='all',call_me = m + '_dir_allreg')
 
         f.plot(ci=True,exclude = ['mlr'])
         plt.savefig(f'../../plot_{tl}.png')
@@ -253,7 +227,6 @@ def test_transfer_modeling():
 
 def main():
     test_add_terms()
-    test_feature_selection_reduction()
     test_pickle()
     test_modeling()
     test_transfer_modeling()

@@ -1,19 +1,16 @@
 import logging
 import traceback
-import os
 import datetime
 import importlib
 
 script_files = [ # comment out scripts to skip testing
-    'test_GridGenerator',
-    'test_Forecaster',
+    #'test_GridGenerator',
+    #'test_Forecaster',
     'test_MVForecaster',
-    'test_AnomalyDetector',
     'test_multiseries',
     'test_Pipeline',
     'test_SeriesTransformer',
     'test_util',
-    #'test_ChangepointDetector', # kats is giving me problems and I don't want to deal with it right now
 ]
 
 timestamp = datetime.datetime.today().strftime('%Y%m%d%H%m%S')

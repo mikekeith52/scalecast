@@ -1,7 +1,9 @@
 import pandas as pd
+from typing import Any, TYPE_CHECKING, Unpack
+if TYPE_CHECKING:
+    from .Forecaster import Forecaster
 
-
-def export_model_summaries(f_dict, **kwargs):
+def export_model_summaries(f_dict:dict[str,'Forecaster'], **kwargs:Any):
     """ Exports a pandas dataframe with information about each model run on each
     eries when doing forecasting using many different series.
 
@@ -20,7 +22,7 @@ def export_model_summaries(f_dict, **kwargs):
     return forecast_info
 
 
-def keep_smallest_first_date(*fs):
+def keep_smallest_first_date(*fs:Unpack['Forecaster']) -> tuple[Unpack['Forecaster']]:
     """ Trims all passed Forecaster objects so they all have the same first date.
     
     Args:
@@ -32,8 +34,9 @@ def keep_smallest_first_date(*fs):
     first_date = max([min(f.current_dates) for f in fs])
     for f in fs:
         f.keep_smaller_history(first_date)
+    return fs
 
-def line_up_dates(*fs):
+def line_up_dates(*fs:Unpack['Forecaster']) -> tuple[Unpack['Forecaster']]:
     """ Trims all passed Forecaster objects so they all have the same dates.
     
     Args:
@@ -47,4 +50,5 @@ def line_up_dates(*fs):
     for f in fs:
         if len(f.y) > size_needed:
             f.chop_from_front(len(f.y) - size_needed)
+    return fs
 

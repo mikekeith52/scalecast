@@ -1,18 +1,17 @@
-from ._Forecaster_parent import _tune_test_forecast
+from ._utils import _tune_test_forecast
 from .Forecaster import Forecaster
 from .MVForecaster import MVForecaster
-import typing
-from typing import Dict, Union
 from ipywidgets import widgets
 from IPython.display import display, clear_output
 import matplotlib.pyplot as plt
-import seaborn as sns
+from typing import Literal, Optional, Any
+from .types import PositiveInt, ModelValues, DynamicTesting, FIMethod, ConfInterval
 
 def results_vis(
-    f_dict: Dict[str,Forecaster],
-    plot_type: str = "forecast",
-    include_train: Union[bool, int] = True,
-    figsize = (12,6),
+    f_dict: dict[str,Forecaster],
+    plot_type: Literal['forecast','test'] = "forecast",
+    include_train: bool|PositiveInt = True,
+    figsize:tuple[int,int] = (12,6),
 ):
     """ Visualize the forecast results from many different Forecaster objects leveraging Jupyter widgets.
 
@@ -103,10 +102,10 @@ def results_vis(
 
 
 def results_vis_mv(
-    f_dict: Dict[str,MVForecaster], 
-    plot_type="forecast", 
-    include_train=True, 
-    figsize = (12,6)
+    f_dict: dict[str,MVForecaster], 
+    plot_type:Literal['forecast','test']="forecast", 
+    include_train:bool|PositiveInt=True, 
+    figsize:tuple[int,int] = (12,6)
 ):
     """ Visualize the forecast results from many different MVForecaster objects leveraging Jupyter widgets.
 
@@ -188,20 +187,20 @@ def results_vis_mv(
 
 
 def tune_test_forecast(
-    f,
-    models,
-    cross_validate=False,
-    dynamic_tuning=False,
-    dynamic_testing=True,
-    summary_stats=False,
-    feature_importance=False,
-    fi_try_order=None,
-    limit_grid_size=None,
-    min_grid_size=1,
-    suffix=None,
-    error='raise',
-    **cvkwargs,
-):
+    f:Forecaster|MVForecaster,
+    models:ModelValues,
+    cross_validate:bool=False,
+    dynamic_tuning:DynamicTesting=False,
+    dynamic_testing:DynamicTesting=True,
+    summary_stats:bool=False,
+    feature_importance:bool=False,
+    fi_try_order:list[FIMethod]=None,
+    limit_grid_size:Optional[PositiveInt|ConfInterval]=None,
+    min_grid_size:PositiveInt=1,
+    suffix:Optional[str]=None,
+    error:Literal['raise','warn','ignore']='raise',
+    **cvkwargs:Any,
+) -> Forecaster|MVForecaster:
     """ Tunes, tests, and forecasts a series of models with a progress bar through tqdm.
 
     Args:
@@ -256,6 +255,7 @@ def tune_test_forecast(
         summary_stats=summary_stats,
         feature_importance=feature_importance,
         fi_try_order = fi_try_order,
-        tqdm = True,
+        use_progress_bar = True,
         **cvkwargs,
     )
+    return f

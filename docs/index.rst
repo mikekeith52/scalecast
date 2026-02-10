@@ -115,8 +115,6 @@ Index
    Forecaster/MVForecaster
    Forecaster/Pipeline
    Forecaster/SeriesTransformer
-   Forecaster/AnomalyDetector
-   Forecaster/ChangepointDetector
 
 .. toctree::
    :maxdepth: 4

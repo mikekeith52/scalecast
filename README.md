@@ -186,20 +186,34 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
 ```
 
 ## Installation
+
+## Required Installations
+- UV recommended
 - Only the base package is needed to get started:  
-  - `pip install --upgrade scalecast`  
-- Optional add-ons:  
-  - `pip install tensorflow` (for RNN/LSTM on Windows) or `pip install tensorflow-macos` (for MAC/M1)
-  - `pip install darts`  
-  - `pip install prophet`  
-  - `pip install greykite` (for the silverkite model)  
-  - `pip install kats` (changepoint detection)  
-  - `pip install pmdarima` (auto arima)  
-  - `pip install tqdm` (progress bar for notebook)  
-  - `pip install ipython` (widgets for notebook)  
-  - `pip install ipywidgets` (widgets for notebook)  
-  - `jupyter nbextension enable --py widgetsnbextension` (widgets for notebook)  
-  - `jupyter labextension install @jupyter-widgets/jupyterlab-manager` (widgets for Lab)  
+  - `pip install --upgrade scalecast`
+  - `uv pip install --upgrade scalecast` (recommended)  
+
+### Optional Installations
+- `shap`: feature importance (known issue with Python 3.11+)
+- `tf`: tensorflow for rnn/lstm models (for MAC, you may need to run `uv pip install tensorflow-macos tensorflow-metal`)
+- `darts`: theta
+- `greykite`: silverkite model
+- `prophet`: prophet model
+- `tbats`: tbats
+
+Install these by using 
+
+```bash
+uv pip install scalecast[list_optional_dependencies]
+``` 
+
+For example, install tensorflow and darts using:
+
+```bash
+uv pip install scalecast[tf,darts]
+```
+
+Please note that the optional dependencies may not be tested before new releases.
 
 ## Papers that use scalecast
 - [Post-covid customer service behavior forecasting using machine learning techniques](https://digital-library.theiet.org/content/conferences/10.1049/icp.2023.0947)

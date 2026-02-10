@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.20.0]
+### Added
+### Changed
+- Added type hints to all functions/methods
+- Updated installation options
+- Updated readme
+- Removed AnomalyDetector and ChangePointDetector modules
+- Removed LightGBM as a required dependency
+### Fixed
+- Updated dependencies to get shap working again
+
 ## [0.19.12] - 2026-02-01
 ### Added
 ### Changed

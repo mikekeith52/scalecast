@@ -1,10 +1,11 @@
 from ._utils import _developer_utils  
 from ._Forecaster_parent import ForecastError
 from .Forecaster import Forecaster
+from .types import PositiveInt, NonNegativeInt
+from typing import Literal, Optional, Any
 import pandas as pd
 import numpy as np
 import warnings
-import logging
 import copy
 from sklearn.preprocessing import RobustScaler
 
@@ -36,7 +37,7 @@ class SeriesTransformer:
             setattr(obj, k, copy.deepcopy(v, memo))
         return obj
 
-    def Transform(self, transform_func, **kwargs):
+    def Transform(self, transform_func:callable, **kwargs:Any) -> Forecaster:
         """ Transforms the y attribute in the Forecaster object.
         
         Args:
@@ -59,7 +60,7 @@ class SeriesTransformer:
         self.f.y = pd.Series(transform_func(self.f.y, **kwargs))
         return self.f
 
-    def Revert(self, revert_func, exclude_models = [], **kwargs):
+    def Revert(self, revert_func:callable, exclude_models:list[str] = [], **kwargs:Any) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
 
         Args:
@@ -119,15 +120,15 @@ class SeriesTransformer:
 
     def DetrendTransform(
         self,
-        loess = False,
-        frac = 0.5,
-        it = 3,
-        poly_order=1,
-        ln_trend=False,
-        seasonal_lags=0,
-        m='auto',
-        fit_intercept=True,
-        train_only=False,
+        loess:bool = False,
+        frac:float = 0.5,
+        it:int = 3,
+        poly_order:PositiveInt=1,
+        ln_trend:bool=False,
+        seasonal_lags:NonNegativeInt=0,
+        m:int|Literal['auto']='auto',
+        fit_intercept:bool=True,
+        train_only:bool=False,
     ):
         """ Detrends the series using an OLS estimator or using LOESS.
         Only call this once if you want to revert the series later.
@@ -258,7 +259,7 @@ class SeriesTransformer:
         self.f.y = pd.Series(self.f.y.values - self.detrend_params['fvs'],dtype=float)
         return self.f
 
-    def DetrendRevert(self, exclude_models = []):
+    def DetrendRevert(self, exclude_models:list[str] = []) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Assumes a detrend transformation has already been called and uses all model information
         already recorded from that transformation to revert.
@@ -309,7 +310,7 @@ class SeriesTransformer:
         #delattr(self,'detrend_params')
         return self.Revert(lambda x: x)  # call here to assign correct test-set metrics
         
-    def LogTransform(self):
+    def LogTransform(self) -> Forecaster:
         """ Transforms the y attribute in the Forecaster object using a natural log transformation.
 
         Returns:
@@ -323,7 +324,7 @@ class SeriesTransformer:
         """
         return self.Transform(np.log)
 
-    def LogRevert(self, **kwargs):
+    def LogRevert(self, **kwargs:Any) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Assumes a natural log transformation has already been called.
 
@@ -343,7 +344,7 @@ class SeriesTransformer:
         """
         return self.Revert(np.exp, **kwargs)
 
-    def SqrtTransform(self):
+    def SqrtTransform(self) -> Forecaster:
         """ Transforms the y attribute in the Forecaster object using a square-root transformation.
 
         Returns:
@@ -357,7 +358,7 @@ class SeriesTransformer:
         """
         return self.Transform(np.sqrt)
 
-    def SqrtRevert(self, **kwargs):
+    def SqrtRevert(self, **kwargs:Any) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Assumes a square-root transformation has already been called.
 
@@ -377,7 +378,7 @@ class SeriesTransformer:
         """
         return self.Revert(np.square, **kwargs)
 
-    def ScaleTransform(self,train_only=False):
+    def ScaleTransform(self,train_only:bool=False) -> Forecaster:
         """ Transforms the y attribute in the Forecaster object using a scale transformation.
         Scale defined as (array[i] - array.mean()) / array.std().
 
@@ -407,7 +408,7 @@ class SeriesTransformer:
 
         return self.Transform(func, mean=self.orig_mean, std=self.orig_std)
 
-    def ScaleRevert(self, **kwargs):
+    def ScaleRevert(self, **kwargs:Any) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Assumes the scale transformation has been called on the object at some point.
         Revert function: array.std()*array[i]+array.mean().
@@ -439,7 +440,7 @@ class SeriesTransformer:
         except AttributeError:
             raise ValueError("Cannot revert a series that was never scaled.")
 
-    def RobustScaleTransform(self,train_only=False,**kwargs):
+    def RobustScaleTransform(self,train_only:bool=False,**kwargs:Any) -> Forecaster:
         """ Transforms the y attribute in the Forecaster object using a robust scale transformation.
         See the function from scikit-learn: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html#sklearn.preprocessing.RobustScaler.
 
@@ -467,7 +468,7 @@ class SeriesTransformer:
 
         return self.Transform(_developer_utils._reshape_func_input,func=transformer.transform)
 
-    def RobustScaleRevert(self, **kwargs):
+    def RobustScaleRevert(self, **kwargs:Any) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Assumes the scale transformation has been called on the object at some point.
 
@@ -494,7 +495,7 @@ class SeriesTransformer:
 
         return self.Revert(_developer_utils._reshape_func_input,func=func,**kwargs)
 
-    def MinMaxTransform(self,train_only=False):
+    def MinMaxTransform(self,train_only:bool=False) -> Forecaster:
         """ Transforms the y attribute in the Forecaster object using a min-max scale transformation.
         Min-max scale defined as (array[i] - array.min()) / (array.max() - array.min()).
 
@@ -524,7 +525,7 @@ class SeriesTransformer:
 
         return self.Transform(func, amin=self.orig_min, amax=self.orig_max,)
 
-    def MinMaxRevert(self, **kwargs):
+    def MinMaxRevert(self, **kwargs:Any) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Assumes the min-max scale transformation has been called on the object at some point.
         Revert function: array[i]*(array.max() - array.min()) + array.min().
@@ -556,7 +557,7 @@ class SeriesTransformer:
         except AttributeError:
             raise ValueError("Cannot revert a series that was never scaled.")
 
-    def DiffTransform(self, m=1):
+    def DiffTransform(self, m:int=1) -> Forecaster:
         """ Takes differences or seasonal differences in the Forecaster object's y attribute.
         If using this transformation, call `Forecaster.add_diffed_terms()` and 
         `Forecaster.add_lagged_terms()` if you want to use those before calling this function.
@@ -600,7 +601,7 @@ class SeriesTransformer:
         f.keep_smaller_history(len(f.y) - m)
         return f
 
-    def DiffRevert(self, m=1, exclude_models = []):
+    def DiffRevert(self, m:int=1, exclude_models:list[str] = []) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Calling this makes so that AR values become unusable and have to be re-added to the object.
 
@@ -693,12 +694,12 @@ class SeriesTransformer:
 
     def DeseasonTransform(
         self,
-        m = None,
-        model='add',
-        extrapolate_trend='freq',
-        train_only = False,
-        **kwargs,
-    ):
+        m:Optional[int] = None,
+        model:Literal["additive", "add", "multiplicative", "mul"]='add',
+        extrapolate_trend:Literal['freq']|int='freq',
+        train_only:bool = False,
+        **kwargs:Any,
+    ) -> Forecaster:
         """ Deseasons a series using the moving average method offered by statsmodel through the seasonal_decompose() function.
 
         Args:
@@ -739,10 +740,6 @@ class SeriesTransformer:
             train_only=train_only,
             **kwargs,
         )
-        deseasoned = (
-            (decomp_res.trend + decomp_res.resid) if model in ('add','additive') 
-            else (decomp_res.trend * decomp_res.resid)
-        )
         current_seasonality = decomp_res.seasonal # check
         f = Forecaster(
             y = current_seasonality,
@@ -770,7 +767,7 @@ class SeriesTransformer:
         )
         return self.f
 
-    def DeseasonRevert(self, m = None, exclude_models = []):
+    def DeseasonRevert(self, m:Optional[int] = None, exclude_models:list[str] = []) -> Forecaster:
         """ Reverts a seasonal adjustment already taken on the series. Call DeseasonTransform() before calling this.
 
         Args:

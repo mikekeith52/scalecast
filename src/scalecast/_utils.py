@@ -1,9 +1,14 @@
+from __future__ import annotations
 from functools import wraps
 import logging
 import warnings
 import numpy as np
 from scipy import stats
 from statsmodels.tsa.tsatools import freq_to_period
+from typing import Literal, Any, TYPE_CHECKING
+from .types import ConfInterval, DynamicTesting
+if TYPE_CHECKING:
+    from ._Forecaster_parent import _Forecaster_parent
 
 class _developer_utils:
     @staticmethod
@@ -122,6 +127,68 @@ class NamedBoxCox:
 
     def __repr__(self):
         return self.name
+    
+def _none(x): # need it like this so can be pickled
+    return x
+    
+def _tune_test_forecast(
+    f:"_Forecaster_parent",
+    models:list[str],
+    cross_validate:bool,
+    dynamic_tuning:DynamicTesting,
+    dynamic_testing:DynamicTesting,
+    limit_grid_size:int|ConfInterval,
+    suffix:str,
+    error:Literal['raise','warn','ignore'],
+    min_grid_size:int = 1,
+    summary_stats:bool = False,
+    feature_importance:bool = False,
+    fi_try_order:list[str] = None,
+    use_progress_bar:bool = False,
+    **cvkwargs:Any,
+):
+    if use_progress_bar: # notebooks only get progress bar
+        from tqdm.notebook import tqdm
+    else:
+        tqdm = list
+
+    [_developer_utils._check_if_correct_estimator(m,f.can_be_tuned) for m in models]
+    for m in tqdm(models):
+        call_me = m if suffix is None else m + suffix
+        f.set_estimator(m)
+        if limit_grid_size is not None:
+            f.ingest_grid(m)
+            f.limit_grid_size(n=limit_grid_size,min_grid_size=min_grid_size)
+        if cross_validate:
+            f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
+        else:
+            f.tune(dynamic_tuning=dynamic_tuning)
+        try:
+            f.auto_forecast(
+                dynamic_testing=dynamic_testing,
+                call_me=call_me,
+            )
+        except Exception as e:
+            if error == 'raise':
+                raise
+            elif error == 'warn':
+                warnings.warn(
+                    f"{m} model could not be evaluated. "
+                    f"Here's the error: {e}",
+                    category=Warning,
+                )
+                continue
+            elif error == 'ignore':
+                continue
+            else:
+                raise ValueError(f'Value passed to error arg not recognized: {error}')
+        if summary_stats:
+            f.save_summary_stats()
+        if feature_importance:
+            if fi_try_order is None:
+                f.save_feature_importance()
+            else:
+                f.save_feature_importance(try_order=fi_try_order)
 
 boxcox_tr = NamedBoxCox(name='BoxcoxTransform',transform=True)
 boxcox_re = NamedBoxCox(name='BoxcoxRevert',transform=False)

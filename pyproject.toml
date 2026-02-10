@@ -21,7 +21,7 @@ keywords = [
   "EASY"
 ]
 
-requires-python = ">=3.11"
+requires-python = ">=3.10,<3.12"
 
 dependencies = [
   "scikit-learn~=1.5",
@@ -31,12 +31,13 @@ dependencies = [
   "pandas>=2.3,<4.0",
   "matplotlib~=3.9",
   "seaborn~=0.13",
-  "xgboost>=1.6,<4.0",
+  "xgboost~=3.1",
   "lightgbm>=3.2.1",
   "dask>=2023.3,<2027.0",
   "catboost~=1.1",
   "openpyxl~=3.1",
   "threadpoolctl~=3.0",
+  "pmdarima~=2.1",
 ]
 
 [project.urls]
@@ -56,3 +57,13 @@ scalecast = ["grids/*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "scalecast.__version__" }
+
+[project.optional-dependencies]
+tf = ['tensorflow~=2.16']
+shap = ['shap']
+lgbm = ['lightgbm']
+darts = ['darts']
+greykite = ['greykite']
+prophet = ['prophet']
+tbats = ['tbats']
+test = ['pandas_datareader','scalecast[tf]','scalecast[shap]']

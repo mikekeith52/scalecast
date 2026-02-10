@@ -8,3 +8,9 @@ src/.DS_Store
 .DS_Store
 src/.DS_Store
 .python-version
+test/error*.log
+test/ExampleGrids.py
+test/Grids.py
+test/MVGrids.py
+test/VECMGrid.py
+/src/SCALECAST.egg-info

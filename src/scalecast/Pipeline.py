@@ -4,12 +4,12 @@ from .util import break_mv_forecaster
 from .SeriesTransformer import SeriesTransformer
 import numpy as np
 import pandas as pd
-from typing import List, Tuple, Union, Dict
-import typing
+from .types import ReadAsTransformer, PositiveInt, ConfInterval, PipelineFunction
+from typing import Any, Optional, Unpack
 import copy
 
 class Transformer:
-    def __init__(self,transformers: List[Tuple]):
+    def __init__(self,transformers: ReadAsTransformer):
         """ Initiates the transformer pipeline.
 
         Args:
@@ -103,8 +103,8 @@ class Transformer:
 
 class Reverter:
     def __init__(self,
-        reverters: List[Tuple],
-        base_transformer: Union[Transformer,SeriesTransformer]
+        reverters: ReadAsTransformer,
+        base_transformer: Transformer|SeriesTransformer,
     ):
         """ Initiates the reverter pipeline.
 
@@ -175,7 +175,7 @@ class Reverter:
     def copy(self):
         return self.__deepcopy__()
 
-    def fit_transform(self,f: Forecaster, exclude_models = []) -> Forecaster:
+    def fit_transform(self,f: Forecaster, exclude_models:list[str] = []) -> Forecaster:
         """ Applies the revert function to the series stored in the Forecaster object.
 
         Args:
@@ -228,15 +228,15 @@ class Pipeline_parent:
 
     def _prepare_backtest(
         self,
-        *fs,
-        n_iter,
-        jump_back,
-        series_length,
-        fcst_length,
-        test_length,
-        cis,
-        cilevel,
-    ) -> List[List[Tuple[Forecaster,np.array]]]:
+        *fs:Forecaster,
+        n_iter:PositiveInt,
+        jump_back:PositiveInt,
+        series_length:PositiveInt,
+        fcst_length:PositiveInt,
+        test_length:PositiveInt,
+        cis:bool,
+        cilevel:ConfInterval,
+    ) -> list[list[tuple[Forecaster,np.array]]]:
         results = []
         for h, f in enumerate(fs):
             fcst_length = len(f.future_dates) if fcst_length is None else fcst_length
@@ -259,17 +259,16 @@ class Pipeline_parent:
 
     def backtest(
         self,        
-        *fs,
-        n_iter=5,
-        jump_back=1,
-        series_length=None,
-        fcst_length=None,
-        test_length=None,
-        cis=None,
-        cilevel=None,
-        verbose=False,
-        **kwargs,
-    ) -> List[Dict[str,pd.DataFrame]]:
+        *fs:Forecaster,
+        n_iter:PositiveInt=5,
+        jump_back:PositiveInt=1,
+        series_length:Optional[PositiveInt]=None,
+        fcst_length:Optional[PositiveInt]=None,
+        test_length:Optional[PositiveInt]=None,
+        cis:Optional[bool]=None,
+        cilevel:Optional[ConfInterval]=None,
+        **kwargs:Any,
+    ) -> list[dict[str,pd.DataFrame]]:
         """ Runs an out-of-sample backtest of the pipeline over a certain amount of iterations.
 
         Args:
@@ -365,7 +364,7 @@ class Pipeline_parent:
         return results
 
 class Pipeline(Pipeline_parent):
-    def __init__(self,steps: List[Tuple[str,Union[Transformer,Reverter,'function']]]):
+    def __init__(self,steps: list[tuple[str,Transformer|Reverter|PipelineFunction]]):
         """ Initiates the full pipeline.
 
         Args:
@@ -440,7 +439,7 @@ class Pipeline(Pipeline_parent):
     def __str__(self):
         return self.__repr__()
 
-    def fit_predict(self,f: Forecaster,**kwargs) -> Forecaster:
+    def fit_predict(self,f: Forecaster,**kwargs:Any) -> Forecaster:
         """ Applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
 
         Args:
@@ -470,8 +469,8 @@ class Pipeline(Pipeline_parent):
 class MVPipeline(Pipeline_parent):
     def __init__(
         self,
-        steps: List[Tuple[str,Union[List[Transformer],List[Reverter],'function']]],
-        **kwargs,
+        steps: list[tuple[str,list[Transformer]|list[Reverter]|PipelineFunction]],
+        **kwargs:Any,
     ):
         """ Initiates the full pipeline for multivariate forecasting applications.
 
@@ -542,7 +541,7 @@ class MVPipeline(Pipeline_parent):
     def __str__(self):
         return self.__repr__()
 
-    def fit_predict(self,*fs: Forecaster,**kwargs):
+    def fit_predict(self,*fs: Forecaster,**kwargs:Any) -> Unpack[Forecaster]:
         """ Applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
         The order of Forecaster passed to *fs is the order all functions in lists will be applied.
 

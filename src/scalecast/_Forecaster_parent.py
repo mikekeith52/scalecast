@@ -1,16 +1,24 @@
-from .__init__ import (
-    __sklearn_imports__,
-    __sklearn_estimators__,
-    __non_sklearn_estimators__,
-    __estimators__,
-    __cannot_be_tuned__,
-    __can_be_tuned__,
-    __metrics__,
-    __normalizer__,
-    __colors__,
-    __not_hyperparams__,
+from __future__ import annotations
+from .cfg import (
+    SKLEARN_IMPORTS,
+    SKLEARN_ESTIMATORS,
+    METRICS,
+    NORMALIZERS,
 )
 from ._utils import _developer_utils
+from .types import (
+    DatetimeLike, 
+    ConfInterval,
+    PositiveInt,
+    NonNegativeInt, 
+    DynamicTesting, 
+    EvaluatedModel, 
+    AvailableXvar, 
+    Metric, 
+    AvailableModel,
+    AvailableNormalizer,
+)
+from .typing_utils import ScikitLike, NormalizerLike
 import copy
 import pandas as pd
 import numpy as np
@@ -22,6 +30,9 @@ import datetime
 import math
 import random
 from sklearn.preprocessing import PowerTransformer
+from typing import Sequence, Self, Optional, Literal, Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from ._Forecaster_parent import _Forecaster_parent
 
 # descriptive errors
 
@@ -31,19 +42,19 @@ class ForecastError(Exception):
 class Forecaster_parent:
     def __init__(
         self,
-        y,
-        test_length,
-        cis,
-        metrics,
+        y:Sequence[float|int],
+        test_length:NonNegativeInt,
+        cis:bool,
+        metrics:dict[str,callable],
         **kwargs,
     ):
         self._logging()
         self.y = y
-        self.sklearn_imports = __sklearn_imports__
-        self.sklearn_estimators = __sklearn_estimators__
-        self.estimators = __sklearn_estimators__ # this will be overwritten with Forecaster but maintained in MVForecaster
-        self.can_be_tuned = __sklearn_estimators__ # this will be overwritten with Forecaster but maintained in MVForecaster
-        self.normalizer = __normalizer__
+        self.sklearn_imports = SKLEARN_IMPORTS
+        self.sklearn_estimators = SKLEARN_ESTIMATORS
+        self.estimators = SKLEARN_ESTIMATORS # this will be overwritten with Forecaster but maintained in MVForecaster
+        self.can_be_tuned = SKLEARN_ESTIMATORS # this will be overwritten with Forecaster but maintained in MVForecaster
+        self.normalizer = NORMALIZERS
         self.set_test_length(test_length)
         self.validation_length = 1
         self.validation_metric = metrics[0]
@@ -79,7 +90,7 @@ class Forecaster_parent:
         state = self.__dict__.copy()
         return state
 
-    def _check_right_test_length_for_cis(self,cilevel):
+    def _check_right_test_length_for_cis(self,cilevel:ConfInterval):
         min_test_length = round(1/(1-cilevel))
         if self.test_length < min_test_length:
             raise ValueError(
@@ -132,14 +143,14 @@ class Forecaster_parent:
 
     def add_seasonal_regressors(
         self, 
-        *args, 
-        raw=True, 
-        sincos=False, 
-        dummy=False, 
-        drop_first=False,
-        cycle_lens=None,
-        fourier_order = 2.0,
-    ):
+        *args:str, 
+        raw:bool=True, 
+        sincos:bool=False, 
+        dummy:bool=False, 
+        drop_first:bool=False,
+        cycle_lens:dict[str,int]=None,
+        fourier_order:float = 2.0,
+    ) -> Self:
         """ Adds seasonal regressors. 
         Can be in the form of Fourier transformed, dummy, or integer values.
 
@@ -157,6 +168,7 @@ class Forecaster_parent:
                 Whether to drop the first observed dummy level.
                 Not relevant when dummy = False.
             cycle_lens (dict): Optional. A dictionary that specifies a cycle length for each selected seasonality.
+                Each key should match a value passed to *args.
                 If this is not specified or a selected seasonality is not added to the dictionary as a key, the
                 cycle length will be selected automatically as the maximum value observed for the given seasonality.
                 Not relevant when sincos = False.
@@ -165,7 +177,7 @@ class Forecaster_parent:
                 and its first harmonic. Higher orders will capture more complex seasonality, but may lead to overfitting.
 
         Returns:
-            None
+            Self
 
         >>> f.add_seasonal_regressors('year')
         >>> f.add_seasonal_regressors(
@@ -242,7 +254,7 @@ class Forecaster_parent:
                 for c in [d for d in all_dummies if d not in self.future_xreg.keys()]:
                     self.future_xreg[c] = [0] * len(self.future_dates)
 
-    def add_time_trend(self, called="t"):
+    def add_time_trend(self, called:str="t") -> Self:
         """ Adds a time trend from 1 to length of the series + the forecast horizon as a current and future Xvar.
 
         Args:
@@ -250,7 +262,7 @@ class Forecaster_parent:
                 What to call the resulting variable.
 
         Returns:
-            None
+            Self
 
         >>> f.add_time_trend() # adds time trend called 't'
         """
@@ -260,13 +272,15 @@ class Forecaster_parent:
             range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
         )
 
+        return self
+
     def transfer_cis(
         self,
-        transfer_from,
-        model,
-        transfer_to_model=None,
-        transfer_test_set_cis='infer'
-    ):
+        transfer_from:"_Forecaster_parent",
+        model:str,
+        transfer_to_model:str=None,
+        transfer_test_set_cis:Optional[bool]=None,
+    ) -> Self:
         """ Transfers the confidence intervals from a model forecast in a passed `Forecaster` or `MVForecaster` object.
 
         Args:
@@ -275,12 +289,12 @@ class Forecaster_parent:
             model (str): The model nickname of the already-evaluated model stored in `transfer_from`.
             transfer_to_model (str): Optional. The nickname of the model to which the intervals should be transferred.
                 If not specified, inherits the name passed to `model`.
-            transfer_test_set_cis (bool or str): Default 'infer'. Whether to pass intervals for test-set predictions.
-                If 'infer', the decision is made based on whether the inheriting `MVForecaster` object has
+            transfer_test_set_cis (bool): Optional. Whether to pass intervals for test-set predictions.
+                If left unspecified, the decision is made based on whether the inheriting object has
                 test-set predictions evaluated.
 
         Returns:
-            None.
+            Self
 
         >>> f.manual_forecast(call_me='mlr')
         >>> f_new.transfer_predict(transfer_from=f,model='mlr')
@@ -326,10 +340,10 @@ class Forecaster_parent:
                     ' Therefore, no test-set confidence intervals were transferred.',
                     category=Warning,
                 )
+        return self
 
-    def add_cycle(self, cycle_length, fourier_order = 2.0, called=None):
-        """ Adds a regressor that acts as a seasonal cycle.
-        Use this function to capture non-normal seasonality.
+    def add_cycle(self, cycle_length:PositiveInt, fourier_order:float = 2.0, called:Optional[str]=None) -> Self:
+        """ Adds a regressor that acts as a seasonal cycle. Use this function to capture non-normal seasonality.
 
         Args:
             cycle_length (int): How many time steps make one complete cycle.
@@ -343,7 +357,7 @@ class Forecaster_parent:
                 If left unspecified, 'cycle{cycle_length}' will be used as the name.
 
         Returns:
-            None
+            Self
 
         >>> f.add_cycle(13) # adds a seasonal effect that cycles every 13 observations called 'cycle13'
         """
@@ -361,7 +375,9 @@ class Forecaster_parent:
         self.future_xreg[called + "sin"] = list(full_sin.values[len(self.y) :])
         self.future_xreg[called + "cos"] = list(full_cos.values[len(self.y) :])
 
-    def add_other_regressor(self, called, start, end):
+        return self
+
+    def add_other_regressor(self, called:str, start:DatetimeLike, end:DatetimeLike) -> Self:
         """ Adds a dummy variable that is 1 during the specified time period, 0 otherwise.
 
         Args:
@@ -373,7 +389,7 @@ class Forecaster_parent:
                 Must be parsable by pandas' Timestamp function.
 
         Returns:
-            None
+            Self
 
         >>> f.add_other_regressor('january_2021','2021-01-01','2021-01-31')
         """
@@ -385,12 +401,14 @@ class Forecaster_parent:
             1 if (x >= pd.Timestamp(start)) & (x <= pd.Timestamp(end)) else 0 for x in self.future_dates
         ]
 
+        return self
+
     def add_covid19_regressor(
         self,
-        called="COVID19",
-        start=datetime.datetime(2020, 3, 15),
-        end=datetime.datetime(2021, 5, 13),
-    ):
+        called:str="COVID19",
+        start:DatetimeLike=datetime.datetime(2020, 3, 15),
+        end:DatetimeLike=datetime.datetime(2021, 5, 13),
+    ) -> Self:
         """ Adds a dummy variable that is 1 during the time period that COVID19 effects are present for the series, 0 otherwise.
         The default dates are selected to be optimized for the time-span where the economy was most impacted by COVID.
 
@@ -409,8 +427,9 @@ class Forecaster_parent:
         """
         #self._validate_future_dates_exist()
         self.add_other_regressor(called=called, start=start, end=end)
+        return self
 
-    def add_combo_regressors(self, *args, sep="_"):
+    def add_combo_regressors(self, *args:AvailableXvar, sep:str="_") -> Self:
         """ Combines all passed variables by multiplying their values together.
 
         Args:
@@ -419,7 +438,7 @@ class Forecaster_parent:
                 The separator between each term in arg to create the final variable name.
 
         Returns:
-            None
+            Self
 
         >>> f.add_combo_regressors('t','monthsin') # multiplies these two together (called 't_monthsin')
         >>> f.add_combo_regressors('t','monthcos') # multiplies these two together (called 't_monthcos')
@@ -454,8 +473,9 @@ class Forecaster_parent:
                         self.future_xreg[sep.join(args)], self.future_xreg[a]
                     )
                 ]
+        return self
 
-    def add_poly_terms(self, *args, pwr=2, sep="^"):
+    def add_poly_terms(self, *args:AvailableXvar, pwr:NonNegativeInt=2, sep:str="^") -> Self:
         """ raises all passed variables (no AR terms) to exponential powers (ints only).
 
         Args:
@@ -466,7 +486,7 @@ class Forecaster_parent:
                 The separator between each term in arg to create the final variable name.
 
         Returns:
-            None
+            Self
 
         >>> f.add_poly_terms('t','year',pwr=3) # raises t and year to 2nd and 3rd powers (called 't^2', 't^3', 'year^2', 'year^3')
         """
@@ -481,7 +501,9 @@ class Forecaster_parent:
                 self.current_xreg[f"{a}{sep}{i}"] = self.current_xreg[a] ** i
                 self.future_xreg[f"{a}{sep}{i}"] = [x ** i for x in self.future_xreg[a]]
 
-    def add_exp_terms(self, *args, pwr, sep="^", cutoff=2, drop=False):
+        return self
+
+    def add_exp_terms(self, *args:AvailableXvar, pwr:float, sep:str="^", cutoff:NonNegativeInt=2, drop:bool=False) -> Self:
         """ Raises all passed variables (no AR terms) to exponential powers (ints or floats).
 
         Args:
@@ -498,7 +520,7 @@ class Forecaster_parent:
                 Whether to drop the regressors passed to *args.
 
         Returns:
-            None
+            Self
 
         >>> f.add_exp_terms('t',pwr=.5) # adds square root t called 't^0.5'
         """
@@ -520,7 +542,9 @@ class Forecaster_parent:
         if drop:
             self.drop_Xvars(*args)
 
-    def add_logged_terms(self, *args, base=math.e, sep="", drop=False):
+        return self
+
+    def add_logged_terms(self, *args:AvailableXvar, base:float=math.e, sep:str="", drop:bool=False) -> Self:
         """ Logs all passed variables (no AR terms).
 
         Args:
@@ -534,7 +558,7 @@ class Forecaster_parent:
                 Whether to drop the regressors passed to *args.
 
         Returns:
-            None
+            Self
 
         >>> f.add_logged_terms('t') # adds natural log t callend 'lnt'
         """
@@ -567,7 +591,15 @@ class Forecaster_parent:
         if drop:
             self.drop_Xvars(*args)
 
-    def add_pt_terms(self, *args, method="box-cox", sep="_", drop=False):
+        return self
+
+    def add_pt_terms(
+        self, 
+        *args:AvailableXvar, 
+        method:Literal['box-cox','yeo-johnson']="box-cox", 
+        sep:str="_", 
+        drop:bool=False
+    ) -> Self:
         """ Applies a box-cox or yeo-johnson power transformation to all passed variables (no AR terms).
 
         Args:
@@ -584,7 +616,7 @@ class Forecaster_parent:
                 Whether to drop the regressors passed to *args.
 
         Returns:
-            None
+            Self
 
         >>> f.add_pt_terms('t') # adds box cox of t called 'box-cox_t'
         """
@@ -609,16 +641,17 @@ class Forecaster_parent:
         if drop:
             self.drop_Xvars(*args)
 
-    def drop_regressors(self, *args, error = 'raise'):
+        return self
+
+    def drop_regressors(self, *args:AvailableXvar, raise_error:bool = True):
         """ Drops regressors.
 
         Args:
             *args (str): The names of regressors to drop.
-            error (str): One of 'ignore','raise'. Default 'raise'.
-                What to do with the error if the Xvar is not found in the object.
+            raise_error (bool): Whether to raise an error if regressors not found. Default raises. False ignores.
 
         Returns:
-            None
+            Self
 
         >>> f.add_time_trend()
         >>> f.add_exp_terms('t',pwr=.5)
@@ -626,42 +659,46 @@ class Forecaster_parent:
         """
         for a in args:
             if a not in self.current_xreg:
-                if error == 'raise':
+                if raise_error:
                     raise ForecastError(f'Cannot find {a} in Forecaster object.')
-                elif error == 'ignore':
-                    continue
-                else:
-                    raise ValueError(f'arg passed to error not recognized: {error}')
             self.current_xreg.pop(a)
             self.future_xreg.pop(a)
 
-    def drop_Xvars(self, *args, error = 'raise'):
+        return self
+
+    def drop_Xvars(self, *args:AvailableXvar, raise_error:bool = True) -> Self:
         """ Drops regressors.
 
         Args:
             *args (str): The names of regressors to drop.
-            error (str): One of 'ignore','raise'. Default 'raise'.
-                What to do with the error if the Xvar is not found in the object.
+            raise_error (bool): Whether to raise an error if regressors not found. Default raises. False ignores.
 
         Returns:
-            None
+            Self
 
         >>> f.add_time_trend()
         >>> f.add_exp_terms('t',pwr=.5)
         >>> f.drop_Xvars('t','t^0.5')
         """
-        self.drop_regressors(*args)
+        self.drop_regressors(*args,raise_error=raise_error)
 
-    def drop_all_Xvars(self):
-        """ drops all regressors.
+    def drop_all_Xvars(self) -> Self:
+        """ Drops all regressors.
+
+        Returns:
+            Self
         """
         self.drop_Xvars(*self.get_regressor_names())
+        return Self
 
-    def pop(self, *args):
+    def pop(self, *args:EvaluatedModel) -> Self:
         """ Deletes evaluated forecasts from the object's memory.
 
         Args:
             *args (str): Names of models matching what was passed to call_me when model was evaluated.
+
+        Returns:
+            Self
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
@@ -670,8 +707,10 @@ class Forecaster_parent:
         for a in args:
             self.history.pop(a)
 
+        return self
 
-    def add_sklearn_estimator(self, imported_module, called):
+
+    def add_sklearn_estimator(self, imported_module:ScikitLike, called:str) -> Self:
         """ Adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
         Only regression models are accepted.
         
@@ -683,7 +722,7 @@ class Forecaster_parent:
                 The name of the estimator that can be called using set_estimator().
 
         Returns:
-            None
+            Self
 
         >>> from sklearn.ensemble import StackingRegressor
         >>> f.add_sklearn_estimator(StackingRegressor,called='stacking')
@@ -694,14 +733,15 @@ class Forecaster_parent:
         self.sklearn_estimators.append(called)
         self.estimators.append(called)
         self.can_be_tuned.append(called)
+        return self
 
-    def add_metric(self, func, called = None):
+    def add_metric(self, func:callable, called:Optional[str] = None):
         """ Add a metric to be evaluated when validating and testing models.
         The function should accept two arguments where the first argument is an array of actual values
         and the second is an array of predicted values. The function returns a float.
 
         Args:
-            func (function): The function used to calculate the metric.
+            func (callable): The function used to calculate the metric.
             called (str): Optional. The name that can be used to reference the metric function
                 within the object. If not specified, will use the function's name.
 
@@ -719,16 +759,17 @@ class Forecaster_parent:
         )
         called = self._called(func,called)
         self.metrics[called] = func
+        return self
 
-    def _called(self,func,called):
+    def _called(self,func:callable,called:str):
         return func.__name__ if called is None else called
 
     def auto_forecast(
         self,
-        call_me=None,
-        dynamic_testing=True,
-        test_again=True,
-    ):
+        call_me:Optional[str]=None,
+        dynamic_testing:DynamicTesting=True,
+        test_again:bool=True,
+    ) -> Self:
         """ Auto forecasts with the best parameters indicated from the tuning process.
 
         Args:
@@ -747,6 +788,9 @@ class Forecaster_parent:
                 Whether to test the model before forecasting to a future horizon.
                 If test_length is 0, this is ignored. Set this to False if you tested the model manually by calling f.test()
                 and don't want to waste resources testing it again.
+
+        Returns:
+            Self
 
         >>> f.set_estimator('xgboost')
         >>> f.tune()
@@ -768,8 +812,13 @@ class Forecaster_parent:
         )
 
     def manual_forecast(
-        self, call_me=None, dynamic_testing=True, test_again = True, bank_history = True, **kwargs
-    ):
+        self, 
+        call_me:Optional[str]=None, 
+        dynamic_testing:DynamicTesting=True, 
+        test_again:bool = True, 
+        bank_history:bool = True, 
+        **kwargs:Any,
+    ) -> Self:
         """ Manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
         See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
 
@@ -792,6 +841,9 @@ class Forecaster_parent:
             **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, 
                 normalizer, cap, and floor, in addition to any given model's specific hyperparameters.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
+
+        Returns:
+            Self
 
         >>> f.set_estimator('lasso')
         >>> f.manual_forecast(alpha=.5)
@@ -844,7 +896,9 @@ class Forecaster_parent:
         if bank_history:
             self._bank_history(**kwargs)
 
-    def eval_cis(self,mode=True,cilevel=.95):
+        return self
+
+    def eval_cis(self,mode:bool=True,cilevel:ConfInterval=.95) -> Self:
         """ Call this function to change whether or not the Forecaster sets confidence intervals on all evaluated models.
         Beginning 0.17.0, only conformal confidence intervals are supported. Conformal intervals need a test set to be configured soundly.
         Confidence intervals cannot be evaluated when there aren't at least 1/(1-cilevel) observations in the test set.
@@ -854,13 +908,14 @@ class Forecaster_parent:
             cilevel (float): Default .95. Must be greater than 0, less than 1. The confidence level
                 to use to set intervals.
         """
-        if mode is True:
+        if mode:
             self._check_right_test_length_for_cis(cilevel)
         
         self.cis=mode
         self.set_cilevel(cilevel)
+        return self
 
-    def ingest_grid(self, grid):
+    def ingest_grid(self, grid:str|dict[str,Any]) -> Self:
         """ Ingests a grid to tune the estimator.
 
         Args:
@@ -869,7 +924,7 @@ class Forecaster_parent:
                 If str, must match the name of a dict grid stored in a grids file.
 
         Returns:
-            None
+            Self
 
         >>> f.set_estimator('mlr')
         >>> f.ingest_grid({'normalizer':['scale','minmax']})
@@ -904,8 +959,9 @@ class Forecaster_parent:
             )
         grid = expand_grid(grid)
         self.grid = grid
+        return self
 
-    def limit_grid_size(self, n, min_grid_size = 1, random_seed=None):
+    def limit_grid_size(self, n:PositiveInt|ConfInterval, min_grid_size:PositiveInt = 1, random_seed:Optional[int]=None) -> Self:
         """ Makes a grid smaller randomly.
 
         Args:
@@ -918,7 +974,7 @@ class Forecaster_parent:
                 Set a seed to make results consistent.
 
         Returns:
-            None
+            Self
 
         >>> from scalecast import GridGenerator
         >>> GridGenerator.get_example_grids()
@@ -940,32 +996,37 @@ class Forecaster_parent:
             )
         )
         self.grid = random.sample(self.grid,n)
+        return self
 
-    def set_metrics(self,metrics):
+    def set_metrics(self,metrics:list[Metric]) -> Self:
         """ Set or change the evaluated metrics for all model testing and validation.
 
         Args:
-            metrics (list): The metrics to evaluate when validating
-                and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
+            metrics (list[str]): The metrics to evaluate when validating and testing models. 
+                Each element must exist in utils.metrics or added manually and take only two arguments: a and f.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
+        
+        Returns:
+            Self
         """
-        bad_metrics = [met for met in metrics if isinstance(met,str) and met not in __metrics__]
+        bad_metrics = [met for met in metrics if isinstance(met,str) and met not in METRICS]
         if len(bad_metrics) > 0:
             raise ValueError(
-                f'Each element in metrics must be one of {list(__metrics__.keys())} or be a function.'
+                f'Each element in metrics must be one of {list(METRICS.keys())} or be a function.'
                 f' Got the following invalid values: {bad_metrics}.'
             )
         self.metrics = {}
         for met in metrics:
             if isinstance(met,str):
-                self.metrics[met] = __metrics__[met]
+                self.metrics[met] = METRICS[met]
             else:
                 self.add_metric(met)
         self.determine_best_by = _developer_utils._determine_best_by(self.metrics)
+        return self
 
-    def set_validation_metric(self, metric):
+    def set_validation_metric(self, metric:Metric) -> Self:
         """ Sets the metric that will be used to tune all subsequent models.
 
         Args:
@@ -975,7 +1036,7 @@ class Forecaster_parent:
                 model optimization with tuning and cross validation only uses one of these.
 
         Returns:
-            None
+            Self
 
         >>> f.set_validation_metric('mae')
         """
@@ -985,8 +1046,9 @@ class Forecaster_parent:
             f"metric must be one of {list(self.metrics)}, got {metric}.",
         )
         self.validation_metric = metric
+        return self
 
-    def set_test_length(self, n=1):
+    def set_test_length(self, n:NonNegativeInt|ConfInterval=1) -> Self:
         """ Sets the length of the test set. As of version 0.16.0, 0-length test sets are supported.
 
         Args:
@@ -996,7 +1058,7 @@ class Forecaster_parent:
                 Fractional splits are supported by passing a float less than 1 and greater than 0.
 
         Returns:
-            None
+            Self
 
         >>> f.set_test_length(12) # test set of 12
         >>> f.set_test_length(.2) # 20% test split
@@ -1021,7 +1083,9 @@ class Forecaster_parent:
             leny = len(self.y[self.names[0]]) if isinstance(self.y,dict) else len(self.y) 
             self.test_length = int(leny * n)
 
-    def set_validation_length(self, n=1):
+        return self
+
+    def set_validation_length(self, n:PositiveInt=1) -> Self:
         """ Sets the length of the validation set. This will never matter for models that are not tuned.
 
         Args:
@@ -1029,7 +1093,7 @@ class Forecaster_parent:
                 The length of the resulting validation set.
 
         Returns:
-            None
+            Self
 
         >>> f.set_validation_length(6) # validation length of 6
         """
@@ -1041,31 +1105,33 @@ class Forecaster_parent:
                 f"Possible values are: {_metrics_}."
             )
         self.validation_length = n
+        return self
 
-    def set_cilevel(self, n):
+    def set_cilevel(self, n:ConfInterval) -> Self:
         """ Sets the level for the resulting confidence intervals (95% default).
 
         Args:
             n (float): Greater than 0 and less than 1.
 
         Returns:
-            None
-
+            Self
+        
         >>> f.set_cilevel(.80) # next forecast will get 80% confidence intervals
         """
         _developer_utils.descriptive_assert(
             n < 1 and n > 0, ValueError, "n must be a float greater than 0 and less than 1."
         )
         self.cilevel = n
+        return self
 
-    def set_estimator(self, estimator):
+    def set_estimator(self, estimator:AvailableModel) -> Self:
         """ Sets the estimator to forecast with.
 
         Args:
             estimator (str): One of Forecaster.estimators.
 
         Returns:
-            None
+            Self
 
         >>> f.set_estimator('lasso')
         >>> f.manual_forecast(alpha = .5)
@@ -1087,7 +1153,9 @@ class Forecaster_parent:
         else:
             self.estimator = estimator
 
-    def set_grids_file(self,name='Grids'):
+        return self
+
+    def set_grids_file(self,name:str='Grids') -> Self:
         """ Sets the name of the file where the object will look automatically for grids when calling 
         `tune()`, `cross_validate()`, `tune_test_forecast()`, or similar function.
         If the grids file does not exist in the working directory, the error will only be raised once tuning is called.
@@ -1106,8 +1174,9 @@ class Forecaster_parent:
             f'name argument expected str type, got {type(name)}.'
         )
         self.grids_file = name
+        return self
 
-    def generate_future_dates(self, n):
+    def generate_future_dates(self, n:PositiveInt) -> Self:
         """ Generates a certain amount of future dates in same frequency as current_dates.
 
         Args:
@@ -1126,15 +1195,17 @@ class Forecaster_parent:
             ).values[1:]
         )
 
-    def set_last_future_date(self, date):
+        return self
+
+    def set_last_future_date(self, date:DatetimeLike) -> Self:
         """ Generates future dates in the same frequency as current_dates that ends on a specified date.
 
         Args:
-            date (datetime.datetime, pd.Timestamp, or str):
+            date (datetime-like):
                 The date to end on. Must be parsable by pandas' Timestamp() function.
 
         Returns:
-            None
+            Self
 
         >>> f.set_last_future_date('2021-06-01') # creates future dates up to this one in the expected frequency
         """
@@ -1144,7 +1215,16 @@ class Forecaster_parent:
             ).values[1:]
         )
 
-    def add_lagged_terms(self, *args, lags=1, upto=True, sep="_", drop = False):
+        return self
+
+    def add_lagged_terms(
+        self, 
+        *args:AvailableXvar, 
+        lags:PositiveInt=1, 
+        upto:bool=True, 
+        sep:str="_", 
+        drop:bool = False
+    ) -> Self:
         """ Lags all passed variables (no AR terms) 1 or more times.
 
         Args:
@@ -1162,7 +1242,7 @@ class Forecaster_parent:
                 Whether to drop the regressors passed to *args.
 
         Returns:
-            None
+            Self
 
         >>> add_lagged_terms('t',lags=3) # adds first, second, and third lag of t called 'tlag_1' - 'tlag_3'
         >>> add_lagged_terms('t',lags=6,upto=False) # adds 6th lag of t only called 'tlag_6'
@@ -1219,14 +1299,15 @@ class Forecaster_parent:
         if drop:
             self.drop_Xvars(*args)
 
+        return self
+
     def add_series(
         self,
-        series,
-        called,
-        first_date=None,
-        forward_pad=True,
-        back_pad=True
-    ):
+        series:Sequence[int|float],
+        called:str,
+        first_date:Optional[DatetimeLike]=None,
+        pad:bool=True,
+    ) -> Self:
         """ Adds other series to the object as regressors. 
         If the added series is less than the length of Forecaster.y + len(Forecaster.future_dates), 
         it will padded with 0s by default.
@@ -1252,11 +1333,17 @@ class Forecaster_parent:
             called:list(series),
         })
 
-        self.ingest_Xvars_df(df,pad=True)
+        self.ingest_Xvars_df(df,pad=pad)
+        return self
 
     def ingest_Xvars_df(
-        self, df, date_col="Date", drop_first=False, use_future_dates=False, pad = False,
-    ):
+        self, 
+        df:pd.DataFrame, 
+        date_col:str="Date", 
+        drop_first:bool=False, 
+        use_future_dates:bool=False, 
+        pad:bool = False,
+    ) -> Self:
         """ Ingests a dataframe of regressors and saves its Xvars to the object.
         The user must specify a date column name in the dataframe being ingested.
         All non-numeric values are dummied.
@@ -1278,7 +1365,7 @@ class Forecaster_parent:
                 Whether to pad any missing values with 0s.
 
         Returns:
-            None
+            Self
         """
         _developer_utils.descriptive_assert(
             df.shape[0] == len(df[date_col].unique()),
@@ -1321,7 +1408,9 @@ class Forecaster_parent:
             self.future_xreg[c] = future_df[c].to_list()[: len(self.future_dates)] + [0] * bpad_len
             self.current_xreg[c] = pd.Series([0] * fpad_len + current_df[c].to_list(),dtype=float)
 
-    def export_validation_grid(self, model) -> pd.DataFrame:
+        return self
+
+    def export_validation_grid(self, model:EvaluatedModel) -> pd.DataFrame:
         """ Exports the validation grid from a model, converted to a pandas dataframe.
         Raises an error if the model was not tuned.
 
@@ -1347,10 +1436,10 @@ class Forecaster_parent:
 
     def test(
         self,
-        dynamic_testing=True,
-        call_me=None,
-        **kwargs,
-    ):
+        dynamic_testing:DynamicTesting=True,
+        call_me:Optional[str]=None,
+        **kwargs:Any,
+    ) -> Self:
         """ Tests the forecast estimator out-of-sample. Uses the test_length attribute to determine on how-many observations.
         All test-set splits maintain temporal order.
 
@@ -1440,7 +1529,9 @@ class Forecaster_parent:
                     k:func(actuals[i],fcst[k]) for i, k in enumerate(fcst.keys())
                 } # little awkward, but necessary for cross_validate to work more efficiently
 
-    def tune(self, dynamic_tuning=False,set_aside_test_set=True):
+        return self
+
+    def tune(self, dynamic_tuning:DynamicTesting=False,set_aside_test_set:bool=True) -> Self:
         """ Tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
         the estimator by default). This is akin to cross-validation with one fold and a test_length equal to f.validation_length.
         Any parameters that can be passed as arguments to manual_forecast() can be tuned with this process.
@@ -1472,17 +1563,19 @@ class Forecaster_parent:
             set_aside_test_set = set_aside_test_set,
         )
 
+        return self
+
     def cross_validate(
         self, 
-        k=5, 
-        test_length = None,
-        train_length = None,
-        space_between_sets = None,
-        rolling=False, 
-        dynamic_tuning=False,
-        set_aside_test_set=True,
-        verbose=False,
-    ):
+        k:PositiveInt=5, 
+        test_length:Optional[int] = None,
+        train_length:Optional[int] = None,
+        space_between_sets:Optional[int] = None,
+        rolling:bool=False, 
+        dynamic_tuning:DynamicTesting=False,
+        set_aside_test_set:bool=True,
+        verbose:bool=False,
+    ) -> Self:
         """ Tunes a model's hyperparameters using time-series cross validation. 
         Monitors the metric specified in the valiation_metric attribute. 
         Set an estimator before calling. 
@@ -1519,7 +1612,7 @@ class Forecaster_parent:
             verbose (bool): Default False. Whether to print out information about the test size, train size, and date ranges for each fold.
 
         Returns:
-            None
+            Self
 
         >>> f.set_estimator('xgboost')
         >>> f.cross_validate() # tunes hyperparam values
@@ -1644,7 +1737,9 @@ class Forecaster_parent:
         if verbose:
             print(f'Chosen paramaters: {self.best_params}.')
 
-    def _fit_normalizer(self, X, normalizer):
+        return self
+
+    def _fit_normalizer(self, X:np.ndarray, normalizer:AvailableNormalizer) -> NormalizerLike:
         _developer_utils.descriptive_assert(
             normalizer in self.normalizer,
             ValueError,
@@ -1658,64 +1753,5 @@ class Forecaster_parent:
         scaler.fit(X)
         return scaler
 
-    def _scale(self, scaler,X):
+    def _scale(self, scaler:callable,X:np.ndarray) -> np.ndarray:
         return scaler.transform(X) if scaler is not None else X
-
-def _tune_test_forecast(
-    f,
-    models,
-    cross_validate,
-    dynamic_tuning,
-    dynamic_testing,
-    limit_grid_size,
-    suffix,
-    error,
-    min_grid_size = 1,
-    summary_stats = False,
-    feature_importance = False,
-    fi_try_order = None,
-    tqdm = False,
-    **cvkwargs,
-):
-    if tqdm: # notebooks only get progress bar
-        from tqdm.notebook import tqdm
-    else:
-        tqdm = list
-
-    [_developer_utils._check_if_correct_estimator(m,f.can_be_tuned) for m in models]
-    for m in tqdm(models):
-        call_me = m if suffix is None else m + suffix
-        f.set_estimator(m)
-        if limit_grid_size is not None:
-            f.ingest_grid(m)
-            f.limit_grid_size(n=limit_grid_size,min_grid_size=min_grid_size)
-        if cross_validate:
-            f.cross_validate(dynamic_tuning=dynamic_tuning, **cvkwargs)
-        else:
-            f.tune(dynamic_tuning=dynamic_tuning)
-        try:
-            f.auto_forecast(
-                dynamic_testing=dynamic_testing,
-                call_me=call_me,
-            )
-        except Exception as e:
-            if error == 'raise':
-                raise
-            elif error == 'warn':
-                warnings.warn(
-                    f"{m} model could not be evaluated. "
-                    f"Here's the error: {e}",
-                    category=Warning,
-                )
-                continue
-            elif error == 'ignore':
-                continue
-            else:
-                raise ValueError(f'Value passed to error arg not recognized: {error}')
-        if summary_stats:
-            f.save_summary_stats()
-        if feature_importance:
-            if fi_try_order is None:
-                f.save_feature_importance()
-            else:
-                f.save_feature_importance(try_order=fi_try_order)

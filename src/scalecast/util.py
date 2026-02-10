@@ -1,9 +1,13 @@
+from __future__ import annotations
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import seaborn as sns
 import numpy as np
 import pandas as pd
 import warnings
 import random
+from .types import ConfInterval, AvailableModel, Metric, TryTransformations, NonNegativeInt, DatetimeLike, FFillOption, PositiveInt
+from typing import Sequence, Optional, Unpack, Any, Literal, TYPE_CHECKING
 from sklearn.metrics import (
     r2_score,
     mean_squared_error,
@@ -16,9 +20,16 @@ from ._utils import (
     boxcox_re,
 )
 
+if TYPE_CHECKING:
+    from statsmodels.tsa.vector_ar.var_model import LagOrderResults
+    from statsmodels.tsa.vector_ar.vecm import CointRankResults
+    from .Forecaster import Forecaster
+    from .MVForecaster import MVForecaster
+    from .Pipeline import Transformer, Reverter, Pipeline
+
 class metrics:
     @staticmethod
-    def bias(a,f):
+    def bias(a:Sequence[float],f:Sequence[float]) -> float:
         """ Returns the total bias over a given forecast horizon. 
         When this is larger than 0, means aggregated predicted points are higher than actuals.
         Divide by the length of the forecast horizon to get average bias.
@@ -38,7 +49,7 @@ class metrics:
         return np.sum(np.array(f) - np.array(a))
 
     @staticmethod
-    def abias(a,f):
+    def abias(a:Sequence[float],f:Sequence[float]) -> float:
         """ Returns the total bias over a given forecast horizon in terms of absolute values. 
         Divide by the length of the forecast horizon to get average bias.
         This is a good metric to minimize when testing/tuning models.
@@ -58,7 +69,7 @@ class metrics:
         return np.abs(np.sum(np.array(f) - np.array(a)))
 
     @staticmethod
-    def mape(a,f):
+    def mape(a:Sequence[float],f:Sequence[float]) -> float:
         """ Mean absolute percentage error (MAPE).
 
         Args:
@@ -80,7 +91,7 @@ class metrics:
 
 
     @staticmethod
-    def r2(a,f):
+    def r2(a:Sequence[float],f:Sequence[float]) -> float:
         """ R-squared (R2).
 
         Args:
@@ -98,7 +109,7 @@ class metrics:
         return r2_score(a, f)
 
     @staticmethod
-    def mse(a,f):
+    def mse(a:Sequence[float],f:Sequence[float]) -> float:
         """ Mean squared error (MSE).
 
         Args:
@@ -116,7 +127,7 @@ class metrics:
         return mean_squared_error(a, f)
 
     @staticmethod
-    def rmse(a,f):
+    def rmse(a:Sequence[float],f:Sequence[float]) -> float:
         """ Root mean squared error (RMSE).
 
         Args:
@@ -134,7 +145,7 @@ class metrics:
         return mean_squared_error(a, f) ** 0.5
 
     @staticmethod
-    def mae(a,f):
+    def mae(a:Sequence[float],f:Sequence[float]) -> float:
         """ Mean absolute error (MAE).
 
         Args:
@@ -152,7 +163,7 @@ class metrics:
         return mean_absolute_error(a, f)
 
     @staticmethod
-    def smape(a,f):
+    def smape(a:Sequence[float],f:Sequence[float]) -> float:
         """ Symmetric mean absolute percentage error (sMAPE).
         Uses the same definition as used in the M4 competition.
         Does not multiply by 100.
@@ -182,7 +193,7 @@ class metrics:
         )
 
     @staticmethod
-    def mase(a,f,obs,m):
+    def mase(a:Sequence[float],f:Sequence[float],obs:Sequence[float],m:int) -> float:
         """ Mean absolute scaled error (MASE).
         Uses the same definition as used in the M4 competition.
         See https://ideas.repec.org/a/eee/intfor/v36y2020i1p54-74.html.
@@ -215,7 +226,7 @@ class metrics:
         return avger * (num / (davger * denom))
 
     @staticmethod
-    def msis(a,uf,lf,obs,m,alpha=0.05):
+    def msis(a:Sequence[float],uf:Sequence[float],lf:Sequence[float],obs:Sequence[float],m:int,alpha:ConfInterval=0.05) -> float:
         """ Mean scaled interval score (MSIS) for evaluating confidence intervals.
         Uses the same definition as used in the M4 competition.
         Lower values are better.
@@ -254,7 +265,7 @@ class metrics:
         denom = np.sum(np.abs(pd.Series(obs).diff(m).values[m:]))
         return avger * (np.sum(num1 + num2) / (davger * denom))
 
-def plot_reduction_errors(f, ax = None, figsize=(12,6)):
+def plot_reduction_errors(f:Forecaster, ax:Axes = None, figsize:tuple[int,int]=(12,6)) -> Axes:
     """ Plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
     with method = 'pfi' or method = 'shap'.
     
@@ -297,14 +308,14 @@ def plot_reduction_errors(f, ax = None, figsize=(12,6)):
     return ax
 
 def backtest_metrics(
-    backtest_results: list,
-    models = None,
-    mets = ['rmse'],
-    mase = False, 
-    msis = False,
-    msis_alpha = 0.05,
-    m = 1, 
-    names = None,
+    backtest_results: list[dict[str,pd.DataFrame]],
+    models:Optional[list[str]] = None,
+    mets:list[str|callable] = ['rmse'],
+    mase:bool = False, 
+    msis:bool = False,
+    msis_alpha:ConfInterval = 0.05,
+    m:int = 1, 
+    names:Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """ Ingests the results output from `Pipeline.backtest()` and converts results to metrics.
     
@@ -416,39 +427,7 @@ def backtest_metrics(
     results_df['Average'] = results_df.mean(axis=1)
     return results_df
 
-def _backtest_plot(
-    backtest_results,
-    models = None,
-    series = None,
-    names = None,
-    ci = False,
-    ax=None,
-    figsize=(12,6),
-):
-    """ (Coming soon). Plots the results from a backtested pipeline. If all default arguments are passed, the resulting plot can
-    be messy, so it's recommended to limit some of the output by specifying arguments.
-
-    Args:
-        backtest_results (list): The output returned from `Pipeline.backtest()` or `MVPipeline.backtest()`.
-        models (list): Which models to plot results for. By default, all models will be plotted.
-        series (list): Which series to plot results for. This argument expects a list with an index position.
-            Ex: [0,2,3] will plot series in the first, third, and fourth index positions of backtest_results.
-        names (list): Optional. The names to give to the corresponding series. Must be the same length as series.
-            If not specified, the series will be named 'Series1' - 'SeriesN'.
-        ci (bool): Default False. Whether to plot confidence intervals. This will raise a warning if confidence intervals are not found.
-        ax (Axis): Optional. A pre-existing axis to write the figure to.
-        figsize (tuple): Default (12,6). The size of the resulting figure. Ignored when ax is specified.
-    
-    Returns:
-        (Axis): The figure's axis.
-
-    >>>
-    >>>
-    """
-    if ax is None:
-        _, ax = plt.subplots(figsize=figsize)
-
-def break_mv_forecaster(mvf,drop_all_Xvars = True):
+def break_mv_forecaster(mvf:MVForecaster,drop_all_Xvars:bool = True) -> Unpack['Forecaster']:
     """ Breaks apart an MVForecaster object and returns as many Foreaster objects as series loaded into the object.
 
     Args:
@@ -514,7 +493,7 @@ def break_mv_forecaster(mvf,drop_all_Xvars = True):
 
     return tuple(to_return)
 
-def find_optimal_lag_order(mvf,train_only=False,**kwargs):
+def find_optimal_lag_order(mvf:'MVForecaster',train_only:bool=False,**kwargs:Any) -> 'LagOrderResults':
     """ Returns the otpimal lag order for a mutlivariate process using the statsmodels function:
     https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.var_model.VAR.select_order.html.
     The exogenous regressors are set based on Xvars loaded in the `MVForecaster` object.
@@ -559,7 +538,7 @@ def find_optimal_lag_order(mvf,train_only=False,**kwargs):
 
     return model.select_order(**kwargs)
 
-def infer_apply_Xvar_selection(infer_from,apply_to,return_copy=False):
+def infer_apply_Xvar_selection(infer_from:'Forecaster'|'MVForecaster',apply_to:'Forecaster'|'MVForecaster',return_copy:bool=False) -> 'Forecaster'|'MVForecaster':
     """ Attempts to infer what Xvars have been added to one Forecaster object and applies the guess to another Forecaster object.
     If using default fourier seasonal terms, linear or log trend terms, and autoregressive terms only, with defaults, 
     this will guess all variables successfully. Other variables (such as through `Forecaster.add_Xvars_df()`) will not be added. 
@@ -572,7 +551,7 @@ def infer_apply_Xvar_selection(infer_from,apply_to,return_copy=False):
             Default will add Xvars to the instance passed to `apply_to`.
 
     Returns:
-        (Forecaster): The Forecaster object with the inferred variables added to it.
+        (Forecaster or MVForecaster): The object with the inferred variables added to it. Same object as passed to apply_to.
 
     >>> f2 = infer_apply_Xvar_selection(infer_from=f1,apply_to=f2)
     """
@@ -606,7 +585,7 @@ def infer_apply_Xvar_selection(infer_from,apply_to,return_copy=False):
 
     return apply_to
 
-def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
+def find_optimal_coint_rank(mvf:'MVForecaster',det_order:int,k_ar_diff:int,train_only:bool=False,**kwargs:Any) -> 'CointRankResults':
     """ Returns the optimal cointigration rank for a multivariate process using the function from statsmodels: 
     https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.select_coint_rank.html
 
@@ -648,15 +627,15 @@ def find_optimal_coint_rank(mvf,det_order,k_ar_diff,train_only=False,**kwargs):
 
 @_developer_utils.log_warnings
 def find_statistical_transformation(
-    f,
-    goal=['stationary'],
-    train_only=False,
-    critical_pval=.05,
-    log = True,
-    m='auto',
-    adf_kwargs = {},
-    **kwargs,
-):
+    f:'Forecaster',
+    goal:list[Literal['stationary','seasonally_adj']]=['stationary'],
+    train_only:bool=False,
+    critical_pval:ConfInterval=.05,
+    log:bool = True,
+    m:int|Literal['auto']='auto',
+    adf_kwargs:dict[str,Any] = {},
+    **kwargs:Any,
+) -> tuple['Transformer','Reverter']:
     """ Finds a set of transformations to achieve stationarity or seasonal adjustment, based on results from statistical tests.
 
     Args:
@@ -793,25 +772,25 @@ def find_statistical_transformation(
 
 @_developer_utils.log_warnings
 def find_optimal_transformation(
-    f,
-    estimator=None,
-    monitor='rmse',
-    test_length=None,
-    train_length=None,
-    num_test_sets=1,
-    space_between_sets = 1,
-    lags='auto',
-    try_order = ['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale'],
-    boxcox_lambdas = [-0.5,0,0.5],
-    detrend_kwargs = [{'loess':True},{'poly_order':1},{'poly_order':2}],
-    scale_type = ['Scale','MinMax','RobustScale'],
-    m='auto',
-    model = 'add',
-    set_aside_test_set=False,
-    return_train_only = False,
-    verbose = False,
-    **kwargs,
-):
+    f:'Forecaster',
+    estimator:AvailableModel=None,
+    monitor:Metric='rmse',
+    test_length:Optional[int]=None,
+    train_length:Optional[int]=None,
+    num_test_sets:int=1,
+    space_between_sets:int = 1,
+    lags:int|Literal['auto']='auto',
+    try_order:list[TryTransformations] = ['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale'],
+    boxcox_lambdas:list[float] = [-0.5,0,0.5],
+    detrend_kwargs:dict[str,Any] = [{'loess':True},{'poly_order':1},{'poly_order':2}],
+    scale_type:list[str] = ['Scale','MinMax','RobustScale'],
+    m:NonNegativeInt|Literal['auto']='auto',
+    model:Literal["additive", "add", "multiplicative", "mul"] = 'add',
+    set_aside_test_set:bool=False,
+    return_train_only:bool = False,
+    verbose:True = False,
+    **kwargs:Any,
+) -> tuple['Transformer','Reverter']:
     """ Finds a set of transformations based on what maximizes forecast accuracy on some out-of-sample metric.
     Works by comparing each transformation individually and stacking the set of transformations that leads to the best
     performance. The estimator only uses series lags as inputs. When an attempted transformation fails, a warning is logged.
@@ -1116,23 +1095,23 @@ def find_optimal_transformation(
     return final_transformer, final_reverter 
 
 def Forecaster_with_missing_vals(
-    y,
-    current_dates,
-    desired_frequency = None,
-    fill_strategy = 0.0,
-    impute_value_pool = None,
-    m = None,
-    impute_lookback = None,
-    add_noise = False,
-    noise_value_pool = None,
-    noise_std = None,
-    noise_lookback = None,
-    cannot_be_below = None,
-    cannot_be_above = None,
-    first_ob_strategy = 'drop',
-    random_seed = None,
-    **kwargs,
-):
+    y:Sequence[float,int],
+    current_dates:list[DatetimeLike],
+    desired_frequency:Optional[str] = None,
+    fill_strategy:float|Literal['linear_interp', 'moving_average', 'moving_seasonal_average', 'impute_pool','ffill','bfill'] = 0.0,
+    impute_value_pool:Optional[list[float]] = None,
+    m:Optional[int] = None,
+    impute_lookback:Optional[int] = None,
+    add_noise:bool = False,
+    noise_value_pool:Optional[list[float]] = None,
+    noise_std:Optional[float] = None,
+    noise_lookback:Optional[int] = None,
+    cannot_be_below:Optional[float] = None,
+    cannot_be_above:Optional[float] = None,
+    first_ob_strategy:Literal['drop','ignore']|FFillOption = 'drop',
+    random_seed:Optional[int] = None,
+    **kwargs:Any,
+) -> 'Forecaster':
     """ Imputes missing values in a given time series such that the result has a user-specified 
     date frequency and/or no remaining null values. If you pass no missing values through this function,
     it will not raise errors.
@@ -1375,13 +1354,13 @@ def Forecaster_with_missing_vals(
     )
 
 def backtest_for_resid_matrix(
-    *fs,
-    pipeline,
-    alpha = 0.05,
-    bt_n_iter = None,
-    jump_back = 1,
-    **kwargs,
-):
+    *fs:'Forecaster',
+    pipeline:'Pipeline',
+    alpha:ConfInterval = 0.05,
+    bt_n_iter:Optional[PositiveInt] = None,
+    jump_back:PositiveInt = 1,
+    **kwargs:Any,
+) -> list[dict[str,pd.DataFrame]]:
     """ Performs a backtest on one or more Forecaster objects using pipelines.
     Specifically, performs a backtest so that a residual matrix to make dynamic intervals
     can easily be obtained. (See `util.get_backtest_resid_matrix()` and 
@@ -1426,7 +1405,7 @@ def backtest_for_resid_matrix(
     )
     return bt_results
 
-def get_backtest_resid_matrix(backtest_results):
+def get_backtest_resid_matrix(backtest_results:list[dict[str,pd.DataFrame]]) -> list[dict[str,np.ndarray]]:
     """ Converts results from a backtest pipeline into a matrix of residuals.
     Each row in this residual is for a backtest iteration and the columns are a forecast step.
 
@@ -1454,7 +1433,12 @@ def get_backtest_resid_matrix(backtest_results):
         mats.append(mat)
     return mats
 
-def overwrite_forecast_intervals(*fs,backtest_resid_matrix,models=None,alpha = .05):
+def overwrite_forecast_intervals(
+    *fs:Forecaster,
+    backtest_resid_matrix:list[dict[str,np.ndarray]],
+    models:Optional[list[str]]=None,
+    alpha:ConfInterval = .05
+) -> Unpack[Forecaster]:
     """ Overwrites naive forecast intervals stored in passed Forecaster objects with dynamic intervals.
     Overwrites future predictions only; does not overwrite intervals for test-set prediction intervals.
 
@@ -1482,23 +1466,24 @@ def overwrite_forecast_intervals(*fs,backtest_resid_matrix,models=None,alpha = .
             f.history[m]['UpperCI'] = np.array(f.history[m]['Forecast']) + percentiles
             f.history[m]['LowerCI'] = np.array(f.history[m]['Forecast']) - percentiles
             f.history[m]['CILevel'] = 1-alpha
+    return fs
 
 def gen_rnn_grid(
-    layer_tries=5,
-    min_layer_size=1,
-    max_layer_size=3,
-    layer_cell_pool=['LSTM'],
-    units_pool=[8,16,32,64],
-    activation_pool=['relu','tanh'],
-    dropout_pool=[0],
-    uniform_layer_cells=True,
-    uniform_units=True,
-    uniform_activations=True,
-    uniform_dropout=True,
-    verbose=0,
-    random_seed = None,
-    **kwargs,
-):
+    layer_tries:int=5,
+    min_layer_size:int=1,
+    max_layer_size:int=3,
+    layer_cell_pool:list[str]=['LSTM'],
+    units_pool:list[int]=[8,16,32,64],
+    activation_pool:list[str]=['relu','tanh'],
+    dropout_pool:list[float]=[0.0],
+    uniform_layer_cells:bool=True,
+    uniform_units:bool=True,
+    uniform_activations:bool=True,
+    uniform_dropout:bool=True,
+    verbose:bool|int=0,
+    random_seed:int = None,
+    **kwargs:Any,
+) -> dict[str,Any]:
     """ Randomly generates an RNN grid for tuning hyperparameters.
     The resulting grid may be very large, so it is generally a good idea to use `Forecaster.limit_grid_size`
     to make it feasible to use with tuning/cross validation.

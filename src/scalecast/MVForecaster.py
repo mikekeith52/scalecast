@@ -1,45 +1,64 @@
-from .__init__ import __colors__, __series_colors__, __not_hyperparams__
-from ._utils import _developer_utils
+from __future__ import annotations
+from .cfg import COLORS, SERIES_COLORS, IGNORE_AS_HYPERPARAMS
+from ._utils import _developer_utils, _tune_test_forecast
 from ._sklearn_models_mv import (
     _prepare_data_mv,
-    _scale_mv,
     _train_mv,
     _predict_mv,
 )
 from ._Forecaster_parent import (
     Forecaster_parent,
     ForecastError,
-    _tune_test_forecast,
 )
+from .types import (
+    DatetimeLike, 
+    PositiveInt, 
+    NonNegativeInt, 
+    ConfInterval, 
+    DynamicTesting, 
+    ModelValues,
+    XvarValues,
+    DetermineBestBy,
+    EvaluatedModel,
+    SKLearnModel,
+    AvailableModel,
+    ExportOptions,
+    SeriesName,
+    Metric,
+    AvailableNormalizer,
+    SeriesValues,
+)
+from .typing_utils import ScikitLike, NormalizerLike
+from typing import Optional, Literal, Any, Self, TYPE_CHECKING
 import warnings
-import typing
 import os
-import random
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 import seaborn as sns
 from collections import Counter
 import warnings
-import logging
-from scipy import stats
-import copy
 import datetime
+if TYPE_CHECKING:
+    from .Forecaster import Forecaster
+    from .MVForecaster import MVForecaster
 
 class MVForecaster(Forecaster_parent):
     def __init__(
         self,
-        *fs,
-        names=None,
-        not_same_len_action="trim",
-        merge_Xvars="union",
-        merge_future_dates="longest",
-        test_length = 0,
-        optimize_on = 'mean',
-        cis = False,
-        metrics=['rmse','mape','mae','r2'],
-        carry_fit_models = False,
-        **kwargs,
+        *fs:'Forecaster',
+        names:Optional[str]=None,
+        not_same_len_action:Literal["trim","fail"]="trim",
+        merge_Xvars:Literal["u","union","intersection","i"]="union",
+        merge_future_dates:Literal["longest","shortest"]="longest",
+        test_length:NonNegativeInt = 0,
+        optimize_on:Literal['mean','min','max']|callable|SeriesName = 'mean',
+        cis:bool = False,
+        metrics:list[Metric]=['rmse','mape','mae','r2'],
+        carry_fit_models:bool = False,
+        **kwargs:Any,
     ):
         """ 
         Args:
@@ -214,7 +233,7 @@ class MVForecaster(Forecaster_parent):
         self.grids_file,
     )
 
-    def add_optimizer_func(self, func, called = None):
+    def add_optimizer_func(self, func:callable, called:Optional[str] = None) -> Self:
         """ Add an optimizer function that can be used to determine the best-performing model.
         This is in addition to the 'mean', 'min', and 'max' functions that are available by default.
 
@@ -236,6 +255,7 @@ class MVForecaster(Forecaster_parent):
         """
         called = self._called(func,called)
         self.optimizer_funcs[called] = func
+        return self
 
     def _typ_set(self):
         """ Placeholder function.
@@ -244,15 +264,15 @@ class MVForecaster(Forecaster_parent):
 
     def transfer_predict(
         self,
-        transfer_from,
-        model,
-        model_type='sklearn',
-        return_df=False,
-        series=None,
-        dates = [],
-        save_to_history = True,
-        call_me = None,
-        regr = None,
+        transfer_from:'MVForecaster',
+        model:EvaluatedModel,
+        model_type:Literal['sklearn']='sklearn',
+        return_df:bool=False,
+        series:Optional[SeriesName]=None,
+        dates:list[DatetimeLike] = [],
+        save_to_history:bool = True,
+        call_me:Optional[str] = None,
+        regr:Optional[ScikitLike] = None,
     ):
         """ Makes predictions using an already-trained model over any given forecast horizon.
         Will use the already-trained model from a passed MVForecaster object to create a new model
@@ -382,11 +402,11 @@ class MVForecaster(Forecaster_parent):
 
     def add_signals(
         self,
-        model_nicknames, 
-        series = 'all', 
-        fill_strategy = 'actuals', 
-        train_only = False
-    ):
+        model_nicknames:list[EvaluatedModel], 
+        series:SeriesName|Literal['all'] = 'all', 
+        fill_strategy:Literal['actuals','bfill']|None = 'actuals', 
+        train_only:bool = False
+    ) -> Self:
         """ Adds the predictions from already-evaluated models as covariates that can be used for future evaluated models.
         The names of the added variables will all begin with "signal_" and end with the given model nickname folowed by the series name.
 
@@ -424,8 +444,9 @@ class MVForecaster(Forecaster_parent):
                     tsp = self.history[m]['TestSetPredictions'][s][:]
                     self.current_xreg[f'signal_{m}_{s}'].iloc[-len(tsp):] = tsp
                 self.future_xreg[f'signal_{m}_{s}'] = fcst
+        return self
 
-    def chop_from_front(self,n,fcst_length=None):
+    def chop_from_front(self,n:NonNegativeInt,fcst_length:Optional[NonNegativeInt]=None) -> Self:
         """ Cuts the amount of y observations in the object from the front counting backwards.
         The current length of the forecast horizon will be maintained and all future regressors will be rewritten to the appropriate attributes.
 
@@ -435,6 +456,9 @@ class MVForecaster(Forecaster_parent):
             fcst_length (int): Optional.
                 The new length of the forecast length.
                 By default, maintains the same forecast length currently in the object.
+
+        Returns:
+            Self
 
         >>> mvf.chop_from_front(10) # keeps all observations before the last 10
         """
@@ -451,8 +475,9 @@ class MVForecaster(Forecaster_parent):
             k:v.iloc[:-n].reset_index(drop=True)
             for k, v in self.current_xreg.items()
         }
+        return self
 
-    def keep_smaller_history(self, n):
+    def keep_smaller_history(self, n:NonNegativeInt) -> Self:
         """ Cuts y observations in the object by counting back from the beginning.
 
         Args:
@@ -462,7 +487,7 @@ class MVForecaster(Forecaster_parent):
                 Must be parsable by pandas' Timestamp function.
 
         Returns:
-            None
+            Self
 
         >>> f.keep_smaller_history(500) # keeps last 500 observations
         >>> f.keep_smaller_history('2020-01-01') # keeps only observations on or later than 1/1/2020
@@ -484,19 +509,20 @@ class MVForecaster(Forecaster_parent):
         self.y = {k: v.iloc[-n:] for k, v in self.y.items()}
         self.current_dates = self.current_dates.iloc[-n:]
         self.current_xreg = {k:v.iloc[-n:].reset_index(drop=True) for k, v in self.current_xreg.items()}
+        return self
 
     def tune_test_forecast(
         self,
-        models,
-        cross_validate=False,
-        dynamic_tuning=False,
-        dynamic_testing=True,
-        limit_grid_size=None,
-        min_grid_size=1,
-        suffix=None,
-        error='raise',
-        **cvkwargs,
-    ):
+        models:list[AvailableModel],
+        cross_validate:bool=False,
+        dynamic_tuning:bool=False,
+        dynamic_testing:bool=True,
+        limit_grid_size:Optional[NonNegativeInt|ConfInterval]=None,
+        min_grid_size:NonNegativeInt=1,
+        suffix:Optional[str]=None,
+        error:Literal['ignore','raise','warn']='raise',
+        **cvkwargs:Any,
+    ) -> Self:
         """ Iterates through a list of models, tunes them using grids in a grids file, and forecasts them.
 
         Args:
@@ -541,6 +567,7 @@ class MVForecaster(Forecaster_parent):
             error=error,
             **cvkwargs,
         )
+        return self
 
     def set_optimize_on(self, how):
         """ Choose how to determine best models by choosing which series should be optimized or the aggregate function to apply on the derived metrics across all series.
@@ -573,8 +600,14 @@ class MVForecaster(Forecaster_parent):
     
     @_developer_utils.log_warnings
     def _forecast_sklearn(
-        self, fcster, dynamic_testing = True, Xvars = 'all', normalizer="minmax", lags=1, **kwargs
-    ):
+        self, 
+        fcster:SKLearnModel, 
+        dynamic_testing:DynamicTesting = True, 
+        Xvars:XvarValues = 'all', 
+        normalizer:AvailableNormalizer="minmax", 
+        lags:NonNegativeInt=1, 
+        **kwargs:Any,
+    ) -> list[float]:
         """ Runs the vector multivariate forecast start-to-finish. All Xvars stored in the object are used always. All sklearn estimators supported.
         See example1: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html
         and example2: https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html.
@@ -669,7 +702,7 @@ class MVForecaster(Forecaster_parent):
             Xvars = Xvars,
         )
 
-    def _parse_normalizer(self, X_train, normalizer):
+    def _parse_normalizer(self, X_train:np.ndarray, normalizer:AvailableNormalizer) -> NormalizerLike:
         """ fits an appropriate scaler to training data that will then be applied to future data
 
         Args:
@@ -703,7 +736,7 @@ class MVForecaster(Forecaster_parent):
                 for k,p in preds.items()
             }
 
-    def _bank_history(self, **kwargs):
+    def _bank_history(self, **kwargs:Any):
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
             **kwargs: passed from each model, depending on how that model uses Xvars, normalizer, and other args
         """
@@ -719,7 +752,7 @@ class MVForecaster(Forecaster_parent):
         
         self.history[call_me]['Estimator'] = self.estimator
         self.history[call_me]['Xvars'] = self.Xvars # self.Xvars
-        self.history[call_me]['HyperParams'] = {k: v for k, v in kwargs.items() if k not in __not_hyperparams__}
+        self.history[call_me]['HyperParams'] = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
         self.history[call_me]['Lags'] =  None if lags is None else int(lags) if not hasattr(lags,'__len__') else lags
         self.history[call_me]['Forecast'] = self.forecast
         self.history[call_me]['Observations'] = len(self.current_dates)
@@ -768,7 +801,7 @@ class MVForecaster(Forecaster_parent):
                 preds = test_preds,
             )
 
-    def set_best_model(self, model=None, determine_best_by=None):
+    def set_best_model(self, model:Optional[EvaluatedModel]=None, determine_best_by:Optional[DetermineBestBy]=None) -> Self:
         """ Sets the best model to be referenced as "best".
         One of model or determine_best_by parameters must be specified.
 
@@ -811,8 +844,9 @@ class MVForecaster(Forecaster_parent):
                 else x[-1]
             )
             self.optimize_metric = determine_best_by
+        return self
 
-    def _parse_series(self, series):
+    def _parse_series(self, series:SeriesValues) -> list[SeriesName]:
         if series == "all":
             series = list(self.y.keys())
         elif isinstance(series,str):
@@ -822,7 +856,7 @@ class MVForecaster(Forecaster_parent):
 
         return series
 
-    def _parse_models(self, models, put_best_on_top):
+    def _parse_models(self, models:ModelValues, put_best_on_top:bool) -> list[EvaluatedModel]:
         if models == "all":
             models = list(self.history.keys())
         elif isinstance(models, str):
@@ -837,13 +871,13 @@ class MVForecaster(Forecaster_parent):
 
     def plot(
         self, 
-        models="all", 
-        series="all", 
-        put_best_on_top=False, 
-        ci=False, 
-        ax=None,
-        figsize=(12,6),
-    ):
+        models:ModelValues="all", 
+        series:SeriesValues="all", 
+        put_best_on_top:bool=False, 
+        ci:bool=False, 
+        ax:Axes=None,
+        figsize:tuple[int,int]=(12,6),
+    ) -> Axes:
         """ Plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
 
         Args:
@@ -881,14 +915,14 @@ class MVForecaster(Forecaster_parent):
                 y=self.y[s].to_list()[-len(self.current_dates) :],
                 label=f"{s} actuals",
                 ax=ax,
-                color=__series_colors__[i],
+                color=next(SERIES_COLORS),
             )
             for m in models:
                 sns.lineplot(
                     x=self.future_dates.to_list(),
                     y=self.history[m]["Forecast"][s],
                     label=f"{s} {m}",
-                    color=__colors__[k],
+                    color=next(COLORS),
                     ax=ax,
                 )
 
@@ -899,7 +933,7 @@ class MVForecaster(Forecaster_parent):
                             y1=self.history[m]["UpperCI"][s],
                             y2=self.history[m]["LowerCI"][s],
                             alpha=0.2,
-                            color=__colors__[k],
+                            color=next(COLORS),
                             label="{} {} {:.0%} CI".format(
                                 s, m, self.history[m]["CILevel"]
                             ),
@@ -915,14 +949,14 @@ class MVForecaster(Forecaster_parent):
 
     def plot_test_set(
         self,
-        models="all",
-        series="all",
-        put_best_on_top=False,
-        include_train=True,
-        ci=False,
-        ax=None,
-        figsize=(12,6),
-    ):
+        models:ModelValues="all",
+        series:SeriesValues="all",
+        put_best_on_top:bool=False,
+        include_train:bool|PositiveInt=True,
+        ci:bool=False,
+        ax:Axes=None,
+        figsize:tuple[int,int]=(12,6),
+    ) -> Axes:
         """  Plots all test-set predictions with the actuals.
 
         Args:
@@ -980,14 +1014,14 @@ class MVForecaster(Forecaster_parent):
                 y=y[-include_train:],
                 label=f"{s} actual",
                 ax=ax,
-                color=__series_colors__[i],
+                color=next(SERIES_COLORS),
             )
             for m in models:
                 sns.lineplot(
                     x=self.current_dates.to_list()[-self.test_length :],
                     y=self.history[m]["TestSetPredictions"][s],
                     label=f"{s} {m}",
-                    color=__colors__[k],
+                    color=next(COLORS),
                     linestyle="--",
                     alpha=0.7,
                     ax=ax,
@@ -1000,7 +1034,7 @@ class MVForecaster(Forecaster_parent):
                             y1=self.history[m]["TestSetUpperCI"][s],
                             y2=self.history[m]["TestSetLowerCI"][s],
                             alpha=0.2,
-                            color=__colors__[k],
+                            color=next(COLORS),
                             label="{} {} {:.0%} CI".format(
                                 s, m, self.history[m]["CILevel"]
                             ),
@@ -1016,11 +1050,11 @@ class MVForecaster(Forecaster_parent):
 
     def plot_fitted(
         self, 
-        models="all", 
-        series="all", 
-        ax=None,
-        figsize=(12,6),
-    ):
+        models:ModelValues="all", 
+        series:SeriesValues="all", 
+        ax:Axes=None,
+        figsize:tuple[int,int]=(12,6),
+    ) -> Axes:
         """ Plots fitted values with the actuals.
 
         Args:
@@ -1054,7 +1088,7 @@ class MVForecaster(Forecaster_parent):
                 y=act[-len(self.current_dates):],
                 label=f"{s} actual",
                 ax=ax,
-                color=__series_colors__[i],
+                color=next(SERIES_COLORS),
             )
             for m in models:
                 fvs = (self.history[m]["FittedVals"][s])
@@ -1064,25 +1098,25 @@ class MVForecaster(Forecaster_parent):
                     label=f"{s} {m}",
                     linestyle="--",
                     alpha=0.7,
-                    color=__colors__[k],
+                    color=next(COLORS),
                     ax=ax,
                 )
                 k += 1
 
     def export(
         self,
-        dfs=[
+        dfs:ExportOptions|list[ExportOptions]=[
             "model_summaries",
             "lvl_test_set_predictions",
             "lvl_fcsts",
         ],
-        models="all",
-        series="all",
-        cis=False,
-        to_excel=False,
-        out_path="./",
-        excel_name="results.xlsx",
-    ):
+        models:ModelValues="all",
+        series:SeriesValues="all",
+        cis:bool=False,
+        to_excel:bool=False,
+        out_path:os.PathLike="./",
+        excel_name:str="results.xlsx",
+    ) -> pd.DataFrame|dict[str,pd.DataFrame]:
         """ Exports 1-all of 3 pandas dataframes. Can write to excel with each dataframe on a separate sheet.
         Will return either a dictionary with dataframes as values (df str arguments as keys) or a single dataframe if only one df is specified.
 
@@ -1269,7 +1303,7 @@ class MVForecaster(Forecaster_parent):
         else:
             return output
 
-    def export_fitted_vals(self, series="all", models="all"):
+    def export_fitted_vals(self, series:SeriesValues="all", models:ModelValues="all") -> pd.DataFrame:
         """ Exports a dataframe of fitted values and actuals.
 
         Args:
@@ -1299,7 +1333,7 @@ class MVForecaster(Forecaster_parent):
             i += 1
         return pd.DataFrame({c: v[-length:] for c, v in dfd.items()})
 
-    def corr(self, train_only=False, disp="matrix", df=None, **kwargs):
+    def corr(self, train_only:bool=False, disp:Literal['matrix','heatmap']="matrix", df:Optional[pd.DataFrame]=None, **kwargs:Any) -> pd.DataFrame|Figure:
         """ Displays pearson correlation between all stored series in object.
 
         Args:
@@ -1316,7 +1350,6 @@ class MVForecaster(Forecaster_parent):
             (DataFrame or Figure): The created dataframe if disp == 'matrix' else the heatmap fig.
         """
         if df is None:
-            series = self._parse_series("all")
             df = pd.DataFrame({k:v.values for k, v in self.y.items()})
 
         if train_only:
@@ -1339,7 +1372,7 @@ class MVForecaster(Forecaster_parent):
         else:
             raise ValueError(f'disp must be one of "matrix","heatmap", got {disp}')
 
-    def corr_lags(self, y=None, x=None, lags=1, **kwargs):
+    def corr_lags(self, y:Optional[SeriesName]=None, x:Optional[SeriesName]=None, lags:PositiveInt=1, **kwargs:Any) -> pd.DataFrame:
         """ Displays pearson correlation between one series and another series' lags.
 
         Args:

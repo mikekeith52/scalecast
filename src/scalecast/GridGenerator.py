@@ -1,6 +1,6 @@
 import os
 
-def get_grids(grid='example',out_name='Grids.py',overwrite=False):
+def get_grids(grid:str='example',out_name:str='Grids.py',overwrite:bool=False):
     """ Saves a grids file to the working directory.
     See all available grids files here: https://github.com/mikekeith52/scalecast/tree/main/src/scalecast/grids.
     Make your own grids file and open a pull request on GitHub to add it to the library.
@@ -31,7 +31,7 @@ def get_grids(grid='example',out_name='Grids.py',overwrite=False):
     with open(out_name, "w") as fl:
         fl.write(contents)
 
-def get_example_grids(out_name='Grids.py',overwrite=False):
+def get_example_grids(out_name:str='Grids.py',overwrite:bool=False):
     """ Saves example grids to working directory as Grids.py (does not overwrite by default).
 
     Args:
@@ -48,7 +48,7 @@ def get_example_grids(out_name='Grids.py',overwrite=False):
     )
 
 
-def get_mv_grids(out_name='MVGrids.py',overwrite=False):
+def get_mv_grids(out_name:str='MVGrids.py',overwrite:bool=False):
     """ Saves example grids to working directory as MVGrids.py (does not overwrite by default).
 
     Args:
@@ -66,7 +66,7 @@ def get_mv_grids(out_name='MVGrids.py',overwrite=False):
     )
 
 
-def get_empty_grids(out_name='Grids.py',overwrite=False):
+def get_empty_grids(out_name:str='Grids.py',overwrite:bool=False):
     """ Saves empty grids to working directory as Grids.py (does not overwrite by default).
 
     Args:

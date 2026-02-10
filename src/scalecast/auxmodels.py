@@ -1,14 +1,19 @@
 from statsmodels.tsa.vector_ar.vecm import VECM
+from .types import AvailableModel, Unused, XvarValues
+from typing import TYPE_CHECKING, Any, Literal, Optional
+if TYPE_CHECKING:
+    from .Forecaster import Forecaster
+    import numpy as np
 
 class vecm:
     def __init__(
         self,
-        k_ar_diff=1, # always 0
-        coint_rank=1,
-        deterministic="n",
-        seasons=0,
-        first_season=0,
-        freq = None,
+        k_ar_diff:int=1, # always 0
+        coint_rank:int=1,
+        deterministic:Literal["n", "co", "ci", "lo", "li"]="n",
+        seasons:int=0,
+        first_season:int=0,
+        freq:Optional[str] = None,
     ):
         """ Initializes a Vector Error Correction Model.
         Uses the statsmodels implementation: https://www.statsmodels.org/dev/generated/statsmodels.tsa.vector_ar.vecm.VECM.html.
@@ -41,7 +46,7 @@ class vecm:
         self.freq = freq
         self._scalecast_set = ['dates','n_series'] # these attrs are set when imported into scalecast
 
-    def fit(self,X,y=None):
+    def fit(self,X:'np.ndarray',y:Unused=None):
         """ Fits the model.
 
         Args:
@@ -72,7 +77,7 @@ class vecm:
 
         self.fittedvalues = self.mod.fittedvalues
         
-    def predict(self,X):
+    def predict(self,X:'np.ndarray'):
         """ Forecasts into an unknown horizon.
 
         Args:
@@ -83,7 +88,7 @@ class vecm:
         exog = X[:,self.n_series:] if X.shape[1] > self.n_series else None
         return self.mod.predict(steps=X.shape[0],exog_fc=exog)
 
-def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=False,**kwargs):
+def auto_arima(f:'Forecaster',call_me:str='auto_arima',Xvars:XvarValues=None,train_only:bool=False,**kwargs:Any):
     """ Adds a forecast to a `Forecaster` object using the auto_arima function from pmdarima.
     This function attempts to find the optimal arima order by minimizing information criteria.
 
@@ -123,16 +128,15 @@ def auto_arima(f,call_me='auto_arima',Xvars=None,train_only=False,**kwargs):
     )
 
 def mlp_stack(
-    f,
-    model_nicknames,
-    max_samples=0.9,
-    max_features=0.5,
-    n_estimators=10,
-    hidden_layer_sizes=(100,100,100),
-    solver='lbfgs',
-    passthrough=False,
-    call_me='mlp_stack',
-    **kwargs,
+    f:'Forecaster',
+    model_nicknames:list[AvailableModel],
+    max_samples:float=0.9,
+    max_features:float=0.5,
+    n_estimators:int=10,
+    hidden_layer_sizes:list[int]=[100,100,100],
+    solver:str='lbfgs',
+    call_me:str='mlp_stack',
+    **kwargs:Any,
 ):
     """ Applies a stacking model using a bagged MLP regressor as the final estimator and adds it to a `Forecaster` or `MVForecaster` object.
     See what it does: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html#StackingRegressor.
@@ -203,7 +207,7 @@ def mlp_stack(
 
     final_estimator = BaggingRegressor(
         estimator = MLPRegressor(
-            hidden_layer_sizes=hidden_layer_sizes,
+            hidden_layer_sizes=tuple(hidden_layer_sizes),
             solver=solver,
         ),
         max_samples = max_samples,
