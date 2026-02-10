@@ -19,7 +19,7 @@ This is the main object that is utilized for making predictions on the test set,
       metrics = ['rmse','mape','mae','r2'],
    )
 
-.. autoclass:: src.scalecast.Forecaster.Forecaster
+.. autoclass:: scalecast.Forecaster.Forecaster
    :members:
    :undoc-members:
    :inherited-members:

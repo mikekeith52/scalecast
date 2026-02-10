@@ -10,7 +10,7 @@ This is a vector error correction model adapted from `statsmodels <https://www.s
 
 This framework also offers a basis for adding other non-scikit-learn forecast models to the scalecast interface. The lags argument must always be 0 or None in the `manual_forecast()` function, but lags for the model can be specified through the `k_ar_diff` argument in the vecm model.
 
-.. autoclass:: src.scalecast.auxmodels.vecm
+.. autoclass:: scalecast.auxmodels.vecm
 
    .. automethod:: __init__
 
@@ -70,8 +70,8 @@ This framework also offers a basis for adding other non-scikit-learn forecast mo
 
 auto_arima()
 -----------------------------
-.. autofunction:: src.scalecast.auxmodels.auto_arima
+.. autofunction:: scalecast.auxmodels.auto_arima
 
 mlp_stack()
 -----------------------------
-.. autofunction:: src.scalecast.auxmodels.mlp_stack
+.. autofunction:: scalecast.auxmodels.mlp_stack

@@ -39,7 +39,7 @@ This object can be used to extend the univariate/exogenous regressor approach fr
       names=['My First Series', 'My Second Series'],
     ) 
 
-.. autoclass:: src.scalecast.MVForecaster.MVForecaster
+.. autoclass:: scalecast.MVForecaster.MVForecaster
    :members:
    :undoc-members:
    :inherited-members:

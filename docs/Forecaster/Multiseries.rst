@@ -5,7 +5,7 @@ If forecasting with many series in a loop, these functions and code examples may
 
 export_model_summaries()
 --------------------------
-.. autofunction:: src.scalecast.multiseries.export_model_summaries
+.. autofunction:: scalecast.multiseries.export_model_summaries
 
 .. code:: python
 
@@ -36,8 +36,8 @@ export_model_summaries()
 
 line_up_dates()
 ------------------------------
-.. autofunction:: src.scalecast.multiseries.line_up_dates
+.. autofunction:: scalecast.multiseries.line_up_dates
 
 keep_smallest_first_date()
 ------------------------------
-.. autofunction:: src.scalecast.multiseries.keep_smallest_first_date
+.. autofunction:: scalecast.multiseries.keep_smallest_first_date

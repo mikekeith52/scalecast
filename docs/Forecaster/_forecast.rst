@@ -6,28 +6,28 @@ arima
 --------------------------------------------------
 See also `auto_arima <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html>`_.
 
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_arima
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_arima
 
 >>> f.set_estimator('arima')
 >>> f.manual_forecast() # above args are now available in this function
 
 combo
 --------------------------------------------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_combo
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_combo
 
 >>> f.set_estimator('combo')
 >>> f.manual_forecast() # above args are now available in this function
 
 hwes
 --------------------------------------------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_hwes
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_hwes
 
 >>> f.set_estimator('hwes')
 >>> f.manual_forecast() # above args are now available in this function
 
 lstm
 --------------------------------------------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_lstm
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_lstm
 
 >>> f.set_estimator('lstm')
 >>> f.manual_forecast() # above args are now available in this function
@@ -37,14 +37,14 @@ multivariate
 ---------------------------------------------------------------
 Although only scikit-learn estimators and the `vecm model <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#vecm>`_ can be used with the `MVForecaster` object, it is possible to make any estimator supported by scalecast that accepts external regressors multivariate. See, for example, `LSTM multivariate modeling <https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html#8.-LSTM-Modeling>`_.
 
-.. automethod:: src.scalecast.MVForecaster.MVForecaster._forecast_sklearn
+.. automethod:: scalecast.MVForecaster.MVForecaster._forecast_sklearn
 
 >>> mvf.set_estimator('xgboost')
 >>> mvf.manual_forecast()
 
 naive
 --------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_naive
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_naive
 
 >>> f.set_estimator('naive')
 >>> f.manual_forecast()
@@ -52,7 +52,7 @@ naive
 
 prophet
 --------------------------------------------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_prophet
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_prophet
 
 >>> f.set_estimator('prophet')
 >>> f.manual_forecast() # above args are now available in this function
@@ -63,7 +63,7 @@ prophet
 
 rnn
 --------------------------------------------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_rnn
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_rnn
 
 >>> f.set_estimator('rnn')
 >>> f.manual_forecast() # above args are now available in this function
@@ -71,7 +71,7 @@ rnn
 
 silverkite
 --------------------------------------------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_silverkite
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_silverkite
 
 >>> f.set_estimator('silverkite')
 >>> f.manual_forecast() # above args are now available in this function
@@ -79,9 +79,9 @@ silverkite
 
 sklearn
 --------------------------------------------------
-See also `mlp_stack <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#module-src.scalecast.auxmodels.mlp_stack>`_.
+See also `mlp_stack <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmodels.html#module-scalecast.auxmodels.mlp_stack>`_.
 
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_sklearn
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_sklearn
 
 >>> f.set_estimator('mlp')
 >>> f.manual_forecast()
@@ -89,14 +89,14 @@ See also `mlp_stack <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmo
 
 tbats
 -------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_tbats
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_tbats
 
 >>> f.set_estimator('tbats')
 >>> f.manual_forecast() # above args are now available in this function
 
 theta
 -------------------------------------------------
-.. automethod:: src.scalecast.Forecaster.Forecaster._forecast_theta
+.. automethod:: scalecast.Forecaster.Forecaster._forecast_theta
 
 >>> f.set_estimator('theta')
 >>> f.manual_forecast() # above args are now available in this function

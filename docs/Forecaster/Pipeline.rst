@@ -65,24 +65,24 @@ Here are some objects that can be placed in a list and executed sequentially, si
 	  ['model_summaries','lvl_fcsts']
 	)
 
-.. autoclass:: src.scalecast.Pipeline.Transformer
+.. autoclass:: scalecast.Pipeline.Transformer
    :members:
 
    .. automethod:: __init__
 
-.. autoclass:: src.scalecast.Pipeline.Reverter
+.. autoclass:: scalecast.Pipeline.Reverter
    :members:
 
    .. automethod:: __init__
 
-.. autoclass:: src.scalecast.Pipeline.Pipeline
+.. autoclass:: scalecast.Pipeline.Pipeline
    :members:
    :undoc-members:
    :inherited-members:
 
    .. automethod:: __init__
 
-.. autoclass:: src.scalecast.Pipeline.MVPipeline
+.. autoclass:: scalecast.Pipeline.MVPipeline
    :members:
    :undoc-members:
    :inherited-members:

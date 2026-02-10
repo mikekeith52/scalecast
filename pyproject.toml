@@ -67,3 +67,15 @@ greykite = ['greykite']
 prophet = ['prophet']
 tbats = ['tbats']
 test = ['pandas_datareader','scalecast[tf]','scalecast[shap]']
+docs = [
+  "sphinx>=7",
+  "sphinx-rtd-theme",
+  "autodocsumm",
+  "myst-parser",
+  "nbsphinx",
+  "sphinxcontrib-napoleon",
+  "sphinxcontrib-confluencebuilder",
+  "numpydoc",
+  "ipywidgets",
+  "tqdm",
+]

@@ -1,28 +1,29 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath("../src"))
 
-import sphinx_rtd_theme
-from scalecast import __version__ as version
-
+from importlib.metadata import version
+release = version("scalecast")
 # -- Project information -----------------------------------------------------
 
 project = 'scalecast'
 copyright = '2022, Michael Keith'
 author = 'Michael Keith'
 
-# The full version, including alpha/beta/rc tags
-release = version
-
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.napoleon", "autodocsumm", "nbsphinx",
-    "myst_parser", "sphinxcontrib.confluencebuilder"]
+extensions = [
+    "sphinx.ext.napoleon", 
+    "autodocsumm", 
+    "nbsphinx",
+    "myst_parser", 
+    "sphinxcontrib.confluencebuilder",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+]
 autodoc_default_options = {"autosummary": True}
 
 #source_suffix = ['.rst', '.md', '.pdf']
@@ -39,7 +40,7 @@ exclude_patterns = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
+nbsphinx_execute = "never"
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': True,
@@ -52,3 +53,10 @@ html_context = {}
 html_favicon = './_static/logo2.png'
 html_logo = './_static/logo2.png'
 html_static_path = ['_static']
+autodoc_mock_imports = [
+    "tensorflow",
+    "kats",
+    "prophet",
+    "darts",
+    "shap",
+]
