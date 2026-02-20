@@ -1,9 +1,9 @@
 from __future__ import annotations
 from .cfg import (
-    SKLEARN_IMPORTS,
-    SKLEARN_ESTIMATORS,
     METRICS,
     NORMALIZERS,
+    ESTIMATORS,
+    CLEAR_ATTRS_ON_ESTIMATOR_CHANGE,
 )
 from ._utils import _developer_utils
 from .types import (
@@ -14,11 +14,14 @@ from .types import (
     DynamicTesting, 
     EvaluatedModel, 
     AvailableXvar, 
-    Metric, 
+    DefaultMetric, 
     AvailableModel,
     AvailableNormalizer,
+    XvarValues,
 )
 from .typing_utils import ScikitLike, NormalizerLike
+from .classes import AR, Estimator, EvaluatedMetric, DetermineBestBy, MetricStore, ValidatedList, DefaultNormalizer
+from .models import SKLearnUni
 import copy
 import pandas as pd
 import numpy as np
@@ -45,16 +48,12 @@ class Forecaster_parent:
         y:Sequence[float|int],
         test_length:NonNegativeInt,
         cis:bool,
-        metrics:dict[str,callable],
-        **kwargs,
+        metrics:ValidatedList[MetricStore]=METRICS[:4]
     ):
         self._logging()
         self.y = y
-        self.sklearn_imports = SKLEARN_IMPORTS
-        self.sklearn_estimators = SKLEARN_ESTIMATORS
-        self.estimators = SKLEARN_ESTIMATORS # this will be overwritten with Forecaster but maintained in MVForecaster
-        self.can_be_tuned = SKLEARN_ESTIMATORS # this will be overwritten with Forecaster but maintained in MVForecaster
-        self.normalizer = NORMALIZERS
+        self.estimators = ESTIMATORS # this will be overwritten with Forecaster but maintained in MVForecaster
+        self.normalizer = NORMALIZERS # TODO make this its own class
         self.set_test_length(test_length)
         self.validation_length = 1
         self.validation_metric = metrics[0]
@@ -62,10 +61,9 @@ class Forecaster_parent:
         self.current_xreg = {} # Series
         self.future_xreg = {} # lists
         self.history = {}
-        self.set_metrics(metrics)
+        self.metrics = metrics
+        self.determine_best_by = DetermineBestBy(metrics,metrics[0])
         self.set_estimator("mlr")
-        for key, value in kwargs.items():
-            setattr(self, key, value)
         self.eval_cis(mode = cis, cilevel = self.cilevel)
 
     def __copy__(self):
@@ -75,12 +73,25 @@ class Forecaster_parent:
         obj.__dict__.update(self.__dict__)
         return obj
 
-    def __deepcopy__(self):
+    def __deepcopy__(self, memo):
+        if id(self) in memo:
+            return memo[id(self)]
+        
         if hasattr(self,'tf_model'):
             delattr(self,'tf_model')
-        obj = type(self).__new__(self.__class__)
-        obj.__dict__ = copy.deepcopy(self.__dict__)
-        return obj
+
+        # Create new instance without calling __init__
+        cls = self.__class__
+        result = cls.__new__(cls)
+
+        # Store in memo before copying attributes
+        memo[id(self)] = result
+
+        # Deep copy attributes
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, memo))
+
+        return result
 
     def __setstate__(self, state):
         self.__dict__.update(state)
@@ -135,11 +146,6 @@ class Forecaster_parent:
         """ Creates an object copy.
         """
         return self.__copy__()
-
-    def deepcopy(self):
-        """ Creates an object deepcopy.
-        """
-        return self.__deepcopy__()
 
     def add_seasonal_regressors(
         self, 
@@ -341,6 +347,26 @@ class Forecaster_parent:
                     category=Warning,
                 )
         return self
+    
+    def list_stored_ar_terms(self):
+        """ Returns a list of all stored autoregressive (AR) terms.
+
+        Returns:
+            list: All stored AR terms.
+        """
+        return [x for x in self.current_xreg if isinstance(x,AR)]
+    
+    def get_max_lag_order(self):
+        """ Returns the highest lag order variable stored in the object. Returns 0 if none were found.
+
+        Returns:
+            int: The max order found.
+        """
+        all_ars = self.list_stored_ar_terms()
+        if all_ars:
+            return max([x.lag_order for x in all_ars])
+        else:
+            return 0
 
     def add_cycle(self, cycle_length:PositiveInt, fourier_order:float = 2.0, called:Optional[str]=None) -> Self:
         """ Adds a regressor that acts as a seasonal cycle. Use this function to capture non-normal seasonality.
@@ -443,18 +469,9 @@ class Forecaster_parent:
         >>> f.add_combo_regressors('t','monthsin') # multiplies these two together (called 't_monthsin')
         >>> f.add_combo_regressors('t','monthcos') # multiplies these two together (called 't_monthcos')
         """
-        #self._validate_future_dates_exist()
-        _developer_utils.descriptive_assert(
-            len(args) > 1,
-            ForecastError,
-            "Need to pass at least two variables to combine regressors.",
-        )
+        if len(args) < 2:
+            raise ForecastError("Need to pass at least two regressor names to form the combination(s).")
         for i, a in enumerate(args):
-            _developer_utils.descriptive_assert(
-                not a.startswith("AR"),
-                ForecastError,
-                "No combining AR terms at this time -- it confuses the forecasting mechanism.",
-            )
             if i == 0:
                 self.current_xreg[sep.join(args)] = self.current_xreg[a]
                 self.future_xreg[sep.join(args)] = self.future_xreg[a]
@@ -492,11 +509,6 @@ class Forecaster_parent:
         """
         #self._validate_future_dates_exist()
         for a in args:
-            _developer_utils.descriptive_assert(
-                not a.startswith("AR"),
-                ForecastError,
-                "No polynomial AR terms at this time -- it confuses the forecasting mechanism.",
-            )
             for i in range(2, pwr + 1):
                 self.current_xreg[f"{a}{sep}{i}"] = self.current_xreg[a] ** i
                 self.future_xreg[f"{a}{sep}{i}"] = [x ** i for x in self.future_xreg[a]]
@@ -527,11 +539,6 @@ class Forecaster_parent:
         #self._validate_future_dates_exist()
         pwr = float(pwr)
         for a in args:
-            _developer_utils.descriptive_assert(
-                not a.startswith("AR"),
-                ForecastError,
-                "No exponent AR terms at this time -- it confuses the forecasting mechanism.",
-            )
             self.current_xreg[f"{a}{sep}{round(pwr,cutoff)}"] = (
                 self.current_xreg[a] ** pwr
             )
@@ -564,11 +571,6 @@ class Forecaster_parent:
         """
         #self._validate_future_dates_exist()
         for a in args:
-            _developer_utils.descriptive_assert(
-                not a.startswith("AR"),
-                ForecastError,
-                "No logged AR terms at this time -- it confuses the forecasting mechanism.",
-            )
             if base == math.e:
                 pass
             elif not (isinstance(base, int)):
@@ -623,11 +625,6 @@ class Forecaster_parent:
         #self._validate_future_dates_exist()
         pt = PowerTransformer(method=method, standardize=False)
         for a in args:
-            _developer_utils.descriptive_assert(
-                not a.startswith("AR"),
-                ForecastError,
-                "no power-transforming AR terms at this time -- it confuses the forecasting mechanism",
-            )
             reshaped_current = np.reshape(self.current_xreg[a].values, (-1, 1))
             reshaped_future = np.reshape(self.future_xreg[a], (-1, 1))
 
@@ -710,7 +707,7 @@ class Forecaster_parent:
         return self
 
 
-    def add_sklearn_estimator(self, imported_module:ScikitLike, called:str) -> Self:
+    def add_sklearn_estimator(self, imported_module:ScikitLike, called:str, mv:bool=False) -> Self:
         """ Adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
         Only regression models are accepted.
         
@@ -720,6 +717,8 @@ class Forecaster_parent:
                 Supports models from sklearn and sklearn APIs.
             called (str):
                 The name of the estimator that can be called using set_estimator().
+            mv (bool):
+                Whether the add is for Multivariate forecasting.
 
         Returns:
             Self
@@ -729,36 +728,14 @@ class Forecaster_parent:
         >>> f.set_estimator('stacking')
         >>> f.manual_forecast(...)
         """
-        self.sklearn_imports[called] = imported_module
-        self.sklearn_estimators.append(called)
-        self.estimators.append(called)
-        self.can_be_tuned.append(called)
-        return self
-
-    def add_metric(self, func:callable, called:Optional[str] = None):
-        """ Add a metric to be evaluated when validating and testing models.
-        The function should accept two arguments where the first argument is an array of actual values
-        and the second is an array of predicted values. The function returns a float.
-
-        Args:
-            func (callable): The function used to calculate the metric.
-            called (str): Optional. The name that can be used to reference the metric function
-                within the object. If not specified, will use the function's name.
-
-        >>> from scalecast.util import metrics
-        >>> def rmse_mae(a,f):
-        >>>     # average of rmse and mae
-        >>>     return (metrics.rmse(a,f) + metrics.mae(a,f)) / 2
-        >>> f.add_metric(rmse_mae)
-        >>> f.set_validation_metric('rmse_mae') # optimize models using this metric
-        """
-        _developer_utils.descriptive_assert(
-            len(inspect.signature(func).parameters) == 2,
-            ValueError,
-            "The passed function must take exactly two arguments."
+        if mv:
+            interpreted_model = SKLearnUni
+        else:
+            pass # TODO: implement
+        
+        self.estimators.estimator_list.append(
+            Estimator(name=called,imported_model=imported_module,interpreted_model=interpreted_model)
         )
-        called = self._called(func,called)
-        self.metrics[called] = func
         return self
 
     def _called(self,func:callable,called:str):
@@ -767,8 +744,9 @@ class Forecaster_parent:
     def auto_forecast(
         self,
         call_me:Optional[str]=None,
+        test_model:bool=True,
+        predict_fitted:bool=True,
         dynamic_testing:DynamicTesting=True,
-        test_again:bool=True,
     ) -> Self:
         """ Auto forecasts with the best parameters indicated from the tuning process.
 
@@ -777,6 +755,10 @@ class Forecaster_parent:
                 What to call the model when storing it in the object's history dictionary.
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
+            test_model (bool): Default True.
+                Whether to test the model before forecasting to a future horizon.
+                If test_length is 0, this is ignored. Set this to False if you tested the model manually by calling f.test()
+                and don't want to waste resources testing it again.
             dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
@@ -784,10 +766,7 @@ class Forecaster_parent:
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
                 The model will skip testing if the test_length attribute is set to 0.
-            test_again (bool): Default True.
-                Whether to test the model before forecasting to a future horizon.
-                If test_length is 0, this is ignored. Set this to False if you tested the model manually by calling f.test()
-                and don't want to waste resources testing it again.
+            predict_fitted (bool): Whether to predict fitted values.
 
         Returns:
             Self
@@ -807,18 +786,94 @@ class Forecaster_parent:
         self.manual_forecast(
             call_me=call_me,
             dynamic_testing=dynamic_testing,
-            test_again = test_again,
+            test_model = test_model,
+            predict_fitted=predict_fitted,
             **self.best_params,
         )
+
+    def init_estimator(
+        self,
+        dynamic_testing:Optional[DynamicTesting]=None,
+        Xvars:XvarValues=None,
+        normalizer:AvailableNormalizer=DefaultNormalizer(), # I can't pass None here because that has meaning for normalizer arg
+        **kwargs:Any
+    ) -> Self:
+        """
+        Docstring for init_estimator
+        
+        :param self: Description
+        :param dynamic_testing: Description
+        :type dynamic_testing: DynamicTesting
+        :param Xvars: Description
+        :type Xvars: XvarValues
+        :param kwargs: Description
+        :type kwargs: any
+        :return: Description
+        :rtype: Self
+        """
+        call_estimator = self.estimators.lookup_item(self.estimator)
+        all_kwargs = dict(
+            f=self,
+            model=self.estimators.lookup_item(self.estimator).imported_model,
+            **kwargs,
+        )
+        accepted_params = inspect.signature(call_estimator.interpreted_model.__init__).parameters
+        if "dynamic_testing" in accepted_params:
+            all_kwargs['dynamic_testing'] = dynamic_testing
+        if "Xvars" in accepted_params:
+            all_kwargs['Xvars'] = Xvars
+        if "normalizer" in accepted_params and not isinstance(normalizer,DefaultNormalizer): # because not every model takes this arg, I can't make it required, but I can't leave it at None because it'll overwrite a given model's default
+            all_kwargs['normalizer'] = normalizer
+        
+        self.call_estimator = call_estimator.interpreted_model(**all_kwargs)
+        return Self
+    
+    def fit(self,**fit_params:Any) -> Self:
+        """
+        Docstring for fit
+        
+        :param self: Description
+        :param fit_params: Description
+        :type fit_params: Any
+        :return: Description
+        :rtype: Self
+        """
+        X = self.call_estimator.generate_current_X()
+        y = self.y.values
+        self.call_estimator.fit(X,y,**fit_params)
+        return self
+
+    def predict(self,**predict_params:Any):
+        """
+        Docstring for predict
+        
+        :param self: Description
+        :param X: Description
+        :type X: np.ndarray
+        """
+        X = self.call_estimator.generate_future_X()
+        return self.call_estimator.predict(X,**predict_params)
+    
+    def predict_fitted_vals(self,**predict_params:Any):
+        """
+        Docstring for predict_fitted_vals
+        
+        :param self: Description
+        :param predict_params: Description
+        :type predict_params: Any
+        """
+        X = self.call_estimator.generate_current_X()
+        return self.call_estimator.predict(X,in_sample=True,**predict_params)
 
     def manual_forecast(
         self, 
         call_me:Optional[str]=None, 
+        test_model:bool = True, 
         dynamic_testing:DynamicTesting=True, 
-        test_again:bool = True, 
-        bank_history:bool = True, 
+        bank_history:bool = True,
+        predict_fitted:bool=True,
         **kwargs:Any,
-    ) -> Self:
+    ) -> list[float]:
         """ Manually forecasts with the hyperparameters, Xvars, and normalizer selection passed as keywords.
         See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
 
@@ -827,6 +882,10 @@ class Forecaster_parent:
                 What to call the model when storing it in the object's history.
                 If not specified, the model's nickname will be assigned the estimator value ('mlp' will be 'mlp', etc.).
                 Duplicated names will be overwritten with the most recently called model.
+            test_model (bool): Default True.
+                Whether to test the model before forecasting to a future horizon.
+                If test_length is 0, this is ignored. Set this to False if you tested the model manually by calling f.test()
+                and don't want to waste resources testing it again.
             dynamic_testing (bool or int): Default True.
                 Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
                 If True, evaluates dynamically over the entire out-of-sample slice of data.
@@ -834,16 +893,13 @@ class Forecaster_parent:
                 Setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform more than one period out.
                 The model will skip testing if the test_length attribute is set to 0.
-            test_again (bool): Default True.
-                Whether to test the model before forecasting to a future horizon.
-                If test_length is 0, this is ignored. Set this to False if you tested the model manually by calling f.test()
-                and don't want to waste resources testing it again.
+            predict_fitted (bool): Whether to predict fitted values.
             **kwargs: passed to the _forecast_{estimator}() method and can include such parameters as Xvars, 
                 normalizer, cap, and floor, in addition to any given model's specific hyperparameters.
                 See https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html.
 
         Returns:
-            Self
+            List[float]: The forecasted predictions.
 
         >>> f.set_estimator('lasso')
         >>> f.manual_forecast(alpha=.5)
@@ -866,7 +922,7 @@ class Forecaster_parent:
         self.dynamic_testing = dynamic_testing
         self.call_me = self.estimator if call_me is None else call_me
 
-        if test_again and self.test_length > 0 and self.estimator != 'combo':
+        if test_model and self.test_length:
             self.test(
                 **kwargs,
                 dynamic_testing=dynamic_testing,
@@ -877,26 +933,24 @@ class Forecaster_parent:
                 self.history[self.call_me] = {}
 
         try:
-            preds = (
-                self._forecast_sklearn(
-                    fcster=self.estimator,
-                    dynamic_testing=dynamic_testing,
-                    **kwargs,
-                )
-                if self.estimator in self.sklearn_estimators
-                else getattr(self, f"_forecast_{self.estimator}")(
-                    dynamic_testing=dynamic_testing, **kwargs
-                )
-            )
+            self.init_estimator(**kwargs,dynamic_testing=dynamic_testing)
+            self.fit()
+            preds = self.predict()
+            if predict_fitted:
+                fvs = self.predict_fitted_vals()
+            else:
+                fvs = []
         except:
             if self.call_me in self.history:
                 self.history.pop(self.call_me)
             raise
+
         self.forecast = preds
+        self.fitted_values = fvs
         if bank_history:
             self._bank_history(**kwargs)
 
-        return self
+        return preds
 
     def eval_cis(self,mode:bool=True,cilevel:ConfInterval=.95) -> Self:
         """ Call this function to change whether or not the Forecaster sets confidence intervals on all evaluated models.
@@ -998,39 +1052,57 @@ class Forecaster_parent:
         self.grid = random.sample(self.grid,n)
         return self
 
-    def set_metrics(self,metrics:list[Metric]) -> Self:
+    def set_metrics(self,metrics:list[MetricStore|DefaultMetric],keep_existing:bool=True) -> Self:
         """ Set or change the evaluated metrics for all model testing and validation.
 
         Args:
-            metrics (list[str]): The metrics to evaluate when validating and testing models. 
-                Each element must exist in utils.metrics or added manually and take only two arguments: a and f.
-                See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
+            metrics (list[MetricStore|str]): The metrics to evaluate when validating and testing models. 
+                If str, each element must exist as a name in scalecast.Metrics.Metrics and can only accept two arguments: a and f.
+                Otherwise use the MetricStore class from scalecast.Classes to specify a custom metric.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
+            keep_existing (bool): Whether to keep evaluating all existing metrics already in the object.
         
         Returns:
             Self
         """
-        bad_metrics = [met for met in metrics if isinstance(met,str) and met not in METRICS]
-        if len(bad_metrics) > 0:
-            raise ValueError(
-                f'Each element in metrics must be one of {list(METRICS.keys())} or be a function.'
-                f' Got the following invalid values: {bad_metrics}.'
-            )
-        self.metrics = {}
+        add_mets = []
         for met in metrics:
-            if isinstance(met,str):
-                self.metrics[met] = METRICS[met]
-            else:
-                self.add_metric(met)
-        self.determine_best_by = _developer_utils._determine_best_by(self.metrics)
-        return self
+            match met:
+                case MetricStore():
+                    add_mets.append(met)
+                case str():
+                    add_mets.append(METRICS.lookup_item(met))
+                case _:
+                    raise ValueError(f'cannot use value passed to metrics: {met}')
+                
+        if keep_existing:
+            self.metrics = [met for met in self.metrics if met not in add_mets]
+        else:
+            self.metrics = add_mets
 
-    def set_validation_metric(self, metric:Metric) -> Self:
+        self.determine_best_by = DetermineBestBy(self.metrics,self.validation_metric)
+
+        return self
+    
+    def parse_determine_best_by(self,determine_best_by:DetermineBestBy) -> MetricStore:
+        """
+        Docstring for parse_determine_best_by
+        
+        :param self: Description
+        :param determine_best_by: Description
+        :type determine_best_by: DetermineBestBy
+        :return: Description
+        :rtype: MetricStore
+        """
+        label = self.determine_best_by.lookup_label(determine_best_by)
+        return self.determine_best_by.lookup_metric(label)
+
+    def set_validation_metric(self, metric:str) -> Self:
         """ Sets the metric that will be used to tune all subsequent models.
 
         Args:
-            metric: One of Forecaster.metrics.
+            metric (str): One of the names in Forecaster.metrics.
                 The metric to optimize the models with using the validation set.
                 Although model testing will evaluate all metrics in Forecaster.metrics,
                 model optimization with tuning and cross validation only uses one of these.
@@ -1040,12 +1112,8 @@ class Forecaster_parent:
 
         >>> f.set_validation_metric('mae')
         """
-        _developer_utils.descriptive_assert(
-            metric in self.metrics,
-            ValueError,
-            f"metric must be one of {list(self.metrics)}, got {metric}.",
-        )
-        self.validation_metric = metric
+        self.validation_metric = [m for m in self.metrics if m.name == metric][0]
+        self.set_validation_length(max(self.validation_metric.min_obs_required,self.validation_length))
         return self
 
     def set_test_length(self, n:NonNegativeInt|ConfInterval=1) -> Self:
@@ -1099,11 +1167,8 @@ class Forecaster_parent:
         """
         n = int(n)
         _developer_utils.descriptive_assert(n > 0, ValueError, f"n must be greater than 0, got {n}.")
-        if (self.validation_metric == "r2") & (n == 1):
-            raise ValueError(
-                "Can only set a validation_length of 1 if validation_metric is not r2. Try calling set_validation_metric() with a different metric."
-                f"Possible values are: {_metrics_}."
-            )
+        if self.validation_metric.min_obs_required > n:
+            raise ValueError(f'The chosen validation length of {n} is too small for the validation metric: {self.validation_metric.name}')
         self.validation_length = n
         return self
 
@@ -1136,16 +1201,9 @@ class Forecaster_parent:
         >>> f.set_estimator('lasso')
         >>> f.manual_forecast(alpha = .5)
         """
-        _developer_utils._check_if_correct_estimator(estimator,self.estimators)
         if hasattr(self, "estimator"):
             if estimator != self.estimator:
-                for attr in (
-                    "grid",
-                    "grid_evaluated",
-                    "best_params",
-                    "validation_metric_value",
-                    "actuals",
-                ):
+                for attr in CLEAR_ATTRS_ON_ESTIMATOR_CHANGE:
                     if hasattr(self, attr):
                         delattr(self, attr)
                 self._clear_the_deck()
@@ -1255,11 +1313,6 @@ class Forecaster_parent:
             f"lags must be an int type greater than 0, got {lags}.",
         )
         for a in args:
-            _developer_utils.descriptive_assert(
-                not a.startswith("AR"),
-                ForecastError,
-                "Adding lagged AR terms makes no sense, add more AR terms instead.",
-            )
             if upto:
                 for i in range(1, lags + 1):
                     self.current_xreg[f"{a}lag{sep}{i}"] = self.current_xreg[a].shift(i)
@@ -1280,8 +1333,7 @@ class Forecaster_parent:
                 )
                 self.future_xreg[f"{a}lag{sep}{lags}"] = fx[-len(self.future_dates) :]
 
-        ars = [int(x[2:]) for x in self.current_xreg if x.startswith('AR')]
-        ars = max(ars) if len(ars) else 0
+        ars = self.get_max_lag_order()
         if lags > ars:
             if not isinstance(self.y,dict): # Forecaster
                 warnings.warn(
@@ -1429,7 +1481,7 @@ class Forecaster_parent:
         for j, h in enumerate(hist['grid_evaluated'].T):
             df[f'Fold{j}Metric'] = h
         df['AverageMetric'] = np.mean(hist['grid_evaluated'],axis=1)
-        df['MetricEvaluated'] = hist['ValidationMetric']
+        df['MetricEvaluated'] = hist['ValidationMetric'].name
         if hasattr(self,'optimize_on'):
             df['Optimized On'] = self.optimize_on
         return df
@@ -1468,7 +1520,7 @@ class Forecaster_parent:
                 ' Call f.set_test_length() to generate a test-set for this object.'
             )
 
-        is_Forecaster = not isinstance(self.y,dict)
+        is_Forecaster = not self.determine_if_MVForecaster()
         call_me = self.estimator if call_me is None else call_me
         if call_me not in self.history:
             self.history[call_me] = {}
@@ -1477,28 +1529,28 @@ class Forecaster_parent:
             already_existed = True
 
         if is_Forecaster:
-            actuals = self.y.to_list()[-self.test_length:]
+            actuals:list[float] = self.y.to_list()[-self.test_length:]
         else:
-            actuals = [
+            actuals:list[list[float]] = [
                 self.y[k].to_list()[-self.test_length:]
                 for k in self.y
             ]
 
-        f1 = self.deepcopy()
+        f1 = copy.deepcopy(self)
         f1.chop_from_front(
             self.test_length,
             fcst_length = self.test_length,
         )
         f1.set_test_length(0)
         f1.eval_cis(False)
-        f1.actuals = actuals
-        f1.manual_forecast(
+        fcst = f1.manual_forecast(
             dynamic_testing = dynamic_testing,
-            test_again = False, 
+            test_model = False, 
             call_me = call_me, 
+            test_set_actuals = actuals,
+            predict_fitted = False,
             **kwargs,
         )
-        fcst = f1.forecast
 
         if not already_existed:
             attrs_to_copy = (
@@ -1521,15 +1573,23 @@ class Forecaster_parent:
             else {k :actuals[i] for i, k in enumerate(fcst.keys())}
         )
 
-        for met, func in self.metrics.items():
-            if is_Forecaster:
-                self.history[call_me]['TestSet' + met.upper()] = func(actuals,fcst)
-            else:
-                self.history[call_me]['TestSet' + met.upper()] = {
-                    k:func(actuals[i],fcst[k]) for i, k in enumerate(fcst.keys())
-                } # little awkward, but necessary for cross_validate to work more efficiently
+        for met, value in zip(self.determine_best_by.metrics,self.determine_best_by.values):
+            if value.startswith('TestSet'):
+                if is_Forecaster:
+                    self.history[call_me][value] = EvaluatedMetric(score=met.eval_func(actuals,fcst),store=met)
+                else:
+                    for i, k in enumerate(fcst.keys()):
+                        self.history[call_me][value] = EvaluatedMetric(score=met.eval_func(actuals[i],fcst[k]),store=met)
 
         return self
+    
+    def determine_if_MVForecaster(self):
+        """
+        Docstring for determine_if_MVForecaster
+        
+        :param self: Description
+        """
+        return isinstance(self.y,dict)
 
     def tune(self, dynamic_tuning:DynamicTesting=False,set_aside_test_set:bool=True) -> Self:
         """ Tunes the specified estimator using an ingested grid (ingests a grid from Grids.py with same name as 
@@ -1550,7 +1610,7 @@ class Forecaster_parent:
                 Whether to separate the test set specified in f.test_length during this process.
 
         Returns:
-            None
+            Self
 
         >>> f.set_estimator('xgboost')
         >>> f.tune()
@@ -1621,11 +1681,11 @@ class Forecaster_parent:
         if not hasattr(self, "grid"):
             self.ingest_grid(self.estimator)
 
-        is_Forecaster = not isinstance(self.y,dict)
+        is_Forecaster = not self.determine_if_MVForecaster()
         rolling = bool(rolling)
         k = int(k)
         _developer_utils.descriptive_assert(k >= 1, ValueError, f"k must be at least 1, got {k}.")
-        f1 = self.deepcopy()
+        f1 = copy.deepcopy(self)
         f1.eval_cis(False)
         if not set_aside_test_set:
             f1.set_test_length(0)
@@ -1641,7 +1701,7 @@ class Forecaster_parent:
             space_between_sets = test_length
 
         grid = self.grid
-        func = self.metrics[self.validation_metric] # function to evaluate metric for each grid try
+        func = self.validation_metric.eval_func # function to evaluate metric for each grid try
         iters = len(grid)
         metrics = np.zeros((iters,k)) # each row is a hyperparam try and column is a fold
         for i in range(k):
@@ -1668,7 +1728,7 @@ class Forecaster_parent:
                 assert len(actuals) == test_length,err_message + f' Got {len(actuals)}.'
             else:
                 assert np.all([len(a) == test_length for a in actuals]),err_message
-            f2 = f1.deepcopy()
+            f2 = copy.deepcopy(f1)
             f2.chop_from_front(ttl_chop,fcst_length=test_length)
             f2.actuals = actuals
             if train_length is not None:
@@ -1692,14 +1752,15 @@ class Forecaster_parent:
                     f2.manual_forecast(
                         **hp,
                         dynamic_testing=dynamic_tuning,
-                        test_again=False,
+                        test_model=False,
                         bank_history=False,
+                        predict_fitted=False,
                     )
                     if is_Forecaster:
                         fcst = f2.forecast[:]
                         evaluated_metric = func(actuals,fcst)
                     else:
-                        fcst = [v[:] for k, v in f2.forecast.items()]
+                        fcst = [v[:] for _, v in f2.forecast.items()]
                         evaluated_metrics = [func(a,f) for a, f in zip(actuals,fcst)]
                         evaluated_metric = self.optimizer_funcs[self.optimize_on](evaluated_metrics) # mean, particular series, etc.
                 except (TypeError,ForecastError):
@@ -1729,29 +1790,27 @@ class Forecaster_parent:
                 category=Warning,
             )
             self.best_params = {}
-            self.validation_metric_value = np.nan
+            self.validation_metric_value = EvaluatedMetric(score=np.nan,store=self.validation_metric)
         else:
-            best_hp_idx = np.nanargmin(avg_mets) if self.validation_metric != 'r2' else np.nanargmax(avg_mets)
+            if self.validation_metric.lower_is_better:
+                best_hp_idx = np.nanargmin(avg_mets)
+            else:
+                best_hp_idx = np.nanargmax(avg_mets)
             self.best_params = grid[best_hp_idx]
-            self.validation_metric_value = avg_mets[best_hp_idx]
+            self.validation_metric_value = EvaluatedMetric(score=avg_mets[best_hp_idx],store=self.validation_metric)
         if verbose:
             print(f'Chosen paramaters: {self.best_params}.')
 
         return self
 
-    def _fit_normalizer(self, X:np.ndarray, normalizer:AvailableNormalizer) -> NormalizerLike:
-        _developer_utils.descriptive_assert(
-            normalizer in self.normalizer,
-            ValueError,
-            f"normalizer must be one of {list(self.normalizer.keys())}, got {normalizer}.",
-        )
+    def lookup_normalizer(self,normalizer:AvailableNormalizer=None) -> NormalizerLike:
+        """ Returns the normalizing object (i.e. StandardScaler) with fit/transform methods.
         
-        if normalizer is None:
-            return None
+        Args:
+            normalizer (str): Optional. The name of the normalizer in the object's normalizer attribute.
+                Default returns a function that does nothing.
 
-        scaler = self.normalizer[normalizer]()
-        scaler.fit(X)
-        return scaler
-
-    def _scale(self, scaler:callable,X:np.ndarray) -> np.ndarray:
-        return scaler.transform(X) if scaler is not None else X
+        Returns:
+            NormalizerLike: An object with the fit/transform methods.
+        """
+        return self.normalizer[normalizer]
