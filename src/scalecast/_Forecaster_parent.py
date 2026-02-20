@@ -794,8 +794,6 @@ class Forecaster_parent:
     def init_estimator(
         self,
         dynamic_testing:Optional[DynamicTesting]=None,
-        Xvars:XvarValues=None,
-        normalizer:AvailableNormalizer=DefaultNormalizer(), # I can't pass None here because that has meaning for normalizer arg
         **kwargs:Any
     ) -> Self:
         """
@@ -820,10 +818,6 @@ class Forecaster_parent:
         accepted_params = inspect.signature(call_estimator.interpreted_model.__init__).parameters
         if "dynamic_testing" in accepted_params:
             all_kwargs['dynamic_testing'] = dynamic_testing
-        if "Xvars" in accepted_params:
-            all_kwargs['Xvars'] = Xvars
-        if "normalizer" in accepted_params and not isinstance(normalizer,DefaultNormalizer): # because not every model takes this arg, I can't make it required, but I can't leave it at None because it'll overwrite a given model's default
-            all_kwargs['normalizer'] = normalizer
         
         self.call_estimator = call_estimator.interpreted_model(**all_kwargs)
         return Self

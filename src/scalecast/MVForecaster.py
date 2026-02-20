@@ -323,7 +323,6 @@ class MVForecaster(Forecaster_parent):
         self.Xvars = Xvars
 
         if model_type == 'sklearn':
-            #f = f.deepcopy()
             regr = mvf.history[model]['regr'] if regr is None else regr
             series = (
                 list(self.y.keys()) if series is None 
@@ -1103,7 +1102,7 @@ class MVForecaster(Forecaster_parent):
                 )
                 k += 1
 
-    def export(
+    def export( # TODO
         self,
         dfs:ExportOptions|list[ExportOptions]=[
             "model_summaries",

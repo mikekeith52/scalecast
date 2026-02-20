@@ -204,13 +204,13 @@ f_new.transfer_predict(transfer_from=f,model='xgboost') # transfers the xgboost 
 Install these by using 
 
 ```bash
-uv pip install scalecast[list_optional_dependencies]
+uv pip install "scalecast[list_optional_dependencies]"
 ``` 
 
 For example, install tensorflow and darts using:
 
 ```bash
-uv pip install scalecast[tf,darts]
+uv pip install "scalecast[tf,darts]"
 ```
 
 Please note that the optional dependencies may not be tested before new releases.

@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.21.0]
+### Added
+### Changed
+- `**kwargs` no longer accepted in `Forecaster` or `MVForecaster` objects
+- All metrics refer to their own classes (`MetricStore` and `EvaluatedMetric`)
+- Updated the functionality of the `set_metrics()` method to incorporate functionality previously available in the `add_metric()` method and removed the `add_metric()` method
+
 ## [0.20.0]
 ### Added
 ### Changed

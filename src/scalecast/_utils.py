@@ -5,8 +5,9 @@ import warnings
 import numpy as np
 from scipy import stats
 from statsmodels.tsa.tsatools import freq_to_period
-from typing import Literal, Any, TYPE_CHECKING
-from .types import ConfInterval, DynamicTesting
+from typing import Literal, Any, Optional, TYPE_CHECKING
+from .types import ConfInterval, DynamicTesting, AvailableNormalizer
+from .typing_utils import NormalizerLike
 if TYPE_CHECKING:
     from ._Forecaster_parent import _Forecaster_parent
 
@@ -128,9 +129,6 @@ class NamedBoxCox:
     def __repr__(self):
         return self.name
     
-def _none(x): # need it like this so can be pickled
-    return x
-    
 def _tune_test_forecast(
     f:"_Forecaster_parent",
     models:list[str],
@@ -152,7 +150,6 @@ def _tune_test_forecast(
     else:
         tqdm = list
 
-    [_developer_utils._check_if_correct_estimator(m,f.can_be_tuned) for m in models]
     for m in tqdm(models):
         call_me = m if suffix is None else m + suffix
         f.set_estimator(m)

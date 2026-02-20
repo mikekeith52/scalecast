@@ -1,7 +1,6 @@
-from .util import metrics
-from .typing_utils import ScikitLike
-from ._utils import _none
-import inspect
+from .classes import NoScaler, Estimator, MetricStore, ValidatedList
+from .Metrics import Metrics
+from .models import SKLearnUni, ARIMA, Theta, HWES, TBATS, Prophet, SilverKite, LSTM, RNN, Naive, Combo
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from xgboost import XGBRegressor
@@ -23,48 +22,48 @@ from sklearn.preprocessing import (
 )
 from itertools import cycle
 
+ESTIMATORS:ValidatedList = ValidatedList([
+    Estimator(name='catboost',imported_model=CatBoostRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='elasticnet',imported_model=ElasticNet,interpreted_model=SKLearnUni),
+    Estimator(name='gbt',imported_model=GradientBoostingRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='knn',imported_model=KNeighborsRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='lasso',imported_model=Lasso,interpreted_model=SKLearnUni),
+    Estimator(name='mlp',imported_model=MLPRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='mlr',imported_model=LinearRegression,interpreted_model=SKLearnUni),
+    Estimator(name='rf',imported_model=RandomForestRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='ridge',imported_model=Ridge,interpreted_model=SKLearnUni),
+    Estimator(name='sgd',imported_model=SGDRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='svr',imported_model=SVR,interpreted_model=SKLearnUni),
+    Estimator(name='xgboost',imported_model=XGBRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='arima',imported_model='auto',interpreted_model=ARIMA),
+    Estimator(name='hwes',imported_model='auto',interpreted_model=HWES),
+    Estimator(name='prophet',imported_model='auto',interpreted_model=Prophet),
+    Estimator(name='silverkite',imported_model='auto',interpreted_model=SilverKite),
+    Estimator(name='rnn',imported_model='auto',interpreted_model=RNN),
+    Estimator(name='lstm',imported_model='auto',interpreted_model=LSTM),
+    Estimator(name='naive',imported_model='auto',interpreted_model=Naive),
+    Estimator(name='tbats',imported_model='auto',interpreted_model=TBATS),
+    Estimator(name='theta',imported_model='auto',interpreted_model=Theta),
+    Estimator(name='combo',imported_model='auto',interpreted_model=Combo),
+],enforce_type='Estimator')
 
-SKLEARN_IMPORTS:dict[str,ScikitLike] = {
-    "catboost": CatBoostRegressor,
-    "elasticnet": ElasticNet,
-    "gbt": GradientBoostingRegressor,
-    "knn": KNeighborsRegressor,
-    "lasso": Lasso,
-    "mlp": MLPRegressor,
-    "mlr":LinearRegression,
-    "rf": RandomForestRegressor,
-    "ridge": Ridge,
-    "sgd": SGDRegressor,
-    "svr": SVR,
-    "xgboost": XGBRegressor,	
-}
-
-SKLEARN_ESTIMATORS:list[str] = list(SKLEARN_IMPORTS.keys())
-OTHER_ESTIMATORS:list[str] = [
-    "arima",
-    "hwes",
-    "prophet",
-    "silverkite",
-    "rnn",
-    "lstm",
-    'naive',
-    "tbats",
-    "theta",
-    "combo",
-]
-
-ESTIMATORS:list[str] = SKLEARN_ESTIMATORS + OTHER_ESTIMATORS
-METRICS:dict[str,callable] = {
-    name:method for name, method in inspect.getmembers(metrics, inspect.isroutine) 
-    if not name.startswith('_') and len(inspect.signature(method).parameters) == 2
-}
+METRICS:ValidatedList[MetricStore] = ValidatedList([
+    MetricStore(name='rmse',eval_func=Metrics.rmse),
+    MetricStore(name='r2',eval_func=Metrics.r2,lower_is_better=False, min_obs_required=2),
+    MetricStore(name='mae',eval_func=Metrics.mae),
+    MetricStore(name='mape',eval_func=Metrics.mape),
+    MetricStore(name='smape',eval_func=Metrics.smape),
+    MetricStore(name='abias',eval_func=Metrics.smape),
+    MetricStore(name='bias',eval_func=Metrics.smape,lower_is_better=False), # be careful ever choosing based off this metric, but leaving it here because it's good to view
+    MetricStore(name='mse',eval_func=Metrics.mse),
+],enforce_type='MetricStore')
 
 NORMALIZERS:dict[str,callable] = {
     "minmax":MinMaxScaler, 
     "normalize":Normalizer, 
     "scale":StandardScaler, 
     "robust":RobustScaler,
-    None:_none,
+    None:NoScaler,
 }
 
 COLORS = cycle([
@@ -80,8 +79,6 @@ COLORS = cycle([
     "#20B2AA",
     "#7FFFD4",
     "#A52A2A",
-    "#DCDCDC",
-    "#E6E6FA",
     "#BDB76B",
     "#DEB887",
 ])
@@ -100,3 +97,4 @@ SERIES_COLORS = cycle([
 ])
 
 IGNORE_AS_HYPERPARAMS = ["Xvars", "tuned", "plot_loss", "plot_loss_test", "lags", "mvf"]
+CLEAR_ATTRS_ON_ESTIMATOR_CHANGE = ["grid","grid_evaluated","best_params","validation_metric_value","actuals"]
