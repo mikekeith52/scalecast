@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from .types import PositiveInt, MetricCall
 from .typing_utils import ScikitLike, ForecasterEstimatorLike
-from typing import Literal, Self, Generic, TypeVar
+from typing import Literal, Self, Generic, TypeVar, Optional
 from collections import Counter
 import numpy as np
 from functools import total_ordering
@@ -13,6 +13,7 @@ class Estimator:
     name:str
     imported_model:ScikitLike|Literal['auto']
     interpreted_model:ForecasterEstimatorLike
+    interpreted_model_mv:Optional[ForecasterEstimatorLike]=None
 
 @dataclass(frozen=True)
 class MetricStore:

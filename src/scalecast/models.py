@@ -1,11 +1,11 @@
 from __future__ import annotations
 from ._utils import _developer_utils
+from .util import find_seasonal_length
 from .typing_utils import ScikitLike, NormalizerLike
 from .types import (
     DynamicTesting, 
     XvarValues, 
     PositiveInt, 
-    NonNegativeInt, 
     ConfInterval, 
     ModelValues, 
     DetermineBestBy, 
@@ -15,6 +15,7 @@ from .classes import AR
 from typing import TYPE_CHECKING, Self, Optional, Any, Literal, Sequence
 import pandas as pd
 import numpy as np
+import warnings
 if TYPE_CHECKING:
     from ._Forecaster_parent import Forecaster_parent
 
@@ -81,7 +82,7 @@ class SKLearnUni:
     def fit(self,X:np.ndarray,y:np.ndarray,**fit_params) -> Self:
         obs_to_drop = self.max_lag_order
         X = self.scaler.transform(X)
-        self.regr.fit(X,y[obs_to_drop:],**fit_params)
+        self.regr.fit(X,np.asarray(y)[obs_to_drop:],**fit_params)
         return self
 
     def predict(self,X,in_sample:bool=False,**predict_params) -> list[float]:
@@ -117,6 +118,217 @@ class SKLearnUni:
         return list(preds)
 
     def fit_predict(self,X,y) -> list[float]:
+        self.fit(X,y)
+        return self.predict(X)
+    
+class SKLearnMV:
+    def __init__(
+        self,
+        f:'Forecaster_parent', 
+        model:ScikitLike, 
+        lags:None|int|list[int]|dict[str,int|list[int]]=1,
+        dynamic_testing:DynamicTesting = True, 
+        Xvars:XvarValues = 'all', 
+        normalizer:NormalizerLike = 'minmax', 
+        test_set_actuals:Optional[list[float]]=None,
+        **kwargs:Any,
+    ):
+        self.regr = {label:model(**kwargs) for label in f.y}
+        self.f = f
+        self.normalizer = normalizer
+        self.lags = self._parse_lags(lags)
+        self.scaler = self.f.lookup_normalizer(normalizer)()
+        self.dynamic_testing = self._parse_dynamic_testing(dynamic_testing)
+        self.Xvars = self._parse_Xvars(Xvars)
+        self.test_set_actuals = test_set_actuals
+        self.current_actuals = f.y
+
+    def _parse_dynamic_testing(self,dynamic_testing) -> int:
+        steps = len(self.f.future_dates)
+        match dynamic_testing:
+            case False:
+                return 1
+            case True:
+                return steps+1
+            case i if i <= 0:
+                raise ValueError(f'Invalid value passed to dynamic_testing: {dynamic_testing}')
+            case _:
+                dynamic_testing = dynamic_testing
+
+    def _parse_lags(self,lags):
+        match lags:
+            case None|0:
+                return 0
+            case str():
+                raise ValueError(f'Unrecognized value passed to lags: {lags}')
+            case float():
+                return int(lags)
+            case _:
+                return lags
+
+    def _parse_Xvars(self,Xvars):
+        match Xvars:
+            case 'all':
+                return list(self.f.current_xreg.keys())
+            case None:
+                return []
+            case _:
+                return list(Xvars)
+            
+    def _generate_X(self):
+        self.predict_with_Xvars = self.Xvars[:]
+        current_X = np.array([self.f.current_xreg[x].values.copy() for x in self.Xvars]).T
+        future_X = np.array([np.array(self.f.future_xreg[x][:]) for x in self.Xvars]).T
+
+        ylen = len(self.f.y[self.f.names[0]])
+        
+        no_other_xvars = current_X.ndim == 1
+        if no_other_xvars:
+            observed_future = np.array([0]*(ylen + len(self.f.future_dates))).reshape(-1,1) # column of 0s
+            observed = np.array([0]*ylen).reshape(-1,1)
+        else:
+            observed_future = np.concatenate([current_X,future_X],axis=0)
+
+        if not self.lags: # handle none
+            observedy = np.array([v.to_list() for _, v in self.f.y.items()]).T
+            futurey = np.zeros((len(self.f.future_dates),self.f.n_series))
+            if no_other_xvars:
+                observed = observedy
+                future = futurey
+            else:
+                observed = np.concatenate([observedy,observed],axis=1)
+                future = np.concatenate([futurey,future],axis=1)
+            
+            self.current_X = observed
+            self.future_X = future
+            return observed, future
+        elif isinstance(self.lags,int): # handle int case
+            max_lag = self.lags
+            lag_matrix = np.zeros((observed_future.shape[0],max_lag*self.f.n_series))
+
+            pos = 0
+            for i in range(self.f.n_series):
+                for j in range(self.lags):
+                    self.predict_with_Xvars.append(f'LAG_{self.f.names[i]}_{j+1}') # LAG_UTUR_1 for first lag to keep track of position
+                    lag_matrix[:,pos] = (
+                        [np.nan] * (j+1)
+                        + self.f.y[self.f.names[i]].to_list() 
+                        + [np.nan] * (lag_matrix.shape[0] - ylen - (j+1)) # pad with nas
+                    )[:lag_matrix.shape[0]] 
+                    pos += 1
+        elif isinstance(self.lags,dict): # handle dict case
+            total_lags = 0
+            for _, lag_val in self.lags.items():
+                local_lags = self._parse_lags(lag_val)
+                if hasattr(local_lags,'__len__'):
+                    total_lags += len(local_lags)
+                else:
+                    total_lags += local_lags
+            lag_matrix = np.zeros((observed_future.shape[0],total_lags))
+            pos = 0
+            max_lag = 1
+            
+            for label, lag_val in self.lags.items():
+                if hasattr(lag_val,'__len__'):
+                    for i in lag_val:
+                        lag_matrix[:,pos] = (
+                            [np.nan] * i
+                            + self.f.y[k].to_list()
+                            + [np.nan]
+                            * (lag_matrix.shape[0] - ylen - i)
+                        )[:lag_matrix.shape[0]] 
+                        self.predict_with_Xvars.append(f'LAG_{label}_{i}')
+                        pos+=1
+                    max_lag = max(max_lag,max(lag_val))
+                else:
+                    for i in range(lag_val):
+                        lag_matrix[:,pos] = (
+                            [np.nan] * (i+1)
+                            + self.f.y[k].to_list()
+                            + [np.nan]
+                            * (lag_matrix.shape[0] - ylen - (i+1))
+                        )[:lag_matrix.shape[0]] 
+                        self.predict_with_Xvars.append(f'LAG_{label}_{i+1}')
+                        pos+=1
+                    max_lag = max(max_lag,lag_val)
+        
+        else:
+            lag_matrix = np.zeros((observed_future.shape[0],len(self.lags)*self.f.n_series))
+            pos = 0
+            max_lag = max(self.lags)
+            for i in range(self.f.n_series):
+                for lag in self.lags:
+                    self.predict_with_Xvars.append(f'LAG_{self.f.names[i]}_{lag}')
+                    lag_matrix[:,pos] = (
+                        [np.nan] * lag
+                        + self.f.y[self.f.names[i]].to_list()
+                        + [np.nan] * (lag_matrix.shape[0] - ylen - lag)
+                    )[:lag_matrix.shape[0]]
+                    pos+=1
+
+        observed_future = np.concatenate([observed_future,lag_matrix],axis=1)
+
+        if no_other_xvars:
+            start_col = 1
+        else:
+            start_col = 0
+
+        future = observed_future[observed.shape[0]:,start_col:]
+        observed = observed_future[max_lag:observed.shape[0],start_col:]
+
+        self.current_X = observed
+        self.future_X = future
+
+        return observed, future
+
+    def generate_current_X(self):
+        X = self._generate_X()[0]
+        self.scaler = self.scaler.fit(X)
+        return X
+
+    def generate_future_X(self):
+        if hasattr(self,'future_X'):
+            return self.future_X
+        else:
+            return self._generate_X()[1]
+
+    @_developer_utils.log_warnings
+    def fit(self,X,y,**fit_params):
+        for label, series in y.items():
+            X_scaled = self.scaler.transform(X)
+            self.regr[label].fit(X_scaled,series[-X.shape[0]:].copy(),**fit_params)
+        return self
+
+    def predict(self,X,in_sample:bool=False,**predict_params) -> dict[str,list[float]]:
+        preds = {}
+        if not self.lags or in_sample or (self.dynamic_testing == 1 and self.test_set_actuals):
+            for label, regr in self.regr.items():
+                X_scaled = self.scaler.transform(X)
+                preds[label] = list(regr.predict(X_scaled,**predict_params))
+        else:
+            series = {k: v.to_list() for k, v in self.f.y.items()}
+            for i in range(X.shape[0]):
+                X_scaled = self.scaler.transform(X[i,:].reshape(1,-1))
+                for label, regr in self.regr.items():
+                    series_loc = list(self.f.y.keys()).index(label)
+                    pred = regr.predict(X_scaled,**predict_params)[0]
+                    preds.setdefault(label,[]).append(pred)
+                    if i < X.shape[0] - 1:
+                        if (i+1) % self.dynamic_testing == 0 and self.test_set_actuals:
+                            series[label].append(self.test_set_actuals[series_loc][i])
+                        else:
+                            series[label].append(pred)
+                if i < X.shape[0] - 1:
+                    for x in self.predict_with_Xvars:
+                        if x.startswith('LAG_'):
+                            idx = self.predict_with_Xvars.index(x)
+                            label = x.split('_')[1]
+                            lag_no = int(x.split('_')[-1])
+                            X[i+1,idx] = series[label][-lag_no]
+
+        return preds
+
+    def fit_predict(self,X,y):
         self.fit(X,y)
         return self.predict(X)
     
@@ -458,12 +670,10 @@ class TBATS:
         self.random_seed = random_seed
 
     def generate_current_X(self) -> np.ndarray:
-        self.current_X = self.current_actuals
-        return self.current_X
+        return np.asarray(self.current_actuals)
 
     def generate_future_X(self) -> np.ndarray:
-        self.future_X = [0]*len(self.f.future_dates)
-        return self.future_X
+        return np.asarray([0]*len(self.f.future_dates))
 
     @_developer_utils.log_warnings
     def fit(self,X,y,**fit_params:Any) -> Self:
@@ -564,13 +774,117 @@ class ARIMA:
         return self.predict(X)
 
 class Prophet:
-    pass
+    """
+    Docstring for Prophet
+    """
+    def __init__(
+        self,
+        f:'Forecaster_parent',
+        model:Literal['auto']='auto',
+        Xvars:XvarValues = None, 
+        test_set_actuals:Optional[list[float]]=None, 
+        cap:Optional[float]=None,
+        floor:Optional[float]=None,
+        callback_func:callable=None,
+        **kwargs:Any,
+    ):
+        if model == 'auto':
+            from prophet import Prophet
+        else:
+            raise ValueError(f'Unrecognized value passed to model: {model}')
+        
+        self.f = f
+        self.current_actuals = f.y.to_list()
+        self.test_set_actuals = test_set_actuals
+        self.Xvars = self._parse_Xvars(Xvars)
+        self.regr = Prophet(**kwargs)
+        self.cap = cap
+        self.floor = floor
+        self.callback_func = callback_func
 
-class SilverKite:
-    pass
+    def _parse_Xvars(self, Xvars):
+        match Xvars:
+            case 'all':
+                return [x for x in self.f.current_xreg if not isinstance(x,AR)]
+            case None:
+                return []
+            case _:
+                return list(Xvars)
+            
+    def generate_current_X(self) -> np.ndarray:
+        df = pd.DataFrame({'ds':self.f.current_dates.to_list(),'y':self.current_actuals})
+        for x in self.Xvars:
+            df[x] = self.f.current_xreg[x][:]
+        if self.cap:
+            df['cap'] = self.cap
+        if self.floor:
+            df['floor'] = self.floor
+        
+        return df
+
+    def generate_future_X(self) -> np.ndarray:
+        df = pd.DataFrame({'ds':self.f.future_dates.to_list()})
+        for x in self.Xvars:
+            df[x] = self.f.future_xreg[x][:]
+        return df
+    
+    @_developer_utils.log_warnings
+    def fit(self,X,y,**fit_params:Any) -> Self:
+        if callable(self.callback_func):
+            self.callback_func(self.regr)
+
+        self.regr = self.regr.fit(X,**fit_params)
+        return self
+    
+    def predict(self,X,in_sample:None=None,**predict_params) -> list[float]:
+        preds = self.regr.predict(X)
+        return preds['yhat'].to_list()
+    
+    def fit_predict(self,X,y) -> list[float]:
+        self.fit(X,y)
+        return self.predict(X)
 
 class Naive:
-    pass
+    """
+    Docstring for Naive
+    """
+    def __init__(
+        self,
+        f:'Forecaster_parent',
+        model:Literal['auto']='auto',
+        test_set_actuals:Optional[list[float]]=None,
+        seasonal:bool=False,
+        m:int|Literal['auto']='auto',
+    ):
+        if model != 'auto':
+            raise ValueError(f'Unrecognized value passed to model: {model}')
+        
+        self.f = f
+        self.test_set_actuals = test_set_actuals
+        if seasonal:
+            self.m = find_seasonal_length(m,f.freq)
+        else:
+            self.m = 1
+
+    def generate_current_X(self):
+        return
+    
+    def generate_future_X(self):
+        return
+    
+    def fit(self,X:None=None,y:None=None):
+        return self
+    
+    def predict(self,X:None,in_sample:bool=False) -> list[float]:
+        if in_sample:
+            return self.f.y.shift(self.m).dropna().to_list()
+        else:
+            return (self.f.y.to_list()[-self.m:] * int(np.ceil(len(self.f.future_dates)/self.m)))[:len(self.f.future_dates)]
+        
+    def fit_predict(self,X,y) -> list[float]:
+        self.fit(X,y)
+        return self.predict(X)
+
 
 class Combo:
     def __init__(
@@ -592,6 +906,7 @@ class Combo:
         self.test_set_actuals = test_set_actuals
         self.how = how
         self.models = self._parse_models(models=models, determine_best_by = determine_best_by)
+        self.metrics = [f.history[m][determine_best_by] for m in self.models]
         self.rebalance_weights = rebalance_weights
         self.weights = weights
         self.splice_points = splice_points
@@ -600,6 +915,7 @@ class Combo:
         match models:
             case 'all':
                 models = [m for m in self.f.history]
+                warnings.warn('Combining all models may lead to previous combination models being overwritten.')
             case i if i.startswith('top_'):
                 top_n = int(models.split('_')[-1])
                 models = self.f.order_fcsts(determine_best_by=determine_best_by)[:top_n]
@@ -609,3 +925,6 @@ class Combo:
                 models = models
 
         return models
+    
+    def fit(self,X,y,**fit_params):
+        pass

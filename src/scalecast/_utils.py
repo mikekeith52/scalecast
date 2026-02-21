@@ -89,14 +89,6 @@ class _developer_utils:
         return m
 
     @staticmethod
-    def _determine_best_by(metrics):
-        return [
-            'TestSet' + m.upper() for m in metrics
-        ] + [
-            'InSample' + m.upper() for m in metrics
-        ] + ['ValidationMetricValue']
-
-    @staticmethod
     def _reshape_func_input(x,func):
         x = np.array(x).reshape(-1,1)
         if x.shape[0] == 0:

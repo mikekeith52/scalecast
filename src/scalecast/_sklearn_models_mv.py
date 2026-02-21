@@ -100,21 +100,21 @@ def _prepare_data_mv(mvf,Xvars,lags):
     return observed, future, Xvars
 
 def _scale_mv(scaler, X) -> np.ndarray:
-	""" uses scaler parsed from _parse_normalizer() function to transform matrix passed to X.
+    """ uses scaler parsed from _parse_normalizer() function to transform matrix passed to X.
 
-	Args:
-	    scaler (MinMaxScaler, Normalizer, StandardScaler, PowerTransformer, or None): 
-	        the fitted scaler or None type
-	    X (ndarray or DataFrame):
-	        the matrix to transform
+    Args:
+        scaler (MinMaxScaler, Normalizer, StandardScaler, PowerTransformer, or None): 
+            the fitted scaler or None type
+        X (ndarray or DataFrame):
+            the matrix to transform
 
-	Returns:
-	    (ndarray): The scaled x values.
-	"""
-	if scaler is not None:
-	    return scaler.transform(X)
-	else:
-	    return X
+    Returns:
+        (ndarray): The scaled x values.
+    """
+    if scaler is not None:
+        return scaler.transform(X)
+    else:
+        return X
 
 def _train_mv(mvf, X, y, fcster,**kwargs):
     X = _scale_mv(mvf.scaler, X)

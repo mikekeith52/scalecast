@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - `**kwargs` no longer accepted in `Forecaster` or `MVForecaster` objects
 - All metrics refer to their own classes (`MetricStore` and `EvaluatedMetric`)
 - Updated the functionality of the `set_metrics()` method to incorporate functionality previously available in the `add_metric()` method and removed the `add_metric()` method
+- Removed the silerkite model--compatability issue
 
 ## [0.20.0]
 ### Added

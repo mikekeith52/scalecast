@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import warnings
 import random
-from .types import ConfInterval, AvailableModel, Metric, TryTransformations, NonNegativeInt, DatetimeLike, FFillOption, PositiveInt
+from statsmodels.tsa.tsatools import freq_to_period
+from .types import ConfInterval, AvailableModel, DefaultMetric, TryTransformations, NonNegativeInt, DatetimeLike, FFillOption, PositiveInt
 from .Metrics import Metrics as metrics
 from typing import Sequence, Optional, Unpack, Any, Literal, TYPE_CHECKING
 from ._utils import (
@@ -23,7 +24,47 @@ if TYPE_CHECKING:
     from .Pipeline import Transformer, Reverter, Pipeline
 
 def plot_rnn_loss(f:Forecaster, ax:Axes=None, figsize:tuple[int,int]=(12,6)) -> Axes:
+    """
+    Docstring for plot_rnn_loss
+    
+    :param f: Description
+    :type f: Forecaster
+    :param ax: Description
+    :type ax: Axes
+    :param figsize: Description
+    :type figsize: tuple[int, int]
+    :return: Description
+    :rtype: Axes
+    """
     pass
+
+def find_seasonal_length(m:int|Literal['auto']='auto',freq:Optional[str]=None):
+    """
+    Docstring for find_seasonal_length
+    
+    :param m: Description
+    :type m: int | Literal['auto']
+    :param freq: Description
+    :type freq: Optional[str]
+    :return: Description
+    :rtype: NoReturn
+    """
+    if m == 'auto':
+        if freq is not None:
+            if freq.startswith('M'):
+                return 12
+            elif freq.startswith('Q'):
+                return 4
+            elif freq.startswith('H'):
+                return 24
+            else:
+                try:
+                    return freq_to_period(freq)
+                except:
+                    return 1
+        else:
+            return 1
+    return m
 
 def plot_reduction_errors(f:Forecaster, ax:Axes = None, figsize:tuple[int,int]=(12,6)) -> Axes:
     """ Plots the resulting error/accuracy of a Forecaster object where `reduce_Xvars()` method has been called
@@ -495,7 +536,7 @@ def find_statistical_transformation(
     f = f.deepcopy()
     transformer = SeriesTransformer.SeriesTransformer(f)
 
-    m = _developer_utils._convert_m(m,f.freq)
+    m = find_seasonal_length(m,f.freq)
 
     possible_args = {
         'stationary':make_stationary,
@@ -534,7 +575,7 @@ def find_statistical_transformation(
 def find_optimal_transformation(
     f:'Forecaster',
     estimator:AvailableModel=None,
-    monitor:Metric='rmse',
+    monitor:DefaultMetric='rmse',
     test_length:Optional[int]=None,
     train_length:Optional[int]=None,
     num_test_sets:int=1,
@@ -698,7 +739,7 @@ def find_optimal_transformation(
     f.drop_all_Xvars()
     f.history = {}
 
-    m = _developer_utils._convert_m(m,f.freq)
+    m = find_seasonal_length(m,f.freq)
     lags = m if lags == 'auto' and not hasattr(m,'__len__') else m[0] if lags == 'auto' else lags
 
     if verbose:
@@ -1049,7 +1090,7 @@ def Forecaster_with_missing_vals(
                         if fill_strategy == valid_strategies[2]: # sma
                             if v['missing_number'] == 1:
                                 if m is None:
-                                    m = _developer_utils._convert_m('auto',pd.infer_freq(ts_df['Date']))
+                                    m = find_seasonal_length('auto',pd.infer_freq(ts_df['Date']))
                             if impute_lookback_i is None:
                                 impute_lookback_i = ma_pool.shape[0]
                             else:

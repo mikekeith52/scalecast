@@ -75,13 +75,6 @@ class Forecaster(Forecaster_parent):
         cis (bool): Default False. Whether to evaluate naive conformal confidence intervals for every model evaluated.
             If setting to True, ensure you also set a test_length of at least 20 observations for 95% confidence intervals.
             See eval_cis() and set_cilevel() methods and docstrings for more information.
-        metrics (list): Default ['rmse','mape','mae','r2']. The metrics to evaluate when validating
-            and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
-            See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
-            Or the element should be a function that accepts two arguments that will be referenced later by its name.
-            The first element of this list will be set as the default validation metric, but that can be changed.
-            For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
-            exported.
         carry_fit_models (bool): Default True.
             Whether to store the regression model for each fitted model in history.
             Setting this to False can save memory.
@@ -352,163 +345,6 @@ class Forecaster(Forecaster_parent):
         self.history[call_me] = f.history[call_me]
         print('⚡Models Synthesized⚡')
         return self
-    
-    @_developer_utils.log_warnings
-    def _forecast_prophet(
-        self,
-        Xvars:Optional[list[str]|str]=None, 
-        dynamic_testing:Unused=True,
-        cap:Optional[float]=None,
-        floor:Optional[float]=None,
-        callback_func:callable=None,
-        **kwargs:Any,
-    ) -> list[float]:
-        """ Forecasts with the Prophet model from the prophet library.
-        See example: https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html.
-
-        Args:
-            Xvars (list-like, str, or None): Default None. The regressors to predict with.
-                None means no Xvars used (unlike sklearn models).
-                AR terms can be accepted in this function if they are further lagged than the forecast horizon
-                (for example, if predicting 2 periods into the future, lags 2 and greater can be used).
-            dynamic_testing (bool):  Unused placeholder parameter that is necessary for Forecaster specific methods to work. 
-                Prophet doesn't use lags.
-            cap (float): Optional.
-                Specific to Prophet when using logistic growth -- the largest amount the model is allowed to evaluate to.
-            floor (float): Optional.
-                Specific to Prophet when using logistic growth -- the smallest amount the model is allowed to evaluate to.
-            calllback_func (callable): Optional. The callback to use to modify the model, such as with different fourier terms.
-            **kwargs: Passed to the Prophet() function from prophet. 
-                See https://facebook.github.io/prophet/docs/quick_start.html#python-api.
-        """
-        from prophet import Prophet
-
-        return_fitted = not hasattr(self,'actuals')
-
-        self._warn_about_dynamic_testing(
-            dynamic_testing=dynamic_testing,
-            does_not_use_lags=True,
-        )
-        
-        possible_Xvars = _developer_utils._select_reg_for_direct_forecasting(self)
-        X = pd.DataFrame(possible_Xvars)
-        p = pd.DataFrame(
-            {
-                c: self.future_xreg[c][:]
-                for c in X
-            }
-        )
-        Xvars = self._parse_Xvars_not_sklearn_nor_rnn(
-            Xvars = Xvars,
-            possible_Xvars = possible_Xvars.keys()
-        )
-        if cap is not None:
-            X["cap"] = cap
-        if floor is not None:
-            X["floor"] = floor
-        X["y"] = self.y.to_list()
-        X["ds"] = self.current_dates.to_list()
-        X = X.dropna()
-        
-        p["ds"] = self.future_dates.to_list()
-        regr = Prophet(**kwargs)
-        for x in Xvars:
-            regr.add_regressor(x)
-        
-        # before fitting the model we can modify the regressor object
-        if callable(callback_func): 
-            callback_func(regr) # if we need arguments we can use closure
-
-        regr.fit(X)
-        fcst = regr.predict(p)
-
-        self.fitted_values = regr.predict(X)["yhat"].to_list() if return_fitted else []
-        self.Xvars = Xvars
-        self.regr = regr
-
-        return fcst["yhat"].to_list()
-    
-    @_developer_utils.log_warnings
-    def _forecast_silverkite(
-        self, 
-        dynamic_testing:Unused=True, 
-        Xvars:Optional[str|list[str]]=None, 
-        cv_max_splits:NonNegativeInt = 0, 
-        **kwargs:Any,
-    ) -> list[float]:
-        """ Forecasts with the silverkite model from LinkedIn greykite library.
-        See the example: https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html.
-
-        Args:
-            dynamic_testing (bool):  Unused placeholder parameter that is necessary for Forecaster specific methods to work. 
-                Silverkite can use lags but they are always far enough in the past to allow a direct forecast.
-            Xvars (list-like, str, or None): The regressors to predict with.
-                None means no Xvars used (unlike sklearn models).
-                AR terms can be accepted in this function if they are further lagged than the forecast horizon
-                (for example, if predicting 2 periods into the future, lags 2 and greater can be used).
-            cv_max_splits (int): Default 0. The number of cross-validation folds to use to optimize the model.
-                This is separate from cross validation native to scalecast. It is native to the greykite library.
-            **kwargs: Passed to the ModelComponentsParam function from greykite.framework.templates.autogen.forecast_config.
-        """
-        from greykite.framework.templates.autogen.forecast_config import (
-            ForecastConfig,
-            MetadataParam,
-            ModelComponentsParam,
-            EvaluationPeriodParam,
-        )
-        from greykite.framework.templates.forecaster import Forecaster as SKForecaster
-
-        return_fitted = not hasattr(self,'actuals')
-
-        self._warn_about_dynamic_testing(
-            dynamic_testing=dynamic_testing,
-            does_not_use_lags=False,
-            uses_direct=True,
-        )
-
-        Xvars = self._parse_Xvars_not_sklearn_nor_rnn(
-            Xvars=Xvars,
-            possible_Xvars = _developer_utils._select_reg_for_direct_forecasting(self).keys()
-        )
-
-        def _forecast_sk(df, Xvars, forecast_length):
-            metadata = MetadataParam(time_col="ts", value_col="y", freq=self.freq)
-            components = ModelComponentsParam(
-                regressors={"regressor_cols": Xvars} if Xvars is not None else None,
-                **kwargs,
-            )
-            forecaster = SKForecaster()
-            result = forecaster.run_forecast_config(
-                df=df,
-                config=ForecastConfig(
-                    forecast_horizon=forecast_length,
-                    metadata_param=metadata,
-                    evaluation_period_param=EvaluationPeriodParam(
-                        cv_max_splits=cv_max_splits,
-                    ),  # makes it very much faster
-                ),
-            )
-            return (
-                result.forecast.df["forecast"].to_list(),
-                result.model[-1].summary().info_dict["coef_summary_df"],
-            )
-
-        fcst_length = len(self.future_dates)
-        ts_df = pd.DataFrame(
-            {
-                "ts": self.current_dates.to_list() + self.future_dates.to_list(),
-                "y": self.y.to_list() + [None] * fcst_length,
-            }
-        )
-        reg_df = pd.DataFrame(
-            {x: self.current_xreg[x].to_list() + self.future_xreg[x] for x in Xvars}
-        )
-        df = pd.concat([ts_df, reg_df], axis=1).dropna(subset=reg_df.columns.to_list())
-        result = _forecast_sk(df=df, Xvars=Xvars, forecast_length=fcst_length)
-        self.summary_stats = result[1].set_index("Pred_col")
-        self.fitted_values = result[0][:-fcst_length] if return_fitted else []
-        self.Xvars = Xvars
-        return result[0][-fcst_length:]
 
     @_developer_utils.log_warnings
     def _forecast_naive(
@@ -2311,6 +2147,15 @@ class Forecaster(Forecaster_parent):
         return self
     
     def parse_labeled_metrics(self, labeled_metrics:dict[str,EvaluatedMetric]) -> dict[str,float]:
+        """
+        Docstring for parse_labeled_metrics
+        
+        :param self: Description
+        :param labeled_metrics: Description
+        :type labeled_metrics: dict[str, EvaluatedMetric]
+        :return: Description
+        :rtype: dict[str, float]
+        """
         scores = {k:v.score for k, v in labeled_metrics.items()}
         ascending_order = [v.store.lower_is_better for _, v in labeled_metrics.items()][0]
         x = Counter(scores).most_common()

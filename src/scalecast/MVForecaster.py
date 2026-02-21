@@ -24,11 +24,13 @@ from .types import (
     AvailableModel,
     ExportOptions,
     SeriesName,
-    Metric,
+    DefaultMetric,
     AvailableNormalizer,
     SeriesValues,
 )
 from .typing_utils import ScikitLike, NormalizerLike
+from .classes import AR, ValidatedList, Estimator
+from dataclasses import replace
 from typing import Optional, Literal, Any, Self, TYPE_CHECKING
 import warnings
 import os
@@ -56,7 +58,6 @@ class MVForecaster(Forecaster_parent):
         test_length:NonNegativeInt = 0,
         optimize_on:Literal['mean','min','max']|callable|SeriesName = 'mean',
         cis:bool = False,
-        metrics:list[Metric]=['rmse','mape','mae','r2'],
         carry_fit_models:bool = False,
         **kwargs:Any,
     ):
@@ -86,13 +87,6 @@ class MVForecaster(Forecaster_parent):
             cis (bool): Default False. Whether to evaluate probabilistic confidence intervals for every model evaluated.
                 If setting to True, ensure you also set a test_length of at least 20 observations for 95% confidence intervals.
                 See eval_cis() and set_cilevel() methods and docstrings for more information.
-            metrics (list): Default ['rmse','mape','mae','r2']. The metrics to evaluate when validating
-                and testing models. Each element must exist in utils.metrics and take only two arguments: a and f.
-                Or the element should be a function that accepts two arguments that will be referenced later by its name.
-                See https://scalecast.readthedocs.io/en/latest/Forecaster/Util.html#metrics.
-                The first element of this list will be set as the default validation metric, but that can be changed.
-                For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
-                exported.
             carry_fit_models (bool): Default False.
                 Whether to store the regression model for each fitted model in history.
                 Setting this to False can save memory.
@@ -102,7 +96,6 @@ class MVForecaster(Forecaster_parent):
             y = fs[0].y, # placeholder -- will be overwritten
             test_length = test_length,
             cis = cis,
-            metrics = metrics,
             **kwargs,
         )
         for f in fs:
@@ -129,6 +122,11 @@ class MVForecaster(Forecaster_parent):
         self.grids_file = 'MVGrids'
         self.freq = fs[0].freq
         self.n_series = len(fs)
+        self.estimators = ValidatedList(
+            [replace(estimator,interpreted_model=estimator.interpreted_model_mv) for estimator in self.estimators if estimator.interpreted_model_mv],
+            enforce_type='Estimator'
+        )
+
         self.y = {}
         if names is None:
             names = [f'y{i+1}' for i in range(self.n_series)]
@@ -142,26 +140,26 @@ class MVForecaster(Forecaster_parent):
                     self.current_xreg = {
                         k: v.copy().reset_index(drop=True)
                         for k, v in f.current_xreg.items()
-                        if not k.startswith("AR")
+                        if not isinstance(k,AR)
                     }
                     self.future_xreg = {
                         k: v[:]
                         for k, v in f.future_xreg.items()
-                        if not k.startswith("AR")
+                        if not isinstance(k,AR)
                     }
                 else:
                     for k, v in f.current_xreg.items():
-                        if not k.startswith("AR"):
+                        if not isinstance(k,AR):
                             self.current_xreg[k] = v.copy().reset_index(drop=True)
                             self.future_xreg[k] = f.future_xreg[k][:]
             elif merge_Xvars in ("intersection", "i"):
                 if i == 0:
                     self.current_xreg = {
-                        k: v.copy().reset_index(drop=True) for k,v in f.current_xreg.items() if not k.startswith('AR')
+                        k: v.copy().reset_index(drop=True) for k,v in f.current_xreg.items() if not isinstance(k,AR)
                     }
-                    self.future_xreg = {k: v[:] for k,v in f.future_xreg.items() if not k.startswith('AR')}
+                    self.future_xreg = {k: v[:] for k,v in f.future_xreg.items() if not isinstance(k,AR)}
                 else:
-                    f.drop_Xvars(*[k for k in f.current_xreg if k not in self.current_xreg or k.startswith('AR')])
+                    f.drop_Xvars(*[k for k in f.current_xreg if k not in self.current_xreg or isinstance(k,AR)])
 
             else:
                 raise ValueError(
@@ -596,137 +594,6 @@ class MVForecaster(Forecaster_parent):
                 f'Possible values are: {list(self.optimizer_funcs.keys())} or a function.')
 
         self.optimize_on = how
-    
-    @_developer_utils.log_warnings
-    def _forecast_sklearn(
-        self, 
-        fcster:SKLearnModel, 
-        dynamic_testing:DynamicTesting = True, 
-        Xvars:XvarValues = 'all', 
-        normalizer:AvailableNormalizer="minmax", 
-        lags:NonNegativeInt=1, 
-        **kwargs:Any,
-    ) -> list[float]:
-        """ Runs the vector multivariate forecast start-to-finish. All Xvars stored in the object are used always. All sklearn estimators supported.
-        See example1: https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html
-        and example2: https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html.
-
-        Args:
-            fcster (str): One of `MVForecaster.estimators`. Scikit-learn estimators or APIs only. 
-                Reads the estimator set to `set_estimator()` method.
-            Xvars (str or list-like): Default 'all'. The exogenous/seasonal variables to use when forecasting.
-                If None is passed, no Xvars will be used.
-            dynamic_testing (bool or int): Default True.
-                Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
-                If True, evaluates dynamically over the entire out-of-sample slice of data.
-                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
-                Setting this to False or 1 means faster performance, 
-                but gives a less-good indication of how well the forecast will perform more than one period out.
-                The model will skip testing if the test_length attribute is set to 0.
-            normalizer (str): Default 'minmax'.
-                The scaling technique to apply to the input data and lags. One of `MVForecaster.normalizer`. 
-            lags (int | list[int] | dict[str,(int | list[int])]): Default 1.
-                The lags to add from each series to forecast with.
-                Needs to use at least one lag for any sklearn model.
-                Some models in the `scalecast.auxmodels` module require you to pass None or 0 to lags.
-                If int, that many lags will be added for all series.
-                If list, each element must be int types, and only those lags will be added for each series.
-                If dict, the key must be a series name and the key is a list or int.
-            **kwargs: Treated as model hyperparameters and passed to the applicable sklearn or other type of estimator.
-
-        >>> mvf.set_estimator('gbt')
-        >>> mvf.manual_forecast(lags=3) # adds three lags for each series
-        >>> mvf.manual_forecast(lags=[1,3]) # first and third lags added for each series
-        >>> mvf.manual_forecast(lags={'y1':2,'y2':3}) # 2 lags added for first series, 3 lags for second
-        >>> mvf.manual_forecast(lags={'series1':[1,3],'series2':3}) # first and third lag for first series, 3 lags for second
-        """
-        steps = len(self.future_dates)
-        dynamic_testing = (
-            steps + 1 
-            if dynamic_testing is True or not hasattr(self,'actuals') 
-            else 1 if dynamic_testing is False 
-            else dynamic_testing
-        )
-        Xvars = (
-            list(self.current_xreg.keys()) if Xvars == 'all' 
-            else [] if Xvars is None 
-            else list(Xvars)[:]
-        )
-        self.Xvars = Xvars
-        nolags = lags is None or not lags
-        observed, future, Xvars = _prepare_data_mv(self,Xvars=Xvars[:],lags=lags)
-        
-        if nolags:
-            self.scaler = self._parse_normalizer(observed.copy(), None)
-            trained_full = _train_mv(
-                mvf=self,
-                X=observed.copy(),
-                y=None,
-                fcster=fcster,
-                **kwargs,
-            )
-        else:
-            trained_full = {}
-            self.scaler = self._parse_normalizer(observed.copy(), normalizer)
-            for k, v in self.y.items():
-                trained_full[k] = _train_mv(
-                    mvf=self,
-                    X=observed,
-                    y=v.values[-observed.shape[0] :].copy(),
-                    fcster=fcster,
-                    **kwargs,
-                )
-        self.trained_models = trained_full
-        if hasattr(self,'actuals'): # skip fitted values if only testing out-of-sample
-            self.fitted_values = {k:[] for k in self.y}
-        elif nolags:
-            self.fitted_values = {
-                k:list(trained_full.fittedvalues[:,i])
-                for i, k in enumerate(self.y.keys())
-            }
-        else:
-            self.fitted_values = _predict_mv(
-                mvf=self,
-                trained_models=trained_full, 
-                future=observed, 
-                dynamic_testing=False,
-                nolags=nolags,
-            )
-        return _predict_mv(
-            mvf=self,
-            trained_models=trained_full, 
-            future=future, 
-            dynamic_testing=dynamic_testing,
-            nolags=nolags,
-            Xvars = Xvars,
-        )
-
-    def _parse_normalizer(self, X_train:np.ndarray, normalizer:AvailableNormalizer) -> NormalizerLike:
-        """ fits an appropriate scaler to training data that will then be applied to future data
-
-        Args:
-            X_train (DataFrame): The independent values.
-            normalizer (str): One of MVForecaster.normalizer.
-                if 'minmax', uses the MinMaxScaler from sklearn.preprocessing.
-                if 'scale', uses the StandardScaler from sklearn.preprocessing.
-                if 'normalize', uses the Normalizer from sklearn.preprocessing.
-                if None, returns None.
-
-        Returns:
-            (scikit-learn preprecessing scaler/normalizer): The normalizer fitted on training data only.
-        """
-        _developer_utils.descriptive_assert(
-            normalizer in self.normalizer,
-            ValueError,
-            f"normalizer must be one of {self.normalizer}, got {normalizer}.",
-        )
-        X_train = X_train if not hasattr(X_train,'values') else X_train.values
-        if normalizer is None:
-            return None
-
-        scaler = scaler = self.normalizer[normalizer]()
-        scaler.fit(X_train)
-        return scaler
 
     def _set_cis(self,*attrs,m,ci_range,preds):
         for i, attr in enumerate(attrs):
@@ -740,19 +607,12 @@ class MVForecaster(Forecaster_parent):
             **kwargs: passed from each model, depending on how that model uses Xvars, normalizer, and other args
         """
         call_me = self.call_me
-        fitted_val_actuals = {
-            k: (
-                self.y[k].to_list()[
-                    -len(self.fitted_values[k]) :
-                ] 
-            ) for k in self.y
-        }
-        lags = kwargs["lags"] if "lags" in kwargs.keys() else 1
+        fitted_val_actuals = {k: (v.to_list()[-len(self.fitted_values[k]):]) for k, v in self.y.items()}
         
         self.history[call_me]['Estimator'] = self.estimator
-        self.history[call_me]['Xvars'] = self.Xvars # self.Xvars
+        self.history[call_me]['Xvars'] = self.call_estimator.predict_with_Xvars
         self.history[call_me]['HyperParams'] = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
-        self.history[call_me]['Lags'] =  None if lags is None else int(lags) if not hasattr(lags,'__len__') else lags
+        self.history[call_me]['Lags'] =  self.call_estimator.lags
         self.history[call_me]['Forecast'] = self.forecast
         self.history[call_me]['Observations'] = len(self.current_dates)
         self.history[call_me]['FittedVals'] = self.fitted_values
@@ -771,9 +631,9 @@ class MVForecaster(Forecaster_parent):
                 self.history[call_me]['grid'] = self.grid
                 self.history[call_me]['grid_evaluated'] = self.grid_evaluated
 
-        for met, func in self.metrics.items():
-            self.history[call_me]["InSample" + met.upper()] = {
-                series: _developer_utils._return_na_if_len_zero(a, self.fitted_values[series], func)
+        for met in self.metrics:
+            self.history[call_me]["InSample" + met.name.upper()] = {
+                series: _developer_utils._return_na_if_len_zero(a, self.fitted_values[series], met.eval_func)
                 for series, a in fitted_val_actuals.items()
             }
 

@@ -20,7 +20,7 @@ from .types import (
     XvarValues,
 )
 from .typing_utils import ScikitLike, NormalizerLike
-from .classes import AR, Estimator, EvaluatedMetric, DetermineBestBy, MetricStore, ValidatedList, DefaultNormalizer
+from .classes import AR, Estimator, EvaluatedMetric, DetermineBestBy, MetricStore, ValidatedList
 from .models import SKLearnUni
 import copy
 import pandas as pd
@@ -833,7 +833,7 @@ class Forecaster_parent:
         :rtype: Self
         """
         X = self.call_estimator.generate_current_X()
-        y = self.y.values
+        y = self.y
         self.call_estimator.fit(X,y,**fit_params)
         return self
 

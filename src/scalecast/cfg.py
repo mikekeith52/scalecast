@@ -1,6 +1,6 @@
 from .classes import NoScaler, Estimator, MetricStore, ValidatedList
 from .Metrics import Metrics
-from .models import SKLearnUni, ARIMA, Theta, HWES, TBATS, Prophet, SilverKite, LSTM, RNN, Naive, Combo
+from .models import SKLearnUni, SKLearnMV, ARIMA, Theta, HWES, TBATS, Prophet, LSTM, RNN, Naive, Combo
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from xgboost import XGBRegressor
@@ -23,22 +23,21 @@ from sklearn.preprocessing import (
 from itertools import cycle
 
 ESTIMATORS:ValidatedList = ValidatedList([
-    Estimator(name='catboost',imported_model=CatBoostRegressor,interpreted_model=SKLearnUni),
-    Estimator(name='elasticnet',imported_model=ElasticNet,interpreted_model=SKLearnUni),
-    Estimator(name='gbt',imported_model=GradientBoostingRegressor,interpreted_model=SKLearnUni),
-    Estimator(name='knn',imported_model=KNeighborsRegressor,interpreted_model=SKLearnUni),
-    Estimator(name='lasso',imported_model=Lasso,interpreted_model=SKLearnUni),
-    Estimator(name='mlp',imported_model=MLPRegressor,interpreted_model=SKLearnUni),
-    Estimator(name='mlr',imported_model=LinearRegression,interpreted_model=SKLearnUni),
-    Estimator(name='rf',imported_model=RandomForestRegressor,interpreted_model=SKLearnUni),
-    Estimator(name='ridge',imported_model=Ridge,interpreted_model=SKLearnUni),
-    Estimator(name='sgd',imported_model=SGDRegressor,interpreted_model=SKLearnUni),
-    Estimator(name='svr',imported_model=SVR,interpreted_model=SKLearnUni),
-    Estimator(name='xgboost',imported_model=XGBRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='catboost',imported_model=CatBoostRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='elasticnet',imported_model=ElasticNet,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='gbt',imported_model=GradientBoostingRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='knn',imported_model=KNeighborsRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='lasso',imported_model=Lasso,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='mlp',imported_model=MLPRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='mlr',imported_model=LinearRegression,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='rf',imported_model=RandomForestRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='ridge',imported_model=Ridge,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='sgd',imported_model=SGDRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='svr',imported_model=SVR,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='xgboost',imported_model=XGBRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
     Estimator(name='arima',imported_model='auto',interpreted_model=ARIMA),
     Estimator(name='hwes',imported_model='auto',interpreted_model=HWES),
     Estimator(name='prophet',imported_model='auto',interpreted_model=Prophet),
-    Estimator(name='silverkite',imported_model='auto',interpreted_model=SilverKite),
     Estimator(name='rnn',imported_model='auto',interpreted_model=RNN),
     Estimator(name='lstm',imported_model='auto',interpreted_model=LSTM),
     Estimator(name='naive',imported_model='auto',interpreted_model=Naive),
