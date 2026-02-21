@@ -895,7 +895,6 @@ class Combo:
         how:Literal['simple','weighted','splice']="simple",
         models:ModelValues="all",
         determine_best_by:DetermineBestBy="ValidationMetricValue",
-        rebalance_weights:ConfInterval=0.1,
         weights:Optional[Sequence[float|int]]=None,
         splice_points:Optional[Sequence[DatetimeLike]]=None,
     ):
@@ -906,25 +905,63 @@ class Combo:
         self.test_set_actuals = test_set_actuals
         self.how = how
         self.models = self._parse_models(models=models, determine_best_by = determine_best_by)
-        self.metrics = [f.history[m][determine_best_by] for m in self.models]
-        self.rebalance_weights = rebalance_weights
         self.weights = weights
+        if how == 'weighted' and not weights:
+            self.metrics = [f.history[m][determine_best_by] for m in self.models]
+            self.lower_is_better = self.metrics[0].store.lower_is_better
+        elif how == 'weighted' and weights:
+            if len(self.weights) != len(self.models):
+                raise ValueError('When how is weighted and weights are provided, the number of provided weights must match the number of provided models')
+        else:
+            self.metrics = None
         self.splice_points = splice_points
+
+    def _validate_how(self,how):
+        if how not in ('simple','weighted','splice'):
+            raise ValueError(f'Argument passed to how not recognized: {how}')
     
     def _parse_models(self, models:ModelValues, determine_best_by:DetermineBestBy):
         match models:
             case 'all':
-                models = [m for m in self.f.history]
-                warnings.warn('Combining all models may lead to previous combination models being overwritten.')
-            case i if i.startswith('top_'):
-                top_n = int(models.split('_')[-1])
-                models = self.f.order_fcsts(determine_best_by=determine_best_by)[:top_n]
+                models = [m for m in self.f.history][:-1] # exclude last model because it's the one just created (combo)
             case str():
-                models = [models]
+                if models.startswith('top_'):
+                    top_n = int(models.split('_')[-1])
+                    models = self.f.order_fcsts(determine_best_by=determine_best_by)[:top_n]
+                else:
+                    models = [models]
             case _:
                 models = models
 
         return models
     
-    def fit(self,X,y,**fit_params):
-        pass
+    def generate_current_X(self):
+        return np.array([self.f.history[m]['FittedVals'] for m in self.models]).T
+
+    def generate_future_X(self):
+        if self.test_set_actuals:
+            return np.array([self.f.history[m]['TestSetPredictions'] for m in self.models]).T
+        else:
+            return np.array([self.f.history[m]['Forecast'] for m in self.models]).T
+    
+    def fit(self,X,y,**fit_params) -> Self:
+        match self.how:
+            case 'simple'|'splice':
+                self.weights = [1/len(self.models) for _ in self.models]
+            case _:
+                if not self.weights:
+                    weights = [m.score/sum([m.score for m in self.metrics]) for m in self.metrics]
+                    if self.lower_is_better:
+                        weights.reverse()
+                    self.weights = weights
+                else:
+                    self.weights = [w/sum(self.weights) for w in self.weights]
+
+        return self
+    
+    def predict(self,X,in_sample:bool=False,**predict_params):
+        return np.sum(X * self.weights,axis=1)
+
+    def fit_predict(self,X,y) -> list[float]:
+        self.fit(X,y)
+        return self.predict(X)

@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from .MVForecaster import MVForecaster
     from .Pipeline import Transformer, Reverter, Pipeline
 
-def plot_rnn_loss(f:Forecaster, ax:Axes=None, figsize:tuple[int,int]=(12,6)) -> Axes:
+def plot_rnn_loss(history, ax:Axes=None, figsize:tuple[int,int]=(12,6)) -> Axes:
     """
     Docstring for plot_rnn_loss
     

@@ -1,11 +1,6 @@
 from __future__ import annotations
 from .cfg import COLORS, SERIES_COLORS, IGNORE_AS_HYPERPARAMS
 from ._utils import _developer_utils, _tune_test_forecast
-from ._sklearn_models_mv import (
-    _prepare_data_mv,
-    _train_mv,
-    _predict_mv,
-)
 from ._Forecaster_parent import (
     Forecaster_parent,
     ForecastError,
@@ -20,16 +15,13 @@ from .types import (
     XvarValues,
     DetermineBestBy,
     EvaluatedModel,
-    SKLearnModel,
     AvailableModel,
     ExportOptions,
     SeriesName,
-    DefaultMetric,
-    AvailableNormalizer,
     SeriesValues,
 )
-from .typing_utils import ScikitLike, NormalizerLike
-from .classes import AR, ValidatedList, Estimator
+from .typing_utils import ScikitLike
+from .classes import AR, ValidatedList
 from dataclasses import replace
 from typing import Optional, Literal, Any, Self, TYPE_CHECKING
 import warnings
@@ -586,8 +578,8 @@ class MVForecaster(Forecaster_parent):
                 to_pop = [o for o in self.optimizer_funcs if o in self.names]
                 for p in to_pop:
                     self.optimizer_funcs.pop(p)
-            globals()['series_to_optimize'] = self.names.index(how)
-            self.add_optimizer_func(func=optimize_on_series,called=how)
+            self.series_to_optimize = self.names.index(how)
+            self.add_optimizer_func(func=self.optimize_on_series,called=how)
         elif how not in self.optimizer_funcs:
             raise ValueError(
                 f'Value passed to how cannot be used: {how}. '
@@ -1256,5 +1248,10 @@ class MVForecaster(Forecaster_parent):
         df = df.dropna()
         return self.corr(df=df, **kwargs)
 
-def optimize_on_series(x):
-    return x[globals()['series_to_optimize']]
+    def optimize_on_series(self):
+        """
+        Docstring for optimize_on_series
+        
+        :param self: Description
+        """
+        return self.series_to_optimize
