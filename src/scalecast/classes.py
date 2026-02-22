@@ -13,7 +13,6 @@ class Estimator:
     name:str
     imported_model:ScikitLike|Literal['auto']
     interpreted_model:ForecasterEstimatorLike
-    interpreted_model_mv:Optional[ForecasterEstimatorLike]=None
 
 @dataclass(frozen=True)
 class MetricStore:

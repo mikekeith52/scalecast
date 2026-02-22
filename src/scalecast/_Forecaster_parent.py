@@ -2,7 +2,6 @@ from __future__ import annotations
 from .cfg import (
     METRICS,
     NORMALIZERS,
-    ESTIMATORS,
     CLEAR_ATTRS_ON_ESTIMATOR_CHANGE,
 )
 from ._utils import _developer_utils
@@ -52,7 +51,6 @@ class Forecaster_parent:
     ):
         self._logging()
         self.y = y
-        self.estimators = ESTIMATORS # this will be overwritten with Forecaster but maintained in MVForecaster
         self.normalizer = NORMALIZERS # TODO make this its own class
         self.set_test_length(test_length)
         self.validation_length = 1

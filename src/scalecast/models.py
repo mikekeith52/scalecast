@@ -17,7 +17,8 @@ import pandas as pd
 import numpy as np
 import warnings
 if TYPE_CHECKING:
-    from ._Forecaster_parent import Forecaster_parent
+    from .Forecaster import Forecaster
+    from .MVForecaster import MVForecaster
 
 class SKLearnUni:
     """
@@ -25,7 +26,7 @@ class SKLearnUni:
     """
     def __init__(
         self, 
-        f:'Forecaster_parent', 
+        f:'Forecaster', 
         model:ScikitLike, 
         dynamic_testing:DynamicTesting = True, 
         Xvars:XvarValues = None, 
@@ -124,13 +125,13 @@ class SKLearnUni:
 class SKLearnMV:
     def __init__(
         self,
-        f:'Forecaster_parent', 
+        f:'MVForecaster', 
         model:ScikitLike, 
         lags:None|int|list[int]|dict[str,int|list[int]]=1,
         dynamic_testing:DynamicTesting = True, 
         Xvars:XvarValues = 'all', 
         normalizer:NormalizerLike = 'minmax', 
-        test_set_actuals:Optional[list[float]]=None,
+        test_set_actuals:Optional[dict[str,list[float]]]=None,
         **kwargs:Any,
     ):
         self.regr = {label:model(**kwargs) for label in f.y}
@@ -332,13 +333,95 @@ class SKLearnMV:
         self.fit(X,y)
         return self.predict(X)
     
+class VECM:
+    """
+    Docstring for VECM
+    """
+    def __init__(
+        self,
+        f:'MVForecaster',
+        model:Literal['auto']='auto',
+        Xvars:XvarValues = None, 
+        test_set_actuals:Optional[dict[str,list[float]]]=None,
+        lags:int=1,
+        coint_rank:int=1,
+        deterministic:Literal["n", "co", "ci", "lo", "li"]="n",
+        seasons:int=0,
+        first_season:int=0,
+        **kwargs,
+    ):
+        if model == 'auto':
+            from statsmodels.tsa.vector_ar.vecm import VECM
+        else:
+            raise ValueError(f'Unrecognized value passed to model: {model}')
+        
+        self.f = f
+        self.Xvars = self._parse_Xvars(Xvars)
+        self.test_set_actuals = test_set_actuals
+        self.lags = lags
+        self.coint_rank = coint_rank
+        self.deterministic = deterministic
+        self.seasons = seasons
+        self.first_season = first_season
+        self.model_kwargs = kwargs
+        self.init_regr = VECM
+
+    def _parse_Xvars(self,Xvars):
+        match Xvars:
+            case 'all':
+                return list(self.f.current_xreg.keys())
+            case None:
+                return []
+            case _:
+                return list(Xvars)
+            
+    def generate_current_X(self) -> np.ndarray:
+        if self.Xvars:
+            return np.array([self.f.current_xreg[x].values.copy() for x in self.Xvars]).T
+        return None
+
+    def generate_future_X(self) -> np.ndarray:
+        if self.Xvars:
+            return np.array([np.array(self.f.future_xreg[x][:]) for x in self.Xvars]).T
+        return None
+
+    @_developer_utils.log_warnings
+    def fit(self,X,y,**fit_params):
+        y = np.array([v.values.copy() for v in self.f.y.values()]).T
+        self.regr = (
+            self.init_regr(
+                y, 
+                exog = X, 
+                k_ar_diff=self.lags,
+                coint_rank=self.coint_rank,
+                deterministic=self.deterministic,
+                seasons=self.seasons,
+                first_season=self.first_season,
+                dates=self.f.current_dates.values,
+                **self.model_kwargs,
+            )
+            .fit(**fit_params)
+        )
+        return self
+
+    def predict(self,X,in_sample:bool=False,**predict_params):
+        if not in_sample:
+            preds = self.regr.predict(steps=len(self.f.future_dates), exog_fc=X, **predict_params)
+            return {name:[p[i] for p in preds] for i, name in enumerate(self.f.y)}
+        else:
+            return {name:[p[i] for p in self.regr.fittedvalues] for i, name in enumerate(self.f.y)}
+
+    def fit_predict(self,X,y):
+        self.fit(X,y)
+        return self.predict(X)
+    
 class RNN:
     """
     Docstring for RNN
     """
     def __init__(
         self, 
-        f:'Forecaster_parent', 
+        f:'Forecaster', 
         model:Literal['auto']='auto', 
         test_set_actuals:Optional[list[float]]=None, 
         Xvars:XvarValues=None,
@@ -520,7 +603,7 @@ class LSTM(RNN):
     """
     def __init__(
         self,
-        f:'Forecaster_parent',
+        f:'Forecaster',
         lags:PositiveInt=1,
         normalizer:NormalizerLike = 'minmax', 
         lstm_layer_sizes:Sequence[int]=[8],
@@ -562,7 +645,7 @@ class Theta:
     """
     def __init__(
         self, 
-        f:'Forecaster_parent', 
+        f:'Forecaster', 
         model:Literal['auto']='auto', 
         test_set_actuals:Optional[list[float]]=None, 
         **kwargs:Any,
@@ -611,7 +694,7 @@ class HWES:
     """
     def __init__(
         self,
-        f:'Forecaster_parent', 
+        f:'Forecaster', 
         model:Literal['auto']='auto', 
         test_set_actuals:Optional[list[float]]=None, 
         **kwargs:Any,
@@ -622,7 +705,8 @@ class HWES:
             raise ValueError(f'Unrecognized value passed to model: {model}')
         self.test_set_actuals = test_set_actuals
         self.f = f
-        self.regr = HWES(f.y, dates = f.current_dates, freq = f.freq, **kwargs)
+        self.model_kwargs = kwargs
+        self.init_regr = HWES
 
     def generate_current_X(self):
         return
@@ -631,8 +715,12 @@ class HWES:
         return
     
     @_developer_utils.log_warnings
-    def fit(self,X:None=None,y:None=None,optimized:bool=True,use_brute:bool=True,**fit_params:Any) -> Self:
-        self.regr = self.regr.fit(optimized=optimized, use_brute=use_brute, **fit_params)
+    def fit(self,X:None=None,y:np.ndarray=None,optimized:bool=True,use_brute:bool=True,**fit_params:Any) -> Self:
+        self.regr = (
+            self
+            .init_regr(y, dates = self.f.current_dates, freq = self.f.freq, **self.model_kwargs)
+            .fit(optimized=optimized, use_brute=use_brute, **fit_params)
+        )
         return self
     
     def predict(self,X:None=None,in_sample:bool=False,**predict_params) -> list[float]:
@@ -652,7 +740,7 @@ class TBATS:
     """
     def __init__(
         self,
-        f:'Forecaster_parent',
+        f:'Forecaster',
         model:Literal['auto']='auto',
         test_set_actuals:Optional[list[float]]=None, 
         random_seed:Optional[int]=None,
@@ -700,7 +788,7 @@ class ARIMA:
     """
     def __init__(
         self,
-        f:'Forecaster_parent',
+        f:'Forecaster',
         model:Literal['auto']='auto',
         Xvars:XvarValues = None, 
         test_set_actuals:Optional[list[float]]=None, 
@@ -716,7 +804,7 @@ class ARIMA:
         self.test_set_actuals = test_set_actuals
         self.Xvars = self._parse_Xvars(Xvars)
         self.model_kwargs = kwargs
-        self.regr = ARIMA
+        self.init_regr = ARIMA
 
     def _parse_Xvars(self, Xvars):
         match Xvars:
@@ -728,19 +816,19 @@ class ARIMA:
                 return list(Xvars)
 
     def generate_current_X(self) -> np.ndarray:
-        if len(self.Xvars):
+        if self.Xvars:
             return np.array([self.f.current_xreg[x].values.copy() for x in self.Xvars]).T
         return None
 
     def generate_future_X(self) -> np.ndarray:
-        if len(self.Xvars):
+        if self.Xvars:
             return np.array([np.array(self.f.future_xreg[x][:]) for x in self.Xvars]).T
         return None
 
     @_developer_utils.log_warnings
     def fit(self,X,y,**fit_params:Any) -> Self:
-        self.regr = self.regr(
-            self.current_actuals,
+        self.regr = self.init_regr(
+            y.values,
             exog=X,
             dates=self.f.current_dates.to_list(),
             freq=self.f.freq,
@@ -752,7 +840,6 @@ class ARIMA:
         self,
         X,
         in_sample:bool=False,
-        typ:Literal['levels','linear']='levels',
         dynamic:Optional[bool]=True,
         **predict_params
     ) -> list[float]:
@@ -761,7 +848,6 @@ class ARIMA:
                 exog=X,
                 start=len(self.current_actuals),
                 end=len(self.current_actuals) + len(self.f.future_dates) - 1, 
-                typ=typ,
                 dynamic=dynamic,
                 **predict_params,
             )
@@ -779,7 +865,7 @@ class Prophet:
     """
     def __init__(
         self,
-        f:'Forecaster_parent',
+        f:'Forecaster',
         model:Literal['auto']='auto',
         Xvars:XvarValues = None, 
         test_set_actuals:Optional[list[float]]=None, 
@@ -850,7 +936,7 @@ class Naive:
     """
     def __init__(
         self,
-        f:'Forecaster_parent',
+        f:'Forecaster',
         model:Literal['auto']='auto',
         test_set_actuals:Optional[list[float]]=None,
         seasonal:bool=False,
@@ -887,16 +973,25 @@ class Naive:
 
 
 class Combo:
+    """
+    Docstring for Combo
+    
+    Args:
+        replace_negative_weights (bool|float): Whether to replace negative-scoring metrics with some positive (or 0) value to avoid situations where predictions might become nonsensical.
+            This will be ignored in situations where lower scores are better (R2 is the main use-case).
+            Change this to False to turn it off. 0 is an acceptable replacement value.
+    """
     def __init__(
         self,
-        f:'Forecaster_parent',
+        f:'Forecaster',
         model:Literal['auto']='auto', 
         test_set_actuals:Optional[list[float]]=None, 
-        how:Literal['simple','weighted','splice']="simple",
+        how:Literal['simple','weighted']="simple",
         models:ModelValues="all",
         determine_best_by:DetermineBestBy="ValidationMetricValue",
         weights:Optional[Sequence[float|int]]=None,
         splice_points:Optional[Sequence[DatetimeLike]]=None,
+        replace_negative_weights:bool|float=.001,
     ):
         if model != 'auto':
             raise ValueError(f'Unrecognized value passed to model: {model}')
@@ -906,6 +1001,7 @@ class Combo:
         self.how = how
         self.models = self._parse_models(models=models, determine_best_by = determine_best_by)
         self.weights = weights
+        self.replace_negative_weights = replace_negative_weights
         if how == 'weighted' and not weights:
             self.metrics = [f.history[m][determine_best_by] for m in self.models]
             self.lower_is_better = self.metrics[0].store.lower_is_better
@@ -946,13 +1042,15 @@ class Combo:
     
     def fit(self,X,y,**fit_params) -> Self:
         match self.how:
-            case 'simple'|'splice':
+            case 'simple':
                 self.weights = [1/len(self.models) for _ in self.models]
             case _:
                 if not self.weights:
                     weights = [m.score/sum([m.score for m in self.metrics]) for m in self.metrics]
                     if self.lower_is_better:
                         weights.reverse()
+                    elif self.replace_negative_weights is not False:
+                        weights = [self.replace_negative_weights if i < 0 else i for i in weights]
                     self.weights = weights
                 else:
                     self.weights = [w/sum(self.weights) for w in self.weights]

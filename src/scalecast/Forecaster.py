@@ -8,7 +8,6 @@ from .types import (
     NonNegativeInt, 
     ConfInterval, 
     DynamicTesting, 
-    Unused, 
     ModelValues,
     XvarValues,
     DetermineBestBy,
@@ -203,25 +202,12 @@ class Forecaster(Forecaster_parent):
                 ci_range = ci_range,
                 preds = fcst,            )
 
-    def _set_summary_stats(self):
-        """ for every model where summary stats are available, saves them to a pandas dataframe where index is the regressor name
-        """
-        if not hasattr(self,'summary_stats'):
-            results_summary = self.regr.summary()
-            results_as_html = results_summary.tables[1].as_html()
-            self.summary_stats = pd.read_html(results_as_html, header=0, index_col=0)[0]
-
     def _bank_fi_to_history(self):
         """ for every model where feature importance can be extracted, saves that info to a pandas dataframe wehre index is the regressor name
         """
         call_me = self.call_me
         self.history[call_me]['feature_importance_explainer'] = self.explainer
         self.history[call_me]["feature_importance"] = self.feature_importance
-
-    def _bank_summary_stats_to_history(self):
-        """ saves summary stats (where available) to history
-        """
-        self.history[self.call_me]["summary_stats"] = self.summary_stats
 
     def transfer_predict(
         self,
@@ -264,7 +250,7 @@ class Forecaster(Forecaster_parent):
         if regr:
             self.call_estimator = regr
         else:
-            self.call_estimator = f.history[model]['regr']
+            self.call_estimator = f.history[model]['call_estimator']
             preds = self.predict()
             try:
                 fvs = self.predict_fitted_vals()
@@ -280,6 +266,13 @@ class Forecaster(Forecaster_parent):
         self.call_me = call_me
 
         if save_to_history:
+            self.history[call_me] = {}
+            for copy_attr, set_attr in [
+                ('Estimator','estimator'),
+                ('DynamicallyTested','dynamic_testing'),
+            ]:
+                setattr(self,set_attr,f.history[call_me][copy_attr])
+            
             self.forecast = preds
             self.fitted_values = fvs
             self._bank_history()
@@ -328,17 +321,6 @@ class Forecaster(Forecaster_parent):
         self.history[call_me] = f.history[call_me]
         print('⚡Models Synthesized⚡')
         return self
-
-    def _metrics(self, y, pred, call_me):
-        """ Needed for combo modeling only.
-        """
-        self.history[call_me]['TestSetActuals'] = y
-        self.history[call_me]['TestSetPredictions'] = pred
-        for met in self.metrics:
-            self.history[call_me]['TestSet' + met.name.upper()] = EvaluatedMetric(
-                score = _developer_utils._return_na_if_len_zero(y, pred, met.eval_func),
-                store = met,
-            )
 
     def _parse_models(self, models:ModelValues, determine_best_by:DetermineBestBy) -> list[str]:
         """ Takes a collection of models and orders them best-to-worst based on a given metric and returns the ordered list (of str type).
@@ -625,10 +607,11 @@ class Forecaster(Forecaster_parent):
         >>> ) # reduce with gradient boosted tree estimator and overwrite with result
         >>> print(f.reduced_Xvars) # view results
         """
+        if not isinstance(self.estimators.lookup_item(estimator).interpreted_model,SKLearnUni):
+            raise ValueError('This function only works with base models that use a scikit-learn API.')
+
         f = copy.deepcopy(self)
         f.set_estimator(estimator)
-        if not isinstance(f.call_estimator,SKLearnUni):
-            raise ValueError('This function only works with base models that use a scikit-learn API.')
         if grid_search:
             if not use_loaded_grid and f.grids_file + ".py" not in os.listdir('.'):
                 from . import GridGenerator
@@ -646,31 +629,6 @@ class Forecaster(Forecaster_parent):
 
         self.reduction_hyperparams = f.best_params.copy()
 
-        if method == 'pfi':
-            warnings.warn(
-                f'"pfi" is no longer accepted as an argument for the'
-                ' `method` argument. Defaulting to "PermutationExplainer" to match'
-                ' the old "pfi" argument methodology.',
-                category = Warning,
-            )
-            method = 'PermutationExplainer'
-        elif method == 'shap':
-            warnings.warn(
-                f'"shap" is no longer accepted as an argument for the'
-                ' `method` argument. Defaulting to "TreeExplainer" to match'
-                ' the old "shap" argument methodology.',
-                category = Warning,
-            )
-            method = 'TreeExplainer'
-        elif method == 'l1':
-            warnings.warn(
-                f'"l1" is no longer accepted as an argument for the'
-                ' `method` argument. Defaulting to "LinearExplainer" to match'
-                ' the old "l1" argument methodology (as best as possible).',
-                category = Warning,
-            )
-            method = 'LinearExplainer'
-
         f.save_feature_importance(
             method='shap',
             try_order=[method],
@@ -682,21 +640,26 @@ class Forecaster(Forecaster_parent):
         lower_is_better = self.parse_determine_best_by(monitor).lower_is_better
 
         features = fi_df.index.to_list()
-        init_error = f.history[estimator][monitor]
-        init_error = init_error if lower_is_better else (init_error * -1)
+        init_metric = f.history[estimator][monitor]
 
         dropped = []
-        errors = [init_error]
+        metrics = [init_metric]
 
         sqrt = int(len(f.y) ** 0.5)
-        keep_this_many_new = (
-            1
-            if keep_this_many == "auto"
-            else sqrt
-            if keep_this_many == "sqrt"
-            else keep_this_many
-        )
-        keep_at_least_new = sqrt if keep_at_least == "sqrt" else keep_at_least
+
+        match keep_this_many:
+            case 'auto':
+                keep_this_many_new = 1
+            case 'sqrt':
+                keep_this_many_new = sqrt
+            case _:
+                keep_this_many_new = keep_this_many
+
+        match keep_at_least:
+            case 'sqrt':
+                keep_at_least_new = 'sqrt'
+            case _:
+                keep_at_least_new = keep_at_least
 
         stop_at = max(keep_this_many_new, keep_at_least_new)
         drop_this_many = len(f.current_xreg) - stop_at
@@ -710,32 +673,26 @@ class Forecaster(Forecaster_parent):
             else:
                 f.cross_validate(dynamic_tuning=dynamic_tuning, set_aside_test_set = False, **cvkwargs)
             f.auto_forecast(test_again=False)
-            new_error = f.history[estimator][monitor]
-            new_error = new_error if lower_is_better else new_error*-1
-            errors.append(new_error)
+            new_metric = f.history[estimator][monitor]
+            metrics.append(new_metric)
 
             f.save_feature_importance(try_order=[method], on_error="raise")
             fi_df = f.export_feature_importance(estimator)
             features = fi_df.index.to_list()
 
-        optimal_drop = (
-            errors.index(min(errors))
-            if keep_this_many == "auto"
-            else drop_this_many
-        )
-        self.reduced_Xvars = [
-            x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]
-        ]
+        match keep_this_many:
+            case 'auto':
+                optimal_drop = metrics.index(max(metrics))
+            case _:
+                optimal_drop = drop_this_many
+
+        self.reduced_Xvars = [x for x in self.current_xreg.keys() if x not in dropped[:optimal_drop]]
         self.pfi_dropped_vars = dropped
-        self.pfi_error_values = [-e for e in errors] if not lower_is_better else errors
+        self.pfi_error_values = metrics
 
         if overwrite:
-            self.current_xreg = {
-                x: v for x, v in self.current_xreg.items() if x in self.reduced_Xvars
-            }
-            self.future_xreg = {
-                x: v for x, v in self.future_xreg.items() if x in self.reduced_Xvars
-            }
+            self.current_xreg = {x: v for x, v in self.current_xreg.items() if x in self.reduced_Xvars}
+            self.future_xreg = {x: v for x, v in self.future_xreg.items() if x in self.reduced_Xvars}
         return self
 
     def _Xvar_select_forecast(
@@ -870,9 +827,8 @@ class Forecaster(Forecaster_parent):
         >>> f.add_covid19_regressor()
         >>> f.auto_Xvar_select(cross_validate=True)
         """
-        def parse_best_metrics(metrics):
-            x = [m[0] for m in Counter(metrics).most_common() if not np.isnan(m[1])]
-            return None if not x else x[0] if using_r2 else x[-1]
+        if self.estimators.lookup_item(estimator).interpreted_model != SKLearnUni:
+            raise ValueError('This function only works with base models that use a scikit-learn API.')
         
         def get_Xvar_combos(
             f,
@@ -942,11 +898,10 @@ class Forecaster(Forecaster_parent):
             if irr_cycles is not None:
                 for i in irr_cycles:
                     f.add_cycle(i)
-                irr_regressors = [
-                    'cycle' + str(i) + 'sin' for i in irr_cycles
-                ] + [
-                    'cycle' + str(i) + 'cos' for i in irr_cycles
-                ]
+                irr_regressors = (
+                    ['cycle' + str(i) + 'sin' for i in irr_cycles] + 
+                    ['cycle' + str(i) + 'cos' for i in irr_cycles]
+                )
             else:
                 irr_regressors = []
 
@@ -987,27 +942,24 @@ class Forecaster(Forecaster_parent):
                     Xvars_deduped.append(list(dict.fromkeys(xvar_set))) # dedupe and preserve order
             return Xvars_deduped
         
-        estimator = self.estimator if estimator is None else estimator
-        self.set_estimator(estimator)
-        if not isinstance(self.call_estimator,SKLearnUni):
-            raise ValueError('This function only works with base models that follow a scikit-learn API.')
+        match estimator:
+            case None:
+                estimator = self.estimator
 
-        using_r2 = monitor.endswith("R2") or (
-            self.validation_metric == "r2" 
-            and monitor == "ValidationMetricValue"
-        )
+        self.set_estimator(estimator)
 
         trend_metrics = {}
         seasonality_metrics = {}
-        irr_cycles_metrics = {}
         ar_metrics = {}
         final_metrics = {}
         seas_to_try = []
 
         regressors_already_added = self.get_regressor_names()
+        
         if isinstance(must_keep,str):
             must_keep = [must_keep]
         must_keep = [x for x in must_keep if x in regressors_already_added]
+        
         f = copy.deepcopy(self)
         f.drop_all_Xvars()
 
@@ -1081,7 +1033,8 @@ class Forecaster(Forecaster_parent):
                             cvkwargs=cvkwargs,
                             kwargs=trend_estimator_kwargs,
                         )
-        best_trend = [k for k in self.parse_labeled_metrics(trend_metrics)][0]
+        trends = self.parse_labeled_metrics(trend_metrics)
+        best_trend = [k for k in trends][0]
         
         if try_seasonalities:
             seasonalities = {
@@ -1200,7 +1153,9 @@ class Forecaster(Forecaster_parent):
                         cvkwargs=cvkwargs,
                         kwargs=kwargs,
                     )
-        best_seasonality = parse_best_metrics(seasonality_metrics)
+        
+        seasonalities = self.parse_labeled_metrics(seasonality_metrics)
+        best_seasonality = [k for k in seasonalities][0]
         
         if max_ar == 'auto' or max_ar > 0:
             max_ar = max(len(f.future_dates),f.test_length) if max_ar == 'auto' else max_ar
@@ -1216,15 +1171,16 @@ class Forecaster(Forecaster_parent):
                     cvkwargs=cvkwargs,
                     kwargs=kwargs,
                 )
-                if np.isnan(ar_metrics[i]):
+                if np.isnan(ar_metrics[i].score):
                     warnings.warn(
                         f'Cannot estimate {estimator} model with {i} AR terms.',
                         category=Warning,
                     )
                     ar_metrics.pop(i)
                     break
-        
-        best_ar_order = parse_best_metrics(ar_metrics)
+
+        ar_orders = self.parse_labeled_metrics(ar_metrics)
+        best_ar_order = [k for k in ar_orders][0]
 
         f = copy.deepcopy(self)
 
@@ -1237,7 +1193,7 @@ class Forecaster(Forecaster_parent):
             seas_to_try,
         )
         for xvar_set in Xvars:
-            final_metrics[tuple(xvar_set)] =  self._Xvar_select_forecast(
+            final_metrics[tuple(xvar_set)] = self._Xvar_select_forecast(
                 f=f,
                 estimator=estimator,
                 monitor=monitor,
@@ -1247,12 +1203,13 @@ class Forecaster(Forecaster_parent):
                 kwargs=kwargs,
                 Xvars=xvar_set,
             )
-        best_combo = parse_best_metrics(final_metrics)
+        combos = self.parse_labeled_metrics(final_metrics)
+        best_combo = [k for k in combos][0]
 
         f.drop_Xvars(*[x for x in f.get_regressor_names() if x not in best_combo])
         self.current_xreg = f.current_xreg
         self.future_xreg = f.future_xreg
-        if len(final_metrics) == 0:
+        if not final_metrics:
             warnings.warn(
                 "auto_Xvar_select() did not add any regressors to the object."
                 " Sometimes this happens when the object's test length is 0"
@@ -1735,7 +1692,7 @@ class Forecaster(Forecaster_parent):
             #'DeepExplainer':
         }
         fail = False
-        if not isinstance(self.call_estimator,SKLearnUni):
+        if not isinstance(self.estimators.lookup_item(self.estimator).interpreted_model,SKLearnUni):
             fail = True
             error = f'Feature importance only works for sklearn estimators, not {self.estimator}.'
         else:

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from .cfg import COLORS, SERIES_COLORS, IGNORE_AS_HYPERPARAMS
+from .cfg import COLORS, SERIES_COLORS, IGNORE_AS_HYPERPARAMS, MV_ESTIMATORS
 from ._utils import _developer_utils, _tune_test_forecast
 from ._Forecaster_parent import (
     Forecaster_parent,
@@ -22,7 +22,6 @@ from .types import (
 )
 from .typing_utils import ScikitLike
 from .classes import AR, ValidatedList
-from dataclasses import replace
 from typing import Optional, Literal, Any, Self, TYPE_CHECKING
 import warnings
 import os
@@ -114,10 +113,7 @@ class MVForecaster(Forecaster_parent):
         self.grids_file = 'MVGrids'
         self.freq = fs[0].freq
         self.n_series = len(fs)
-        self.estimators = ValidatedList(
-            [replace(estimator,interpreted_model=estimator.interpreted_model_mv) for estimator in self.estimators if estimator.interpreted_model_mv],
-            enforce_type='Estimator'
-        )
+        self.estimators = MV_ESTIMATORS
 
         self.y = {}
         if names is None:
@@ -602,7 +598,10 @@ class MVForecaster(Forecaster_parent):
         fitted_val_actuals = {k: (v.to_list()[-len(self.fitted_values[k]):]) for k, v in self.y.items()}
         
         self.history[call_me]['Estimator'] = self.estimator
-        self.history[call_me]['Xvars'] = self.call_estimator.predict_with_Xvars
+        if hasattr(self.call_estimator,'Xvars'):
+            self.history[call_me]['Xvars'] = self.call_estimator.Xvars
+        else:
+            self.history[call_me]['Xvars'] = None
         self.history[call_me]['HyperParams'] = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
         self.history[call_me]['Lags'] =  self.call_estimator.lags
         self.history[call_me]['Forecast'] = self.forecast
@@ -635,7 +634,6 @@ class MVForecaster(Forecaster_parent):
             test_preds = self.history[call_me]['TestSetPredictions']
             test_actuals = self.history[call_me]['TestSetActuals']
             test_resids = {k:np.array(p) - np.array(test_actuals[k]) for k, p in test_preds.items()}
-            #test_resids = {k:correct_residuals(r) for k, r in test_resids.items()}
             ci_range = {k:np.percentile(np.abs(r), 100 * self.cilevel) for k,r in test_resids.items()}
             self._set_cis(
                 "UpperCI",

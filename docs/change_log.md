@@ -9,6 +9,10 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - All metrics refer to their own classes (`MetricStore` and `EvaluatedMetric`)
 - Updated the functionality of the `set_metrics()` method to incorporate functionality previously available in the `add_metric()` method and removed the `add_metric()` method
 - Removed the silverkite model--compatability issue
+- VECM is native to any `MVForecaster` object
+- `'splice'` no longer available as an option in the combo model
+- Removed option to save summary stats from models
+### Fixed
 
 ## [0.20.0]
 ### Added

@@ -1,6 +1,6 @@
 from .classes import NoScaler, Estimator, MetricStore, ValidatedList
 from .Metrics import Metrics
-from .models import SKLearnUni, SKLearnMV, ARIMA, Theta, HWES, TBATS, Prophet, LSTM, RNN, Naive, Combo
+from .models import SKLearnUni, SKLearnMV, VECM, ARIMA, Theta, HWES, TBATS, Prophet, LSTM, RNN, Naive, Combo
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from xgboost import XGBRegressor
@@ -21,20 +21,21 @@ from sklearn.preprocessing import (
     RobustScaler,
 )
 from itertools import cycle
+from dataclasses import replace
 
 ESTIMATORS:ValidatedList = ValidatedList([
-    Estimator(name='catboost',imported_model=CatBoostRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='elasticnet',imported_model=ElasticNet,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='gbt',imported_model=GradientBoostingRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='knn',imported_model=KNeighborsRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='lasso',imported_model=Lasso,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='mlp',imported_model=MLPRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='mlr',imported_model=LinearRegression,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='rf',imported_model=RandomForestRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='ridge',imported_model=Ridge,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='sgd',imported_model=SGDRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='svr',imported_model=SVR,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
-    Estimator(name='xgboost',imported_model=XGBRegressor,interpreted_model=SKLearnUni,interpreted_model_mv=SKLearnMV),
+    Estimator(name='catboost',imported_model=CatBoostRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='elasticnet',imported_model=ElasticNet,interpreted_model=SKLearnUni),
+    Estimator(name='gbt',imported_model=GradientBoostingRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='knn',imported_model=KNeighborsRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='lasso',imported_model=Lasso,interpreted_model=SKLearnUni),
+    Estimator(name='mlp',imported_model=MLPRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='mlr',imported_model=LinearRegression,interpreted_model=SKLearnUni),
+    Estimator(name='rf',imported_model=RandomForestRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='ridge',imported_model=Ridge,interpreted_model=SKLearnUni),
+    Estimator(name='sgd',imported_model=SGDRegressor,interpreted_model=SKLearnUni),
+    Estimator(name='svr',imported_model=SVR,interpreted_model=SKLearnUni),
+    Estimator(name='xgboost',imported_model=XGBRegressor,interpreted_model=SKLearnUni),
     Estimator(name='arima',imported_model='auto',interpreted_model=ARIMA),
     Estimator(name='hwes',imported_model='auto',interpreted_model=HWES),
     Estimator(name='prophet',imported_model='auto',interpreted_model=Prophet),
@@ -45,6 +46,12 @@ ESTIMATORS:ValidatedList = ValidatedList([
     Estimator(name='theta',imported_model='auto',interpreted_model=Theta),
     Estimator(name='combo',imported_model='auto',interpreted_model=Combo),
 ],enforce_type='Estimator')
+
+MV_ESTIMATORS:ValidatedList[Estimator] = ValidatedList(
+    [replace(e,interpreted_model=SKLearnMV) for e in ESTIMATORS if e.interpreted_model is SKLearnUni] + 
+    [Estimator(name='vecm',imported_model='auto',interpreted_model=VECM)]
+    ,enforce_type='Estimator'
+)
 
 METRICS:ValidatedList[MetricStore] = ValidatedList([
     MetricStore(name='rmse',eval_func=Metrics.rmse),
@@ -95,5 +102,5 @@ SERIES_COLORS = cycle([
     "#9FE2BF",
 ])
 
-IGNORE_AS_HYPERPARAMS = ["Xvars", "tuned", "plot_loss", "plot_loss_test", "lags", "mvf"]
+IGNORE_AS_HYPERPARAMS = ["Xvars", "lags"]
 CLEAR_ATTRS_ON_ESTIMATOR_CHANGE = ["grid","grid_evaluated","best_params","validation_metric_value","actuals"]

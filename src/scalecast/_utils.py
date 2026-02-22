@@ -4,7 +4,6 @@ import logging
 import warnings
 import numpy as np
 from scipy import stats
-from statsmodels.tsa.tsatools import freq_to_period
 from typing import Literal, Any, Optional, TYPE_CHECKING
 from .types import ConfInterval, DynamicTesting, AvailableNormalizer
 from .typing_utils import NormalizerLike
@@ -68,25 +67,6 @@ class _developer_utils:
             'To turn on confidence intervals for future evaluated models, call the eval_cis() method.'
             ,category=Warning
         )
-
-    @staticmethod
-    def _convert_m(m,freq):
-        if m == 'auto':
-            if freq is not None:
-                if freq.startswith('M'):
-                    return 12
-                elif freq.startswith('Q'):
-                    return 4
-                elif freq.startswith('H'):
-                    return 24
-                else:
-                    try:
-                        return freq_to_period(freq)
-                    except:
-                        return 1
-            else:
-                return 1
-        return m
 
     @staticmethod
     def _reshape_func_input(x,func):
