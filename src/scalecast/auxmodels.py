@@ -1,11 +1,9 @@
-from statsmodels.tsa.vector_ar.vecm import VECM
-from .types import AvailableModel, Unused, XvarValues
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from .types import AvailableModel, XvarValues
+from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from .Forecaster import Forecaster
-    import numpy as np
 
-def auto_arima(f:'Forecaster',call_me:str='auto_arima',Xvars:XvarValues=None,train_only:bool=False,**kwargs:Any):
+def auto_arima(f:'Forecaster',call_me:str='auto_arima',Xvars:XvarValues=None,train_only:bool=False,**kwargs:Any) -> 'Forecaster':
     """ Adds a forecast to a `Forecaster` object using the auto_arima function from pmdarima.
     This function attempts to find the optimal arima order by minimizing information criteria.
 
@@ -18,7 +16,7 @@ def auto_arima(f:'Forecaster',call_me:str='auto_arima',Xvars:XvarValues=None,tra
             See https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html.
 
     Returns:
-        None
+        (Forecaster): The passed Forecaster object.
 
     >>> from scalecast.util import pdr_load
     >>> from scalecast.auxmodels import auto_arima
@@ -44,6 +42,8 @@ def auto_arima(f:'Forecaster',call_me:str='auto_arima',Xvars:XvarValues=None,tra
         call_me = call_me,
     )
 
+    return f
+
 def mlp_stack(
     f:'Forecaster',
     model_nicknames:list[AvailableModel],
@@ -54,7 +54,7 @@ def mlp_stack(
     solver:str='lbfgs',
     call_me:str='mlp_stack',
     **kwargs:Any,
-):
+) -> 'Forecaster':
     """ Applies a stacking model using a bagged MLP regressor as the final estimator and adds it to a `Forecaster` or `MVForecaster` object.
     See what it does: https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html#StackingRegressor.
     Recommended to use at least four models in the stack.
@@ -77,7 +77,10 @@ def mlp_stack(
         solver (str): Default 'lbfgs'.
             The mlp solver.
         call_me (str): Default 'mlp_stack'. The name of the resulting model.
-        **kwargs: Passed to the `manual_forecast()` or `proba_forecast()` method.
+        **kwargs: Passed to the `manual_forecast()` method (can include normalizer argument).
+
+    Returns:
+        Forecaster: The passed Forecaster object.
 
     >>> from scalecast.auxmodels import mlp_stack
     >>> from scalecast import GridGenerator
@@ -91,33 +94,12 @@ def mlp_stack(
     from sklearn.neural_network import MLPRegressor
     from sklearn.ensemble import BaggingRegressor
     from sklearn.ensemble import StackingRegressor
-    results = f.export('model_summaries',models=model_nicknames)
-
-    if len(results['ModelNickname'].unique()) != len(model_nicknames):
-        raise ValueError(
-            '{} not found in the Forecaster object.'
-            ' The available models to pass to mlp_stack are: {}'.format(
-                model_nicknames,
-                [m for m in f.history if m in f.sklearn_imports],
-            )
-        )
     
     estimators = [
         (
             m,
-            f.sklearn_imports[
-                results.loc[
-                    results['ModelNickname'] == m,
-                    'Estimator'
-                ].values[0]
-            ](
-                **{k:v
-                    for k,v in results.loc[
-                        results['ModelNickname'] == m,
-                        'HyperParams'
-                    ].values[0].items()
-                    if k != 'normalizer'
-                }
+            f.estimators.lookup_item(f.history[m]['Estimator']).imported_model(
+                **{k:v for k,v in f.history[m]['HyperParams'].items() if k != 'normalizer'}
             )
         ) for m in model_nicknames
     ]
@@ -140,3 +122,5 @@ def mlp_stack(
         call_me=call_me,
         **kwargs,
     )
+
+    return f

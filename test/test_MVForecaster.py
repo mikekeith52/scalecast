@@ -1,7 +1,7 @@
 from scalecast.Forecaster import Forecaster
 from scalecast.MVForecaster import MVForecaster
 from scalecast.util import break_mv_forecaster, find_optimal_lag_order, find_optimal_coint_rank
-from scalecast.auxmodels import vecm, mlp_stack
+from scalecast.auxmodels import mlp_stack
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import pickle
@@ -22,11 +22,6 @@ def build_MVForecaster(test_length=24):
         test_length = test_length,
         names=['UTUR','UNRATE','SAHMREALTIME'],
         merge_Xvars='i',
-        metrics = [
-            'rmse',
-            'smape',
-            'mse',
-        ],
     )
 
 def weighted_series(x):
@@ -54,7 +49,6 @@ def test_modeling():
         mvf.corr_lags('UNRATE','UTUR',lags=5,disp='heatmap',annot=True,vmin=-1,vmax=1)
         plt.savefig('../../corr_lags.png')
         plt.close()
-        mvf.add_sklearn_estimator(vecm,'vecm')
         find_optimal_lag_order(mvf)
         find_optimal_coint_rank(mvf,det_order=-1,k_ar_diff=8)
         mvf.tune_test_forecast(

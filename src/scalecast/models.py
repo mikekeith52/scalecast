@@ -9,13 +9,11 @@ from .types import (
     ConfInterval, 
     ModelValues, 
     DetermineBestBy, 
-    DatetimeLike,
 )
 from .classes import AR
 from typing import TYPE_CHECKING, Self, Optional, Any, Literal, Sequence
 import pandas as pd
 import numpy as np
-import warnings
 if TYPE_CHECKING:
     from .Forecaster import Forecaster
     from .MVForecaster import MVForecaster
@@ -47,14 +45,14 @@ class SKLearnUni:
     def _parse_dynamic_testing(self,dynamic_testing) -> int:
         steps = len(self.f.future_dates)
         match dynamic_testing:
-            case False:
+            case False|None:
                 return 1
             case True:
                 return steps+1
             case i if i <= 0:
                 raise ValueError(f'Invalid value passed to dynamic_testing: {dynamic_testing}')
             case _:
-                dynamic_testing = dynamic_testing
+                return dynamic_testing
             
     def _determine_max_lag_order(self,Xvars):
         lag_orders = [x.lag_order for x in Xvars if isinstance(x,AR)]
@@ -147,14 +145,14 @@ class SKLearnMV:
     def _parse_dynamic_testing(self,dynamic_testing) -> int:
         steps = len(self.f.future_dates)
         match dynamic_testing:
-            case False:
+            case False|None:
                 return 1
             case True:
                 return steps+1
             case i if i <= 0:
                 raise ValueError(f'Invalid value passed to dynamic_testing: {dynamic_testing}')
             case _:
-                dynamic_testing = dynamic_testing
+                return dynamic_testing
 
     def _parse_lags(self,lags):
         match lags:
@@ -178,17 +176,17 @@ class SKLearnMV:
             
     def _generate_X(self):
         self.predict_with_Xvars = self.Xvars[:]
-        current_X = np.array([self.f.current_xreg[x].values.copy() for x in self.Xvars]).T
-        future_X = np.array([np.array(self.f.future_xreg[x][:]) for x in self.Xvars]).T
+        observed = np.array([self.f.current_xreg[x].values.copy() for x in self.Xvars]).T
+        future = np.array([np.array(self.f.future_xreg[x][:]) for x in self.Xvars]).T
 
         ylen = len(self.f.y[self.f.names[0]])
         
-        no_other_xvars = current_X.ndim == 1
+        no_other_xvars = not observed.shape[0]
         if no_other_xvars:
             observed_future = np.array([0]*(ylen + len(self.f.future_dates))).reshape(-1,1) # column of 0s
             observed = np.array([0]*ylen).reshape(-1,1)
         else:
-            observed_future = np.concatenate([current_X,future_X],axis=0)
+            observed_future = np.concatenate([observed,future],axis=0)
 
         if not self.lags: # handle none
             observedy = np.array([v.to_list() for _, v in self.f.y.items()]).T
@@ -288,10 +286,7 @@ class SKLearnMV:
         return X
 
     def generate_future_X(self):
-        if hasattr(self,'future_X'):
-            return self.future_X
-        else:
-            return self._generate_X()[1]
+        return self._generate_X()[1]
 
     @_developer_utils.log_warnings
     def fit(self,X,y,**fit_params):
@@ -306,26 +301,28 @@ class SKLearnMV:
             for label, regr in self.regr.items():
                 X_scaled = self.scaler.transform(X)
                 preds[label] = list(regr.predict(X_scaled,**predict_params))
-        else:
-            series = {k: v.to_list() for k, v in self.f.y.items()}
-            for i in range(X.shape[0]):
-                X_scaled = self.scaler.transform(X[i,:].reshape(1,-1))
-                for label, regr in self.regr.items():
-                    series_loc = list(self.f.y.keys()).index(label)
-                    pred = regr.predict(X_scaled,**predict_params)[0]
-                    preds.setdefault(label,[]).append(pred)
-                    if i < X.shape[0] - 1:
-                        if (i+1) % self.dynamic_testing == 0 and self.test_set_actuals:
-                            series[label].append(self.test_set_actuals[series_loc][i])
-                        else:
-                            series[label].append(pred)
+            return preds
+
+        series = {k: v.to_list() for k, v in self.f.y.items()}
+        for i in range(X.shape[0]):
+            X_scaled = self.scaler.transform(X[i,:].reshape(1,-1))
+            for label, regr in self.regr.items():
+                series_loc = list(self.f.y.keys()).index(label)
+                pred = regr.predict(X_scaled,**predict_params)[0]
+                preds.setdefault(label,[]).append(pred)
                 if i < X.shape[0] - 1:
-                    for x in self.predict_with_Xvars:
-                        if x.startswith('LAG_'):
-                            idx = self.predict_with_Xvars.index(x)
-                            label = x.split('_')[1]
-                            lag_no = int(x.split('_')[-1])
-                            X[i+1,idx] = series[label][-lag_no]
+                    if (i+1) % self.dynamic_testing == 0 and self.test_set_actuals:
+                        series[label].append(self.test_set_actuals[series_loc][i])
+                    else:
+                        series[label].append(pred)
+            if i < X.shape[0] - 1:
+                for x in self.predict_with_Xvars:
+                    if x.startswith('LAG_'):
+                        idx = self.predict_with_Xvars.index(x)
+                        label = x.split('_')[1]
+                        lag_no = int(x.split('_')[-1])
+                        series[label][-lag_no]
+                        X[i+1,idx] = series[label][-lag_no]
 
         return preds
 
@@ -419,6 +416,7 @@ class RNN:
     """
     Docstring for RNN
     """
+    @_developer_utils.log_warnings
     def __init__(
         self, 
         f:'Forecaster', 
@@ -505,8 +503,8 @@ class RNN:
                         params['return_sequences'] = layers_struct[i+1][0] != 'Dense'
                 model.add(layer(**params))
         model.add(Dense(self.y.shape[1]))
-        self.model = model
-        self.model.compile(optimizer=self.optimizer,loss=self.loss)
+        self.regr = model
+        self.regr.compile(optimizer=self.optimizer,loss=self.loss)
 
     def _determine_max_lag_order(self,Xvars):
         lag_orders = [x.lag_order for x in Xvars if isinstance(x,AR)]
@@ -578,15 +576,15 @@ class RNN:
         if self.random_seed is not None:
             np.random.seed(self.random_seed)
         
-        self.hist = self.model.fit(X, self.y, **self.fit_kwargs, **fit_params)
+        self.hist = self.regr.fit(X, self.y, **self.fit_kwargs, **fit_params)
         return self
 
     def predict(self,X,in_sample:bool=False,**predict_params) -> list[float]:
         if in_sample:
-            preds = self.model.predict(X,**predict_params)
+            preds = self.regr.predict(X,**predict_params)
             preds = [p[0] for p in preds[:-1]] + [p for p in preds[-1]]
         else:
-            preds = self.model.predict(X,**predict_params)
+            preds = self.regr.predict(X,**predict_params)
             preds = [p for p in preds[0]]
             
         if self.scale_y:
@@ -990,8 +988,8 @@ class Combo:
         models:ModelValues="all",
         determine_best_by:DetermineBestBy="ValidationMetricValue",
         weights:Optional[Sequence[float|int]]=None,
-        splice_points:Optional[Sequence[DatetimeLike]]=None,
         replace_negative_weights:bool|float=.001,
+        exclude_models_with_no_fvs:bool = True,
     ):
         if model != 'auto':
             raise ValueError(f'Unrecognized value passed to model: {model}')
@@ -999,7 +997,7 @@ class Combo:
         self.f = f
         self.test_set_actuals = test_set_actuals
         self.how = how
-        self.models = self._parse_models(models=models, determine_best_by = determine_best_by)
+        self.models = self._parse_models(models=models, determine_best_by=determine_best_by)
         self.weights = weights
         self.replace_negative_weights = replace_negative_weights
         if how == 'weighted' and not weights:
@@ -1010,29 +1008,39 @@ class Combo:
                 raise ValueError('When how is weighted and weights are provided, the number of provided weights must match the number of provided models')
         else:
             self.metrics = None
-        self.splice_points = splice_points
+        self.exclude_models_with_no_fvs = exclude_models_with_no_fvs
 
     def _validate_how(self,how):
-        if how not in ('simple','weighted','splice'):
+        if how not in ('simple','weighted'):
             raise ValueError(f'Argument passed to how not recognized: {how}')
     
     def _parse_models(self, models:ModelValues, determine_best_by:DetermineBestBy):
+        all_models = [m for m in self.f.history][:-1] # exclude last model because it's the one just created (combo)
         match models:
             case 'all':
-                models = [m for m in self.f.history][:-1] # exclude last model because it's the one just created (combo)
+                return all_models
             case str():
                 if models.startswith('top_'):
                     top_n = int(models.split('_')[-1])
-                    models = self.f.order_fcsts(determine_best_by=determine_best_by)[:top_n]
+                    return self.f._parse_models(models=all_models, determine_best_by=determine_best_by)[:top_n]
                 else:
-                    models = [models]
-            case _:
-                models = models
+                    return [models]
 
         return models
     
     def generate_current_X(self):
-        return np.array([self.f.history[m]['FittedVals'] for m in self.models]).T
+        lengths = []
+        all_fvs = []
+        for m in self.models:
+            fvs = self.f.history[m]['FittedVals']
+            if not fvs and self.exclude_models_with_no_fvs:
+                continue
+            else:   
+                lengths.append(len(fvs))
+            all_fvs.append(fvs)
+        
+        min_length = min(lengths)
+        return np.array([fv[-min_length:] for fv in all_fvs]).T
 
     def generate_future_X(self):
         if self.test_set_actuals:
@@ -1040,6 +1048,7 @@ class Combo:
         else:
             return np.array([self.f.history[m]['Forecast'] for m in self.models]).T
     
+    @_developer_utils.log_warnings
     def fit(self,X,y,**fit_params) -> Self:
         match self.how:
             case 'simple':
@@ -1058,7 +1067,7 @@ class Combo:
         return self
     
     def predict(self,X,in_sample:bool=False,**predict_params):
-        return np.sum(X * self.weights,axis=1)
+        return list(np.sum(X * self.weights,axis=1))
 
     def fit_predict(self,X,y) -> list[float]:
         self.fit(X,y)

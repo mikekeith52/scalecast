@@ -29,8 +29,8 @@ import seaborn as sns
 import datetime
 import warnings
 import os
+from pathlib import Path
 import copy
-from collections import Counter
 from collections.abc import Sized
 from scipy import stats
 from statsmodels.tsa.stattools import adfuller
@@ -106,7 +106,7 @@ class Forecaster(Forecaster_parent):
         self.current_dates.values[0].astype(str),
         self.current_dates.values[-1].astype(str),
         self.freq,
-        len(self.y),
+        self.n_actuals,
         len(self.future_dates),
         list(self.current_xreg.keys()),
         self.test_length,
@@ -134,10 +134,7 @@ class Forecaster(Forecaster_parent):
     
     def _set_cis(self,*attrs,m,ci_range,preds):
         for i, attr in enumerate(attrs):
-            self.history[m][attr] = [
-                p + (ci_range if i%2 == 0 else (ci_range*-1))
-                for p in preds
-            ]
+            self.history[m][attr] = [p + (ci_range if i%2 == 0 else (ci_range*-1)) for p in preds]
 
     def _bank_history(self, **kwargs:Any):
         """ places all relevant information from the last evaluated forecast into the history dictionary attribute
@@ -146,7 +143,7 @@ class Forecaster(Forecaster_parent):
         # since test only, what gets saved to history is relevant to the train set only, the genesis of the next line
         call_me = self.call_me
         self.history[call_me]['Estimator'] = self.estimator
-        self.history[call_me]['Xvars'] = self.Xvars if hasattr(self,'Xvars') else None
+        self.history[call_me]['Xvars'] = self.call_estimator.Xvars if hasattr(self.call_estimator,'Xvars') else None
         self.history[call_me]['HyperParams'] = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
         self.history[call_me]['Observations'] = len(self.y)
         self.history[call_me]['Forecast'] = self.forecast[:]
@@ -209,78 +206,6 @@ class Forecaster(Forecaster_parent):
         self.history[call_me]['feature_importance_explainer'] = self.explainer
         self.history[call_me]["feature_importance"] = self.feature_importance
 
-    def transfer_predict(
-        self,
-        transfer_from:"Forecaster",
-        model:str,
-        return_series:bool = False,
-        save_to_history:bool = True,
-        call_me:Optional[str] = None,
-        regr = None,
-    ) -> Self|list[float]:
-        """ Makes predictions using an already-trained model over any given forecast horizon.
-        Will use the already-trained model from a passed Forecaster object to create a new model
-        in the `Forecaster` object from which the method is called. Or the option is available to not
-        save a new model but return the predictions in a pandas Series object. Confidence intervals cannot
-        be transferred from this method but can be from the `transfer_cis()` method.
-        
-        Args:
-            transfer_from (Forecaster): The Forecaster object that contains the already-fitted model.
-            model (str): The model nickname of the already-evaluated model stored in the `Forecaster`
-                object passed to `transfer_from`.
-            return_series (bool): Default False. Whether to return a pandas Series with the
-                date as an index of the values. If the `dates` argument is not specified, this
-                will include all dates in the `Forecaster` instance that the method is called from.
-            save_to_history (bool): Default True. Whether to save the transferred predictions as if
-                they were a model being run using a `_forecast()` method.
-            call_me (str): Optional. What to call the resulting model.
-                If save_to_history is False, this is ignored.
-                If not specified, inherits the name passed to `model`.
-            regr: Optional. The model to make predictions with. If not supplied,
-                the model will be searched for in the `Forecaster` passed
-                to `transfer_from`.
-
-        Returns:
-            (Pandas Series or Self): The date-indexed series if return_series is True. Otherwise returns self.
-
-        >>> f.manual_forecast(call_me='mlr')
-        >>> f_new.transfer_predict(transfer_from=f,model='mlr')
-        """
-        f = transfer_from
-        if regr:
-            self.call_estimator = regr
-        else:
-            self.call_estimator = f.history[model]['call_estimator']
-            preds = self.predict()
-            try:
-                fvs = self.predict_fitted_vals()
-            except:
-                fvs = []
-                warnings.warn(
-                    f'Could not calculate fitted values for {model} model.',
-                    category = Warning,
-                )
-        
-        if call_me is None:
-            call_me = model
-        self.call_me = call_me
-
-        if save_to_history:
-            self.history[call_me] = {}
-            for copy_attr, set_attr in [
-                ('Estimator','estimator'),
-                ('DynamicallyTested','dynamic_testing'),
-            ]:
-                setattr(self,set_attr,f.history[call_me][copy_attr])
-            
-            self.forecast = preds
-            self.fitted_values = fvs
-            self._bank_history()
-        if return_series:
-            return preds
-        
-        return self
-
     def synthesize_models(
         self,
         models:ModelValues='all',
@@ -334,33 +259,33 @@ class Forecaster(Forecaster_parent):
             (list) The ordered evaluated models.
         """
         if determine_best_by is None:
-            if models[:4] == "top_":
-                raise ValueError(
-                    'Cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified.'
-                )
-            elif models == "all":
-                models = list(self.history.keys())
-            elif isinstance(models, str):
-                models = [models]
-            else:
-                models = list(models)
-            if len(models) == 0:
-                raise ValueError(
-                    f"models argument with determine_best_by={determine_best_by} returns no evaluated forecasts."
-                )
+            match models:
+                case "all":
+                    models = list(self.history.keys())
+                case str():
+                    if models.startswith("top_"):
+                        raise ValueError('Cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified.')
+                    else:
+                        models = [models]
+                case _:
+                    models = list(models)
         else:
-            all_models = [
-                m for m, d in self.history.items() if determine_best_by in d.keys()
-            ]
+            all_models = [m for m, d in self.history.items() if determine_best_by in d]
             all_models = self.order_fcsts(all_models, determine_best_by)
-            if models == "all":
-                models = all_models[:]
-            elif models[:4] == "top_":
-                models = all_models[: int(models.split("_")[1])]
-            elif isinstance(models, str):
-                models = [models]
-            else:
-                models = [m for m in all_models if m in models]
+            match models:
+                case 'all':
+                    models = all_models[:]
+                case str():
+                    if models.startswith("top_"):
+                        models = all_models[: int(models.split("_")[1])]
+                    else:
+                        models = [models]
+                case _:
+                    models = [m for m in all_models if m in models]
+        
+        if not models:
+            raise ValueError(f"models argument with determine_best_by={determine_best_by} returns no evaluated forecasts.")
+        
         return models
 
     def _diffy(self, n):
@@ -607,7 +532,7 @@ class Forecaster(Forecaster_parent):
         >>> ) # reduce with gradient boosted tree estimator and overwrite with result
         >>> print(f.reduced_Xvars) # view results
         """
-        if not isinstance(self.estimators.lookup_item(estimator).interpreted_model,SKLearnUni):
+        if self.estimators.lookup_item(estimator).interpreted_model != SKLearnUni:
             raise ValueError('This function only works with base models that use a scikit-learn API.')
 
         f = copy.deepcopy(self)
@@ -637,7 +562,6 @@ class Forecaster(Forecaster_parent):
         )
 
         fi_df = f.export_feature_importance(estimator)
-        lower_is_better = self.parse_determine_best_by(monitor).lower_is_better
 
         features = fi_df.index.to_list()
         init_metric = f.history[estimator][monitor]
@@ -1278,14 +1202,6 @@ class Forecaster(Forecaster_parent):
         >>> f.auto_Xvar_select()
         >>> f.determine_best_series_length()
         """
-        def parse_best_metrics(metrics):
-            x = [m[0] for m in Counter(metrics).most_common()]
-            return None if not x else x[0] if using_r2 else x[-1]
-
-        using_r2 = monitor.endswith("R2") or (
-                self.validation_metric == "r2" and monitor == "ValidationMetricValue"
-            )
-
         history_metrics = {}
         max_obs = len(self.y) if max_obs is None else max_obs
         i = len(self.y) - 1
@@ -1312,10 +1228,10 @@ class Forecaster(Forecaster_parent):
                 cvkwargs=cvkwargs,
                 kwargs=kwargs,
             )
-        best_history_to_keep = parse_best_metrics(history_metrics)
+        best_history_to_keep = self.parse_labeled_metrics(history_metrics)
 
         if chop:
-            self.keep_smaller_history(best_history_to_keep)
+            self.keep_smaller_history(list(best_history_to_keep.keys())[0])
         
         return history_metrics
 
@@ -1525,7 +1441,6 @@ class Forecaster(Forecaster_parent):
         cross_validate:bool=False,
         dynamic_tuning:bool=False,
         dynamic_testing:bool=True,
-        summary_stats:bool=False,
         feature_importance:bool=False,
         fi_try_order:Optional[Sequence[FIMethod]]=None,
         limit_grid_size:Optional[PositiveInt|ConfInterval]=None,
@@ -1554,8 +1469,6 @@ class Forecaster(Forecaster_parent):
                 if int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
                 setting this to False or 1 means faster performance, 
                 but gives a less-good indication of how well the forecast will perform out x amount of periods.
-            summary_stats (bool): Default False.
-                Whether to save summary stats for the models that offer those.
             feature_importance (bool): Default False.
                 Whether to save feature importance information for the models that offer it.
             fi_try_order (list): Optional.
@@ -1589,43 +1502,11 @@ class Forecaster(Forecaster_parent):
             min_grid_size=min_grid_size,
             suffix=suffix,
             error=error,
-            summary_stats=summary_stats,
             feature_importance=feature_importance,
             fi_try_order=fi_try_order,
             **cvkwargs,
         )
         return self
-
-    def save_tf_model(self,name:str='model.h5'):
-        """ Saves a fitted tensorflow (RNN/LSTM) model as a file.
-        Call this after fitting a tensorflow model and before changing the estimator.
-
-        Args:
-            name (str): Default 'model.h5'. The name of the resulting file. 
-                A file directory with a file name is also accepted here.
-
-        >>> f.set_estimator('rnn')
-        >>> f.manual_forecast()
-        >>> f.save_tf_model('path/to/model.h5')
-        """
-        self.tf_model.save(name)
-
-    def load_tf_model(self,name:str='model.h5'):
-        """ Loads a fitted tensorflow (RNN/LSTM) model and attaches it to the `Forecaster` object
-        in the tf_model attribute.
-
-        Args:
-            name (str): Default 'model.h5'. The name of the file to load. 
-                A file directory with a file name is also accepted here.
-
-        >>> f.set_estimator('rnn')
-        >>> f.manual_forecast()
-        >>> f.save_tf_model('path/to/model.h5')
-        >>> del f.tf_model # deletes the attribute to save memory
-        >>> f.load_tf_model('path/to/model.h5')
-        """
-        import tensorflow as tf
-        self.tf_model = tf.keras.models.load_model(name)
 
     def save_feature_importance(
             self, 
@@ -1689,17 +1570,17 @@ class Forecaster(Forecaster_parent):
             #'AdditiveExplainer':['predict','masker'],
             #'GradientExplainer':
             #'PartitionExplainer':
-            #'DeepExplainer':
+            'DeepExplainer':[None,None],
         }
         fail = False
-        if not isinstance(self.estimators.lookup_item(self.estimator).interpreted_model,SKLearnUni):
+        if not hasattr(self.call_estimator,'Xvars') or not self.call_estimator.Xvars:
             fail = True
-            error = f'Feature importance only works for sklearn estimators, not {self.estimator}.'
+            error = f'Feature importance only works for models that use external regressors.'
         else:
             try:
-                regr = self.regr
-                X = self.X
-                Xvars = self.Xvars
+                regr = self.call_estimator
+                X = self.call_estimator.generate_current_X()
+                Xvars = self.call_estimator.Xvars
 
                 if masker is None:
                     masker = shap.maskers.Independent(data = X)
@@ -1736,7 +1617,7 @@ class Forecaster(Forecaster_parent):
                         continue
                     break
                 
-                if 'explainer' not in locals():
+                if 'explainer' not in locals() or 'shap_values' not in locals():
                     raise TypeError(error)
                 
                 shap_df = pd.DataFrame(shap_values.values, columns=Xvars)
@@ -1770,24 +1651,6 @@ class Forecaster(Forecaster_parent):
             return
 
         self._bank_fi_to_history()
-
-    def save_summary_stats(self):
-        """ Saves summary stats for models that offer it and will not raise errors if not available.
-        Call after evaluating the model you want it for and before changing the estimator.
-
-        >>> f.set_estimator('arima')
-        >>> f.manual_forecast(order=(1,1,1))
-        >>> f.save_summary_stats()
-        """
-        try:
-            self._set_summary_stats()
-        except:
-            warnings.warn(
-                f"{self.estimator} does not have summary stats.",
-                category = Warning,
-            )
-            return
-        self._bank_summary_stats_to_history()
 
     def chop_from_front(self, n:PositiveInt, fcst_length:Optional[PositiveInt] = None) -> Self:
         """ Cuts the amount of y observations in the object from the front counting backwards.
@@ -1876,57 +1739,6 @@ class Forecaster(Forecaster_parent):
         self.current_dates = self.current_dates.iloc[-n:]
         self.current_xreg = {k:v.iloc[-n:].reset_index(drop=True) for k, v in self.current_xreg.items()}
         return self
-    
-    def parse_labeled_metrics(self, labeled_metrics:dict[str,EvaluatedMetric]) -> dict[str,float]:
-        """
-        Docstring for parse_labeled_metrics
-        
-        :param self: Description
-        :param labeled_metrics: Description
-        :type labeled_metrics: dict[str, EvaluatedMetric]
-        :return: Description
-        :rtype: dict[str, float]
-        """
-        scores = {k:v.score for k, v in labeled_metrics.items()}
-        ascending_order = [v.store.lower_is_better for _, v in labeled_metrics.items()][0]
-        x = Counter(scores).most_common()
-        x = {model:score for model, score in x}
-        if not ascending_order:
-            return x
-        else:
-            return {k: v for k, v in reversed(x.items())}
-
-    def order_fcsts(self, models:Optional[EvaluatedModel] = None, determine_best_by:DetermineBestBy="TestSetRMSE") -> list[str]:
-        """ Gets estimated forecasts ordered from best-to-worst.
-        
-        Args:
-            models (list-like): Optional. A list of models to consider in the order. Default considers all evaluated models.
-                If not 'all', each element must match an evaluated model's nickname.
-                'all' will only consider models that have a non-null determine_best_by value in history.
-            determine_best_by (str): Default 'TestSetRMSE'. One of Forecaster.determine_best_by.
-
-        Returns:
-            (list): The ordered models.
-
-        >>> models = ('mlr','mlp','lightgbm')
-        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
-        >>> ordered_models = f.order_fcsts(models,"TestSetRMSE")
-        """
-        _developer_utils.descriptive_assert(
-            determine_best_by in self.determine_best_by,
-            ValueError,
-            f"determine_best_by must be one of {self.determine_best_by}, got {determine_best_by}.",
-        )
-        
-        if not models:
-            models = [
-                m for m, v in self.history.items()
-                if determine_best_by in v and not np.isnan(v[determine_best_by])
-            ]
-        
-        metrics = {m:self.history[m][determine_best_by] for m in models}
-        parsed_metrics = self.parse_labeled_metrics(metrics)
-        return [x[0] for x in parsed_metrics]
 
     def get_regressor_names(self):
         """ Gets the regressor names stored in the object.
@@ -2030,7 +1842,7 @@ class Forecaster(Forecaster_parent):
                 label="actuals",
                 ax=ax,
             )
-            for i, m in enumerate(models):
+            for m in models:
                 plot[m] = (self.history[m]["Forecast"])
                 if plot[m] is None or not len(plot[m]):
                     continue
@@ -2136,7 +1948,7 @@ class Forecaster(Forecaster_parent):
             ax=ax,
         )
 
-        for i, m in enumerate(models):
+        for m in models:
             plot[m] = (self.history[m]["TestSetPredictions"])
             test_dates = self.current_dates.values[-len(plot[m]) :]
             sns.lineplot(
@@ -2208,7 +2020,7 @@ class Forecaster(Forecaster_parent):
         }
         sns.lineplot(x=plot["date"], y=plot["actuals"], label="actuals", ax=ax)
 
-        for i, m in enumerate(models):
+        for m in models:
             plot[m] = (self.history[m]["FittedVals"])
             if plot[m] is None or not len(plot[m]):
                 continue
@@ -2227,7 +2039,7 @@ class Forecaster(Forecaster_parent):
         ax.set_ylabel("Values")
         return ax
 
-    def export( # TODO
+    def export(
         self,
         dfs:ExportOptions|list[ExportOptions]=[
             "model_summaries",
@@ -2239,7 +2051,7 @@ class Forecaster(Forecaster_parent):
         determine_best_by:Optional[DetermineBestBy]=None,
         cis:bool=False,
         to_excel:bool=False,
-        out_path:os.PathLike="./",
+        out_path:os.PathLike=Path.cwd(),
         excel_name:str="results.xlsx",
     ) -> pd.DataFrame|dict[str,pd.DataFrame]:
         """ Exports 1-all of 3 pandas DataFrames. Can write to excel with each DataFrame on a separate sheet.
@@ -2261,7 +2073,7 @@ class Forecaster(Forecaster_parent):
                 If None and best_model is 'auto', the best model will be designated as the first-evaluated model.
             to_excel (bool): Default False.
                 Whether to save to excel.
-            out_path (str): Default './'.
+            out_path (PathLike): Default './'.
                 The path to save the excel file to (ignored when `to_excel=False`).
             cis (bool): Default False.
                 Whether to export confidence intervals for models in 
@@ -2284,34 +2096,33 @@ class Forecaster(Forecaster_parent):
             "ValueError",
             f"Argument passed to cis must be a bool type, got {type(cis)}.",
         )
-        if isinstance(dfs, str):
-            dfs = [dfs]
-        else:
-            dfs = list(dfs)
-        if len(dfs) == 0:
-            raise ValueError("No values passed to the dfs argument.")
+
+        match dfs:
+            case str():
+                dfs = [dfs]
+            case obj if hasattr(obj, "__len__") and not obj:
+                raise ValueError("No values passed to the dfs argument.")
+            case _:
+                dfs = list(dfs)
+
         models = self._parse_models(models, determine_best_by)
-        _dfs_ = [
-            "model_summaries",
-            "lvl_test_set_predictions",
-            "lvl_fcsts",
-        ]
+        _dfs_ = ["model_summaries","lvl_test_set_predictions","lvl_fcsts"]
         _bad_dfs_ = [i for i in dfs if i not in _dfs_]
-        if len(_bad_dfs_) > 0:
-            raise ValueError(
-                f"Values passed to the dfs list must be in {_dfs_}, not {_bad_dfs_}"
-            )
-        if determine_best_by is not None:
-            best_fcst_name = (
-                self.order_fcsts(models, determine_best_by)[0]
-                if best_model == "auto"
-                else best_model
-            )
-        else:
-            best_fcst_name = list(self.history.keys())[0] # first evaluated model
+        if _bad_dfs_:
+            raise ValueError(f"Values passed to the dfs list must be in {_dfs_}, not {_bad_dfs_}")
+        
+        match best_model:
+            case 'auto':
+                if determine_best_by is None:
+                    best_fcst_name = list(self.history.keys())[0] # first evaluated model
+                else:
+                    best_fcst_name = self.order_fcsts(models, determine_best_by)[0]
+            case _:
+                best_fcst_name = best_model
+
         output = {}
         if "model_summaries" in dfs:
-            cols1 = [
+            cols = [
                 "ModelNickname",
                 "Estimator",
                 "Xvars",
@@ -2327,38 +2138,22 @@ class Forecaster(Forecaster_parent):
                 "best_model",
             ]
 
-            model_summaries = pd.DataFrame()
+            model_summaries = []
             for m in models:
                 model_summary_m = pd.DataFrame({"ModelNickname": [m]})
-                cols = cols1 + [
-                    k for k in self.history[m] if (
-                        (
-                            k.startswith('TestSet') & (k not in ( 
-                                'TestSetPredictions',
-                                'TestSetActuals',
-                                'TestSetLowerCI',
-                                'TestSetUpperCI',
-                            )
-                        ))
-                        | k.startswith('InSample')
-                    )
-                ]
                 for c in cols:
-                    if c not in (
-                        "ModelNickname",
-                        "LastTestSetPrediction",
-                        "LastTestSetActual",
-                        "best_model",
-                    ):
-                        model_summary_m[c] = [
-                            self.history[m][c] if c in self.history[m].keys() else np.nan
-                        ]
+                    if c in self.history[m]:
+                        model_summary_m[c] = [self.history[m][c]]
                     elif c == "best_model":
                         model_summary_m[c] = m == best_fcst_name
-                model_summaries = pd.concat(
-                    [model_summaries, model_summary_m], ignore_index=True
-                )
-            output["model_summaries"] = model_summaries
+                    else:
+                        model_summary_m[c] = pd.NA
+                for c in self.determine_best_by:
+                    if c in self.history[m]:
+                        model_summary_m[c] = self.history[m][c].score
+                model_summaries.append(model_summary_m)
+            output["model_summaries"] = pd.concat(model_summaries)
+        
         if "lvl_fcsts" in dfs:
             lvl_fcsts = pd.DataFrame({"DATE": self.future_dates.to_list()})
             for m in models:
@@ -2370,6 +2165,7 @@ class Forecaster(Forecaster_parent):
                     except KeyError:
                         _developer_utils._warn_about_not_finding_cis(m)
             output["lvl_fcsts"] = lvl_fcsts
+        
         if "lvl_test_set_predictions" in dfs:
             if self.test_length == 0:
                 output["lvl_test_set_predictions"] = pd.DataFrame()
@@ -2380,20 +2176,15 @@ class Forecaster(Forecaster_parent):
                     test_set_predictions[m] = self.history[m]["TestSetPredictions"]
                     if cis:
                         try:
-                            test_set_predictions[m + "_upperci"] = self.history[m][
-                                "TestSetUpperCI"
-                            ]
-                            test_set_predictions[m + "_lowerci"] = self.history[m][
-                                "TestSetLowerCI"
-                            ]
+                            test_set_predictions[m + "_upperci"] = self.history[m]["TestSetUpperCI"]
+                            test_set_predictions[m + "_lowerci"] = self.history[m]["TestSetLowerCI"]
                         except KeyError:
                             _developer_utils._warn_about_not_finding_cis(m)
                 output["lvl_test_set_predictions"] = test_set_predictions
 
         if to_excel:
-            with pd.ExcelWriter(
-                os.path.join(out_path, excel_name), engine="openpyxl"
-            ) as writer:
+            out_path = Path(out_path)
+            with pd.ExcelWriter(out_path/excel_name, engine="openpyxl") as writer:
                 for k, df in output.items():
                     df.to_excel(writer, sheet_name=k, index=False)
 
@@ -2401,22 +2192,6 @@ class Forecaster(Forecaster_parent):
             return list(output.values())[0]
         else:
             return output
-
-    def export_summary_stats(self, model:EvaluatedModel) -> pd.DataFrame:
-        """ Exports the summary stats from a model.
-        Raises an error if you never saved the model's summary stats.
-
-        Args:
-            model (str):
-                The name of the model to export.
-                Matches what was passed to call_me when evaluating the model.
-
-        Returns:
-            (DataFrame): The resulting summary stats of the evaluated model passed to `model`.
-
-        >>> ss = f.export_summary_stats('arima')
-        """
-        return self.history[model]["summary_stats"]
 
     def export_feature_importance(self, model:EvaluatedModel) -> pd.DataFrame:
         """ Exports the feature importance from a model.
@@ -2434,13 +2209,13 @@ class Forecaster(Forecaster_parent):
         """
         return self.history[model]["feature_importance"]
 
-    def all_feature_info_to_excel(self, out_path:os.PathLike="./", excel_name:str="feature_info.xlsx"):
-        """ Saves all feature importance and summary stats to excel.
+    def all_feature_info_to_excel(self, out_path:os.PathLike=Path.cwd(), excel_name:str="feature_info.xlsx"):
+        """ Saves all feature importance to excel.
         Each model where such info is available for gets its own tab.
-        Be sure to have called save_summary_stats() and/or save_feature_importance() before using this function.
+        Be sure to have called save_feature_importance() before using this function.
 
         Args:
-            out_path (str): Default './'.
+            out_path (PathLike): Default './'.
                 The path to export to.
             excel_name (str): Default 'feature_info.xlsx'.
                 The name of the resulting excel file.
@@ -2449,26 +2224,19 @@ class Forecaster(Forecaster_parent):
             None
         """
         try:
-            with pd.ExcelWriter(
-                os.path.join(out_path, excel_name), engine="openpyxl"
-            ) as writer:
+            out_path = Path(out_path)
+            with pd.ExcelWriter(out_path/excel_name, engine="openpyxl") as writer:
                 for m in self.history.keys():
-                    if "summary_stats" in self.history[m].keys():
-                        self.history[m]["summary_stats"].to_excel(
-                            writer, sheet_name=f"{m}_summary_stats"
-                        )
-                    elif "feature_importance" in self.history[m].keys():
+                    if "feature_importance" in self.history[m].keys():
                         self.history[m]["feature_importance"].to_excel(
                             writer, sheet_name=f"{m}_feature_importance"
                         )
         except IndexError:
-            raise ForecastError(
-                "No saved feature importance or summary stats could be found."
-            )
+            raise ForecastError( "No saved feature importance could be found.")
 
     def all_validation_grids_to_excel(
         self,
-        out_path:os.PathLike="./",
+        out_path:os.PathLike=Path.cwd(),
         excel_name:str="validation_grids.xlsx",
     ):
         """ Saves all validation grids to excel.
@@ -2476,7 +2244,7 @@ class Forecaster(Forecaster_parent):
         Be sure to have tuned at least model before calling this.
 
         Args:
-            out_path (str): Default './'.
+            out_path (PathLike): Default uses current working directory.
                 The path to export to.
             excel_name (str): Default 'feature_info.xlsx'.
                 The name of the resulting excel file.
@@ -2485,9 +2253,8 @@ class Forecaster(Forecaster_parent):
             None
         """
         try:
-            with pd.ExcelWriter(
-                os.path.join(out_path, excel_name), engine="openpyxl"
-            ) as writer:
+            out_path = Path(out_path)
+            with pd.ExcelWriter(out_path/excel_name, engine="openpyxl") as writer:
                 for m in self.history.keys():
                     if "grid_evaluated" in self.history[m].keys():
                         df = self.export_validation_grid(m)

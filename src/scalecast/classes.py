@@ -149,3 +149,6 @@ class DetermineBestBy:
 
     def __repr__(self):
         return self.values.__repr__()
+    
+    def __iter__(self):
+        return iter(self.values)

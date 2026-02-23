@@ -1,4 +1,7 @@
 from __future__ import annotations
+from ._utils import _developer_utils, boxcox_tr, boxcox_re
+from .types import ConfInterval, AvailableModel, DefaultMetric, TryTransformations, NonNegativeInt, DatetimeLike, FFillOption, PositiveInt
+from .Metrics import Metrics as metrics
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import seaborn as sns
@@ -7,47 +10,59 @@ import pandas as pd
 import warnings
 import random
 from statsmodels.tsa.tsatools import freq_to_period
-from .types import ConfInterval, AvailableModel, DefaultMetric, TryTransformations, NonNegativeInt, DatetimeLike, FFillOption, PositiveInt
-from .Metrics import Metrics as metrics
 from typing import Sequence, Optional, Unpack, Any, Literal, TYPE_CHECKING
-from ._utils import (
-    _developer_utils, 
-    boxcox_tr, 
-    boxcox_re,
-)
-
 if TYPE_CHECKING:
     from statsmodels.tsa.vector_ar.var_model import LagOrderResults
     from statsmodels.tsa.vector_ar.vecm import CointRankResults
     from .Forecaster import Forecaster
     from .MVForecaster import MVForecaster
     from .Pipeline import Transformer, Reverter, Pipeline
+    from tf.keras.callbacks import History
 
-def plot_rnn_loss(history, ax:Axes=None, figsize:tuple[int,int]=(12,6)) -> Axes:
-    """
-    Docstring for plot_rnn_loss
-    
-    :param f: Description
-    :type f: Forecaster
-    :param ax: Description
-    :type ax: Axes
-    :param figsize: Description
-    :type figsize: tuple[int, int]
-    :return: Description
-    :rtype: Axes
-    """
-    pass
+def plot_rnn_loss(history:'History', title:str = '', ax:Axes=None, figsize:tuple[int,int]=(12,6), show:bool = False) -> Axes:
+    """ Plots the loss from a tensorflow model.
 
-def find_seasonal_length(m:int|Literal['auto']='auto',freq:Optional[str]=None):
+    Args:
+        history (History): The model history to plot.
+        title (str): Default empty. The title to apply to the plot.
+        ax (Axes): The existing axis to attach the plot to.
+        figsize (tuple[int,int]): Default (12,6). The size of the resulting figure.
+        show (bool): Default False. Whether to show the plot.
+
+    Returns:
+        Axes: The firgure's axis.
+
+    >>> f.set_estimator('lstm')
+    >>> f.fit()
+    >>> plot_rnn_loss(f.call_estimator.regr)
     """
-    Docstring for find_seasonal_length
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        
+    ax.plot(history.history["loss"], label="train_loss")
     
-    :param m: Description
-    :type m: int | Literal['auto']
-    :param freq: Description
-    :type freq: Optional[str]
-    :return: Description
-    :rtype: NoReturn
+    if "val_loss" in history.history.keys():
+        ax.plot(history.history["val_loss"], label="val_loss")
+    
+    ax.set_title(title)
+    ax.set_xlabel("epoch")
+    ax.set_legend(loc="upper right")
+    
+    if show:
+        plt.show()
+
+    return ax
+
+
+def find_seasonal_length(m:int|Literal['auto']='auto',freq:Optional[str]=None) -> int:
+    """ Finds the seasonal length of a given freqency.
+
+    Args:
+        m ('auto' or int): The existing seasonal value. If you pass an int here, that same int is returned.
+        freq (str): A pandas frequency value. If m is 'auto', this will be used to find the seasonal length.
+    
+    Returns:
+        int: The inferred seasonal length.
     """
     if m == 'auto':
         if freq is not None:
@@ -78,22 +93,7 @@ def plot_reduction_errors(f:Forecaster, ax:Axes = None, figsize:tuple[int,int]=(
     Returns:
         (Axis) The figure's axis.
 
-    >>> from scalecast.Forecaster import Forecaster
-    >>> from scalecast.util import plot_reduction_errors
-    >>> import matplotlib.pyplot as plt
-    >>> import seaborn as sns
-    >>> import pandas as pd
-    >>> import pandas_datareader as pdr
-    >>> 
-    >>> df = pdr.get_data_fred('HOUSTNSA',start='1900-01-01',end='2021-06-01')
-    >>> f = Forecaster(y=df['HOUSTNSA'],current_dates=df.index)
-    >>> f.set_test_length(.2)
-    >>> f.generate_future_dates(24)
-    >>> f.add_ar_terms(24)
-    >>> f.add_seasonal_regressors('month',raw=False,sincos=True,dummy=True)
-    >>> f.add_seasonal_regressors('year')
-    >>> f.add_time_trend()
-    >>> f.reduce_Xvars(method='pfi')
+    >>> f.reduce_Xvars()
     >>> plot_reduction_errors(f)
     >>> plt.show()
     """

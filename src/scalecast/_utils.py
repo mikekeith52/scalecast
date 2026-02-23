@@ -4,15 +4,14 @@ import logging
 import warnings
 import numpy as np
 from scipy import stats
-from typing import Literal, Any, Optional, TYPE_CHECKING
-from .types import ConfInterval, DynamicTesting, AvailableNormalizer
-from .typing_utils import NormalizerLike
+from typing import Literal, Any, Sequence, TYPE_CHECKING
+from .types import ConfInterval, DynamicTesting
 if TYPE_CHECKING:
-    from ._Forecaster_parent import _Forecaster_parent
+    from ._Forecaster_parent import Forecaster_parent
 
 class _developer_utils:
     @staticmethod
-    def log_warnings(func):
+    def log_warnings(func:callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
             with warnings.catch_warnings(record=True) as warn_list:
@@ -24,44 +23,30 @@ class _developer_utils:
         return wrapper
     
     @staticmethod
-    def descriptive_assert(statement, ErrorType, error_message):
-        # descriptive assert statement for descriptive exception raising
+    def descriptive_assert(statement:bool, ErrorType:Exception, error_message:str):
         try:
             assert statement
         except AssertionError:
             raise ErrorType(error_message)
 
     @staticmethod      
-    def _return_na_if_len_zero(y,pred,func):
-        return (
-            np.nan 
-            if len(pred) == 0 else func(y,pred) 
-            if len(y) == len(pred) else func(y,pred[-len(y):])
-        )
+    def _return_na_if_len_zero(y:Sequence[float],pred:Sequence[float],func:callable):
+        if len(pred) == 0:
+            return np.nan
+        else:
+            return func(y,pred[-len(y):])
 
     @staticmethod
-    def _set_ci_step(f,s):
+    def _set_ci_step(f:'Forecaster_parent',s:int):
         return stats.norm.ppf(1 - (1 - f.cilevel) / 2) * s
 
     @staticmethod
-    def _check_train_only_arg(f, train_only):
-        _developer_utils.descriptive_assert(
-            isinstance(train_only, bool), ValueError, f"train_only must be True or False, got {train_only} of type {type(train_only)}."
-        )
-        _developer_utils.descriptive_assert(
-            not train_only or f.test_length > 0, ValueError, "train_only cannot be True when test_length is 0."
-        )
+    def _check_train_only_arg(f:'Forecaster_parent', train_only:bool):
+        _developer_utils.descriptive_assert(isinstance(train_only, bool), ValueError, f"train_only must be True or False, got {train_only} of type {type(train_only)}.")
+        _developer_utils.descriptive_assert(not train_only or f.test_length > 0, ValueError, "train_only cannot be True when test_length is 0.")
 
     @staticmethod
-    def _check_if_correct_estimator(estimator,possible_estimators):
-        _developer_utils.descriptive_assert(
-            estimator in possible_estimators,
-            ValueError,
-            f"estimator must be one of {possible_estimators}, got {estimator}.",
-        )
-
-    @staticmethod
-    def _warn_about_not_finding_cis(m):
+    def _warn_about_not_finding_cis(m:str):
         warnings.warn(
             f'Confidence intervals not found for {m}. '
             'To turn on confidence intervals for future evaluated models, call the eval_cis() method.'
@@ -69,7 +54,7 @@ class _developer_utils:
         )
 
     @staticmethod
-    def _reshape_func_input(x,func):
+    def _reshape_func_input(x:Sequence[float],func:callable):
         x = np.array(x).reshape(-1,1)
         if x.shape[0] == 0:
             return []
@@ -77,7 +62,7 @@ class _developer_utils:
             return func(x)[:,0]
 
     @staticmethod
-    def _select_reg_for_direct_forecasting(f):
+    def _select_reg_for_direct_forecasting(f:'Forecaster_parent'):
         return {
             k:v.to_list() 
             for k, v in f.current_xreg.items() 
@@ -88,7 +73,7 @@ class _developer_utils:
         }
 
 class NamedBoxCox:
-    def __init__(self,name,transform):
+    def __init__(self,name:str,transform:bool):
         self.name = name
         self.transform = transform
 
@@ -102,7 +87,7 @@ class NamedBoxCox:
         return self.name
     
 def _tune_test_forecast(
-    f:"_Forecaster_parent",
+    f:"Forecaster_parent",
     models:list[str],
     cross_validate:bool,
     dynamic_tuning:DynamicTesting,
@@ -111,7 +96,6 @@ def _tune_test_forecast(
     suffix:str,
     error:Literal['raise','warn','ignore'],
     min_grid_size:int = 1,
-    summary_stats:bool = False,
     feature_importance:bool = False,
     fi_try_order:list[str] = None,
     use_progress_bar:bool = False,
@@ -151,8 +135,6 @@ def _tune_test_forecast(
                 continue
             else:
                 raise ValueError(f'Value passed to error arg not recognized: {error}')
-        if summary_stats:
-            f.save_summary_stats()
         if feature_importance:
             if fi_try_order is None:
                 f.save_feature_importance()

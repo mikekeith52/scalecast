@@ -3,7 +3,10 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 
 ## [0.21.0]
 ### Added
+- Added a uniform modeling framework for all scalecast models
 - Added `fit()`/`predict()`/`fit_predict()` methods to `Forecaster` and `MVForecaster` objects
+- New `n_actuals` attribute
+- Added `parse_labeled_metrics()` method in `Forecaster_parent`
 ### Changed
 - `**kwargs` no longer accepted in `Forecaster` or `MVForecaster` objects
 - All metrics refer to their own classes (`MetricStore` and `EvaluatedMetric`)
@@ -12,7 +15,11 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - VECM is native to any `MVForecaster` object
 - `'splice'` no longer available as an option in the combo model
 - Removed option to save summary stats from models
+- Removed deprecation warnings from `Forecaster.reduce_Xvars()` method, introduced in 0.19.14
+- Moved `order_fcsts` to `Forecaster_parent` object
 ### Fixed
+- Fixed type hints
+- Fixed adding regressors, such as time trend, to `MVForecaster` (methods measuring `len(y)`)
 
 ## [0.20.0]
 ### Added

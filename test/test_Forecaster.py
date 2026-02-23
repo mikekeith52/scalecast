@@ -2,6 +2,7 @@ import pandas_datareader as pdr
 from scalecast.Forecaster import Forecaster
 from scalecast.auxmodels import mlp_stack, auto_arima
 from scalecast.util import metrics, infer_apply_Xvar_selection
+from scalecast.classes import AR, MetricStore
 import matplotlib.pyplot as plt
 import pickle
 
@@ -11,43 +12,38 @@ df = pdr.get_data_fred(
     end = '2022-12-31',
 )
 
-def rmse_mae(a, f):
+def eval_rmse_mae(a, f):
     return (metrics.rmse(a,f) + metrics.mae(a,f)) / 2
+
+rmse_mae = MetricStore(name='rmse_mae',eval_func = eval_rmse_mae)
 
 def build_Forecaster(
     cis = False, 
     test_length = 48,
-    **kwargs,
 ):
     global df
-    return Forecaster(
+    f = Forecaster(
         y = df['HOUSTNSA'],
         current_dates = df.index,
         future_dates = 24,
         test_length = test_length,
         cis = cis,
-        metrics = [
-            'abias',
-            'rmse',
-            'smape',
-            'mse',
-        ],
-        **kwargs,
     )
+    return f.set_metrics(['abias','rmse','smape','mse'])
 
 def test_add_terms():
     f = build_Forecaster()
     f.add_AR_terms((2,12))
-    assert 'AR24' in f.get_regressor_names(), 'regressor AR24 not added'
+    assert AR(24) in f.get_regressor_names(), 'regressor AR24 not added'
 
     f.add_ar_terms(12)
-    assert 'AR12' in f.get_regressor_names(), 'regressor AR12 not added'
+    assert AR(12) in f.get_regressor_names(), 'regressor AR12 not added'
 
     f.drop_all_Xvars()
     f.add_ar_terms([12,24])
-    assert 'AR12' in f.get_regressor_names(), 'regressor AR12 not added'
-    assert 'AR24' in f.get_regressor_names(), 'regressor AR24 not added'
-    assert 'AR1' not in f.get_regressor_names(), 'regressor AR1 found when should not be'
+    assert AR(12) in f.get_regressor_names(), 'regressor AR12 not added'
+    assert AR(24) in f.get_regressor_names(), 'regressor AR24 not added'
+    assert AR(1) not in f.get_regressor_names(), 'regressor AR1 found when should not be'
 
     f.add_time_trend()
     assert 't' in f.get_regressor_names(), 'regressor t not added'
@@ -98,10 +94,10 @@ def test_statistical_tests():
 
 def test_modeling():
     for tl in (0,48): # make sure 0 and non-0 length test sets work
+        print(f'testing test length {tl}')
         f = build_Forecaster(test_length=tl)
         f.set_metrics(['rmse','smape',rmse_mae])
         f.set_grids_file('ExampleGrids')
-        f.add_metric(rmse_mae)
         f.set_validation_metric('rmse_mae')
         f.set_validation_length(12)
         if tl != 0: 
@@ -139,7 +135,6 @@ def test_modeling():
             dynamic_tuning = 24,
             dynamic_testing = 24,
             feature_importance = True,
-            summary_stats = True,
             suffix = '_cv',
             limit_grid_size = .2,
             min_grid_size = 4,
@@ -219,7 +214,6 @@ def test_transfer_modeling():
         f_new.transfer_predict(
             transfer_from=f,
             model='mlr',
-            dates=['2022-12-01','2023-01-01','2017-01-01'],
             save_to_history=False,
             return_series=True,
         )

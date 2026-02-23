@@ -20,7 +20,8 @@ from .types import (
 )
 from .typing_utils import ScikitLike, NormalizerLike
 from .classes import AR, Estimator, EvaluatedMetric, DetermineBestBy, MetricStore, ValidatedList
-from .models import SKLearnUni
+from .models import SKLearnUni, SKLearnMV
+from collections import Counter
 import copy
 import pandas as pd
 import numpy as np
@@ -51,6 +52,7 @@ class Forecaster_parent:
     ):
         self._logging()
         self.y = y
+        self.n_actuals = len(self.y)
         self.normalizer = NORMALIZERS # TODO make this its own class
         self.set_test_length(test_length)
         self.validation_length = 1
@@ -271,9 +273,9 @@ class Forecaster_parent:
         >>> f.add_time_trend() # adds time trend called 't'
         """
         #self._validate_future_dates_exist()
-        self.current_xreg[called] = pd.Series(range(1, len(self.y) + 1))
+        self.current_xreg[called] = pd.Series(range(1, self.n_actuals + 1))
         self.future_xreg[called] = list(
-            range(len(self.y) + 1, len(self.y) + len(self.future_dates) + 1)
+            range(self.n_actuals + 1, self.n_actuals + len(self.future_dates) + 1)
         )
 
         return self
@@ -346,6 +348,60 @@ class Forecaster_parent:
                 )
         return self
     
+    def parse_labeled_metrics(self, labeled_metrics:dict[str,EvaluatedMetric]) -> dict[str,float]:
+        """
+        Docstring for parse_labeled_metrics
+        
+        :param self: Description
+        :param labeled_metrics: Description
+        :type labeled_metrics: dict[str, EvaluatedMetric]
+        :return: Description
+        :rtype: dict[str, float]
+        """
+        if not labeled_metrics:
+            return {}
+
+        scores = {k:v.score for k, v in labeled_metrics.items()}
+        ascending_order = [v.store.lower_is_better for _, v in labeled_metrics.items()][0]
+        x = Counter(scores).most_common()
+        x = {model:score for model, score in x}
+        if not ascending_order:
+            return x
+        else:
+            return {k: v for k, v in reversed(x.items())}
+
+    def order_fcsts(self, models:Optional[EvaluatedModel] = None, determine_best_by:DetermineBestBy="TestSetRMSE") -> list[str]:
+        """ Gets estimated forecasts ordered from best-to-worst.
+        
+        Args:
+            models (list-like): Optional. A list of models to consider in the order. Default considers all evaluated models.
+                If not 'all', each element must match an evaluated model's nickname.
+                'all' will only consider models that have a non-null determine_best_by value in history.
+            determine_best_by (str): Default 'TestSetRMSE'. One of Forecaster.determine_best_by.
+
+        Returns:
+            (list): The ordered models.
+
+        >>> models = ('mlr','mlp','lightgbm')
+        >>> f.tune_test_forecast(models,dynamic_testing=False,feature_importance=True)
+        >>> ordered_models = f.order_fcsts(models,"TestSetRMSE")
+        """
+        _developer_utils.descriptive_assert(
+            determine_best_by in self.determine_best_by,
+            ValueError,
+            f"determine_best_by must be one of {self.determine_best_by}, got {determine_best_by}.",
+        )
+        
+        if not models:
+            models = [
+                m for m, v in self.history.items()
+                if determine_best_by in v and not np.isnan(v[determine_best_by].score)
+            ]
+        
+        metrics = {m:self.history[m][determine_best_by] for m in models}
+        parsed_metrics = self.parse_labeled_metrics(metrics)
+        return list(parsed_metrics.keys())
+
     def list_stored_ar_terms(self):
         """ Returns a list of all stored autoregressive (AR) terms.
 
@@ -388,16 +444,16 @@ class Forecaster_parent:
         #self._validate_future_dates_exist()
         if called is None:
             called = f"cycle{cycle_length}"
-        full_sin = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
+        full_sin = pd.Series(range(1, self.n_actuals + len(self.future_dates) + 1)).apply(
             lambda x: np.sin(np.pi * x / (cycle_length / fourier_order))
         )
-        full_cos = pd.Series(range(1, len(self.y) + len(self.future_dates) + 1)).apply(
+        full_cos = pd.Series(range(1, self.n_actuals + len(self.future_dates) + 1)).apply(
             lambda x: np.cos(np.pi * x / (cycle_length / fourier_order))
         )
-        self.current_xreg[called + "sin"] = pd.Series(full_sin.values[: len(self.y)])
-        self.current_xreg[called + "cos"] = pd.Series(full_cos.values[: len(self.y)])
-        self.future_xreg[called + "sin"] = list(full_sin.values[len(self.y) :])
-        self.future_xreg[called + "cos"] = list(full_cos.values[len(self.y) :])
+        self.current_xreg[called + "sin"] = pd.Series(full_sin.values[: self.n_actuals])
+        self.current_xreg[called + "cos"] = pd.Series(full_cos.values[: self.n_actuals])
+        self.future_xreg[called + "sin"] = list(full_sin.values[self.n_actuals :])
+        self.future_xreg[called + "cos"] = list(full_cos.values[self.n_actuals :])
 
         return self
 
@@ -704,8 +760,7 @@ class Forecaster_parent:
 
         return self
 
-
-    def add_sklearn_estimator(self, imported_module:ScikitLike, called:str, mv:bool=False) -> Self:
+    def add_sklearn_estimator(self, imported_module:ScikitLike, called:str) -> Self:
         """ Adds a new estimator from scikit-learn not built-in to the forecaster object that can be called using set_estimator().
         Only regression models are accepted.
         
@@ -726,14 +781,13 @@ class Forecaster_parent:
         >>> f.set_estimator('stacking')
         >>> f.manual_forecast(...)
         """
-        if mv:
-            interpreted_model = SKLearnUni
+        is_MVForecaster = self.determine_if_MVForecaster()
+        if is_MVForecaster:
+            interpreted_model = SKLearnMV
         else:
-            pass # TODO: implement
+            interpreted_model = SKLearnUni
         
-        self.estimators.estimator_list.append(
-            Estimator(name=called,imported_model=imported_module,interpreted_model=interpreted_model)
-        )
+        self.estimators.item_list.append(Estimator(name=called,imported_model=imported_module,interpreted_model=interpreted_model))
         return self
 
     def _called(self,func:callable,called:str):
@@ -818,7 +872,7 @@ class Forecaster_parent:
             all_kwargs['dynamic_testing'] = dynamic_testing
         
         self.call_estimator = call_estimator.interpreted_model(**all_kwargs)
-        return Self
+        return self
     
     def fit(self,**fit_params:Any) -> Self:
         """
@@ -930,6 +984,8 @@ class Forecaster_parent:
             preds = self.predict()
             if predict_fitted:
                 fvs = self.predict_fitted_vals()
+            elif self.determine_if_MVForecaster():
+                fvs = {k:{} for k in self.y}
             else:
                 fvs = []
         except:
@@ -1044,7 +1100,7 @@ class Forecaster_parent:
         self.grid = random.sample(self.grid,n)
         return self
 
-    def set_metrics(self,metrics:list[MetricStore|DefaultMetric],keep_existing:bool=True) -> Self:
+    def set_metrics(self,metrics:list[MetricStore|DefaultMetric],keep_existing:bool=False) -> Self:
         """ Set or change the evaluated metrics for all model testing and validation.
 
         Args:
@@ -1053,7 +1109,7 @@ class Forecaster_parent:
                 Otherwise use the MetricStore class from scalecast.Classes to specify a custom metric.
                 For each metric and model that is tested, the test-set and in-sample metrics will be evaluated and can be
                 exported. Level test-set and in-sample metrics are also currently available, but will be removed in a future version.
-            keep_existing (bool): Whether to keep evaluating all existing metrics already in the object.
+            keep_existing (bool): Default False. Whether to keep evaluating all existing metrics already in the object.
         
         Returns:
             Self
@@ -1069,7 +1125,7 @@ class Forecaster_parent:
                     raise ValueError(f'cannot use value passed to metrics: {met}')
                 
         if keep_existing:
-            self.metrics = [met for met in self.metrics if met not in add_mets]
+            self.metrics = add_mets + [met for met in self.metrics if met not in add_mets]
         else:
             self.metrics = add_mets
 
@@ -1104,7 +1160,11 @@ class Forecaster_parent:
 
         >>> f.set_validation_metric('mae')
         """
-        self.validation_metric = [m for m in self.metrics if m.name == metric][0]
+        met = [m for m in self.metrics if m.name == metric]
+        if not met:
+            raise ValueError(f'{metric} not available for validation. Try calling set_metrics()')
+        else:
+            self.validation_metric = met[0]
         self.set_validation_length(max(self.validation_metric.min_obs_required,self.validation_length))
         return self
 
@@ -1140,8 +1200,7 @@ class Forecaster_parent:
                 ValueError,
                 f"n must be an int of at least 0 or float greater than 0 and less than 1, got {n} of type {type(n)}.",
             )
-            leny = len(self.y[self.names[0]]) if isinstance(self.y,dict) else len(self.y) 
-            self.test_length = int(leny * n)
+            self.test_length = int(self.n_actuals * n)
 
         return self
 
@@ -1426,9 +1485,9 @@ class Forecaster_parent:
 
         fpad_len = 0
         bpad_len = 0
-        if current_df.shape[0] < len(self.y):
+        if current_df.shape[0] < self.n_actuals:
             if pad:
-                fpad_len = len(self.y) - current_df.shape[0]
+                fpad_len = self.n_actuals - current_df.shape[0]
             else:
                 raise ForecastError(
                 "Could not ingest Xvars dataframe."
@@ -1478,12 +1537,7 @@ class Forecaster_parent:
             df['Optimized On'] = self.optimize_on
         return df
 
-    def test(
-        self,
-        dynamic_testing:DynamicTesting=True,
-        call_me:Optional[str]=None,
-        **kwargs:Any,
-    ) -> Self:
+    def test(self,dynamic_testing:DynamicTesting=True,call_me:Optional[str]=None,**kwargs:Any) -> Self:
         """ Tests the forecast estimator out-of-sample. Uses the test_length attribute to determine on how-many observations.
         All test-set splits maintain temporal order.
 
@@ -1760,9 +1814,7 @@ class Forecaster_parent:
                 except Exception as e:
                     #raise # good to uncomment when debugging
                     evaluated_metric = np.nan
-                    logging.warning(
-                        f"Could not evaluate the paramaters: {hp}. error: {e}",
-                    )
+                    logging.warning(f"Could not evaluate the paramaters: {hp}. error: {e}")
                 metrics[h,i] = evaluated_metric
 
         self.grid_evaluated = metrics
@@ -1793,6 +1845,78 @@ class Forecaster_parent:
         if verbose:
             print(f'Chosen paramaters: {self.best_params}.')
 
+        return self
+    
+    def transfer_predict(
+        self,
+        transfer_from:"Forecaster_parent",
+        model:str,
+        return_series:bool = False,
+        save_to_history:bool = True,
+        call_me:Optional[str] = None,
+        regr = None,
+    ) -> Self|list[float]:
+        """ Makes predictions using an already-trained model over any given forecast horizon.
+        Will use the already-trained model from a passed Forecaster object to create a new model
+        in the `Forecaster` or 'MVForecaster` object from which the method is called. Or the option is available to not
+        save a new model but return the predictions in a pandas Series object. Confidence intervals cannot
+        be transferred from this method but can be from the `transfer_cis()` method.
+        
+        Args:
+            transfer_from (Forecaster): The Forecaster object that contains the already-fitted model.
+            model (str): The model nickname of the already-evaluated model stored in the `Forecaster`
+                object passed to `transfer_from`.
+            return_series (bool): Default False. Whether to return a pandas Series with the
+                date as an index of the values. If the `dates` argument is not specified, this
+                will include all dates in the `Forecaster` instance that the method is called from.
+            save_to_history (bool): Default True. Whether to save the transferred predictions as if
+                they were a model being run using a `_forecast()` method.
+            call_me (str): Optional. What to call the resulting model.
+                If save_to_history is False, this is ignored.
+                If not specified, inherits the name passed to `model`.
+            regr: Optional. The model to make predictions with. If not supplied,
+                the model will be searched for in the `Forecaster` passed
+                to `transfer_from`.
+
+        Returns:
+            (Pandas Series or Self): The date-indexed series if return_series is True. Otherwise returns self.
+
+        >>> f.manual_forecast(call_me='mlr')
+        >>> f_new.transfer_predict(transfer_from=f,model='mlr')
+        """
+        f = transfer_from
+        if regr:
+            self.call_estimator = regr
+        else:
+            self.call_estimator = f.history[model]['call_estimator']
+            preds = self.predict()
+            try:
+                fvs = self.predict_fitted_vals()
+            except:
+                fvs = []
+                warnings.warn(
+                    f'Could not calculate fitted values for {model} model.',
+                    category = Warning,
+                )
+        
+        if call_me is None:
+            call_me = model
+        self.call_me = call_me
+
+        if save_to_history:
+            self.history[call_me] = {}
+            for copy_attr, set_attr in [
+                ('Estimator','estimator'),
+                ('DynamicallyTested','dynamic_testing'),
+            ]:
+                setattr(self,set_attr,f.history[call_me][copy_attr])
+            
+            self.forecast = preds
+            self.fitted_values = fvs
+            self._bank_history()
+        if return_series:
+            return preds
+        
         return self
 
     def lookup_normalizer(self,normalizer:AvailableNormalizer=None) -> NormalizerLike:

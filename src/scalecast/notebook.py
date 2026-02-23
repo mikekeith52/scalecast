@@ -192,7 +192,6 @@ def tune_test_forecast(
     cross_validate:bool=False,
     dynamic_tuning:DynamicTesting=False,
     dynamic_testing:DynamicTesting=True,
-    summary_stats:bool=False,
     feature_importance:bool=False,
     fi_try_order:list[FIMethod]=None,
     limit_grid_size:Optional[PositiveInt|ConfInterval]=None,
@@ -218,9 +217,6 @@ def tune_test_forecast(
             If int, window evaluates over that many steps (2 for 2-step recurvie testing, 12 for 12-step, etc.).
             Setting this to False or 1 means faster performance, 
             but gives a less-good indication of how well the forecast will perform more than one period out.
-        summary_stats (bool): Default False.
-            Whether to save summary stats for the models that offer those.
-            Does not work for `MVForecaster` objects.
         feature_importance (bool): Default False.
             Whether to save feature importance information for the models that offer it.
             Does not work for `MVForecaster` objects.
@@ -252,7 +248,6 @@ def tune_test_forecast(
         min_grid_size=min_grid_size,
         suffix=suffix,
         error=error,
-        summary_stats=summary_stats,
         feature_importance=feature_importance,
         fi_try_order = fi_try_order,
         use_progress_bar = True,
