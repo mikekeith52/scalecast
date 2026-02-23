@@ -4,8 +4,8 @@ import datetime
 import importlib
 
 script_files = [ # comment out scripts to skip testing
-    #'test_GridGenerator',
-    #'test_Forecaster',
+    'test_GridGenerator',
+    'test_Forecaster',
     'test_MVForecaster',
     'test_multiseries',
     'test_Pipeline',

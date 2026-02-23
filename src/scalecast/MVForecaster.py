@@ -14,7 +14,7 @@ from .types import (
     SeriesName,
     SeriesValues,
 )
-from .classes import AR
+from .classes import AR, EvaluatedMetric
 from typing import Optional, Literal, Any, Self, TYPE_CHECKING
 import warnings
 import os
@@ -167,7 +167,6 @@ class MVForecaster(Forecaster_parent):
             raise ValueError(
                 f"merge_future_dates must be one of ('longest','shortest'), got {merge_future_dates}."
             )
-        self.n_actuals = len(list(self.y.values())[0])
         self.set_test_length(test_length)
         self.carry_fit_models = carry_fit_models
 
@@ -193,7 +192,7 @@ class MVForecaster(Forecaster_parent):
         self.current_dates.values[0].astype(str),
         self.current_dates.values[-1].astype(str),
         self.freq,
-        len(self.current_dates),
+        self.n_actuals(),
         self.n_series,
         self.names,
         len(self.future_dates),
@@ -207,6 +206,11 @@ class MVForecaster(Forecaster_parent):
         self.optimize_on,
         self.grids_file,
     )
+
+    def n_actuals(self):
+        """ docstring
+        """
+        return len(list(self.y.values())[0])
 
     def add_optimizer_func(self, func:callable, called:Optional[str] = None) -> Self:
         """ Add an optimizer function that can be used to determine the best-performing model.
@@ -475,7 +479,7 @@ class MVForecaster(Forecaster_parent):
 
         for met in self.metrics:
             self.history[call_me]["InSample" + met.name.upper()] = {
-                series: _developer_utils._return_na_if_len_zero(a, self.fitted_values[series], met.eval_func)
+                series: EvaluatedMetric(store=met,score=_developer_utils._return_na_if_len_zero(a, self.fitted_values[series], met.eval_func))
                 for series, a in fitted_val_actuals.items()
             }
 
@@ -880,7 +884,7 @@ class MVForecaster(Forecaster_parent):
                                 case "HyperParams"|"Lags":
                                     model_summary_sm[c] = [attr]
                                 case dict():
-                                    model_summary_sm[c] = [attr[s]]
+                                    model_summary_sm[c] = [attr.get(s,pd.NA)]
                                 case _:
                                     model_summary_sm[c] = [attr]
                         elif c == "OptimizedOn" and hasattr(self, "best_model"):
@@ -897,7 +901,9 @@ class MVForecaster(Forecaster_parent):
                     
                     for c in self.determine_best_by:
                         if c in self.history[m]:
-                            model_summary_sm[c] = self.history[m][s]
+                            match self.history[m][c]:
+                                case dict():
+                                    model_summary_sm[c] = self.history[m][c][s].score
 
                     model_summaries.append(model_summary_sm)
             model_summaries = pd.concat(model_summaries)

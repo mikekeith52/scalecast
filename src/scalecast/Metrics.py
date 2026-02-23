@@ -1,6 +1,7 @@
 from .types import ConfInterval
 from typing import Sequence
 import numpy as np
+import pandas as pd
 from sklearn.metrics import (
     r2_score,
     mean_squared_error,
@@ -200,9 +201,7 @@ class Metrics:
         num = np.sum(np.abs(f-a))
         davger = 1 / (len(obs) - m)
         denom = np.sum(
-            np.abs(
-                pd.Series(obs).diff(m).values[m:]
-            )
+            np.abs(pd.Series(obs).diff(m).values[m:])
         )
         return avger * (num / (davger * denom))
 

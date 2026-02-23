@@ -52,7 +52,6 @@ class Forecaster_parent:
     ):
         self._logging()
         self.y = y
-        self.n_actuals = len(self.y)
         self.normalizer = NORMALIZERS # TODO make this its own class
         self.set_test_length(test_length)
         self.validation_length = 1
@@ -141,6 +140,11 @@ class Forecaster_parent:
                 delattr(self, attr)
             except AttributeError:
                 pass
+
+    def n_actuals(self):
+        """ docstring
+        """
+        return len(self.y)
 
     def copy(self):
         """ Creates an object copy.
@@ -273,9 +277,9 @@ class Forecaster_parent:
         >>> f.add_time_trend() # adds time trend called 't'
         """
         #self._validate_future_dates_exist()
-        self.current_xreg[called] = pd.Series(range(1, self.n_actuals + 1))
+        self.current_xreg[called] = pd.Series(range(1, self.n_actuals() + 1))
         self.future_xreg[called] = list(
-            range(self.n_actuals + 1, self.n_actuals + len(self.future_dates) + 1)
+            range(self.n_actuals() + 1, self.n_actuals() + len(self.future_dates) + 1)
         )
 
         return self
@@ -360,8 +364,8 @@ class Forecaster_parent:
         """
         if not labeled_metrics:
             return {}
-
-        scores = {k:v.score for k, v in labeled_metrics.items()}
+        
+        scores:dict[str,float] = {k:v.score for k, v in labeled_metrics.items()}
         ascending_order = [v.store.lower_is_better for _, v in labeled_metrics.items()][0]
         x = Counter(scores).most_common()
         x = {model:score for model, score in x}
@@ -393,13 +397,24 @@ class Forecaster_parent:
         )
         
         if not models:
-            models = [
-                m for m, v in self.history.items()
-                if determine_best_by in v and not np.isnan(v[determine_best_by].score)
-            ]
+            models = [m for m, v in self.history.items() if determine_best_by in v]
         
         metrics = {m:self.history[m][determine_best_by] for m in models}
-        parsed_metrics = self.parse_labeled_metrics(metrics)
+        if not self.determine_if_MVForecaster():
+            sunk_metrics = metrics
+        else:
+            sunk_metrics = {}
+            optimizer_func = self.optimizer_funcs[self.optimize_on]
+            for model, metric in metrics.items():
+                match metric:
+                    case dict():
+                        metric_array = list(metric.values())
+                        new_metric = EvaluatedMetric(store=metric_array[0].store,score=optimizer_func([m.score for m in metric_array]))
+                    case _:
+                        new_metric = metric
+                sunk_metrics[model] = new_metric
+
+        parsed_metrics = self.parse_labeled_metrics(sunk_metrics)
         return list(parsed_metrics.keys())
 
     def list_stored_ar_terms(self):
@@ -444,16 +459,16 @@ class Forecaster_parent:
         #self._validate_future_dates_exist()
         if called is None:
             called = f"cycle{cycle_length}"
-        full_sin = pd.Series(range(1, self.n_actuals + len(self.future_dates) + 1)).apply(
+        full_sin = pd.Series(range(1, self.n_actuals() + len(self.future_dates) + 1)).apply(
             lambda x: np.sin(np.pi * x / (cycle_length / fourier_order))
         )
-        full_cos = pd.Series(range(1, self.n_actuals + len(self.future_dates) + 1)).apply(
+        full_cos = pd.Series(range(1, self.n_actuals() + len(self.future_dates) + 1)).apply(
             lambda x: np.cos(np.pi * x / (cycle_length / fourier_order))
         )
-        self.current_xreg[called + "sin"] = pd.Series(full_sin.values[: self.n_actuals])
-        self.current_xreg[called + "cos"] = pd.Series(full_cos.values[: self.n_actuals])
-        self.future_xreg[called + "sin"] = list(full_sin.values[self.n_actuals :])
-        self.future_xreg[called + "cos"] = list(full_cos.values[self.n_actuals :])
+        self.current_xreg[called + "sin"] = pd.Series(full_sin.values[: self.n_actuals()])
+        self.current_xreg[called + "cos"] = pd.Series(full_cos.values[: self.n_actuals()])
+        self.future_xreg[called + "sin"] = list(full_sin.values[self.n_actuals() :])
+        self.future_xreg[called + "cos"] = list(full_cos.values[self.n_actuals() :])
 
         return self
 
@@ -1200,7 +1215,7 @@ class Forecaster_parent:
                 ValueError,
                 f"n must be an int of at least 0 or float greater than 0 and less than 1, got {n} of type {type(n)}.",
             )
-            self.test_length = int(self.n_actuals * n)
+            self.test_length = int(self.n_actuals() * n)
 
         return self
 
@@ -1485,9 +1500,9 @@ class Forecaster_parent:
 
         fpad_len = 0
         bpad_len = 0
-        if current_df.shape[0] < self.n_actuals:
+        if current_df.shape[0] < self.n_actuals():
             if pad:
-                fpad_len = self.n_actuals - current_df.shape[0]
+                fpad_len = self.n_actuals() - current_df.shape[0]
             else:
                 raise ForecastError(
                 "Could not ingest Xvars dataframe."
@@ -1599,33 +1614,19 @@ class Forecaster_parent:
         )
 
         if not already_existed:
-            attrs_to_copy = (
-                'Estimator',
-                'Xvars',
-                'HyperParams',
-                'Lags',
-                'regr',
-                'X',
-            )
-            self.history[call_me] = {
-                k:(v if k in attrs_to_copy else None) for 
-                k, v in f1.history[call_me].items()
-            }
+            attrs_to_copy = ['Estimator','Xvars','HyperParams','Lags']
+            self.history[call_me] = {k:(v if k in attrs_to_copy else None) for k, v in f1.history[call_me].items()}
         self.call_me = call_me
         self.history[call_me]['TestSetLength'] = self.test_length
         self.history[call_me]['TestSetPredictions'] = fcst
-        self.history[call_me]['TestSetActuals'] = ( 
-            actuals if is_Forecaster
-            else {k :actuals[i] for i, k in enumerate(fcst.keys())}
-        )
+        self.history[call_me]['TestSetActuals'] = actuals if is_Forecaster else {k :actuals[i] for i, k in enumerate(fcst.keys())}
 
         for met, value in zip(self.determine_best_by.metrics,self.determine_best_by.values):
             if value.startswith('TestSet'):
                 if is_Forecaster:
                     self.history[call_me][value] = EvaluatedMetric(score=met.eval_func(actuals,fcst),store=met)
                 else:
-                    for i, k in enumerate(fcst.keys()):
-                        self.history[call_me][value] = EvaluatedMetric(score=met.eval_func(actuals[i],fcst[k]),store=met)
+                    self.history[call_me][value] = {k:EvaluatedMetric(score=met.eval_func(actuals[i],fcst[k]),store=met) for i, k in enumerate(fcst.keys())}
 
         return self
     

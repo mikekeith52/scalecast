@@ -12,9 +12,10 @@ def main():
             current_dates=df.index,
             future_dates = 12,
             test_length = .2,
-            validation_length = 12,
         )
+        f.set_validation_length(12)
         f_dict[sym] = f
+    
     keep_smallest_first_date(*f_dict.values())
 
     for k, f in f_dict.items():

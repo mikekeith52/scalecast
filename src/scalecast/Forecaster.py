@@ -106,7 +106,7 @@ class Forecaster(Forecaster_parent):
         self.current_dates.values[0].astype(str),
         self.current_dates.values[-1].astype(str),
         self.freq,
-        self.n_actuals,
+        self.n_actuals(),
         len(self.future_dates),
         list(self.current_xreg.keys()),
         self.test_length,
@@ -1702,7 +1702,7 @@ class Forecaster(Forecaster_parent):
         }
         return self
 
-    def keep_smaller_history(self, n:PositiveInt) -> Self:
+    def keep_smaller_history(self, n:PositiveInt|str|DatetimeLike) -> Self:
         """ Cuts y observations in the object by counting back from the beginning.
 
         Args:
@@ -1721,20 +1721,8 @@ class Forecaster(Forecaster_parent):
             n = len([i for i in self.current_dates if i >= pd.Timestamp(n)])
         
         n = int(n)
-        _developer_utils.descriptive_assert(
-            isinstance(n, int),
-            ValueError,
-            "n must be an int, datetime object, or str and there must be more than 2 observations to keep.",
-        )
-        _developer_utils.descriptive_assert(
-            n > 2,
-            ValueError,
-            "n must be an int, datetime object, or str and there must be more than 2 observations to keep.",
-        )
-        self.orig_attr = {
-            'y':self.y.values.copy(),
-            'cd':self.current_dates.values.copy(),
-        } # for reverting later
+        _developer_utils.descriptive_assert(n > 2,ValueError,"n must be an int, datetime object, or str and there must be more than 2 observations to keep.")
+        self.orig_attr = {'y':self.y.values.copy(),'cd':self.current_dates.values.copy()} # for reverting later
         self.y = self.y.iloc[-n:]
         self.current_dates = self.current_dates.iloc[-n:]
         self.current_xreg = {k:v.iloc[-n:].reset_index(drop=True) for k, v in self.current_xreg.items()}

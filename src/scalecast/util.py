@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import warnings
 import random
+import copy
 from statsmodels.tsa.tsatools import freq_to_period
 from typing import Sequence, Optional, Unpack, Any, Literal, TYPE_CHECKING
 if TYPE_CHECKING:
@@ -262,7 +263,7 @@ def break_mv_forecaster(mvf:MVForecaster,drop_all_Xvars:bool = True) -> Unpack['
                         hist[k][k2] = []
         return hist
 
-    mvf1 = mvf.deepcopy()
+    mvf1 = copy.deepcopy(mvf)
 
     set_len = (
         len(mvf1.y[mvf1.names[0]]) 
@@ -275,13 +276,13 @@ def break_mv_forecaster(mvf:MVForecaster,drop_all_Xvars:bool = True) -> Unpack['
             y=mvf1.y[s].values[-set_len:],
             current_dates=mvf1.current_dates.values[-set_len:],
             future_dates=len(mvf1.future_dates),
-            current_xreg={k:v.copy() for k,v in mvf1.current_xreg.items()},
-            future_xreg={k:v.copy() for k,v in mvf1.future_xreg.items()},
             test_length=mvf1.test_length,
-            validation_length=mvf1.validation_length,
             cis = mvf1.cis,
-            cilevel = mvf1.cilevel,
         )
+        f.current_xreg = {k:v.copy() for k,v in mvf1.current_xreg.items()}
+        f.future_xreg = {k:v.copy() for k,v in mvf1.future_xreg.items()}
+        f.set_validation_length(mvf1.validation_length)
+        f.set_cilevel(mvf1.cilevel)
         f.history = convert_mv_hist(
             f=f, 
             mvhist=mvf1.history, 
@@ -357,7 +358,7 @@ def infer_apply_Xvar_selection(infer_from:'Forecaster'|'MVForecaster',apply_to:'
     >>> f2 = infer_apply_Xvar_selection(infer_from=f1,apply_to=f2)
     """
     if return_copy:
-        apply_to = apply_to.deepcopy()
+        apply_to = copy.deepcopy(apply_to)
     
     not_guessed = []
     for k in infer_from.current_xreg.keys():
@@ -533,8 +534,7 @@ def find_statistical_transformation(
 
         return transformers
 
-    f = f.deepcopy()
-    transformer = SeriesTransformer.SeriesTransformer(f)
+    f = copy.deepcopy(f)
 
     m = find_seasonal_length(m,f.freq)
 
@@ -689,6 +689,8 @@ def find_optimal_transformation(
     """
     from . import Pipeline
     from ._Forecaster_parent import ForecastError
+    from .models import SKLearnUni
+
     def forecaster(f):
         f.add_ar_terms(lags)
         f.set_estimator(estimator)
@@ -731,7 +733,7 @@ def find_optimal_transformation(
             "This can happen if you used the default test_length argument and didn't add future dates to the passed `Forecaster`."
         )
 
-    f = f.deepcopy()
+    f = copy.deepcopy(f)
     if set_aside_test_set:
         f.chop_from_front(f.test_length)
     
@@ -744,7 +746,7 @@ def find_optimal_transformation(
 
     if verbose:
         print(f'Using {estimator} model to find the best transformation set on {num_test_sets} test sets, each {test_length} in length.')
-        if estimator in f.sklearn_estimators:
+        if f.estimators.lookup_item(estimator).interpreted_model == SKLearnUni:
             print(f'All transformation tries will be evaluated with {lags} lags.')
 
     level_met = neg_r2(make_pipeline_fit_predict(f,[],[]))

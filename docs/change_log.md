@@ -4,6 +4,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 ## [0.21.0]
 ### Added
 - Added a uniform modeling framework for all scalecast models
+- Added classes (`AR`, `EvaluatedMetric`, etc.) to a `classes.py` module
 - Added `fit()`/`predict()`/`fit_predict()` methods to `Forecaster` and `MVForecaster` objects
 - New `n_actuals` attribute
 - Added `parse_labeled_metrics()` method in `Forecaster_parent`
@@ -17,6 +18,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - Removed option to save summary stats from models
 - Removed deprecation warnings from `Forecaster.reduce_Xvars()` method, introduced in 0.19.14
 - Moved `order_fcsts` to `Forecaster_parent` object
+- Evaluated metrics in `MVForecaster` no longer split out by series
 ### Fixed
 - Fixed type hints
 - Fixed adding regressors, such as time trend, to `MVForecaster` (methods measuring `len(y)`)

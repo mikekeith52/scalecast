@@ -173,7 +173,7 @@ class Reverter:
         return obj
 
     def copy(self):
-        return self.__deepcopy__()
+        return copy.deepcopy(self)
 
     def fit_transform(self,f: Forecaster, exclude_models:list[str] = []) -> Forecaster:
         """ Applies the revert function to the series stored in the Forecaster object.
@@ -250,8 +250,8 @@ class Pipeline_parent:
                     future_dates = fcst_length,
                     test_length = f.test_length if test_length is None else test_length,
                     cis = f.cis if cis is None else cis,
-                    cilevel = f.cilevel if cilevel is None else cilevel,
                 )
+                f1.set_cilevel(f.cilevel if not cilevel else cilevel)
                 if series_length is not None:
                     f1.keep_smaller_history(series_length)
                 results[h].append((f1,hold_out))

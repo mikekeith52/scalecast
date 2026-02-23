@@ -2,6 +2,8 @@ from ._utils import _developer_utils
 from ._Forecaster_parent import ForecastError
 from .Forecaster import Forecaster
 from .types import PositiveInt, NonNegativeInt
+from .classes import EvaluatedMetric
+from .util import find_seasonal_length
 from typing import Literal, Optional, Any
 import pandas as pd
 import numpy as np
@@ -17,7 +19,7 @@ class SeriesTransformer:
             f (Forecaster): The Forecaster object that will receive each transformation/revert.
             deepcopy (bool): Default True. Whether to store a deepcopy of the Forecaster object in the SeriesTransformer object.
         """
-        self.f = f.__deepcopy__() if deepcopy else f
+        self.f = copy.deepcopy(f) if deepcopy else f
 
     def __repr__(self):
         return "SeriesTransformer(\n{}\n)".format(self.f)
@@ -104,16 +106,14 @@ class SeriesTransformer:
                     h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).ffill().to_list()
                 elif not k.endswith('CI'):
                     h[k] = []
-            for met, func in self.f.metrics.items():
-                h['TestSet' + met.upper()] = _developer_utils._return_na_if_len_zero(
-                    self.f.y.iloc[-len(h["TestSetPredictions"]) :], 
-                    h["TestSetPredictions"], 
-                    func,
+            for met in self.f.metrics:
+                h['TestSet' + met.name.upper()] = EvaluatedMetric(
+                    store=met,
+                    score=_developer_utils._return_na_if_len_zero(self.f.y.iloc[-len(h["TestSetPredictions"]) :], h["TestSetPredictions"], met.eval_func)
                 )
-                h['InSample' + met.upper()] = _developer_utils._return_na_if_len_zero(
-                    self.f.y.iloc[-len(h['FittedVals']) :], 
-                    h['FittedVals'],
-                    func,
+                h['InSample' + met.name.upper()] = EvaluatedMetric(
+                    store = met,
+                    score = _developer_utils._return_na_if_len_zero(self.f.y.iloc[-len(h['FittedVals']) :], h['FittedVals'], met.eval_func)
                 )
 
         return self.f
@@ -180,7 +180,7 @@ class SeriesTransformer:
 
         train_only = train_only if self.f.test_length > 0 else False
 
-        fmod = self.f.deepcopy()
+        fmod = copy.deepcopy(self.f)
         fmod.drop_all_Xvars()
         fmod.add_time_trend()
 
@@ -188,7 +188,7 @@ class SeriesTransformer:
             import statsmodels.api as sm 
             if seasonal_lags > 0:
                 if m == 'auto':
-                    m = _developer_utils._convert_m(m,fmod.freq)
+                    m = find_seasonal_length(m,fmod.freq)
                     if m == 1:
                         warnings.warn(
                             f'Cannot add seasonal lags automatically for the {fmod.freq} frequency. '
@@ -732,7 +732,7 @@ class SeriesTransformer:
         )
         train_only = train_only if self.f.test_length > 0 else False
         if m is None:
-            m = _developer_utils._convert_m('auto',self.f.freq)
+            m = find_seasonal_length('auto',self.f.freq)
         decomp_res = self.f.seasonal_decompose(
             model=model,
             extrapolate_trend=extrapolate_trend,
@@ -750,7 +750,7 @@ class SeriesTransformer:
         f.manual_forecast(
             seasonal=True,
             m=m,
-            test_again=False,
+            test_model=False,
             bank_history=False,
         )
         params = {
