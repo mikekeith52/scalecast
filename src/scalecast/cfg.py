@@ -1,6 +1,7 @@
 from .classes import NoScaler, Estimator, MetricStore, ValidatedList
 from .Metrics import Metrics
 from .models import SKLearnUni, SKLearnMV, VECM, ARIMA, Theta, HWES, TBATS, Prophet, LSTM, RNN, Naive, Combo
+from .typing_utils import NormalizerLike
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from xgboost import XGBRegressor
@@ -20,10 +21,9 @@ from sklearn.preprocessing import (
     Normalizer,
     RobustScaler,
 )
-from itertools import cycle
 from dataclasses import replace
 
-ESTIMATORS:ValidatedList = ValidatedList([
+ESTIMATORS:ValidatedList[Estimator] = ValidatedList([
     Estimator(name='catboost',imported_model=CatBoostRegressor,interpreted_model=SKLearnUni),
     Estimator(name='elasticnet',imported_model=ElasticNet,interpreted_model=SKLearnUni),
     Estimator(name='gbt',imported_model=GradientBoostingRegressor,interpreted_model=SKLearnUni),
@@ -48,7 +48,7 @@ ESTIMATORS:ValidatedList = ValidatedList([
 ],enforce_type='Estimator')
 
 MV_ESTIMATORS:ValidatedList[Estimator] = ValidatedList(
-    [replace(e,interpreted_model=SKLearnMV) for e in ESTIMATORS if e.interpreted_model is SKLearnUni] + 
+    [replace(e,interpreted_model=SKLearnMV) for e in ESTIMATORS if e.interpreted_model == SKLearnUni] + 
     [Estimator(name='vecm',imported_model='auto',interpreted_model=VECM)]
     ,enforce_type='Estimator'
 )
@@ -64,7 +64,7 @@ METRICS:ValidatedList[MetricStore] = ValidatedList([
     MetricStore(name='mse',eval_func=Metrics.mse),
 ],enforce_type='MetricStore')
 
-NORMALIZERS:dict[str,callable] = {
+NORMALIZERS:dict[str,NormalizerLike] = {
     "minmax":MinMaxScaler, 
     "normalize":Normalizer, 
     "scale":StandardScaler, 
@@ -72,7 +72,7 @@ NORMALIZERS:dict[str,callable] = {
     None:NoScaler,
 }
 
-COLORS = cycle([
+COLORS = [
     "#FFA500",
     "#DC143C",
     "#00FF7F",
@@ -87,9 +87,9 @@ COLORS = cycle([
     "#A52A2A",
     "#BDB76B",
     "#DEB887",
-])
+]
 
-SERIES_COLORS = cycle([
+SERIES_COLORS = [
     "#0000FF",
     "#00FFFF",
     "#7393B3",
@@ -100,7 +100,7 @@ SERIES_COLORS = cycle([
     "#5D3FD3",
     "#191970",
     "#9FE2BF",
-])
+]
 
 IGNORE_AS_HYPERPARAMS = ["Xvars", "lags"]
 CLEAR_ATTRS_ON_ESTIMATOR_CHANGE = ["grid","grid_evaluated","best_params","validation_metric_value","actuals"]

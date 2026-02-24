@@ -41,5 +41,3 @@ PipelineFunction = Annotated[callable,"first argument is a Forecaster object and
 TryTransformations = Literal['detrend','seasonal_adj','boxcox','first_diff','first_seasonal_diff','scale']
 # Fill Strategies
 FFillOption = Annotated[str,'begins with ffill_ followed by an integer']
-# To denote parameter is unused -- TODO: stop using this shit
-Unused = Any

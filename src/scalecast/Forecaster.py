@@ -30,6 +30,7 @@ import datetime
 import warnings
 import os
 from pathlib import Path
+from itertools import cycle
 import copy
 from collections.abc import Sized
 from scipy import stats
@@ -211,7 +212,8 @@ class Forecaster(Forecaster_parent):
         models:ModelValues='all',
         determine_best_by:Optional[DetermineBestBy]=None,
         call_me:str='synthesized',
-        cilevel:ConfInterval=.95
+        cilevel:ConfInterval=.95,
+        verbose:bool = False,
     ) -> Self:
         """ Creates a model that is an average of other models with confidence intervals determined by forming normal distributions around each point prediction.
 
@@ -221,6 +223,7 @@ class Forecaster(Forecaster_parent):
             determine_best_by (str): Optional. Combine with `call_me = 'top_{n}'`. One of Forecaster.determine_best_by.
             call_me (str): The name of the resulting model. Default 'synthesized'.
             cilevel (float): The confidence level for the resulting confidence interval. Default .95.
+            verbose (bool): Whether to print successful completion of the function. Default False.
         """
         models = self._parse_models(models,determine_best_by)
         if len(models) < 3:
@@ -244,7 +247,8 @@ class Forecaster(Forecaster_parent):
             f.history[call_me]['TestSetLowerCI'] = np.array(f.history[call_me]['TestSetPredictions']) - z_score * test_st_errors
 
         self.history[call_me] = f.history[call_me]
-        print('⚡Models Synthesized⚡')
+        if verbose:
+            print('⚡Models Synthesized⚡')
         return self
 
     def _parse_models(self, models:ModelValues, determine_best_by:DetermineBestBy) -> list[str]:
@@ -1775,6 +1779,7 @@ class Forecaster(Forecaster_parent):
         ci:bool=False,
         ax:Optional[Axes] = None,
         figsize:tuple[int,int]=(12,6),
+        colors:Optional[list[str]] = COLORS,
     ) -> Axes:
         """ Plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
 
@@ -1792,6 +1797,7 @@ class Forecaster(Forecaster_parent):
                 Whether to display the confidence intervals.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). The size of the resulting figure. Ignored when ax is not None.
+            colors (list[str]): Optional. The colors to use when making the plot.
 
         Returns:
             (Axis): The figure's axis.
@@ -1805,6 +1811,8 @@ class Forecaster(Forecaster_parent):
             models = [m for m in self._parse_models(models, order_by) if m not in exclude]
         except (ValueError, TypeError):
             models = None
+
+        colors = cycle(colors)
 
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
@@ -1831,13 +1839,14 @@ class Forecaster(Forecaster_parent):
                 ax=ax,
             )
             for m in models:
+                color = next(colors)
                 plot[m] = (self.history[m]["Forecast"])
                 if plot[m] is None or not len(plot[m]):
                     continue
                 sns.lineplot(
                     x=self.future_dates.to_list(),
                     y=plot[m],
-                    color=next(COLORS),
+                    color=color,
                     label=m,
                     ax=ax,
                 )
@@ -1848,7 +1857,7 @@ class Forecaster(Forecaster_parent):
                             y1=self.history[m]["UpperCI"],
                             y2=self.history[m]["LowerCI"],
                             alpha=0.2,
-                            color=next(COLORS),
+                            color=color,
                             label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
                         )
                     except KeyError:
@@ -1868,6 +1877,7 @@ class Forecaster(Forecaster_parent):
         ci:bool=False,
         ax:Optional[Axes] = None,
         figsize:tuple[int,int]=(12,6),
+        colors:Optional[list[str]] = COLORS,
     ):
         """ Plots all test-set predictions with the actuals.
 
@@ -1890,6 +1900,7 @@ class Forecaster(Forecaster_parent):
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). Size of the resulting figure. 
                 Ignored when ax is not None.
+            colors (list[str]): Optional. The colors to use when making the plot.
 
         Returns:
             (Axis): The figure's axis.
@@ -1901,6 +1912,8 @@ class Forecaster(Forecaster_parent):
         """
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
+
+        colors = cycle(colors)
 
         models = [m for m in self._parse_models(models, order_by) if m not in exclude]
         _developer_utils.descriptive_assert(
@@ -1937,13 +1950,14 @@ class Forecaster(Forecaster_parent):
         )
 
         for m in models:
+            color = next(colors)
             plot[m] = (self.history[m]["TestSetPredictions"])
             test_dates = self.current_dates.values[-len(plot[m]) :]
             sns.lineplot(
                 x=test_dates,
                 y=plot[m],
                 linestyle="--",
-                color=next(COLORS),
+                color=color,
                 alpha=0.7,
                 label=m,
                 ax=ax,
@@ -1955,7 +1969,7 @@ class Forecaster(Forecaster_parent):
                         y1=self.history[m]["TestSetUpperCI"],
                         y2=self.history[m]["TestSetLowerCI"],
                         alpha=0.2,
-                        color=next(COLORS),
+                        color=color,
                         label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
                     )
                 except KeyError:
@@ -1973,6 +1987,7 @@ class Forecaster(Forecaster_parent):
         order_by:Optional[DetermineBestBy]=None, 
         ax:Optional[Axes] = None,
         figsize:tuple[int,int]=(12,6),
+        colors:Optional[list[str]] = COLORS,
     ):
         """ Plots all fitted values with the actuals. Does not support level fitted values (for now).
 
@@ -1986,6 +2001,7 @@ class Forecaster(Forecaster_parent):
                 How to order the display of forecasts on the plots (from best-to-worst according to the selected metric).
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
+            colors (list[str]): Optional. The colors to use when making the plot.
 
         Returns:
             (Axis): The figure's axis.
@@ -1995,6 +2011,8 @@ class Forecaster(Forecaster_parent):
         >>> f.plot_fitted(order_by='TestSetRMSE') # plots all fitted values
         >>> plt.show()
         """
+        colors = cycle(colors)
+
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
 
@@ -2009,6 +2027,7 @@ class Forecaster(Forecaster_parent):
         sns.lineplot(x=plot["date"], y=plot["actuals"], label="actuals", ax=ax)
 
         for m in models:
+            color = next(colors)
             plot[m] = (self.history[m]["FittedVals"])
             if plot[m] is None or not len(plot[m]):
                 continue
@@ -2016,7 +2035,7 @@ class Forecaster(Forecaster_parent):
                 x=plot["date"][-len(plot[m]) :],
                 y=plot[m][-len(plot["date"]) :],
                 linestyle="--",
-                color=next(COLORS),
+                color=color,
                 alpha=0.7,
                 label=m,
                 ax=ax,

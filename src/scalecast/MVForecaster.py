@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 import seaborn as sns
-from collections import Counter
+from itertools import cycle
 import warnings
 import datetime
 if TYPE_CHECKING:
@@ -164,10 +164,7 @@ class MVForecaster(Forecaster_parent):
                 if v == min(future_dates_lengths.values())
             ][0]
         else:
-            raise ValueError(
-                f"merge_future_dates must be one of ('longest','shortest'), got {merge_future_dates}."
-            )
-        self.set_test_length(test_length)
+            raise ValueError(f"merge_future_dates must be one of ('longest','shortest'), got {merge_future_dates}.")
         self.carry_fit_models = carry_fit_models
 
     def __repr__(self):
@@ -210,7 +207,11 @@ class MVForecaster(Forecaster_parent):
     def n_actuals(self):
         """ docstring
         """
-        return len(list(self.y.values())[0])
+        match self.y: # this is how we have to do it due to weirdness when object is initiated
+            case dict():
+                return len(self.current_dates)
+            case _:
+                return len(self.y)
 
     def add_optimizer_func(self, func:callable, called:Optional[str] = None) -> Self:
         """ Add an optimizer function that can be used to determine the best-performing model.
@@ -558,6 +559,8 @@ class MVForecaster(Forecaster_parent):
         ci:bool=False, 
         ax:Axes=None,
         figsize:tuple[int,int]=(12,6),
+        colors:Optional[list[str]] = COLORS,
+        series_colors:Optional[list[str]] = SERIES_COLORS,
     ) -> Axes:
         """ Plots all forecasts with the actuals, or just actuals if no forecasts have been evaluated or are selected.
 
@@ -575,7 +578,8 @@ class MVForecaster(Forecaster_parent):
                 Whether to display the confidence intervals.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
-
+            colors (list[str]): Optional. The colors to use when drawing the forecasts.
+            series_colors (list[str]): Optional. The colors to use when drawing the actual series.
 
         Returns:
             (Axis): The figure's axis.
@@ -586,24 +590,29 @@ class MVForecaster(Forecaster_parent):
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
 
+        colors = cycle(colors)
+        series_colors = cycle(series_colors)
+
         series = self._parse_series(series)
         models = self._parse_models(models, put_best_on_top)
 
         k = 0
         for s in series:
+            series_color = next(series_colors)
             sns.lineplot(
                 x=self.current_dates.to_list(),
                 y=self.y[s].to_list()[-len(self.current_dates) :],
                 label=f"{s} actuals",
                 ax=ax,
-                color=next(SERIES_COLORS),
+                color=series_color,
             )
             for m in models:
+                color = next(colors)
                 sns.lineplot(
                     x=self.future_dates.to_list(),
                     y=self.history[m]["Forecast"][s],
                     label=f"{s} {m}",
-                    color=next(COLORS),
+                    color=color,
                     ax=ax,
                 )
 
@@ -614,7 +623,7 @@ class MVForecaster(Forecaster_parent):
                             y1=self.history[m]["UpperCI"][s],
                             y2=self.history[m]["LowerCI"][s],
                             alpha=0.2,
-                            color=next(COLORS),
+                            color=color,
                             label="{} {} {:.0%} CI".format(
                                 s, m, self.history[m]["CILevel"]
                             ),
@@ -637,6 +646,8 @@ class MVForecaster(Forecaster_parent):
         ci:bool=False,
         ax:Axes=None,
         figsize:tuple[int,int]=(12,6),
+        colors:Optional[list[str]] = COLORS,
+        series_colors:Optional[list[str]] = SERIES_COLORS,
     ) -> Axes:
         """  Plots all test-set predictions with the actuals.
 
@@ -659,7 +670,8 @@ class MVForecaster(Forecaster_parent):
                 Whether to display the confidence intervals.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
-
+            colors (list[str]): Optional. The colors to use when drawing the forecasts.
+            series_colors (list[str]): Optional. The colors to use when drawing the actual series.
 
         Returns:
             (Axis): The figure's axis.
@@ -676,33 +688,36 @@ class MVForecaster(Forecaster_parent):
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
 
-        
+        colors = cycle(colors)
+        series_colors = cycle(series_colors)
+
         series = self._parse_series(series)
         models = self._parse_models(models, put_best_on_top)
-        include_train = (
-            len(self.current_dates)
-            if include_train is True
-            else self.test_length
-            if include_train is False
-            else include_train
-        )
+
+        match include_train:
+            case True:
+                include_train = self.n_actuals()
+            case False:
+                include_train = self.test_length
 
         k = 0
         for s in series:
+            series_color = next(series_colors)
             y = self.y[s].to_list()[-len(self.current_dates) :]
             sns.lineplot(
                 x=self.current_dates.to_list()[-include_train:],
                 y=y[-include_train:],
                 label=f"{s} actual",
                 ax=ax,
-                color=next(SERIES_COLORS),
+                color=series_color,
             )
             for m in models:
+                color = next(colors)
                 sns.lineplot(
                     x=self.current_dates.to_list()[-self.test_length :],
                     y=self.history[m]["TestSetPredictions"][s],
                     label=f"{s} {m}",
-                    color=next(COLORS),
+                    color=color,
                     linestyle="--",
                     alpha=0.7,
                     ax=ax,
@@ -715,7 +730,7 @@ class MVForecaster(Forecaster_parent):
                             y1=self.history[m]["TestSetUpperCI"][s],
                             y2=self.history[m]["TestSetLowerCI"][s],
                             alpha=0.2,
-                            color=next(COLORS),
+                            color=color,
                             label="{} {} {:.0%} CI".format(
                                 s, m, self.history[m]["CILevel"]
                             ),
@@ -735,6 +750,8 @@ class MVForecaster(Forecaster_parent):
         series:SeriesValues="all", 
         ax:Axes=None,
         figsize:tuple[int,int]=(12,6),
+        colors:Optional[list[str]] = COLORS,
+        series_colors:Optional[list[str]] = SERIES_COLORS,
     ) -> Axes:
         """ Plots fitted values with the actuals.
 
@@ -748,7 +765,8 @@ class MVForecaster(Forecaster_parent):
                Name of the series ('y1...', 'series1...' or user-selected name), 'all', or list-like of series names.
             ax (Axis): Optional. The existing axis to write the resulting figure to.
             figsize (tuple): Default (12,6). Size of the resulting figure. Ignored when ax is not None.
-
+            colors (list[str]): Optional. The colors to use when drawing the forecasts.
+            series_colors (list[str]): Optional. The colors to use when drawing the actual series.
 
         Returns:
             (Axis): The figure's axis.
@@ -761,17 +779,22 @@ class MVForecaster(Forecaster_parent):
         if ax is None:
             _, ax = plt.subplots(figsize=figsize)
 
+        colors = cycle(colors)
+        series_colors = cycle(series_colors)
+
         k = 0
         for s in series:
+            series_color = next(series_colors)
             act = self.y[s].to_list()
             sns.lineplot(
                 x=self.current_dates.to_list(),
                 y=act[-len(self.current_dates):],
                 label=f"{s} actual",
                 ax=ax,
-                color=next(SERIES_COLORS),
+                color=series_color,
             )
             for m in models:
+                color = next(colors)
                 fvs = (self.history[m]["FittedVals"][s])
                 sns.lineplot(
                     x=self.current_dates.to_list()[-len(fvs) :],
@@ -779,7 +802,7 @@ class MVForecaster(Forecaster_parent):
                     label=f"{s} {m}",
                     linestyle="--",
                     alpha=0.7,
-                    color=next(COLORS),
+                    color=color,
                     ax=ax,
                 )
                 k += 1

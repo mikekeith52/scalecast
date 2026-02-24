@@ -52,7 +52,7 @@ class Forecaster_parent:
     ):
         self._logging()
         self.y = y
-        self.normalizer = NORMALIZERS # TODO make this its own class
+        self.normalizer = NORMALIZERS
         self.set_test_length(test_length)
         self.validation_length = 1
         self.validation_metric = metrics[0]
@@ -1918,6 +1918,19 @@ class Forecaster_parent:
         if return_series:
             return preds
         
+        return self
+    
+    def add_normalizer(self,called:str,imported_normalizer:NormalizerLike) -> Self:
+        """ Add a normalizer to be available for forecasting.
+
+        Args:
+            called (str): The name of the normalizer that can be referenced when looking up normalizers.
+            imported_normalizer (NormalizerLike): The object that can be used for normalizing/scaling.
+
+        Returns:
+            Self
+        """
+        self.normalizer[called] = imported_normalizer
         return self
 
     def lookup_normalizer(self,normalizer:AvailableNormalizer=None) -> NormalizerLike:

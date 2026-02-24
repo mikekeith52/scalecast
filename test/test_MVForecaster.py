@@ -5,6 +5,7 @@ from scalecast.auxmodels import mlp_stack
 import pandas_datareader as pdr
 import matplotlib.pyplot as plt
 import pickle
+from sklearn.preprocessing import RobustScaler
 
 def build_MVForecaster(test_length=24):
     s1 = pdr.get_data_fred('UTUR',start='2000-01-01',end='2022-10-01')
@@ -38,6 +39,7 @@ def test_pickle():
 def test_modeling():
     for tl in (0,36):
         mvf = build_MVForecaster(test_length = tl)
+        mvf.add_Normalizer('robust',RobustScaler)
         mvf.set_metrics(['rmse','r2'])
         mvf
         if tl > 0:

@@ -5,6 +5,7 @@ from scalecast.util import metrics, infer_apply_Xvar_selection
 from scalecast.classes import AR, MetricStore
 import matplotlib.pyplot as plt
 import pickle
+from sklearn.preprocessing import RobustScaler
 
 df = pdr.get_data_fred(
     'HOUSTNSA',
@@ -96,6 +97,7 @@ def test_modeling():
     for tl in (0,48): # make sure 0 and non-0 length test sets work
         print(f'testing test length {tl}')
         f = build_Forecaster(test_length=tl)
+        f.add_normalizer('robust',RobustScaler)
         f.set_metrics(['rmse','smape',rmse_mae])
         f.set_grids_file('ExampleGrids')
         f.set_validation_metric('rmse_mae')
@@ -144,7 +146,7 @@ def test_modeling():
 
         f.set_estimator('mlr')
         f.add_signals(['lstm_cv'],fill_strategy = 'bfill')
-        f.manual_forecast()
+        f.manual_forecast(normalizer='robust')
         f.add_signals(['lstm_cv'],fill_strategy = None)
         f.add_signals(['lstm_cv'],train_only=tl > 0)
 

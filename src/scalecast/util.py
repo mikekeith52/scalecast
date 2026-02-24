@@ -2,13 +2,13 @@ from __future__ import annotations
 from ._utils import _developer_utils, boxcox_tr, boxcox_re
 from .types import ConfInterval, AvailableModel, DefaultMetric, TryTransformations, NonNegativeInt, DatetimeLike, FFillOption, PositiveInt
 from .Metrics import Metrics as metrics
+from .classes import EvaluatedMetric
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import seaborn as sns
 import numpy as np
 import pandas as pd
 import warnings
-import random
 import copy
 from statsmodels.tsa.tsatools import freq_to_period
 from typing import Sequence, Optional, Unpack, Any, Literal, TYPE_CHECKING
@@ -688,7 +688,7 @@ def find_optimal_transformation(
     >>> f = pipeline.fit_predict(f)
     """
     from . import Pipeline
-    from ._Forecaster_parent import ForecastError
+    from ._Forecaster_parent import ForecastError, METRICS
     from .models import SKLearnUni
 
     def forecaster(f):
@@ -721,9 +721,6 @@ def find_optimal_transformation(
             print('-'*50)
         return mets.iloc[0,-1]
 
-    def neg_r2(metric):
-        return -metric if monitor == 'r2' else metric
-
     estimator = f.estimator if estimator is None else estimator
     test_length = len(f.future_dates) if test_length is None else int(test_length)
     if test_length<=0:
@@ -749,7 +746,8 @@ def find_optimal_transformation(
         if f.estimators.lookup_item(estimator).interpreted_model == SKLearnUni:
             print(f'All transformation tries will be evaluated with {lags} lags.')
 
-    level_met = neg_r2(make_pipeline_fit_predict(f,[],[]))
+    metric_store = METRICS.lookup_item(monitor)
+    level_met = EvaluatedMetric(store=metric_store,score=make_pipeline_fit_predict(f,[],[]))
     final_transformer = []
     final_reverter = []
 
@@ -767,8 +765,8 @@ def find_optimal_transformation(
                 try:
                     transformer.append(('Transform',boxcox_tr,{'lmbda':lmbda}))
                     reverter.reverse(); reverter.append(('Revert',boxcox_re,{'lmbda':lmbda})); reverter.reverse()
-                    comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
-                    if comp_met < met:
+                    comp_met = EvaluatedMetric(store=metric_store,score=make_pipeline_fit_predict(f,transformer,reverter))
+                    if comp_met > met:
                         met = comp_met
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
@@ -788,8 +786,8 @@ def find_optimal_transformation(
                 try:
                     transformer.append(('DetrendTransform',kw))
                     reverter.reverse(); reverter.append(('DetrendRevert',)); reverter.reverse()
-                    comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
-                    if comp_met < met:
+                    comp_met = EvaluatedMetric(store=metric_store,score=make_pipeline_fit_predict(f,transformer,reverter))
+                    if comp_met > met:
                         met = comp_met
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]
@@ -807,8 +805,8 @@ def find_optimal_transformation(
             try:
                 transformer.append(('DiffTransform',1))
                 reverter.reverse(); reverter.append(('DiffRevert',1)); reverter.reverse()
-                comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
-                if comp_met < met:
+                comp_met = EvaluatedMetric(store=metric_store,score=make_pipeline_fit_predict(f,transformer,reverter))
+                if comp_met > met:
                     met = comp_met
                     best_transformer = transformer[:]
                     best_reverter = reverter[:]
@@ -838,8 +836,8 @@ def find_optimal_transformation(
                             else [('DeseasonRevert',{'m':mi})]
                         )
                         reverter.reverse()
-                        comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
-                        if comp_met < met:
+                        comp_met = EvaluatedMetric(store=metric_store,score=make_pipeline_fit_predict(f,transformer,reverter))
+                        if comp_met > met:
                             met = comp_met
                             best_transformer = transformer[:]
                             best_reverter = reverter[:]
@@ -861,8 +859,8 @@ def find_optimal_transformation(
                 try:
                     transformer.append((f'{s}Transform',))
                     reverter.reverse(); reverter.append((f'{s}Revert',)); reverter.reverse()
-                    comp_met = neg_r2(make_pipeline_fit_predict(f,transformer,reverter))
-                    if comp_met < met:
+                    comp_met = EvaluatedMetric(store=metric_store,score=make_pipeline_fit_predict(f,transformer,reverter))
+                    if comp_met > met:
                         met = comp_met
                         best_transformer = transformer[:]
                         best_reverter = reverter[:]

@@ -8,6 +8,8 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - Added `fit()`/`predict()`/`fit_predict()` methods to `Forecaster` and `MVForecaster` objects
 - New `n_actuals` attribute
 - Added `parse_labeled_metrics()` method in `Forecaster_parent`
+- Added `verbose` option to `Forecaster.synthesize_models()` method
+- Added the `add_normalizer` method to `Forecaster`/`MVForecaster` object
 ### Changed
 - `**kwargs` no longer accepted in `Forecaster` or `MVForecaster` objects
 - All metrics refer to their own classes (`MetricStore` and `EvaluatedMetric`)
@@ -22,6 +24,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 ### Fixed
 - Fixed type hints
 - Fixed adding regressors, such as time trend, to `MVForecaster` (methods measuring `len(y)`)
+- Fixed plotting issue raised in #273
 
 ## [0.20.0]
 ### Added

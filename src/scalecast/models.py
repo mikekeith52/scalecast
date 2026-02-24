@@ -19,8 +19,16 @@ if TYPE_CHECKING:
     from .MVForecaster import MVForecaster
 
 class SKLearnUni:
-    """
-    Docstring for SKlearnEstimator
+    """ Model class that supports any scikit-learn API estimator for univariate forecasting.
+
+    Args:
+        f (Forecaster): The Forecaster object storing the actual series and associated dates.
+        model (Scikit-learn API Estimator): The imported scikit-learn API regression estimator/class (such as LinearRegressor or XGBRegressor).
+        dynamic_testing (bool or int): Whether to dynamically test the model or how many steps. Ignored when test_set_actuals not specified.
+        Xvars (list[str]): List of regressors to use from the passed Forecaster object.
+        normalizer (NormalizerLike): Default 'minmax'. The label of the normalizer to use.
+        test_set_actuals (list[float]): Optional. Test-set actuals to use for testing the model. This enables the dynamic_testing option.
+        **kwargs: Passed to the scikit-learn model passed to model.
     """
     def __init__(
         self, 
@@ -68,23 +76,47 @@ class SKLearnUni:
                 return list(Xvars)
 
     def generate_current_X(self) -> np.ndarray:
+        """ Returns the matrix of the current input dataset.
+        """
         obs_to_drop = self.max_lag_order
         X = np.array([self.f.current_xreg[x].values[obs_to_drop:].copy() for x in self.Xvars]).T
         self.scaler = self.scaler.fit(X)
         return X
 
     def generate_future_X(self) -> np.ndarray:
+        """ Returns the matrix of the future input dataset. 
+        """
         X = np.array([np.array(self.f.future_xreg[x][:]) for x in self.Xvars]).T
         return X
 
     @_developer_utils.log_warnings
-    def fit(self,X:np.ndarray,y:np.ndarray,**fit_params) -> Self:
+    def fit(self,X:np.ndarray,y:np.ndarray,**fit_params:Any) -> Self:
+        """ Fits the estimator.
+
+        Args:
+            X (np.ndarray): The input data.
+            y (np.ndarray): The observed actuals.
+            **fit_params: Passed to the .fit() method from the scikit-learn model.
+
+        Returns:
+            Self
+        """
         obs_to_drop = self.max_lag_order
         X = self.scaler.transform(X)
         self.regr.fit(X,np.asarray(y)[obs_to_drop:],**fit_params)
         return self
 
-    def predict(self,X,in_sample:bool=False,**predict_params) -> list[float]:
+    def predict(self,X,in_sample:bool=False,**predict_params:Any) -> list[float]:
+        """ Makes predictions.
+
+        Args:
+            X (np.ndarray): The input data.
+            in_sample (bool): Default False. If True, returns fitted values with a one-step ahead forecast.
+            **predict_params: Passed to the estimator's predict() method.
+        
+        Returns:
+            list[float]: The predictions.
+        """
         if self.max_lag_order == 0 or in_sample or (self.dynamic_testing == 1 and self.test_set_actuals):
             X = self.scaler.transform(X)
             return list(self.regr.predict(X,**predict_params))
@@ -121,6 +153,8 @@ class SKLearnUni:
         return self.predict(X)
     
 class SKLearnMV:
+    """ Model class that supports any scikit-learn API estimator for multivariate forecasting.
+    """
     def __init__(
         self,
         f:'MVForecaster', 
