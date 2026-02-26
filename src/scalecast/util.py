@@ -2,7 +2,7 @@ from __future__ import annotations
 from ._utils import _developer_utils, boxcox_tr, boxcox_re
 from .types import ConfInterval, AvailableModel, DefaultMetric, TryTransformations, NonNegativeInt, DatetimeLike, FFillOption, PositiveInt
 from .Metrics import Metrics as metrics
-from .classes import EvaluatedMetric
+from .classes import EvaluatedMetric, AR
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import seaborn as sns
@@ -362,8 +362,8 @@ def infer_apply_Xvar_selection(infer_from:'Forecaster'|'MVForecaster',apply_to:'
     
     not_guessed = []
     for k in infer_from.current_xreg.keys():
-        if k.startswith('AR'):
-            apply_to.add_ar_terms([int(k.split('AR')[-1])])
+        if isinstance(k,AR):
+            apply_to.add_ar_terms([k.lag_order])
         elif k.endswith('sin'):
             apply_to.add_seasonal_regressors(k.split('sin')[0],sincos=True,raw=False)
         elif k.endswith('cos'):
@@ -1338,23 +1338,23 @@ def gen_rnn_grid(
 
     hps['layers_struct'] = []
     for i in range(layer_tries):
-        layer = tuple()
+        layer = []
         pool_values = {}
         for k, v in pool_choices.items():
             pool_values[v] = locals()[v]
             if locals()[k] and len(locals()[v]) > 1:
                 pool_values[v] = [np.random.choice(locals()[v])]
 
-        for h in range(np.random.choice(np.arange(min_layer_size,max_layer_size+1))):
-            layer += (
-                np.random.choice(pool_values['layer_cell_pool']),
+        for _ in range(np.random.choice(np.arange(min_layer_size,max_layer_size+1))):
+            layer.append((
+                str(np.random.choice(pool_values['layer_cell_pool'])),
                 {
-                    'units':np.random.choice(pool_values['units_pool']),
-                    'activation':np.random.choice(pool_values['activation_pool']),
-                    'dropout':np.random.choice(pool_values['dropout_pool']),
+                    'units':int(np.random.choice(pool_values['units_pool'])),
+                    'activation':str(np.random.choice(pool_values['activation_pool'])),
+                    'dropout':float(np.random.choice(pool_values['dropout_pool'])),
                 },
-            )
+            ))
 
-        hps['layers_struct'].append([layer])
+        hps['layers_struct'].append(layer)
 
     return hps

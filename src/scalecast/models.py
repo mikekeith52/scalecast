@@ -456,7 +456,7 @@ class RNN:
         f:'Forecaster', 
         model:Literal['auto']='auto', 
         test_set_actuals:Optional[list[float]]=None, 
-        Xvars:XvarValues=None,
+        Xvars:XvarValues='all',
         normalizer:NormalizerLike = 'minmax', 
         layers_struct:list[tuple[dict[str,Any]]]=[("SimpleRNN", {"units": 8, "activation": "tanh"})],
         loss:str="mean_absolute_error",
@@ -1066,7 +1066,7 @@ class Combo:
         lengths = []
         all_fvs = []
         for m in self.models:
-            fvs = self.f.history[m]['FittedVals']
+            fvs = self.f.history[m].get('FittedVals',[])
             if not fvs and self.exclude_models_with_no_fvs:
                 continue
             else:   

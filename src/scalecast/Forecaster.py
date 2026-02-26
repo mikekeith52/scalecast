@@ -820,7 +820,7 @@ class Forecaster(Forecaster_parent):
                     ]
             if best_ar_order is not None:
                 f.add_ar_terms(best_ar_order)
-                ar_regressors = [x for x in f.get_regressor_names() if isinstance(x,str)]
+                ar_regressors = [x for x in f.get_regressor_names() if isinstance(x,AR)]
             else:
                 ar_regressors = []
             if irr_cycles is not None:
@@ -881,6 +881,10 @@ class Forecaster(Forecaster_parent):
         ar_metrics = {}
         final_metrics = {}
         seas_to_try = []
+
+        best_trend = None
+        best_seasonality = None
+        best_ar_order = None
 
         regressors_already_added = self.get_regressor_names()
         
@@ -961,8 +965,9 @@ class Forecaster(Forecaster_parent):
                             cvkwargs=cvkwargs,
                             kwargs=trend_estimator_kwargs,
                         )
-        trends = self.parse_labeled_metrics(trend_metrics)
-        best_trend = [k for k in trends][0]
+        if trend_metrics:
+            trends = self.parse_labeled_metrics(trend_metrics)
+            best_trend = [k for k in trends][0]
         
         if try_seasonalities:
             seasonalities = {
@@ -1082,8 +1087,9 @@ class Forecaster(Forecaster_parent):
                         kwargs=kwargs,
                     )
         
-        seasonalities = self.parse_labeled_metrics(seasonality_metrics)
-        best_seasonality = [k for k in seasonalities][0]
+        if seasonality_metrics:
+            seasonalities = self.parse_labeled_metrics(seasonality_metrics)
+            best_seasonality = [k for k in seasonalities][0]
         
         if max_ar == 'auto' or max_ar > 0:
             max_ar = max(len(f.future_dates),f.test_length) if max_ar == 'auto' else max_ar
@@ -1107,8 +1113,9 @@ class Forecaster(Forecaster_parent):
                     ar_metrics.pop(i)
                     break
 
-        ar_orders = self.parse_labeled_metrics(ar_metrics)
-        best_ar_order = [k for k in ar_orders][0]
+        if ar_metrics:
+            ar_orders = self.parse_labeled_metrics(ar_metrics)
+            best_ar_order = [k for k in ar_orders][0]
 
         f = copy.deepcopy(self)
 
@@ -1131,13 +1138,14 @@ class Forecaster(Forecaster_parent):
                 kwargs=kwargs,
                 Xvars=xvar_set,
             )
-        combos = self.parse_labeled_metrics(final_metrics)
-        best_combo = [k for k in combos][0]
-
-        f.drop_Xvars(*[x for x in f.get_regressor_names() if x not in best_combo])
-        self.current_xreg = f.current_xreg
-        self.future_xreg = f.future_xreg
-        if not final_metrics:
+        
+        if final_metrics:
+            combos = self.parse_labeled_metrics(final_metrics)
+            best_combo = [k for k in combos][0]
+            f.drop_Xvars(*[x for x in f.get_regressor_names() if x not in best_combo])
+            self.current_xreg = f.current_xreg
+            self.future_xreg = f.future_xreg
+        else:
             warnings.warn(
                 "auto_Xvar_select() did not add any regressors to the object."
                 " Sometimes this happens when the object's test length is 0"
@@ -1325,7 +1333,7 @@ class Forecaster(Forecaster_parent):
         y = y.values if not train_only else y.values[: -self.test_length]
         return plot_acf(y, **kwargs)
 
-    def plot_pacf(self, diff:bool=False, train_only:bool=False, **kwargs:Any) -> Figure:
+    def plot_pacf(self, diffy:bool=False, train_only:bool=False, **kwargs:Any) -> Figure:
         """ Plots a partial autocorrelation function of the y values.
 
         Args:
@@ -2130,7 +2138,6 @@ class Forecaster(Forecaster_parent):
         output = {}
         if "model_summaries" in dfs:
             cols = [
-                "ModelNickname",
                 "Estimator",
                 "Xvars",
                 "HyperParams",
@@ -2139,7 +2146,6 @@ class Forecaster(Forecaster_parent):
                 "TestSetLength",
                 "CILevel",
                 "ValidationMetric",
-                "ValidationMetricValue",
                 "models",
                 "weights",
                 "best_model",
@@ -2149,7 +2155,9 @@ class Forecaster(Forecaster_parent):
             for m in models:
                 model_summary_m = pd.DataFrame({"ModelNickname": [m]})
                 for c in cols:
-                    if c in self.history[m]:
+                    if c == 'ValidationMetric' and c in self.history[m]:
+                        model_summary_m[c] = [self.history[m][c].name]
+                    elif c in self.history[m]:
                         model_summary_m[c] = [self.history[m][c]]
                     elif c == "best_model":
                         model_summary_m[c] = m == best_fcst_name

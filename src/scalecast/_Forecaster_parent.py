@@ -755,7 +755,7 @@ class Forecaster_parent:
             Self
         """
         self.drop_Xvars(*self.get_regressor_names())
-        return Self
+        return self
 
     def pop(self, *args:EvaluatedModel) -> Self:
         """ Deletes evaluated forecasts from the object's memory.
@@ -814,7 +814,7 @@ class Forecaster_parent:
         test_model:bool=True,
         predict_fitted:bool=True,
         dynamic_testing:DynamicTesting=True,
-    ) -> Self:
+    ) -> list[float]:
         """ Auto forecasts with the best parameters indicated from the tuning process.
 
         Args:
@@ -836,7 +836,7 @@ class Forecaster_parent:
             predict_fitted (bool): Whether to predict fitted values.
 
         Returns:
-            Self
+            (list[float]): The final point estimates.
 
         >>> f.set_estimator('xgboost')
         >>> f.tune()
@@ -850,7 +850,7 @@ class Forecaster_parent:
             )
             self.best_params = {}
             self.validation_metric_value = np.nan
-        self.manual_forecast(
+        return self.manual_forecast(
             call_me=call_me,
             dynamic_testing=dynamic_testing,
             test_model = test_model,

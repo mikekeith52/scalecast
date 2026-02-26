@@ -881,8 +881,6 @@ class MVForecaster(Forecaster_parent):
         output = {}
         if "model_summaries" in dfs:
             cols = [
-                "Series",
-                "ModelNickname",
                 "Estimator",
                 "Xvars",
                 "HyperParams",
