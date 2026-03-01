@@ -2,8 +2,9 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath("../src"))
 
-from importlib.metadata import version
-release = version("scalecast")
+from importlib.metadata import version as get_version
+release = get_version("scalecast")
+version = release
 # -- Project information -----------------------------------------------------
 
 project = 'scalecast'
