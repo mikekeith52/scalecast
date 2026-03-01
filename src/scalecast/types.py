@@ -19,11 +19,10 @@ EvaluatedModel = Annotated[str,"must exist as a key in object's history attribut
 TopNModels = Annotated[str,'must begin with top_ followed by a positive integer']
 ModelValues = Union[EvaluatedModel,list[EvaluatedModel],TopNModels,Literal['all']]
 # Xvars
-AutoRegressive = Annotated[str,'must begin with AR followed by a positive integer, denoting the lag order']
-AvailableXvar = Annotated[str,"must exist in the object's current_xreg attribute"]
+AvailableXvar = Annotated[str,"must exist as a key in the object's current_xreg attribute"]
 XvarValues = Union[AvailableXvar,list[AvailableXvar],Literal['all'],None]
 # Normalizers
-AvailableNormalizer = Annotated[str,"must exist in object's normalizer attribute"]
+AvailableNormalizer = Annotated[str,"must exist as a key in the object's normalizer attribute"]
 # Metrics
 MetricCall = Annotated[callable,"accepts two arguments: a and f in that order, and returns a float"]
 DefaultMetric = Annotated[str,"must be the name of a static method in the scalecast.Metrics class that only accepts two arguments (a and f)"]

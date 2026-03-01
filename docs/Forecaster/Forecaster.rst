@@ -12,7 +12,6 @@ This is the main object that is utilized for making predictions on the test set,
       y=array_of_values, 
       current_dates=array_of_dates,
       # defaults below
-      require_future_dates=True, 
       future_dates=None,
       test_length = 0,
       cis = False,

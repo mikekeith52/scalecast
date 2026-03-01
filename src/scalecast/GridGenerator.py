@@ -1,6 +1,6 @@
-import os
+from pathlib import Path
 
-def get_grids(grid:str='example',out_name:str='Grids.py',overwrite:bool=False):
+def get_grids(grid:str='example',out_name:str='Grids.py',overwrite:bool=False) -> None:
     """ Saves a grids file to the working directory.
     See all available grids files here: https://github.com/mikekeith52/scalecast/tree/main/src/scalecast/grids.
     Make your own grids file and open a pull request on GitHub to add it to the library.
@@ -16,13 +16,12 @@ def get_grids(grid:str='example',out_name:str='Grids.py',overwrite:bool=False):
     Returns:
         None
     """
-    output_file = os.path.join(os.getcwd(), out_name)
-    if not overwrite and os.path.exists(output_file):
+    output_file = Path.cwd()/out_name
+    if not overwrite and output_file.exists():
         return
 
-    grids_dir = os.path.join(os.path.dirname(__file__), "grids")
-
-    input_file = os.path.join(grids_dir, f'{grid}.py')
+    grids_dir = Path(__file__)/"grids"
+    input_file = grids_dir/f'{grid}.py'
 
     with open(input_file, "r") as fl:
         contents = fl.read()

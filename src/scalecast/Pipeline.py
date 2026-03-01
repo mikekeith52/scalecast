@@ -339,12 +339,7 @@ class Pipeline_parent:
                 if i == 0:
                     results[-1]['Obs'][f'Iter{i}'] = f[0].y.to_list()
                 else:
-                    results[-1]['Obs'][f'Iter{i}'] = (
-                        [np.nan] * 
-                        (
-                            results[-1]['Obs'].shape[0] - len(f[0].y)
-                        ) + f[0].y.to_list() 
-                    )
+                    results[-1]['Obs'][f'Iter{i}'] = [np.nan] * (results[-1]['Obs'].shape[0] - len(f[0].y)) + f[0].y.to_list()
         for i, fsi in enumerate(_prepare_backtest_results[0]):
             fs = self.fit_predict(*[ft[i][0] for ft in _prepare_backtest_results],**kwargs)
             if isinstance(fs,MVForecaster):

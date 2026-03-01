@@ -236,7 +236,7 @@ def tune_test_forecast(
         **cvkwargs: Passed to the cross_validate() method.
 
     Returns:
-        None
+        Forecater or MVForecaster: The same object as the input, but with the models tuned, tested, and forecasted and the results saved in the history attribute.
     """
     _tune_test_forecast(
         f=f,

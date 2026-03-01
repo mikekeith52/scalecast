@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     import shap
 
 class Forecaster(Forecaster_parent):
-    """ Docstring
+    """ Forecaster object is the main univariate forecasting object in the scalecast library. It contains all the observed data, future dates, regressors, and methods to manipulate these and evaluate forecasts.
 
     Args:
         y (collection): An array of all observed values. Must match the order of elements passed to current_dates.
@@ -55,6 +55,8 @@ class Forecaster(Forecaster_parent):
         test_length (int or float): Default 0. The test length that all models will use to test all models out of sample.
             If float, must be between 0 and 1 and will be treated as a fractional split.
             By default, models will not be tested.
+        validation_length (int): The size of the validation set. Default sets it at 1.
+        metrics (list[str]): Optional. List of metrics to evaluate every model.
         cis (bool): Default False. Whether to evaluate naive conformal confidence intervals for every model evaluated.
             If setting to True, ensure you also set a test_length of at least 20 observations for 95% confidence intervals.
             See eval_cis() and set_cilevel() methods and docstrings for more information.
@@ -66,8 +68,10 @@ class Forecaster(Forecaster_parent):
         self, 
         y:Sequence[float|int], 
         current_dates:Sequence[DatetimeLike], 
-        future_dates:Optional[int]=None,
+        future_dates:Optional[NonNegativeInt]=None,
         test_length:NonNegativeInt = 0,
+        validation_length:NonNegativeInt = 1,
+        metrics:Optional[list[str]]=None,
         cis:bool = False,
         carry_fit_models:bool = True,
     ):
@@ -75,7 +79,10 @@ class Forecaster(Forecaster_parent):
             y = y,
             test_length = test_length,
             cis = cis,
+            validation_length=validation_length,
         )
+        if metrics:
+            self.set_metrics(metrics)
         self.estimators = ESTIMATORS
         self.current_dates = current_dates
         self.future_dates = pd.Series([], dtype="datetime64[ns]")
@@ -813,10 +820,12 @@ class Forecaster(Forecaster_parent):
                 for s in seas_to_try:
                     seas_regressors += [
                         x for x in f.get_regressor_names() 
-                        if (x == s + 'sin') 
-                        or (x == s + 'cos') 
-                        or x.startswith(s + '_') 
-                        or x == s 
+                        if isinstance(x,str) and (
+                            (x == s + 'sin') 
+                            or (x == s + 'cos') 
+                            or x.startswith(s + '_') 
+                            or x == s 
+                        )
                     ]
             if best_ar_order is not None:
                 f.add_ar_terms(best_ar_order)
@@ -874,8 +883,6 @@ class Forecaster(Forecaster_parent):
             case None:
                 estimator = self.estimator
 
-        self.set_estimator(estimator)
-
         trend_metrics = {}
         seasonality_metrics = {}
         ar_metrics = {}
@@ -893,6 +900,7 @@ class Forecaster(Forecaster_parent):
         must_keep = [x for x in must_keep if x in regressors_already_added]
         
         f = copy.deepcopy(self)
+        f.set_estimator(estimator)
         f.drop_all_Xvars()
 
         if try_trend:

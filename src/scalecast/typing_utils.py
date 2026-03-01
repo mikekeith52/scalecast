@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING, Protocol, Any, Self, Literal, Optional, Sequence
-from .types import XvarValues
 import numpy as np
 if TYPE_CHECKING:
     from .Forecaster import Forecaster

@@ -47,7 +47,7 @@ def plot_rnn_loss(history:'History', title:str = '', ax:Axes=None, figsize:tuple
     
     ax.set_title(title)
     ax.set_xlabel("epoch")
-    ax.set_legend(loc="upper right")
+    ax.legend(loc="upper right")
     
     if show:
         plt.show()

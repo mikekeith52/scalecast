@@ -75,7 +75,7 @@ prophet = {
 rf = {
     'max_depth':[2,5],
     'n_estimators':[100,500],
-    'max_features':['auto','sqrt'],
+    'max_features':[.5,'sqrt'],
     'max_samples':[.75,.9,1],
 }
 

@@ -12,6 +12,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - Added the `add_normalizer` method to `Forecaster`/`MVForecaster` object
 ### Changed
 - `**kwargs` no longer accepted in `Forecaster` or `MVForecaster` objects
+- `metrics` and `validation_length` arguments accepted in `Forecaster` and `MVForecaster` objects
 - All metrics refer to their own classes (`MetricStore` and `EvaluatedMetric`)
 - Updated the functionality of the `set_metrics()` method to incorporate functionality previously available in the `add_metric()` method and removed the `add_metric()` method
 - Removed the silverkite model--compatability issue
@@ -21,10 +22,15 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - Removed deprecation warnings from `Forecaster.reduce_Xvars()` method, introduced in 0.19.14
 - Moved `order_fcsts` to `Forecaster_parent` object
 - Evaluated metrics in `MVForecaster` no longer split out by series
+- `transfer_predict()` now compatible with every model type
+- Every model can be tuned, including `Combo`
+- `lightgbm` no longer installed by default
 ### Fixed
 - Fixed type hints
 - Fixed adding regressors, such as time trend, to `MVForecaster` (methods measuring `len(y)`)
 - Fixed plotting issue raised in #273
+- Fixed rnn grid generation (was only outputting one-layer models)
+- Removed outdated 'auto' value from random forest grid
 
 ## [0.20.0]
 ### Added

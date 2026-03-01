@@ -32,8 +32,7 @@ if TYPE_CHECKING:
     from .Forecaster import Forecaster
 
 class MVForecaster(Forecaster_parent):
-    """
-    Docstring for MVForecaster
+    """ MVForecaster is a class for forecasting multiple series at once with the same models and hyperparameters.
 
     Args:
         *fs (Forecaster): Forecaster objects
@@ -53,6 +52,8 @@ class MVForecaster(Forecaster_parent):
         test_length (int or float): Default 0. The test length that all models will use to test all models out of sample.
             If float, must be between 0 and 1 and will be treated as a fractional split.
             By default, models will not be tested.
+        validation_length (int): The size of the validation set. Default sets to 1.
+        metrics (list[str]): Optional. List of metrics to evaluate every model. 
         optimize_on (str): The way to aggregate the derived metrics when optimizing models across all series. 
             This can be a function: 'mean', 'min', 'max', a custom function that takes a list of objects and returns an aggregate function (such as a weighted average) 
             or a series name. Custom functions and weighted averages can also be added later
@@ -72,6 +73,8 @@ class MVForecaster(Forecaster_parent):
         merge_Xvars:Literal["u","union","intersection","i"]="union",
         merge_future_dates:Literal["longest","shortest"]="longest",
         test_length:NonNegativeInt = 0,
+        validation_length:NonNegativeInt=1,
+        metrics:Optional[list[str]]=None,
         optimize_on:Literal['mean','min','max']|callable|SeriesName = 'mean',
         cis:bool = False,
         carry_fit_models:bool = False,
@@ -80,6 +83,7 @@ class MVForecaster(Forecaster_parent):
             y = fs[0].y, # placeholder -- will be overwritten
             test_length = test_length,
             cis = cis,
+            validation_length=validation_length,
         )
         for f in fs:
             f._typ_set()
@@ -165,6 +169,8 @@ class MVForecaster(Forecaster_parent):
             ][0]
         else:
             raise ValueError(f"merge_future_dates must be one of ('longest','shortest'), got {merge_future_dates}.")
+        if metrics:
+            self.set_metrics(metrics)
         self.carry_fit_models = carry_fit_models
 
     def __repr__(self):
@@ -204,15 +210,6 @@ class MVForecaster(Forecaster_parent):
         self.grids_file,
     )
 
-    def n_actuals(self):
-        """ docstring
-        """
-        match self.y: # this is how we have to do it due to weirdness when object is initiated
-            case dict():
-                return len(self.current_dates)
-            case _:
-                return len(self.y)
-
     def add_optimizer_func(self, func:callable, called:Optional[str] = None) -> Self:
         """ Add an optimizer function that can be used to determine the best-performing model.
         This is in addition to the 'mean', 'min', and 'max' functions that are available by default.
@@ -223,7 +220,7 @@ class MVForecaster(Forecaster_parent):
                 If left unspecified, will use the name of the function.
 
         Returns:
-            None
+            Self
 
         >>> def weighted(x):
         >>>     # weighted average of first two series in the object
@@ -262,6 +259,9 @@ class MVForecaster(Forecaster_parent):
                 The test-set predictions will be out-of-sample if this is True. The future unknown values are always out-of-sample.
                 Even when this is True, the future unknown values are taken from a model trained on the full set of
                 known observations.
+
+        Returns:
+            Self
 
         >>> mvf.set_estimator('xgboost')
         >>> mvf.manual_forecast()
@@ -390,7 +390,7 @@ class MVForecaster(Forecaster_parent):
             **cvkwargs: Passed to the cross_validate() method.
 
         Returns:
-            None
+            Self
 
         >>> models = ('mlr','mlp','lightgbm')
         >>> mvf.tune_test_forecast(models,dynamic_testing=False)
@@ -409,7 +409,7 @@ class MVForecaster(Forecaster_parent):
         )
         return self
 
-    def set_optimize_on(self, how):
+    def set_optimize_on(self, how:str) -> Self:
         """ Choose how to determine best models by choosing which series should be optimized or the aggregate function to apply on the derived metrics across all series.
         This is the decision that will be used for optimizing model hyperparameters.
 
@@ -417,6 +417,9 @@ class MVForecaster(Forecaster_parent):
             how (str): One of MVForecaster.optimizer_funcs, a series name, or a function. 
                 Only one series name will be in mvf.optimizer_funcs at a given time.
                 mvf.optimize_on is set to 'mean' when the object is initiated.
+        
+        Returns:
+            Self
         """
         if callable(how):
             self.add_optimizer_func(how)
@@ -430,7 +433,7 @@ class MVForecaster(Forecaster_parent):
                 for p in to_pop:
                     self.optimizer_funcs.pop(p)
             self.series_to_optimize = self.names.index(how)
-            self.add_optimizer_func(func=self.optimize_on_series,called=how)
+            self.add_optimizer_func(func=lambda x: self.series_to_optimize,called=how)
         elif how not in self.optimizer_funcs:
             raise ValueError(
                 f'Value passed to how cannot be used: {how}. '
@@ -438,6 +441,7 @@ class MVForecaster(Forecaster_parent):
             )
 
         self.optimize_on = how
+        return self
 
     def _set_cis(self,*attrs,m,ci_range,preds):
         for i, attr in enumerate(attrs):
@@ -517,7 +521,7 @@ class MVForecaster(Forecaster_parent):
                 If model is specified, this will be ignored.
 
         Returns:
-            None
+            Self
         """
         if model is not None:
             if model in self.history.keys():
@@ -525,7 +529,8 @@ class MVForecaster(Forecaster_parent):
             else:
                 raise ValueError(f"Cannot find {model} in history.")
         else:
-            return self.order_fcsts(determine_best_by=determine_best_by)[0]
+            self.best_model = self.order_fcsts(determine_best_by=determine_best_by)[0]
+        return self
 
     def _parse_series(self, series:SeriesValues) -> list[SeriesName]:
         match series:
@@ -1066,11 +1071,3 @@ class MVForecaster(Forecaster_parent):
 
         df = df.dropna()
         return self.corr(df=df, **kwargs)
-
-    def optimize_on_series(self):
-        """
-        Docstring for optimize_on_series
-        
-        :param self: Description
-        """
-        return self.series_to_optimize

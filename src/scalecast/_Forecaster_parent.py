@@ -48,14 +48,15 @@ class Forecaster_parent:
         y:Sequence[float|int],
         test_length:NonNegativeInt,
         cis:bool,
-        metrics:ValidatedList[MetricStore]=METRICS[:4]
+        metrics:ValidatedList[MetricStore]=METRICS[:4],
+        validation_length:int = 1,
     ):
         self._logging()
         self.y = y
         self.normalizer = NORMALIZERS
         self.set_test_length(test_length)
-        self.validation_length = 1
         self.validation_metric = metrics[0]
+        self.set_validation_length(validation_length)
         self.cilevel = 0.95
         self.current_xreg = {} # Series
         self.future_xreg = {} # lists
@@ -142,12 +143,19 @@ class Forecaster_parent:
                 pass
 
     def n_actuals(self):
-        """ docstring
+        """ Returns the number of actual observations in the object.
         """
-        return len(self.y)
+        match self.y:
+            case dict():
+                return len(self.current_dates)
+            case _:
+                return len(self.y)
 
     def copy(self):
         """ Creates an object copy.
+
+        Returns:
+            Self: A copy of the object.
         """
         return self.__copy__()
 
@@ -353,14 +361,14 @@ class Forecaster_parent:
         return self
     
     def parse_labeled_metrics(self, labeled_metrics:dict[str,EvaluatedMetric]) -> dict[str,float]:
-        """
-        Docstring for parse_labeled_metrics
+        """ Parsses a dictionary of EvaluatedMetric objects and returns a dictionary of model nicknames and their corresponding scores ordered from best to worst based on the store attribute of the EvaluatedMetric objects.
+        If the metric is one where lower is better, the dictionary is ordered in ascending order. If the metric is one where higher is better, the dictionary is ordered in descending order.
         
-        :param self: Description
-        :param labeled_metrics: Description
-        :type labeled_metrics: dict[str, EvaluatedMetric]
-        :return: Description
-        :rtype: dict[str, float]
+        Args:
+            labeled_metrics (dict): A dictionary where the keys are model nicknames and the values are EvaluatedMetric objects.
+
+        Returns:
+            dict: A dictionary where the keys are model nicknames and the values are the corresponding scores ordered from best to worst.
         """
         if not labeled_metrics:
             return {}
@@ -863,18 +871,21 @@ class Forecaster_parent:
         dynamic_testing:Optional[DynamicTesting]=None,
         **kwargs:Any
     ) -> Self:
-        """
-        Docstring for init_estimator
+        """ Initiates the estimator to be used for forecasting by creating an instance of the model's interpreted_model class and assigning it to self.call_estimator. 
+        This is called in auto_forecast()/manual_forecast() and can be called separately if you want to fit the model manually by calling f.fit() and f.predict().
+
+        Args:
+            dynamic_testing (bool or int): Optional. Whether to dynamically/recursively test the forecast (meaning AR terms will be propagated with predicted values).
+                If True, evaluates dynamically over the entire out-of-sample slice of data.
+                If int, window evaluates over that many steps (2 for 2-step dynamic forecasting, 12 for 12-step, etc.).
+                Setting this to False or 1 means faster performance, 
+                but gives a less-good indication of how well the forecast will perform more than one period out.
+                The model will skip testing if the test_length attribute is set to 0.
+            **kwargs: Passed to the relevant model class and can include such parameters as Xvars, 
+                normalizer, cap, and floor, in addition to any given model's specific hyperparameters.
         
-        :param self: Description
-        :param dynamic_testing: Description
-        :type dynamic_testing: DynamicTesting
-        :param Xvars: Description
-        :type Xvars: XvarValues
-        :param kwargs: Description
-        :type kwargs: any
-        :return: Description
-        :rtype: Self
+        Returns:
+            Self
         """
         call_estimator = self.estimators.lookup_item(self.estimator)
         all_kwargs = dict(
@@ -890,38 +901,42 @@ class Forecaster_parent:
         return self
     
     def fit(self,**fit_params:Any) -> Self:
-        """
-        Docstring for fit
-        
-        :param self: Description
-        :param fit_params: Description
-        :type fit_params: Any
-        :return: Description
-        :rtype: Self
+        """ Fits the model assigned to self.call_estimator. Called in auto_forecast()/manual_forecast() after init_estimator() creates the instance to fit.
+
+        Args:
+            **fit_params: Any parameters to pass to the fit method of the model instance assigned to self.call_estimator. 
+                This can include parameters such as sample_weight, eval_set, early_stopping_rounds, etc. depending on the model being fit. 
+
+        Returns:
+            Self
         """
         X = self.call_estimator.generate_current_X()
         y = self.y
         self.call_estimator.fit(X,y,**fit_params)
         return self
 
-    def predict(self,**predict_params:Any):
-        """
-        Docstring for predict
-        
-        :param self: Description
-        :param X: Description
-        :type X: np.ndarray
+    def predict(self,**predict_params:Any) -> list[float]:
+        """ Predicts with the model assigned to self.call_estimator. Called in auto_forecast()/manual_forecast() after fit() fits the model.
+
+        Args:
+            **predict_params: Any parameters to pass to the predict method of the model instance assigned to self.call_estimator. 
+                This can include parameters such as num_iteration for xgboost, etc. depending on the model being fit.
+
+        Returns:
+            list[float]: The forecasted values.
         """
         X = self.call_estimator.generate_future_X()
         return self.call_estimator.predict(X,**predict_params)
     
     def predict_fitted_vals(self,**predict_params:Any):
-        """
-        Docstring for predict_fitted_vals
+        """ Returns the fitted values for the training data with the model assigned to self.call_estimator.
+
+        Args:
+            **predict_params: Any parameters to pass to the predict method of the model instance assigned to self.call_estimator. 
+                This can include parameters such as num_iteration for xgboost, etc. depending on the model being fit.
         
-        :param self: Description
-        :param predict_params: Description
-        :type predict_params: Any
+        Returns:
+            list[float]: The fitted values for the training data.
         """
         X = self.call_estimator.generate_current_X()
         return self.call_estimator.predict(X,in_sample=True,**predict_params)
@@ -1149,14 +1164,13 @@ class Forecaster_parent:
         return self
     
     def parse_determine_best_by(self,determine_best_by:DetermineBestBy) -> MetricStore:
-        """
-        Docstring for parse_determine_best_by
+        """ Returns the metric to determine the best model by based on the DetermineBestBy object created in set_metrics().
+
+        Args:
+            determine_best_by (DetermineBestBy): The DetermineBestBy object created in set_metrics().
         
-        :param self: Description
-        :param determine_best_by: Description
-        :type determine_best_by: DetermineBestBy
-        :return: Description
-        :rtype: MetricStore
+        Returns:
+            MetricStore: The metric to determine the best model by based on the DetermineBestBy object created in set_metrics().
         """
         label = self.determine_best_by.lookup_label(determine_best_by)
         return self.determine_best_by.lookup_metric(label)
@@ -1589,29 +1603,33 @@ class Forecaster_parent:
         else:
             already_existed = True
 
-        if is_Forecaster:
-            actuals:list[float] = self.y.to_list()[-self.test_length:]
-        else:
-            actuals:list[list[float]] = [
-                self.y[k].to_list()[-self.test_length:]
-                for k in self.y
-            ]
+        try:
+            if is_Forecaster:
+                actuals:list[float] = self.y.to_list()[-self.test_length:]
+            else:
+                actuals:list[list[float]] = [
+                    self.y[k].to_list()[-self.test_length:]
+                    for k in self.y
+                ]
 
-        f1 = copy.deepcopy(self)
-        f1.chop_from_front(
-            self.test_length,
-            fcst_length = self.test_length,
-        )
-        f1.set_test_length(0)
-        f1.eval_cis(False)
-        fcst = f1.manual_forecast(
-            dynamic_testing = dynamic_testing,
-            test_model = False, 
-            call_me = call_me, 
-            test_set_actuals = actuals,
-            predict_fitted = False,
-            **kwargs,
-        )
+            f1 = copy.deepcopy(self)
+            f1.chop_from_front(
+                self.test_length,
+                fcst_length = self.test_length,
+            )
+            f1.set_test_length(0)
+            f1.eval_cis(False)
+            fcst = f1.manual_forecast(
+                dynamic_testing = dynamic_testing,
+                test_model = False, 
+                call_me = call_me, 
+                test_set_actuals = actuals,
+                predict_fitted = False,
+                **kwargs,
+            )
+        except:
+            self.history.pop(call_me)
+            raise
 
         if not already_existed:
             attrs_to_copy = ['Estimator','Xvars','HyperParams','Lags']
@@ -1631,10 +1649,10 @@ class Forecaster_parent:
         return self
     
     def determine_if_MVForecaster(self):
-        """
-        Docstring for determine_if_MVForecaster
+        """ Determines if the object is a Forecater of MVForecaster type by checking if the y attribute is a dictionary (MVForecaster) or a Series (Forecaster).
         
-        :param self: Description
+        Returns:
+            bool: True if the object is an MVForecaster, False if it is a Forecaster.
         """
         return isinstance(self.y,dict)
 
@@ -1890,9 +1908,12 @@ class Forecaster_parent:
             self.call_estimator = regr
         else:
             self.call_estimator = f.history[model]['call_estimator']
-            preds = self.predict()
+            self.call_estimator.f = self
+            current_X = self.call_estimator.generate_current_X()
+            future_X = self.call_estimator.generate_future_X()
+            preds = self.call_estimator.predict(future_X)
             try:
-                fvs = self.predict_fitted_vals()
+                fvs = self.call_estimator.predict(current_X,in_sample=True)
             except:
                 fvs = []
                 warnings.warn(

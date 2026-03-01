@@ -129,7 +129,7 @@ class SeriesTransformer:
         m:int|Literal['auto']='auto',
         fit_intercept:bool=True,
         train_only:bool=False,
-    ):
+    ) -> Forecaster:
         """ Detrends the series using an OLS estimator or using LOESS.
         Only call this once if you want to revert the series later.
         The passed Forecaster object must have future dates or be initiated with `require_future_dates=False`.
@@ -197,7 +197,7 @@ class SeriesTransformer:
                 if m > 1:
                     fmod.add_lagged_terms('t',lags=m*seasonal_lags)
                     fmod.drop_Xvars(*[
-                        x for x in fmod.get_regressor_names() if (
+                        x for x in fmod.get_regressor_names() if isinstance(x,str) and (
                             x.startswith(
                                 'tlag'
                             ) and int(
@@ -213,7 +213,7 @@ class SeriesTransformer:
             if fit_intercept:
                 dataset = sm.add_constant(dataset)
 
-            train_set = dataset.loc[fmod.current_dates] # full dataset minus future dates
+            train_set = dataset.loc[fmod.current_dates].dropna() # full dataset minus future dates
             model_inputs = train_set.iloc[:-fmod.test_length,:] if train_only else train_set.copy() # what will be used to fit the model
             test_set = train_set.iloc[-fmod.test_length:,:] # the test set for reverting models later
             future_set = dataset.loc[fmod.future_dates] # the future inputs for reverting models later
@@ -221,7 +221,7 @@ class SeriesTransformer:
             y = fmod.y.values
             y_train = y.copy() if not train_only else y[:-fmod.test_length].copy()
 
-            ols_mod = sm.OLS(y_train,model_inputs).fit()
+            ols_mod = sm.OLS(y_train[-len(model_inputs):],model_inputs).fit()
             fvs = ols_mod.predict(train_set) # reverts fitted values
             fvs_fut = ols_mod.predict(future_set) # reverts forecasts
             fvs_test = ols_mod.predict(test_set) # reverts test-set predictions
@@ -601,7 +601,7 @@ class SeriesTransformer:
         f.keep_smaller_history(len(f.y) - m)
         return f
 
-    def DiffRevert(self, m:int=1, exclude_models:list[str] = []) -> Forecaster:
+    def DiffRevert(self, m:int=1, exclude_models:list[str] = [], delete_attributes:bool=True) -> Forecaster:
         """ Reverts the y attribute in the Forecaster object, along with all model results.
         Calling this makes so that AR values become unusable and have to be re-added to the object.
 
@@ -613,6 +613,9 @@ class SeriesTransformer:
                 to transform the object originally.
             exclude_models (list-like): Models to not revert. This is useful if you are transforming
                 and reverting an object over and over.
+            delete_attributes (bool): Default True. Whether to delete the attributes created in DiffTransform after reverting.
+                Deleting the attributes allows you to second difference any series.
+                Keeping the attributes makes the object more reusable.
 
         Returns:
             (Forecaster): A Forecaster object with the reverted attributes.
@@ -688,8 +691,10 @@ class SeriesTransformer:
                 ci_range = ci_range,
                 preds = fcst,
             )
-        #delattr(self, f"orig_y_{m}_{n}")
-        #delattr(self, f"orig_dates_{m}_{n}")
+
+        if delete_attributes:
+            delattr(self, f"orig_y_{m}_{n}")
+            delattr(self, f"orig_dates_{m}_{n}")
         return self.Revert(lambda x: x, exclude_models = exclude_models)  # call here to assign correct test-set metrics
 
     def DeseasonTransform(
