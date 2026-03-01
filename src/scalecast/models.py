@@ -563,7 +563,7 @@ class RNN:
 
     Args: 
         f (Forecaster): The Forecaster object storing the actual series and associated dates.
-        model (Scikit-learn API Estimator): The imported scikit-learn API regression estimator/class (such as LinearRegressor or XGBRegressor).
+        model (str): Default 'auto'. 'auto' is the only accepted value.
         lags (None or int or list[int] or dict[str,int or list[int]]): The number of lags to add to the model.
             If int, that many lags added to every model.
             If a list of ints, only the lags in the list are added.
@@ -820,6 +820,7 @@ class LSTM(RNN):
 
     Args:
         f (Forecaster): The Forecaster object storing the actual series and associated dates.
+        model (str): Default 'auto'. 'auto' is the only accepted value.
         lags (int): The number of lags to add to the model. Default
             1. This is added to the Forecaster object as AR terms, so the model will automatically use them as input features.
         normalizer (NormalizerLike): Default 'minmax'. The label of the normalizer to use.
@@ -839,6 +840,7 @@ class LSTM(RNN):
     def __init__(
         self,
         f:'Forecaster',
+        model:Literal['auto']='auto',
         lags:PositiveInt=1,
         normalizer:NormalizerLike = 'minmax', 
         lstm_layer_sizes:Sequence[int]=[8],
@@ -853,6 +855,7 @@ class LSTM(RNN):
         f.add_ar_terms(lags)
         lstm_kwargs = {
             'f':f,
+            'model':model,
             'Xvars':[AR(i) for i in range(1,lags+1)],
             'normalizer':normalizer,
             'lstm_layer_sizes':lstm_layer_sizes,

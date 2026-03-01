@@ -20,7 +20,7 @@ def get_grids(grid:str='example',out_name:str='Grids.py',overwrite:bool=False) -
     if not overwrite and output_file.exists():
         return
 
-    grids_dir = Path(__file__)/"grids"
+    grids_dir = Path(__file__).parent/"grids"
     input_file = grids_dir/f'{grid}.py'
 
     with open(input_file, "r") as fl:
