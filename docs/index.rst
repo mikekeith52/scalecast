@@ -104,7 +104,7 @@ Index
 
    about
    Forecaster/ForecasterGlobals
-   Forecaster/_forecast
+   Forecaster/Models
 
 .. toctree::
    :maxdepth: 4

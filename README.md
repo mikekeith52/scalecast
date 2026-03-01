@@ -7,7 +7,16 @@
 
 ## About
 
-Scalecast helps you forecast time series. Here is how to initiate its main object:
+Scalecast helps you forecast time series. It is especially good in the following use cases:
+
+- Series need dynamic transformations to extract signals
+- Series have missing values
+- Need to establish proof-of-concept experimentations with model validation
+- Academic research
+- Working in internal production and sandbox environments
+
+Here is how to initiate its main object:
+
 ```python
 from scalecast.Forecaster import Forecaster
 
@@ -257,7 +266,6 @@ Please note that the optional dependencies may not be tested before new releases
   - [Prophet](https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html)
   - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
   - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
-  - [Silverkite](https://scalecast-examples.readthedocs.io/en/latest/silverkite/silverkite.html)
 
 ### [Transforming and Reverting](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 - [Time Series Transformations (and Reverting) Made Easy](https://medium.com/towards-data-science/time-series-transformations-and-reverting-made-easy-f4f768c18f63)
@@ -287,11 +295,6 @@ Please note that the optional dependencies may not be tested before new releases
 ### Transfer Learning
 - [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/transfer_learning/transfer_learning.html)
 - [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/transfer_learning/transfer_learning_tf.html)
-
-### Anomaly Detection
-- [Anomaly Detection for Time Series with Monte Carlo Simulations](https://towardsdatascience.com/anomaly-detection-for-time-series-with-monte-carlo-simulations-e43c77ba53c?source=email-85177a9cbd35-1658325190052-activity.collection_post_approved)
-- [Notebook1](https://scalecast-examples.readthedocs.io/en/latest/misc/anomalies/anomalies.html)
-- [Notebook2](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/anomalies/monte%20carlo/monte%20carlo.ipynb)
 
 ## Contributing
 - [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)
