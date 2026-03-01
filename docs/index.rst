@@ -1,7 +1,5 @@
 .. scalecast documentation master file, created by
    sphinx-quickstart on Fri Jan 21 15:40:54 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 Scalecast Official Docs
 ==========================
@@ -66,16 +64,16 @@ Links
 `Readme <about.rst>`_
    Overview, starter code, and installation.
 
-`Introductory Notebook <https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html>`_
+`Forecaster/examples/Introduction2`
    A well-organized notebook that will quickly show you a lot of cool features.
 
-`Examples <https://scalecast-examples.readthedocs.io/en/latest/index.html>`_
+`Examples <https://github.com/mikekeith52/scalecast-examples>`_
    Other example notebooks.
 
 :doc:`Forecaster/ForecasterGlobals`
    Key terms that will make your life easier when reading documentation.
 
-:doc:`Forecaster/_forecast`
+:doc:`Forecaster/models`
    What models are available?
 
 :doc:`change_log`
@@ -103,6 +101,7 @@ Index
    :hidden:
 
    about
+   Forecaster/examples/Introduction2
    Forecaster/ForecasterGlobals
    Forecaster/Models
 
@@ -126,13 +125,6 @@ Index
    Forecaster/Multiseries
    Forecaster/Notebook
    Forecaster/Util
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Examples:
-   :hidden: 
-
-   https://scalecast-examples.readthedocs.io/en/latest/
 
 .. toctree::
    :maxdepth: 1
