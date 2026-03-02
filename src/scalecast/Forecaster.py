@@ -2174,6 +2174,8 @@ class Forecaster(Forecaster_parent):
                 for c in self.determine_best_by:
                     if c in self.history[m]:
                         model_summary_m[c] = self.history[m][c].score
+                    else:
+                        model_summary_m[c] = pd.NA
                 model_summaries.append(model_summary_m)
             output["model_summaries"] = pd.concat(model_summaries)
         

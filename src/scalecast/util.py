@@ -804,7 +804,7 @@ def find_optimal_transformation(
             best_reverter = reverter[:]
             try:
                 transformer.append(('DiffTransform',1))
-                reverter.reverse(); reverter.append(('DiffRevert',1)); reverter.reverse()
+                reverter.reverse(); reverter.append(('DiffRevert',1,{'delete_attributes':False})); reverter.reverse()
                 comp_met = EvaluatedMetric(store=metric_store,score=make_pipeline_fit_predict(f,transformer,reverter))
                 if comp_met > met:
                     met = comp_met
@@ -832,7 +832,7 @@ def find_optimal_transformation(
                         )
                         reverter.reverse()
                         reverter += (
-                            [('DiffRevert',mi)] if tr == 'first_seasonal_diff' 
+                            [('DiffRevert',mi,{'delete_attributes':False})] if tr == 'first_seasonal_diff' 
                             else [('DeseasonRevert',{'m':mi})]
                         )
                         reverter.reverse()

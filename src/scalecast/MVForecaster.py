@@ -907,10 +907,11 @@ class MVForecaster(Forecaster_parent):
                         if c in self.history[m]:
                             attr = self.history[m][c]
                             match attr:
-                                case "HyperParams"|"Lags":
-                                    model_summary_sm[c] = [attr]
                                 case dict():
-                                    model_summary_sm[c] = [attr.get(s,pd.NA)]
+                                    if c in ['HyperParams','Lags']:
+                                        model_summary_sm[c] = [attr]
+                                    else:
+                                        model_summary_sm[c] = [attr.get(s,pd.NA)]
                                 case _:
                                     model_summary_sm[c] = [attr]
                         elif c == "OptimizedOn" and hasattr(self, "best_model"):
