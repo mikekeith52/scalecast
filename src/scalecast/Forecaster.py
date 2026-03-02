@@ -1580,9 +1580,9 @@ class Forecaster(Forecaster_parent):
         )
         required_args = {
             # name of explainer: [required method, required arg]
-            'PermutationExplainer':['predict','masker'],
-            'TreeExplainer':[None,None],
             'LinearExplainer':[None,'masker'],
+            'TreeExplainer':[None,None],
+            'PermutationExplainer':['predict','masker'],
             'KernelExplainer':['predict','data'],
             'SamplingExplainer':['predict','data'],
             # fe:

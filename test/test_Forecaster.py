@@ -136,10 +136,8 @@ def test_modeling():
             space_between_sets = 12,
             dynamic_tuning = 24,
             dynamic_testing = 24,
-            feature_importance = True,
             suffix = '_cv',
-            limit_grid_size = .2,
-            min_grid_size = 4,
+            limit_grid_size = 5,
             verbose = True,
             error = 'raise',
         )
@@ -147,6 +145,7 @@ def test_modeling():
         f.set_estimator('mlr')
         f.add_signals(['lstm_cv'],fill_strategy = 'bfill')
         f.manual_forecast(normalizer='robust')
+        f.save_feature_importance()
         f.add_signals(['lstm_cv'],fill_strategy = None)
         f.add_signals(['lstm_cv'],train_only=tl > 0)
 
