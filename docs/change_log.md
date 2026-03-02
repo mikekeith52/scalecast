@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
-## [0.21.0]
+## [0.21.0] - 2026-03-01
 ### Added
 - Added a uniform modeling framework for all scalecast models
 - Added classes (`AR`, `EvaluatedMetric`, etc.) to a `classes.py` module
@@ -32,7 +32,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 - Fixed rnn grid generation (was only outputting one-layer models)
 - Removed outdated 'auto' value from random forest grid
 
-## [0.20.0]
+## [0.20.0] - 2026-02-09
 ### Added
 ### Changed
 - Added type hints to all functions/methods
