@@ -64,10 +64,10 @@ Links
 `Readme <about.rst>`_
    Overview, starter code, and installation.
 
-:doc:`Forecaster/examples/Introduction2`
+:doc:`examples/Introduction2`
    A well-organized notebook that will quickly show you a lot of cool features.
 
-:doc:`Examples <https://github.com/mikekeith52/scalecast-examples>`_
+`Examples <https://github.com/mikekeith52/scalecast-examples>`_
    Other example notebooks.
 
 :doc:`Forecaster/ForecasterGlobals`
@@ -101,7 +101,7 @@ Index
    :hidden:
 
    about
-   Forecaster/examples/Introduction2
+   examples/Introduction2
    Forecaster/ForecasterGlobals
    Forecaster/Models
 
