@@ -73,7 +73,7 @@ Links
 :doc:`Forecaster/ForecasterGlobals`
    Key terms that will make your life easier when reading documentation.
 
-:doc:`Forecaster/models`
+:doc:`Forecaster/Models`
    What models are available?
 
 :doc:`change_log`
