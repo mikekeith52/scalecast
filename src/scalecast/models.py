@@ -596,18 +596,10 @@ class RNN:
         random_seed (int): Optional.
             Set a seed for consistent results.
             With tensorflow networks, setting seeds does not guarantee consistent results.
-        plot_loss_test (bool): Default False.
-            Whether to plot the loss trend stored in history for each epoch on the test set.
-            If validation_split passed to kwargs, will plot the validation loss as well.
-            The resulting plot looks better if epochs > 1 passed to **kwargs.
-        plot_loss (bool): default False.
-            whether to plot the loss trend stored in history for each epoch on the full model.
-            if validation_split passed to kwargs, will plot the validation loss as well.
-            looks better if epochs > 1 passed to **kwargs.
         scale_X (bool): Default True.
-            Whether to scale the exogenous inputs with a minmax scaler.
+            Whether to scale the exogenous inputs with the scaler passed to the normalizer paramater.
         scale_y (bool): Default True.
-            Whether to scale the endogenous inputs (lags), as well as the model output, with a minmax scaler.
+            Whether to scale the endogenous inputs (lags), as well as the model output, with the scaler passed to the normalizer paramater.
             The results will automatically return unscaled.
         **kwargs: Passed to fit() and can include epochs, verbose, callbacks, validation_split, and more.
     """
@@ -778,7 +770,7 @@ class RNN:
             X (np.ndarray): The input data.
             y (np.ndarray): The observed actuals. Ignored for RNN models since the actuals are already stored in self.y, which is used for training. 
                 This is just for API consistency with other models.
-            **fit_params: Passed to the .fit() method from the scikit-learn model.
+            **fit_params: Passed to the .fit() method from the tensorflow model.
 
         Returns:
             Self
@@ -812,6 +804,15 @@ class RNN:
         return preds
 
     def fit_predict(self,X,y) -> list[float]:
+        """ Runs fit and predict methods, returning predictions.
+
+        Args:
+            X (np.ndarray): The input data.
+            y (np.ndarray): The observed actuals. Ignored for RNN models since the actuals are already stored in self.y, which is used for training.
+
+        Returns:
+            list[float]: The predictions.
+        """
         self.fit(X,y)
         return self.predict(X)
     
@@ -925,7 +926,7 @@ class Theta:
             X (np.ndarray): The input data.
             y (np.ndarray): The observed actuals. Ignored for Theta models since the actuals are already stored in self.current_actuals, which is used for training. 
                 This is just for API consistency with other models.
-            **fit_params: Passed to the .fit() method from the scikit-learn model.
+            **fit_params: Passed to the .fit() method from the darts model.
 
         Returns:
             Self
@@ -1017,7 +1018,7 @@ class HWES:
             use_brute (bool): Default True. Whether to use the brute-force optimization method when optimizing the model's smoothing level parameters. 
                 This is passed to the fit() method from the statsmodels ExponentialSmoothing model and is only relevant if optimized is True. 
                     If False, the model will use the default optimization method from the statsmodels ExponentialSmoothing model when optimizing the smoothing level parameters. 
-            **fit_params: Passed to the .fit() method from the scikit-learn model.
+            **fit_params: Passed to the .fit() method from the statsmodels model.
 
         Returns:
             Self
@@ -1031,6 +1032,7 @@ class HWES:
     
     def predict(self,X:None=None,in_sample:bool=False,**predict_params) -> list[float]:
         """ Makes predictions.
+
         Args:
             X (np.ndarray): The input data. Ignored for HWES models since HWES does not use an input matrix. This is just for API consistency with other models.
             in_sample (bool): Default False. If True, returns fitted values with a one-step ahead forecast.
@@ -1105,7 +1107,7 @@ class TBATS:
             X (np.ndarray): The input data.
             y (np.ndarray): The observed actuals. Ignored for TBATS models since the actuals are already stored in self.current_actuals, which is used for training. 
                 This is just for API consistency with other models.
-            **fit_params: Passed to the .fit() method from the scikit-learn model.
+            **fit_params: Passed to the .fit() method from the tbats model.
         
         Returns:
             Self
@@ -1152,8 +1154,7 @@ class ARIMA:
 
     Args:
         f (Forecaster): The Forecaster object storing the actual series and associated dates.
-        model (str): The ARIMA model to use. Default 'auto' which selects the
-        ARIMA model from Statsmodels. Currently, 'auto' is the only option.
+        model (str): The ARIMA model to use. Default 'auto' which selects the ARIMA model from Statsmodels. Currently, 'auto' is the only option.
         Xvars (list[str]): List of regressors to use from the passed Forecaster object.
         test_set_actuals (list[float]): Optional. Test-set actuals to use for testing the model. This enables the dynamic_testing option.
         **kwargs: Passed to the Statsmodels ARIMA model specified in model.
@@ -1189,6 +1190,7 @@ class ARIMA:
 
     def generate_current_X(self) -> np.ndarray:
         """ Returns the matrix of the current input exogenous variables.
+            If no regressors specified using the Xvars paramater, returns None.
         """
         if self.Xvars:
             return np.array([self.f.current_xreg[x].values.copy() for x in self.Xvars]).T
@@ -1196,7 +1198,7 @@ class ARIMA:
 
     def generate_future_X(self) -> np.ndarray:
         """ Returns the matrix of the future input exogenous variables. 
-            If no regressors specified, returns None.
+            If no regressors specified using the Xvars paramater, returns None.
         """
         if self.Xvars:
             return np.array([np.array(self.f.future_xreg[x][:]) for x in self.Xvars]).T
@@ -1209,7 +1211,7 @@ class ARIMA:
         Args:
             X (np.ndarray): The input data.
             y (np.ndarray): The observed actuals.
-            **fit_params: Passed to the .fit() method from the scikit-learn model.  
+            **fit_params: Passed to the .fit() method from the statsmodel model.  
 
         Returns:
             Self
@@ -1491,7 +1493,7 @@ class Naive:
 
 
 class Combo:
-    """ Forecasts using a combination of the forecasts from multiple models. The forecasts are combined with either simple or weighted averaging.
+    """ Forecasts using a combination of other evaluated forecasts from multiple models. The forecasts are combined with either simple or weighted averaging.
 
     
     Args:
@@ -1590,8 +1592,7 @@ class Combo:
     
     @_developer_utils.log_warnings
     def fit(self,X:None=None,y:None=None,**fit_params:None) -> Self:
-        """ Fits the estimator. For the Combo model, there is no fitting process since the model simply combines the forecasts from the specified models using either simple or weighted averaging. 
-            This method is included for API consistency with other models, but it does not need to do anything for the Combo model.
+        """ Fits the estimator. For the Combo model, this means specifying the weights to use for combining the forecasts from the specified models based on the method specified in how.
 
         Args:
             X (None): Ignored for the Combo model since it does not use an input matrix for fitting. This is just for API consistency with other models.
@@ -1632,9 +1633,8 @@ class Combo:
         """
         return list(np.sum(X * self.weights,axis=1))
 
-    def fit_predict(self,X:None,y:None) -> list[float]:
-        """ Fits and predicts on the same dataset. For the Combo model, there is no fitting process since the model simply combines the forecasts from the specified models using either simple or weighted averaging. 
-            This method is included for API consistency with other models, but it does not need to do anything for the Combo model.
+    def fit_predict(self,X:None=None,y:None=None) -> list[float]:
+        """ Fits and predicts on the same dataset.
 
         Args:
             X (None): Ignored for the Combo model since it does not use an input matrix for fitting. This is just for API consistency with other models.
