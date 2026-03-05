@@ -144,7 +144,7 @@ def test_modeling():
 
         f.set_estimator('mlr')
         f.add_signals(['lstm_cv'],fill_strategy = 'bfill')
-        f.manual_forecast(normalizer='robust')
+        f.manual_forecast(normalizer='robust',dynamic_testing=False)
         f.save_feature_importance()
         f.add_signals(['lstm_cv'],fill_strategy = None)
         f.add_signals(['lstm_cv'],train_only=tl > 0)

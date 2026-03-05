@@ -39,7 +39,7 @@ def test_pickle():
 def test_modeling():
     for tl in (0,36):
         mvf = build_MVForecaster(test_length = tl)
-        mvf.add_Normalizer('robust',RobustScaler)
+        mvf.add_normalizer('robust',RobustScaler)
         mvf.set_metrics(['rmse','r2'])
         mvf
         if tl > 0:

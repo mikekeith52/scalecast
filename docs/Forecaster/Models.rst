@@ -26,6 +26,7 @@ See also `auxmodels <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmo
 - :py:class:`scalecast.models.RNN`
 - :py:class:`scalecast.models.TBATS`
 - :py:class:`scalecast.models.Theta`
+- :py:class:`scalecast.models.VECM`
 
 .. autoclass:: scalecast.models.ARIMA
    :members:
@@ -78,6 +79,11 @@ See also `auxmodels <https://scalecast.readthedocs.io/en/latest/Forecaster/Auxmo
    :inherited-members:
 
 .. autoclass:: scalecast.models.Theta
+   :members:
+   :undoc-members:
+   :inherited-members:
+
+.. autoclass:: scalecast.models.VECM
    :members:
    :undoc-members:
    :inherited-members:
