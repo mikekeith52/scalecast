@@ -9,31 +9,31 @@ from typing import Any, Optional, Unpack
 import copy
 
 class Transformer:
+    """A class for applying transformations to the y attribute in a Forecaster object and storing the information necessary to revert those transformations later with the Reverter class.
+
+    Args:
+        transformers (list[tuple]): A list of transformations to apply to the time series stored in a Forecaster object.
+            The tuple's first element should match the name of a transform function from the SeriesTransformer object: 
+            https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html.
+            Positional and keyword arguments can be passed to these functions.
+            If a given tuple is more than 1 in length, the `fit_transform()` method will parse
+            Elements after index 0 as positional arguments.
+            Keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
+            Therefore, if the last argument in the tuple is a dict type,
+            This is assumed to contain the keyword arguments. 
+            If the last positional argument you wish to pass happens to be dict type,
+            you can eaither pass it as a keyword argument or place an additional (empty) dictionary at the end of the tuple.
+
+    >>> from scalecast.Pipeline import Transformer
+    >>> transformer = Transformer(
+    >>>     transformers = [
+    >>>         ('LogTransform',),
+    >>>         ('DiffTransform',1),
+    >>>         ('DiffTransform',12),
+    >>>     ],
+    >>> )
+    """
     def __init__(self,transformers: ReadAsTransformer):
-        """ Initiates the transformer pipeline.
-
-        Args:
-            transformers (list[tuple]): A list of transformations to apply to the time series stored in a Forecaster object.
-                The tuple's first element should match the name of a transform function from the SeriesTransformer object: 
-                https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html.
-                Positional and keyword arguments can be passed to these functions.
-                If a given tuple is more than 1 in length, the `fit_transform()` method will parse
-                Elements after index 0 as positional arguments.
-                Keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
-                Therefore, if the last argument in the tuple is a dict type,
-                This is assumed to contain the keyword arguments. 
-                If the last positional argument you wish to pass happens to be dict type,
-                you can eaither pass it as a keyword argument or place an additional (empty) dictionary at the end of the tuple.
-
-        >>> from scalecast.Pipeline import Transformer
-        >>> transformer = Transformer(
-        >>>     transformers = [
-        >>>         ('LogTransform',),
-        >>>         ('DiffTransform',1),
-        >>>         ('DiffTransform',12),
-        >>>     ],
-        >>> )
-        """
         # validate types (transform str types to tuple)
         for i, transformer in enumerate(transformers):
             if isinstance(transformer,str):
@@ -102,38 +102,38 @@ class Transformer:
         return f
 
 class Reverter:
+    """ A class for reverting transformations applied to the y attribute in a Forecaster object with the Transformer class.
+
+    Args:
+        reverters (list[tuple]): A list of revert funcs to apply to the time series stored in a Forecaster object.
+            The tuple's first element should match the name of a revert function from the SeriesTransformer object: 
+            https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html.
+            Positional and keyword arguments can be passed to these functions.
+            If a given tuple is more than 1 in length, the `fit_transform()` method will parse
+            elements after index 0 as positional arguments.
+            Keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
+            Therefore, if the last argument in the tuple is a dict type,
+            this is assumed to contain the keyword arguments. 
+            If the last positional argument you wish to pass happens to be dict type,
+            You can eaither pass it as a keyword argument or place an additional (empty) dictionary at the end of the tuple.
+        base_transformer (Transformer|SeriesTransformer): The object that was used to make the original transformations.
+            These objects contain the key information to undifference and unscale the stored data 
+            and therefore this argument is required.
+
+    >>> from scalecast.Pipeline import Reverter
+    >>> reverter = Reverter(
+    >>>     reverters = [
+    >>>         ('DiffRevert',12),
+    >>>         ('DiffRevert',1),
+    >>>         ('LogRevert',),
+    >>>     ],
+    >>>     base_transformer = transformer,
+    >>> )
+    """
     def __init__(self,
         reverters: ReadAsTransformer,
         base_transformer: Transformer|SeriesTransformer,
     ):
-        """ Initiates the reverter pipeline.
-
-        Args:
-            reverters (list[tuple]): A list of revert funcs to apply to the time series stored in a Forecaster object.
-                The tuple's first element should match the name of a revert function from the SeriesTransformer object: 
-                https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html.
-                Positional and keyword arguments can be passed to these functions.
-                If a given tuple is more than 1 in length, the `fit_transform()` method will parse
-                elements after index 0 as positional arguments.
-                Keywords are passed as a dictionary in the last position of tuples greater than 1 in length. 
-                Therefore, if the last argument in the tuple is a dict type,
-                this is assumed to contain the keyword arguments. 
-                If the last positional argument you wish to pass happens to be dict type,
-                You can eaither pass it as a keyword argument or place an additional (empty) dictionary at the end of the tuple.
-            base_transformer (Transformer|SeriesTransformer): The object that was used to make the original transformations.
-                These objects contain the key information to undifference and unscale the stored data 
-                and therefore this argument is required.
-
-        >>> from scalecast.Pipeline import Reverter
-        >>> reverter = Reverter(
-        >>>     reverters = [
-        >>>         ('DiffRevert',12),
-        >>>         ('DiffRevert',1),
-        >>>         ('LogRevert',),
-        >>>     ],
-        >>>     base_transformer = transformer,
-        >>> )
-        """
         # validate types (transform str types to tuple)
         for i, reverter in enumerate(reverters):
             if isinstance(reverter,str):
@@ -359,62 +359,62 @@ class Pipeline_parent:
         return results
 
 class Pipeline(Pipeline_parent):
+    """ A class for applying a series of transformations, forecasts, and reverts to a Forecaster object in a pipeline fashion.
+
+    Args:
+        steps (list[tuple]): A list of transform, forecast, and revert funcs to apply
+            to a Forecaster object. The first element of each tuple names the step.
+            The second element should either be a Transformer or Reverter type or a function.
+            If it is a function, the first argument in the function should require a Forecaster object.
+            Functions are checked for as objects that do not have the `fit_transform()` method,
+            so adding more elements to the Pipeline may be possible if they have a `fit_transform()` method.
+
+    >>> from scalecast.Forecaster import Forecaster
+    >>> from scalecast.Pipeline import Transformer, Reverter, Pipeline
+    >>> import pandas_datareader as pdr
+    >>> 
+    >>> models = ['mlr','elasticnet']
+    >>> def forecaster(f,models):
+    >>>     f.add_covid19_regressor()
+    >>>     f.auto_Xvar_select(cross_validate=True)
+    >>>     f.tune_test_forecast(models)
+    >>>
+    >>> df = pdr.get_data_fred(
+    >>>     'HOUSTNSA',
+    >>>     start='1959-01-01',
+    >>>     end='2022-08-01'
+    >>> )
+    >>> f = Forecaster(
+    >>>     y=df['HOUSTNSA'],
+    >>>     current_dates=df.index,
+    >>>     future_dates=24,
+    >>> )
+    >>> f.set_test_length(0.2)
+    >>> f.set_validation_length(24)
+    >>> transformer = Transformer(
+    >>>     transformers = [
+    >>>         ('LogTransform',),
+    >>>         ('DiffTransform',1),
+    >>>         ('DiffTransform',12),
+    >>>     ],
+    >>> )
+    >>> reverter = Reverter(
+    >>>     reverters = [
+    >>>         ('DiffRevert',12),
+    >>>         ('DiffRevert',1),
+    >>>         ('LogRevert',),
+    >>>     ],
+    >>>     base_transformer = transformer,
+    >>> )
+    >>> pipeline = Pipeline(
+    >>>     steps = [
+    >>>         ('Transform',transformer),
+    >>>         ('Forecast',forecaster),
+    >>>         ('Revert',reverter),
+    >>>     ],
+    >>> )
+    """
     def __init__(self,steps: list[tuple[str,Transformer|Reverter|PipelineFunction]]):
-        """ Initiates the full pipeline.
-
-        Args:
-            steps (list[tuple]): A list of transform, forecast, and revert funcs to apply
-                to a Forecaster object. The first element of each tuple names the step.
-                The second element should either be a Transformer or Reverter type or a function.
-                If it is a function, the first argument in the function should require a Forecaster object.
-                Functions are checked for as objects that do not have the `fit_transform()` method,
-                so adding more elements to the Pipeline may be possible if they have a `fit_transform()` method.
-
-        >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.Pipeline import Transformer, Reverter, Pipeline
-        >>> import pandas_datareader as pdr
-        >>> 
-        >>> models = ['mlr','elasticnet']
-        >>> def forecaster(f,models):
-        >>>     f.add_covid19_regressor()
-        >>>     f.auto_Xvar_select(cross_validate=True)
-        >>>     f.tune_test_forecast(models)
-        >>>
-        >>> df = pdr.get_data_fred(
-        >>>     'HOUSTNSA',
-        >>>     start='1959-01-01',
-        >>>     end='2022-08-01'
-        >>> )
-        >>> f = Forecaster(
-        >>>     y=df['HOUSTNSA'],
-        >>>     current_dates=df.index,
-        >>>     future_dates=24,
-        >>> )
-        >>> f.set_test_length(0.2)
-        >>> f.set_validation_length(24)
-        >>> transformer = Transformer(
-        >>>     transformers = [
-        >>>         ('LogTransform',),
-        >>>         ('DiffTransform',1),
-        >>>         ('DiffTransform',12),
-        >>>     ],
-        >>> )
-        >>> reverter = Reverter(
-        >>>     reverters = [
-        >>>         ('DiffRevert',12),
-        >>>         ('DiffRevert',1),
-        >>>         ('LogRevert',),
-        >>>     ],
-        >>>     base_transformer = transformer,
-        >>> )
-        >>> pipeline = Pipeline(
-        >>>     steps = [
-        >>>         ('Transform',transformer),
-        >>>         ('Forecast',forecaster),
-        >>>         ('Revert',reverter),
-        >>>     ],
-        >>> )
-        """
         # validate we have tuples
         for step in steps:
             if not isinstance(step,tuple):
@@ -462,61 +462,61 @@ class Pipeline(Pipeline_parent):
         return f
 
 class MVPipeline(Pipeline_parent):
+    """ A class for applying a series of transformations, forecasts, and reverts to multiple Forecaster objects in a pipeline fashion for multivariate forecasting applications.
+
+    Args:
+        steps: (list[tuple]): A list of transform, forecast, and revert funcs to apply
+            to multiple Forecaster objects. The first element of each tuple names the step.
+            The second element should be a list of Transformer objects, a list of Reverter objects,
+            a list of functions, or a single function. If it is a function or list of functions, 
+            the first argument in the should require a Forecaster or MVForecaster object.
+            If it is a list of functions, Transformer, or Revereter objects,
+            each one of these will be called on the Forecaster objects in the order they are passed
+            to the `fit_predict()` method.
+            Functions are checked for as objects that do not have the `fit_transform()` method,
+            so adding more elements to the Pipeline may be possible if they have a `fit_transform()` method.
+        **kwargs: Passed to MVForecaster(). See
+            https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.__init__.
+
+    >>> from scalecast.Forecaster import Forecaster
+    >>> from scalecast.Pipeline import MVPipeline
+    >>> from scalecast.util import pdr_load, find_optimal_transformation
+    >>> 
+    >>> def auto_Xvar_select(f):
+    >>>    f.auto_Xvar_select(max_ar=0)
+    >>> def forecaster(mvf):
+    >>>     mvf.set_test_length(24)
+    >>>     mvf.set_estimator('elasticnet')
+    >>>     mvf.manual_forecast(alpha=.2,lags=12)
+    >>>
+    >>> f1 = pdr_load('UTUR',future_dates=24,start='1970-01-01',end='2022-07-01')
+    >>> f2 = pdr_load('UTPHCI',future_dates=24,start='1970-01-01',end='2022-07-01')
+    >>> f3 = pdr_load('UNRATE',future_dates=24,start='1970-01-01',end='2022-07-01')
+    >>> # doing this helps the `DetrendTransform()` function
+    >>> fs = [f1,f2,f3]
+    >>> for f in fs:
+    >>>     f.set_test_length(24)
+    >>>
+    >>> transformer1, reverter1 = find_optimal_transformation(f1)
+    >>> transformer2, reverter2 = find_optimal_transformation(f2)
+    >>> transformer3, reverter3 = find_optimal_transformation(f3)
+    >>> 
+    >>> pipeline = MVPipeline(
+    >>>     steps = [
+    >>>         ('Transform',[transformer1,transformer2,transformer3]),
+    >>>         ('Select Xvars',[auto_Xvar_select]*3), # finds xvars for each object
+    >>>         ('Forecast',forecaster,), # combines to an mvf object
+    >>>         ('Revert',[reverter1,reverter2,reverter3]), # breaks back to f objects
+    >>>     ],
+    >>>     names = ['UTUR','UTPHCI','UNRATE'],
+    >>>     merge_Xvars = 'i',
+    >>> )
+    """
     def __init__(
         self,
         steps: list[tuple[str,list[Transformer]|list[Reverter]|PipelineFunction]],
         **kwargs:Any,
     ):
-        """ Initiates the full pipeline for multivariate forecasting applications.
-
-        Args:
-            steps: (list[tuple]): A list of transform, forecast, and revert funcs to apply
-                to multiple Forecaster objects. The first element of each tuple names the step.
-                The second element should be a list of Transformer objects, a list of Reverter objects,
-                a list of functions, or a single function. If it is a function or list of functions, 
-                the first argument in the should require a Forecaster or MVForecaster object.
-                If it is a list of functions, Transformer, or Revereter objects,
-                each one of these will be called on the Forecaster objects in the order they are passed
-                to the `fit_predict()` method.
-                Functions are checked for as objects that do not have the `fit_transform()` method,
-                so adding more elements to the Pipeline may be possible if they have a `fit_transform()` method.
-            **kwargs: Passed to MVForecaster(). See
-                https://scalecast.readthedocs.io/en/latest/Forecaster/MVForecaster.html#src.scalecast.MVForecaster.MVForecaster.__init__.
-
-        >>> from scalecast.Forecaster import Forecaster
-        >>> from scalecast.Pipeline import MVPipeline
-        >>> from scalecast.util import pdr_load, find_optimal_transformation
-        >>> 
-        >>> def auto_Xvar_select(f):
-        >>>    f.auto_Xvar_select(max_ar=0)
-        >>> def forecaster(mvf):
-        >>>     mvf.set_test_length(24)
-        >>>     mvf.set_estimator('elasticnet')
-        >>>     mvf.manual_forecast(alpha=.2,lags=12)
-        >>>
-        >>> f1 = pdr_load('UTUR',future_dates=24,start='1970-01-01',end='2022-07-01')
-        >>> f2 = pdr_load('UTPHCI',future_dates=24,start='1970-01-01',end='2022-07-01')
-        >>> f3 = pdr_load('UNRATE',future_dates=24,start='1970-01-01',end='2022-07-01')
-        >>> # doing this helps the `DetrendTransform()` function
-        >>> fs = [f1,f2,f3]
-        >>> for f in fs:
-        >>>     f.set_test_length(24)
-        >>>
-        >>> transformer1, reverter1 = find_optimal_transformation(f1)
-        >>> transformer2, reverter2 = find_optimal_transformation(f2)
-        >>> transformer3, reverter3 = find_optimal_transformation(f3)
-        >>> 
-        >>> pipeline = MVPipeline(
-        >>>     steps = [
-        >>>         ('Transform',[transformer1,transformer2,transformer3]),
-        >>>         ('Select Xvars',[auto_Xvar_select]*3), # finds xvars for each object
-        >>>         ('Forecast',forecaster,), # combines to an mvf object
-        >>>         ('Revert',[reverter1,reverter2,reverter3]), # breaks back to f objects
-        >>>     ],
-        >>>     names = ['UTUR','UTPHCI','UNRATE'],
-        >>>     merge_Xvars = 'i',
-        >>> )
-        """
         for step in steps:
             if not isinstance(step,tuple):
                 raise TypeError(f'Expected elements of pipeline steps list to be tuple type, got {type(step)}.')

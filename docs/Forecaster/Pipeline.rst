@@ -68,23 +68,15 @@ Here are some objects that can be placed in a list and executed sequentially, si
 .. autoclass:: scalecast.Pipeline.Transformer
    :members:
 
-   .. automethod:: __init__
-
 .. autoclass:: scalecast.Pipeline.Reverter
    :members:
-
-   .. automethod:: __init__
 
 .. autoclass:: scalecast.Pipeline.Pipeline
    :members:
    :undoc-members:
    :inherited-members:
 
-   .. automethod:: __init__
-
 .. autoclass:: scalecast.Pipeline.MVPipeline
    :members:
    :undoc-members:
    :inherited-members:
-   
-   .. automethod:: __init__

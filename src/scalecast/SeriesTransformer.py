@@ -12,13 +12,13 @@ import copy
 from sklearn.preprocessing import RobustScaler
 
 class SeriesTransformer:
-    def __init__(self, f, deepcopy=True):
-        """ Initiates the object.
+    """ A class for transforming the y attribute in a Forecaster object and reverting it back to its original form.
 
-        Args:
-            f (Forecaster): The Forecaster object that will receive each transformation/revert.
-            deepcopy (bool): Default True. Whether to store a deepcopy of the Forecaster object in the SeriesTransformer object.
-        """
+    Args:
+        f (Forecaster): The Forecaster object that will receive each transformation/revert.
+        deepcopy (bool): Default True. Whether to store a deepcopy of the Forecaster object in the SeriesTransformer object.
+    """
+    def __init__(self, f, deepcopy=True):
         self.f = copy.deepcopy(f) if deepcopy else f
 
     def __repr__(self):

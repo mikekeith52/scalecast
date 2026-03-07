@@ -43,5 +43,3 @@ This object can be used to perform more complex transformations on your `Forecas
 
 .. autoclass:: scalecast.SeriesTransformer.SeriesTransformer
    :members:
-
-   .. automethod:: __init__
