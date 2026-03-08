@@ -19,3 +19,4 @@ docs/examples/avocado.csv
 docs/.DS_Store
 /docs/examples/catboost_info
 /docs/examples
+/build

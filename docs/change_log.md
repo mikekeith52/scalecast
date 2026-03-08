@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.21.1] - 2026-03-08
+### Added
+### Changed
+### Fixed
+- Fixed `Forecaster.reduce_Xvars()` function
+- Fixed type hints
+
 ## [0.21.0] - 2026-03-01
 ### Added
 - Added a uniform modeling framework for all scalecast models

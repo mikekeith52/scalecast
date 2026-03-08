@@ -536,7 +536,7 @@ class MVPipeline(Pipeline_parent):
     def __str__(self):
         return self.__repr__()
 
-    def fit_predict(self,*fs: Forecaster,**kwargs:Any) -> Unpack[Forecaster]:
+    def fit_predict(self,*fs: Forecaster,**kwargs:Any) -> Unpack[Forecaster]|MVForecaster:
         """ Applies the transform, forecast, and revert functions to the series stored in the Forecaster object.
         The order of Forecaster passed to *fs is the order all functions in lists will be applied.
 

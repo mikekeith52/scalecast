@@ -561,7 +561,7 @@ class Forecaster(Forecaster_parent):
         else:
             f.cross_validate(dynamic_tuning=dynamic_tuning, set_aside_test_set = False, **cvkwargs)
         f.ingest_grid({k: [v] for k, v in f.best_params.items()})
-        f.auto_forecast(test_again=False)
+        f.auto_forecast(test_model=False)
 
         self.reduction_hyperparams = f.best_params.copy()
 
@@ -607,7 +607,7 @@ class Forecaster(Forecaster_parent):
                 f.tune(dynamic_tuning=dynamic_tuning, set_aside_test_set = False)
             else:
                 f.cross_validate(dynamic_tuning=dynamic_tuning, set_aside_test_set = False, **cvkwargs)
-            f.auto_forecast(test_again=False)
+            f.auto_forecast(test_model=False)
             new_metric = f.history[estimator][monitor]
             metrics.append(new_metric)
 
@@ -1598,7 +1598,7 @@ class Forecaster(Forecaster_parent):
             error = f'Feature importance only works for models that use external regressors.'
         else:
             try:
-                regr = self.call_estimator
+                regr = self.call_estimator.regr
                 X = self.call_estimator.generate_current_X()
                 Xvars = self.call_estimator.Xvars
 
