@@ -2914,7 +2914,7 @@ tf = [
 [package.metadata]
 requires-dist = [
     { name = "autodocsumm", marker = "extra == 'docs'" },
-    { name = "catboost", specifier = "~=1.1" },
+    { name = "catboost", specifier = "~=1.2" },
     { name = "darts", marker = "extra == 'darts'" },
     { name = "dask", specifier = ">=2023.3,<2027.0" },
     { name = "greykite", marker = "extra == 'greykite'" },

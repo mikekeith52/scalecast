@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file since v0.1.8. Th
 ### Fixed
 - Fixed `Forecaster.reduce_Xvars()` function
 - Fixed type hints
+- Fixed dependencies
 
 ## [0.21.0] - 2026-03-01
 ### Added
