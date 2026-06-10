@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.21.2] - 2026-06-10
+### Added
+- Added imports in `__init__`
+### Changed
+### Fixed
+- Fixed calculations for bias and abias
+
 ## [0.21.1] - 2026-03-08
 ### Added
 ### Changed

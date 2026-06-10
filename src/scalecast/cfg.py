@@ -59,8 +59,8 @@ METRICS:ValidatedList[MetricStore] = ValidatedList([
     MetricStore(name='mae',eval_func=Metrics.mae),
     MetricStore(name='mape',eval_func=Metrics.mape),
     MetricStore(name='smape',eval_func=Metrics.smape),
-    MetricStore(name='abias',eval_func=Metrics.smape),
-    MetricStore(name='bias',eval_func=Metrics.smape,lower_is_better=False), # be careful ever choosing based off this metric, but leaving it here because it's good to view
+    MetricStore(name='abias',eval_func=Metrics.abias),
+    MetricStore(name='bias',eval_func=Metrics.bias,lower_is_better=False), # be careful ever choosing based off this metric, but leaving it here because it's good to view
     MetricStore(name='mse',eval_func=Metrics.mse),
 ],enforce_type='MetricStore')
 

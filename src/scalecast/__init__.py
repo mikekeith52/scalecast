@@ -1,1 +1,8 @@
-__version__ = '0.21.1'
+__version__ = '0.21.2'
+
+from . import Forecaster
+from . import MVForecaster
+from . import Metrics
+from . import Pipeline
+from . import SeriesTransformer
+from . import GridGenerator
