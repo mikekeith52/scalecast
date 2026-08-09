@@ -669,7 +669,7 @@ class SeriesTransformer:
                     )
                 )[m:]
                 h["TestSetActuals"] = self.f.y.to_list()[-self.f.test_length :]
-            if np.isnan(self.f.history[mod]['CILevel']) or 'TestSetUpperCI' not in h: # no cis evaluated
+            if not self.f.history[mod]['CILevel'] or 'TestSetUpperCI' not in h: # no cis evaluated
                 continue
             # undifference cis
             fcst = h["Forecast"]
@@ -684,13 +684,14 @@ class SeriesTransformer:
                 ci_range = ci_range,
                 preds = test_preds,
             )
-            self.f._set_cis(
-                "UpperCI",
-                "LowerCI",
-                m = mod,
-                ci_range = ci_range,
-                preds = fcst,
-            )
+            if 'UpperCI' in h:
+                self.f._set_cis(
+                    "UpperCI",
+                    "LowerCI",
+                    m = mod,
+                    ci_range = ci_range,
+                    preds = fcst,
+                )
 
         if delete_attributes:
             delattr(self, f"orig_y_{m}_{n}")

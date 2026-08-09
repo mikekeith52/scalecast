@@ -48,6 +48,7 @@ class Forecaster_parent:
         y:Sequence[float|int],
         test_length:NonNegativeInt,
         cis:bool,
+        cilevel=.95,
         metrics:ValidatedList[MetricStore]=METRICS[:4],
         validation_length:int = 1,
     ):
@@ -57,7 +58,7 @@ class Forecaster_parent:
         self.set_test_length(test_length)
         self.validation_metric = metrics[0]
         self.set_validation_length(validation_length)
-        self.cilevel = 0.95
+        self.cilevel = cilevel
         self.current_xreg = {} # Series
         self.future_xreg = {} # lists
         self.history = {}
@@ -910,6 +911,9 @@ class Forecaster_parent:
         Returns:
             Self
         """
+        if not hasattr(self,'call_estimator'):
+            warnings.warn('init_estimator() not called. Calling now with default parameters.')
+            self.init_estimator()
         X = self.call_estimator.generate_current_X()
         y = self.y
         self.call_estimator.fit(X,y,**fit_params)
@@ -1597,10 +1601,11 @@ class Forecaster_parent:
 
         is_Forecaster = not self.determine_if_MVForecaster()
         call_me = self.estimator if call_me is None else call_me
+
+        already_existed = False
         if call_me not in self.history:
             self.history[call_me] = {}
-            already_existed = False
-        else:
+        elif self.history[call_me]['Forecast'] is not None:
             already_existed = True
 
         try:
@@ -1638,6 +1643,25 @@ class Forecaster_parent:
         self.history[call_me]['TestSetLength'] = self.test_length
         self.history[call_me]['TestSetPredictions'] = fcst
         self.history[call_me]['TestSetActuals'] = actuals if is_Forecaster else {k :actuals[i] for i, k in enumerate(fcst.keys())}
+
+        if self.cis is True:
+            self._check_right_test_length_for_cis(self.cilevel)
+            test_preds = self.history[call_me]['TestSetPredictions']
+            test_actuals = self.history[call_me]['TestSetActuals']
+            if is_Forecaster:
+                test_resids = np.array([p - a for p, a in zip(test_preds,test_actuals)])
+                ci_range = np.percentile(np.abs(test_resids), 100 * self.cilevel)
+            else:
+                test_resids = {k:np.array(p) - np.array(test_actuals[k]) for k, p in test_preds.items()}
+                ci_range = {k:np.percentile(np.abs(r), 100 * self.cilevel) for k,r in test_resids.items()}
+            self._set_cis(
+                "TestSetUpperCI",
+                "TestSetLowerCI",
+                m = call_me,
+                ci_range = ci_range,
+                preds = test_preds,
+            )
+            self.history[call_me]['CILevel'] = self.cilevel
 
         for met, value in zip(self.determine_best_by.metrics,self.determine_best_by.values):
             if value.startswith('TestSet'):

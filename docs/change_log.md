@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.21.3] - 2026-08-08
+### Added
+- Added `cilevel` parameter when initiating `Forecaster` or `MVForecaster` object
+- Added CI storing when only testing models
+### Changed
+### Fixed
+- Fixed broken `plot_reduction_errors()` function
+- Fixed CI reverting when model is only tested
+- Fixed broken links in the readme
+
 ## [0.21.2] - 2026-06-10
 ### Added
 - Added imports in `__init__`

@@ -102,5 +102,5 @@ SERIES_COLORS = [
     "#9FE2BF",
 ]
 
-IGNORE_AS_HYPERPARAMS = ["Xvars", "lags"]
+IGNORE_AS_HYPERPARAMS = ["Xvars", "lags",'test_set_actuals']
 CLEAR_ATTRS_ON_ESTIMATOR_CHANGE = ["grid","grid_evaluated","best_params","validation_metric_value","actuals"]

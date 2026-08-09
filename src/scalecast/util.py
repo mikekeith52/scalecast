@@ -103,7 +103,7 @@ def plot_reduction_errors(f:Forecaster, ax:Axes = None, figsize:tuple[int,int]=(
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)
     sns.lineplot(
-        x=np.arange(0, len(dropped) + 1, 1), y=errors,
+        x=np.arange(0, len(dropped) + 1, 1), y=[i.score for i in errors],
     )
     plt.xlabel("dropped Xvars")
     plt.ylabel("error")

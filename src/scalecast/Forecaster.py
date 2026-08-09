@@ -60,6 +60,7 @@ class Forecaster(Forecaster_parent):
         cis (bool): Default False. Whether to evaluate naive conformal confidence intervals for every model evaluated.
             If setting to True, ensure you also set a test_length of at least 20 observations for 95% confidence intervals.
             See eval_cis() and set_cilevel() methods and docstrings for more information.
+        cilevel (float): The level to use when evaluating confidence intervals.
         carry_fit_models (bool): Default True.
             Whether to store the regression model for each fitted model in history.
             Setting this to False can save memory.
@@ -73,12 +74,14 @@ class Forecaster(Forecaster_parent):
         validation_length:NonNegativeInt = 1,
         metrics:Optional[list[str]]=None,
         cis:bool = False,
+        cilevel:ConfInterval=.95,
         carry_fit_models:bool = True,
     ):
         super().__init__(
             y = y,
             test_length = test_length,
             cis = cis,
+            cilevel = cilevel,
             validation_length=validation_length,
         )
         if metrics:
@@ -191,7 +194,6 @@ class Forecaster(Forecaster_parent):
             test_preds = self.history[call_me]['TestSetPredictions']
             test_actuals = self.history[call_me]['TestSetActuals']
             test_resids = np.array([p - a for p, a in zip(test_preds,test_actuals)])
-            #test_resids = correct_residuals(test_resids)
             ci_range = np.percentile(np.abs(test_resids), 100 * self.cilevel)
             self._set_cis(
                 "TestSetUpperCI",
@@ -205,7 +207,8 @@ class Forecaster(Forecaster_parent):
                 "LowerCI",
                 m = call_me,
                 ci_range = ci_range,
-                preds = fcst,            )
+                preds = fcst,            
+            )
 
     def _bank_fi_to_history(self):
         """ for every model where feature importance can be extracted, saves that info to a pandas dataframe wehre index is the regressor name
@@ -561,6 +564,9 @@ class Forecaster(Forecaster_parent):
         else:
             f.cross_validate(dynamic_tuning=dynamic_tuning, set_aside_test_set = False, **cvkwargs)
         f.ingest_grid({k: [v] for k, v in f.best_params.items()})
+        if not len(f.future_dates):
+            f.generate_future_dates(1) # we need everything that happens next from auto_forecast so we create one future date to get it to work
+            f._propagate_Xvars()
         f.auto_forecast(test_model=False)
 
         self.reduction_hyperparams = f.best_params.copy()
@@ -2350,3 +2356,14 @@ class Forecaster(Forecaster_parent):
 
         self.y = np.round(self.y,decimals=decimals)
         return self
+
+    def _propagate_Xvars(self):
+        for x in self.current_xreg:
+            match x:
+                case AR():
+                    self.add_ar_terms([x.lag_order])
+                case i if i not in self.future_xreg:
+                    self.future_xreg[x] = [0.0]*len(self.future_dates)
+                case _:
+                    self.future_xreg[x] += ([0.0] * (len(self.future_xreg) - len(self.future_xreg[x])))
+

@@ -33,7 +33,7 @@ Uniform ML modeling (with models from a diverse set of libraries, including scik
 
 ## Documentation  
 - [Read the Docs](https://scalecast.readthedocs.io/en/latest/)  
-- [Introductory Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html)  
+- [Introductory Notebook](https://scalecast.readthedocs.io/en/latest/examples/Introduction2.html)  
 - [Change Log](https://scalecast.readthedocs.io/en/latest/change_log.html)  
  
 ## Popular Features
@@ -241,60 +241,59 @@ Please note that the optional dependencies may not be tested before new releases
 ### [Forecasting with Different Model Types](https://scalecast.readthedocs.io/en/latest/Forecaster/_forecast.html)
 - Sklearn Univariate
   - [Expand your Time Series Arsenal with These Models](https://towardsdatascience.com/expand-your-time-series-arsenal-with-these-models-10c807d37558)
-  - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/sklearn/sklearn.html)
+  - [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/sklearn/sklearn.ipynb)
 - Sklearn Multivariate
   - [Multiple Series? Forecast Them together with any Sklearn Model](https://towardsdatascience.com/multiple-series-forecast-them-together-with-any-sklearn-model-96319d46269)
-  - [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/multivariate/multivariate.html)
-  - [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/multivariate-beyond/mv.html)  
+  - [Notebook 1](https://github.com/mikekeith52/scalecast-examples/blob/main/multivariate/multivariate.ipynb)
+  - [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/multivariate-beyond/mv.ipynb)  
 - RNN 
   - [Exploring the LSTM Neural Network Model for Time Series](https://towardsdatascience.com/exploring-the-lstm-neural-network-model-for-time-series-8b7685aa8cf)
-  - [LSTM Notebook](https://scalecast-examples.readthedocs.io/en/latest/lstm/lstm.html)
-  - [RNN Notebook](https://scalecast-examples.readthedocs.io/en/latest/rnn/rnn.html)
+  - [LSTM Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/lstm/lstm_latest.ipynb)
+  - [RNN Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/rnn/rnn.ipynb)
 - ARIMA
   - [Forecast with ARIMA in Python More Easily with Scalecast](https://towardsdatascience.com/forecast-with-arima-in-python-more-easily-with-scalecast-35125fc7dc2e)
-  - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/arima/arima.html)
+  - [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/arima/arima.ipynb)
 - Theta
   - [Easily Employ A Theta Model For Time Series](https://medium.com/towards-data-science/easily-employ-a-theta-model-for-time-series-b94465099a00)
-  - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/theta/theta.html)
+  - [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/theta/theta.ipynb)
 - VECM
   - [Employ a VECM to predict FANG Stocks with an ML Framework](https://medium.com/p/52f170ec68e6)
-  - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/vecm/vecm.html)
+  - [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/vecm/vecm.ipynb)
 - Stacking
    - [Stacking Time Series Models to Improve Accuracy](https://medium.com/towards-data-science/stacking-time-series-models-to-improve-accuracy-7977c6667d29)
-   - [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/stacking/custom_stacking.html)
+   - [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/stacking/custom_stacking.ipynb)
 - Other Notebooks
-  - [Prophet](https://scalecast-examples.readthedocs.io/en/latest/prophet/prophet.html)
-  - [Combo](https://scalecast-examples.readthedocs.io/en/latest/combo/combo.html)
-  - [Holt-Winters Exponential Smoothing](https://scalecast-examples.readthedocs.io/en/latest/hwes/hwes.html)
+  - [Combo](https://github.com/mikekeith52/scalecast-examples/blob/main/combo/combo.ipynb)
+  - [Holt-Winters Exponential Smoothing](https://github.com/mikekeith52/scalecast-examples/blob/main/hwes/hwes.ipynb)
 
 ### [Transforming and Reverting](https://scalecast.readthedocs.io/en/latest/Forecaster/SeriesTransformer.html)
 - [Time Series Transformations (and Reverting) Made Easy](https://medium.com/towards-data-science/time-series-transformations-and-reverting-made-easy-f4f768c18f63)
-- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/transforming/medium_code.html)  
+- [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/transforming/series_transformer.ipynb)  
   
 ### Confidence Intervals
 - [Easy Distribution-Free Conformal Intervals for Time Series](https://medium.com/towards-data-science/easy-distribution-free-conformal-intervals-for-time-series-665137e4d907)  
 - [Dynamic Conformal Intervals for any Time Series Model](https://towardsdatascience.com/dynamic-conformal-intervals-for-any-time-series-model-d1638aa48527)
-- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/misc/cis/cis.html)  
-- [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/misc/cis-bt/cis-bt.html)
+- [Notebook 1](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/cis/cis.ipynb)  
+- [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/cis-bt/cis-bt.ipynb)
 
 ### Dynamic Validation
 - [How Not to be Fooled by Time Series Models](https://towardsdatascience.com/how-not-to-be-fooled-by-time-series-forecasting-8044f5838de3)
 - [Model Validation Techniques for Time Series](https://towardsdatascience.com/model-validation-techniques-for-time-series-3518269bd5b3)
-- [Notebook](https://scalecast-examples.readthedocs.io/en/latest/misc/validation/validation.html)
+- [Notebook](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/validation/validation.ipynb)
 
 ### Model Input Selection
 - [Variable Reduction Techniques for Time Series](https://medium.com/towards-data-science/variable-reduction-techniques-for-time-series-646743f726d4)
 - [Auto Model Specification with ML Techniques for Time Series](https://mikekeith52.medium.com/auto-model-specification-with-ml-techniques-for-time-series-e7b9a90ae9d7)
-- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/misc/feature-selection/feature_selection.html)
-- [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/misc/auto_Xvar/auto_Xvar.html)
+- [Notebook 1](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/feature-selection/feature_selection.ipynb)
+- [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/misc/auto_Xvar/auto_Xvar.ipynb)
 
 ### Scaled Forecasting on Many Series
 - [May the Forecasts Be with You](https://towardsdatascience.com/may-the-forecasts-be-with-you-introducing-scalecast-pt-2-692f3f7f0be5)
 - [Introductory Notebook Section](https://scalecast-examples.readthedocs.io/en/latest/misc/introduction/Introduction2.html#Scaled-Automated-Forecasting)
 
 ### Transfer Learning
-- [Notebook 1](https://scalecast-examples.readthedocs.io/en/latest/transfer_learning/transfer_learning.html)
-- [Notebook 2](https://scalecast-examples.readthedocs.io/en/latest/transfer_learning/transfer_learning_tf.html)
+- [Notebook 1](https://github.com/mikekeith52/scalecast-examples/blob/main/transfer_learning/transfer_learning.ipynb)
+- [Notebook 2](https://github.com/mikekeith52/scalecast-examples/blob/main/transfer_learning/transfer_learning_tf.ipynb)
 
 ## Contributing
 - [Contributing.md](https://github.com/mikekeith52/scalecast/blob/main/Contributing.md)

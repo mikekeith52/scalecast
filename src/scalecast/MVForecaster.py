@@ -61,6 +61,7 @@ class MVForecaster(Forecaster_parent):
         cis (bool): Default False. Whether to evaluate probabilistic confidence intervals for every model evaluated.
             If setting to True, ensure you also set a test_length of at least 20 observations for 95% confidence intervals.
             See eval_cis() and set_cilevel() methods and docstrings for more information.
+        cilevel (float): The level to use when evaluating confidence intervals.
         carry_fit_models (bool): Default False.
             Whether to store the regression model for each fitted model in history.
             Setting this to False can save memory.
@@ -77,12 +78,14 @@ class MVForecaster(Forecaster_parent):
         metrics:Optional[list[str]]=None,
         optimize_on:Literal['mean','min','max']|callable|SeriesName = 'mean',
         cis:bool = False,
+        cilevel:ConfInterval=.95,
         carry_fit_models:bool = False,
     ):
         super().__init__(
             y = fs[0].y, # placeholder -- will be overwritten
             test_length = test_length,
             cis = cis,
+            cilevel = cilevel,
             validation_length=validation_length,
         )
         for f in fs:
