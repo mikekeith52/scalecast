@@ -39,7 +39,8 @@ From root:
 
 ```bash
 rm -rf dist build *.egg-info
+rm dist/*
 uv run python -m build
-twine check dist/*
-twine upload dist/*
+uv run python -m twine check dist/*
+uv run python -m twine upload dist/*
 ```

@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project are documented in this file since v0.1.8. The source code for most releases is available on [GitHub](https://github.com/mikekeith52/scalecast).
 
+## [0.21.4] - 2026-10-12
+### Added
+### Changed
+- Changed history attribute to an object called ModelHistory with consistent datatypes and attribute names.
+### Fixed
+- Fixed bug in combo model that made using the most recently evaluated model impossible in some situations.
+
 ## [0.21.3] - 2026-08-08
 ### Added
 - Added `cilevel` parameter when initiating `Forecaster` or `MVForecaster` object
