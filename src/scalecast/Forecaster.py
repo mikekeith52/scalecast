@@ -17,9 +17,9 @@ from .types import (
     AvailableModel,
     ExportOptions,
 )
-from .classes import AR, EvaluatedMetric
+from .classes import AR, ModelHistory, EvaluatedMetric
 from .models import SKLearnUni
-from typing import Literal, Optional, Collection, Sequence, Any, Self, TYPE_CHECKING
+from typing import Literal, Optional, Collection, Sequence, Any, Self, TYPE_CHECKING, get_args
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -153,17 +153,31 @@ class Forecaster(Forecaster_parent):
         """
         # since test only, what gets saved to history is relevant to the train set only, the genesis of the next line
         call_me = self.call_me
-        self.history[call_me]['Estimator'] = self.estimator
-        self.history[call_me]['Xvars'] = self.call_estimator.Xvars if hasattr(self.call_estimator,'Xvars') else None
-        self.history[call_me]['HyperParams'] = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
-        self.history[call_me]['Observations'] = len(self.y)
-        self.history[call_me]['Forecast'] = self.forecast[:]
-        self.history[call_me]['FittedVals'] = self.fitted_values[:]
-        self.history[call_me]['DynamicallyTested'] = self.dynamic_testing
-        self.history[call_me]['CILevel'] = self.cilevel if self.cis else np.nan
-        for attr in ('TestSetPredictions','TestSetActuals'):
-            if attr not in self.history[call_me]:
+
+        if call_me not in self.history:
+            self.history[call_me] = ModelHistory()
+
+        self.history[call_me].Estimator = self.estimator
+        self.history[call_me].HyperParams = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
+        self.history[call_me].Observations = len(self.y)
+        self.history[call_me].Forecast = self.forecast[:]
+        self.history[call_me].FittedVals = self.fitted_values[:]
+        self.history[call_me].DynamicallyTested = self.dynamic_testing
+        
+        if hasattr(self.call_estimator,'Xvars'):
+            self.history[call_me]['Xvars'] = self.call_estimator.Xvars
+        if self.cis:
+            self.history[call_me]['CILevel'] = self.cilevel
+        if self.carry_fit_models:
+            self.history[call_me]['call_estimator'] = self.call_estimator
+
+        for attr in ['TestSetPredictions','TestSetActuals']:
+            if self.history[call_me][attr] is None:
                 self.history[call_me][attr] = []
+
+        for attr in  ["models", "weights"]:
+            if hasattr(self,attr):
+                self.history[call_me][attr] = getattr(self, attr)
 
         if hasattr(self,'best_params'):
             if np.all([k in self.best_params for k in self.history[call_me]['HyperParams']]):
@@ -182,32 +196,13 @@ class Forecaster(Forecaster_parent):
                         store = met,
                     )
 
-        for attr in ("call_estimator", "models", "weights", "ymin", "ymax"):
-            if hasattr(self, attr):
-                if attr == 'call_estimator' and not self.carry_fit_models:
-                    continue
-                self.history[call_me][attr] = getattr(self, attr)
-        
-        if self.cis is True and len(self.history[call_me]['TestSetPredictions']) > 0: #and 'TestSetPredictions' in self.history[call_me].keys():
-            self._check_right_test_length_for_cis(self.cilevel)
-            fcst = self.history[call_me]['Forecast']
-            test_preds = self.history[call_me]['TestSetPredictions']
-            test_actuals = self.history[call_me]['TestSetActuals']
-            test_resids = np.array([p - a for p, a in zip(test_preds,test_actuals)])
-            ci_range = np.percentile(np.abs(test_resids), 100 * self.cilevel)
-            self._set_cis(
-                "TestSetUpperCI",
-                "TestSetLowerCI",
-                m = call_me,
-                ci_range = ci_range,
-                preds = test_preds,
-            )
+        if self.cis and len(self.history[call_me]['TestSetPredictions']):
             self._set_cis(
                 "UpperCI",
                 "LowerCI",
                 m = call_me,
-                ci_range = ci_range,
-                preds = fcst,            
+                ci_range = self.history[call_me]['ci_range'],
+                preds = self.history[call_me]['Forecast'],            
             )
 
     def _bank_fi_to_history(self):
@@ -395,18 +390,23 @@ class Forecaster(Forecaster_parent):
             fcst = self.history[m]['Forecast'][:]
             fvs = self.history[m]['FittedVals'][:]
             num_fvs = len(fvs)
-            pad = (
-                [
-                    np.nan if fill_strategy is None
-                    else fvs[0]
-                ] * (len(self.y) - num_fvs) 
-                if fill_strategy != 'actuals' 
-                else self.y.to_list()[:-num_fvs]
-            )
+            pad_len = (len(self.y) - num_fvs) 
+            match fill_strategy:
+                case None:
+                    pad = [pd.NA] * pad_len
+                case 'bfill':
+                    pad = fvs[:1] * pad_len
+                case 'actuals':
+                    pad = self.y.to_list()[:-num_fvs]
+                case _:
+                    raise ValueError(f'Unrecognized value passed to fill_strategy: {fill_strategy}')
+
             self.current_xreg[f'signal_{m}'] = pd.Series(pad + fvs)
-            if train_only:
+
+            if train_only and self.history[m]['TestSetPredictions']:
                 tsp = self.history[m]['TestSetPredictions'][:]
                 self.current_xreg[f'signal_{m}'].iloc[-len(tsp):] = tsp
+
             self.future_xreg[f'signal_{m}'] = fcst
 
     def add_ar_terms(self, n:PositiveInt|list[PositiveInt]) -> Self:
@@ -1873,7 +1873,7 @@ class Forecaster(Forecaster_parent):
                     ax=ax,
                 )
                 if ci:
-                    try:
+                    if self.history[m]["CILevel"]:
                         ax.fill_between(
                             x=self.future_dates.values,
                             y1=self.history[m]["UpperCI"],
@@ -1882,7 +1882,7 @@ class Forecaster(Forecaster_parent):
                             color=color,
                             label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
                         )
-                    except KeyError:
+                    else:
                         _developer_utils._warn_about_not_finding_cis(m)
         
         ax.legend()
@@ -1939,7 +1939,7 @@ class Forecaster(Forecaster_parent):
 
         models = [m for m in self._parse_models(models, order_by) if m not in exclude]
         _developer_utils.descriptive_assert(
-            np.all(['TestSetPredictions' in self.history[m].keys() for m in models]),
+            np.all(['TestSetPredictions' in self.history[m] for m in models]),
             ForecastError,
             'plot_test_set() does not work when models were not tested (test_length set to 0).',
         )
@@ -1985,7 +1985,7 @@ class Forecaster(Forecaster_parent):
                 ax=ax,
             )
             if ci:
-                try:
+                if self.history[m]["CILevel"]:
                     ax.fill_between(
                         x=test_dates,
                         y1=self.history[m]["TestSetUpperCI"],
@@ -1994,7 +1994,7 @@ class Forecaster(Forecaster_parent):
                         color=color,
                         label="{} {:.0%} CI".format(m, self.history[m]["CILevel"]),
                     )
-                except KeyError:
+                else:
                     _developer_utils._warn_about_not_finding_cis(m)
 
         ax.legend()
@@ -2135,7 +2135,7 @@ class Forecaster(Forecaster_parent):
                 dfs = list(dfs)
 
         models = self._parse_models(models, determine_best_by)
-        _dfs_ = ["model_summaries","lvl_test_set_predictions","lvl_fcsts"]
+        _dfs_ = get_args(ExportOptions)
         _bad_dfs_ = [i for i in dfs if i not in _dfs_]
         if _bad_dfs_:
             raise ValueError(f"Values passed to the dfs list must be in {_dfs_}, not {_bad_dfs_}")
@@ -2169,16 +2169,14 @@ class Forecaster(Forecaster_parent):
             for m in models:
                 model_summary_m = pd.DataFrame({"ModelNickname": [m]})
                 for c in cols:
-                    if c == 'ValidationMetric' and c in self.history[m]:
+                    if c == 'ValidationMetric' and self.history[m][c] is not None:
                         model_summary_m[c] = [self.history[m][c].name]
-                    elif c in self.history[m]:
-                        model_summary_m[c] = [self.history[m][c]]
                     elif c == "best_model":
                         model_summary_m[c] = m == best_fcst_name
                     else:
-                        model_summary_m[c] = pd.NA
+                        model_summary_m[c] = [self.history[m][c]]
                 for c in self.determine_best_by:
-                    if c in self.history[m]:
+                    if c in self.history[m] and self.history[m][c]:
                         model_summary_m[c] = self.history[m][c].score
                     else:
                         model_summary_m[c] = pd.NA
@@ -2190,10 +2188,10 @@ class Forecaster(Forecaster_parent):
             for m in models:
                 lvl_fcsts[m] = self.history[m]["Forecast"]
                 if cis:
-                    try:
+                    if self.history[m]['CILevel']:
                         lvl_fcsts[m + "_upperci"] = self.history[m]["UpperCI"]
                         lvl_fcsts[m + "_lowerci"] = self.history[m]["LowerCI"]
-                    except KeyError:
+                    else:
                         _developer_utils._warn_about_not_finding_cis(m)
             output["lvl_fcsts"] = lvl_fcsts
         
@@ -2206,10 +2204,10 @@ class Forecaster(Forecaster_parent):
                 for m in models:
                     test_set_predictions[m] = self.history[m]["TestSetPredictions"]
                     if cis:
-                        try:
+                        if self.history[m]['CILevel']:
                             test_set_predictions[m + "_upperci"] = self.history[m]["TestSetUpperCI"]
                             test_set_predictions[m + "_lowerci"] = self.history[m]["TestSetLowerCI"]
-                        except KeyError:
+                        else:
                             _developer_utils._warn_about_not_finding_cis(m)
                 output["lvl_test_set_predictions"] = test_set_predictions
 
@@ -2258,12 +2256,12 @@ class Forecaster(Forecaster_parent):
             out_path = Path(out_path)
             with pd.ExcelWriter(out_path/excel_name, engine="openpyxl") as writer:
                 for m in self.history.keys():
-                    if "feature_importance" in self.history[m].keys():
+                    if isinstance(self.history[m]["feature_importance"],pd.DataFrame):
                         self.history[m]["feature_importance"].to_excel(
                             writer, sheet_name=f"{m}_feature_importance"
                         )
         except IndexError:
-            raise ForecastError( "No saved feature importance could be found.")
+            raise ForecastError("No saved feature importance could be found.")
 
     def all_validation_grids_to_excel(
         self,
@@ -2287,7 +2285,7 @@ class Forecaster(Forecaster_parent):
             out_path = Path(out_path)
             with pd.ExcelWriter(out_path/excel_name, engine="openpyxl") as writer:
                 for m in self.history.keys():
-                    if "grid_evaluated" in self.history[m].keys():
+                    if "grid_evaluated" in self.history[m]:
                         df = self.export_validation_grid(m)
                         df.to_excel(writer, sheet_name=m, index=False)
         except IndexError:

@@ -14,7 +14,7 @@ from .types import (
     SeriesName,
     SeriesValues,
 )
-from .classes import AR, EvaluatedMetric
+from .classes import AR, ModelHistory, EvaluatedMetric
 from typing import Optional, Literal, Any, Self, TYPE_CHECKING
 import warnings
 import os
@@ -459,23 +459,26 @@ class MVForecaster(Forecaster_parent):
         """
         call_me = self.call_me
         fitted_val_actuals = {k: (v.to_list()[-len(self.fitted_values[k]):]) for k, v in self.y.items()}
+
+        if call_me not in self.history:
+            self.history[call_me] = ModelHistory()
+
+        self.history[call_me].Estimator = self.estimator
+        self.history[call_me].HyperParams = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
+        self.history[call_me].Observations = len(self.current_dates)
+        self.history[call_me].Forecast = self.forecast
+        self.history[call_me].FittedVals = self.fitted_values
+        self.history[call_me].DynamicallyTested = self.dynamic_testing
+        self.history[call_me].Lags = self.call_estimator.lags
         
-        self.history[call_me]['Estimator'] = self.estimator
         if hasattr(self.call_estimator,'Xvars'):
             self.history[call_me]['Xvars'] = self.call_estimator.Xvars
-        else:
-            self.history[call_me]['Xvars'] = None
-        self.history[call_me]['HyperParams'] = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
-        self.history[call_me]['Lags'] =  self.call_estimator.lags
-        self.history[call_me]['Forecast'] = self.forecast
-        self.history[call_me]['Observations'] = len(self.current_dates)
-        self.history[call_me]['FittedVals'] = self.fitted_values
-        self.history[call_me]['DynamicallyTested'] = self.dynamic_testing
-        self.history[call_me]['CILevel'] = self.cilevel if self.cis else np.nan
+        if self.cis:
+            self.history[call_me]['CILevel'] = self.cilevel
         if self.carry_fit_models:
-            self.history[call_me]['regr'] = self.trained_models
-        for attr in ('TestSetPredictions','TestSetActuals'):
-            if attr not in self.history[call_me]:
+            self.history[call_me]['call_estimator'] = self.trained_models
+        for attr in ['TestSetPredictions','TestSetActuals']:
+            if self.history[call_me][attr] is None:
                 self.history[call_me][attr] = {n:[] for n in self.names}
 
         if hasattr(self,'best_params'):
@@ -487,30 +490,20 @@ class MVForecaster(Forecaster_parent):
 
         for met in self.metrics:
             self.history[call_me]["InSample" + met.name.upper()] = {
-                series: EvaluatedMetric(store=met,score=_developer_utils._return_na_if_len_zero(a, self.fitted_values[series], met.eval_func))
+                series: EvaluatedMetric(
+                    store=met,
+                    score=_developer_utils._return_na_if_len_zero(a, self.fitted_values[series], met.eval_func)
+                )
                 for series, a in fitted_val_actuals.items()
             }
 
         if self.cis and self.history[call_me]['TestSetPredictions'][self.names[0]]:
-            self._check_right_test_length_for_cis(self.cilevel)
-            fcst = self.history[call_me]['Forecast']
-            test_preds = self.history[call_me]['TestSetPredictions']
-            test_actuals = self.history[call_me]['TestSetActuals']
-            test_resids = {k:np.array(p) - np.array(test_actuals[k]) for k, p in test_preds.items()}
-            ci_range = {k:np.percentile(np.abs(r), 100 * self.cilevel) for k,r in test_resids.items()}
             self._set_cis(
                 "UpperCI",
                 "LowerCI",
                 m = call_me,
-                ci_range = ci_range,
-                preds = fcst,
-            )
-            self._set_cis(
-                "TestSetUpperCI",
-                "TestSetLowerCI",
-                m = call_me,
-                ci_range = ci_range,
-                preds = test_preds,
+                ci_range = self.history[call_me]['ci_range'],
+                preds = self.history[call_me]['Forecast'],
             )
 
     def set_best_model(self, model:Optional[EvaluatedModel]=None, determine_best_by:Optional[DetermineBestBy]=None) -> Self:
@@ -527,7 +520,7 @@ class MVForecaster(Forecaster_parent):
             Self
         """
         if model is not None:
-            if model in self.history.keys():
+            if model in self.history:
                 self.best_model = model
             else:
                 raise ValueError(f"Cannot find {model} in history.")
@@ -625,7 +618,7 @@ class MVForecaster(Forecaster_parent):
                 )
 
                 if ci:
-                    try:
+                    if self.history[m]["CILevel"]:
                         ax.fill_between(
                             x=self.future_dates.to_list(),
                             y1=self.history[m]["UpperCI"][s],
@@ -636,7 +629,7 @@ class MVForecaster(Forecaster_parent):
                                 s, m, self.history[m]["CILevel"]
                             ),
                         )
-                    except KeyError:
+                    else:
                         _developer_utils._warn_about_not_finding_cis(m)
                 k += 1
 
@@ -732,7 +725,7 @@ class MVForecaster(Forecaster_parent):
                 )
 
                 if ci:
-                    try:
+                    if self.history[m]["CILevel"]:
                         plt.fill_between(
                             x=self.current_dates.to_list()[-self.test_length :],
                             y1=self.history[m]["TestSetUpperCI"][s],
@@ -743,7 +736,7 @@ class MVForecaster(Forecaster_parent):
                                 s, m, self.history[m]["CILevel"]
                             ),
                         )
-                    except KeyError:
+                    else:
                         _developer_utils._warn_about_not_finding_cis(m)
                 k += 1
 
@@ -930,10 +923,8 @@ class MVForecaster(Forecaster_parent):
                             model_summary_sm[c] = pd.NA
                     
                     for c in self.determine_best_by:
-                        if c in self.history[m]:
-                            match self.history[m][c]:
-                                case dict():
-                                    model_summary_sm[c] = self.history[m][c][s].score
+                        if c in self.history[m] and isinstance(self.history[m][c],dict):
+                            model_summary_sm[c] = self.history[m][c][s].score
 
                     model_summaries.append(model_summary_sm)
             model_summaries = pd.concat(model_summaries)
@@ -945,10 +936,10 @@ class MVForecaster(Forecaster_parent):
                 for m in models:
                     df[f"{s}_{m}_lvl_fcst"] = self.history[m]["Forecast"][s][:]
                     if cis:
-                        try:
+                        if self.history[m]['CILevel']:
                             df[f"{s}_{m}_lvl_fcst_upper"] = self.history[m]["UpperCI"][s][:]
                             df[f"{s}_{m}_lvl_fcst_lower"] = self.history[m]["LowerCI"][s][:]
-                        except KeyError:
+                        else:
                             _developer_utils._warn_about_not_finding_cis(m)
             output["lvl_fcsts"] = df
         
@@ -962,10 +953,10 @@ class MVForecaster(Forecaster_parent):
                     for m in models:
                         df[f"{s}_{m}_lvl_ts"] = self.history[m]["TestSetPredictions"][s][:]
                         if cis:
-                            try:
+                            if self.history[m]['CILevel']:
                                 df[f"{s}_{m}_lvl_ts_upper"] = self.history[m]["TestSetUpperCI"][s][:]
                                 df[f"{s}_{m}_lvl_ts_lower"] = self.history[m]["TestSetLowerCI"][s][:]
-                            except KeyError:
+                            else:
                                 _developer_utils._warn_about_not_finding_cis(m)
                     i += 1
                 output["lvl_test_set_predictions"] = df

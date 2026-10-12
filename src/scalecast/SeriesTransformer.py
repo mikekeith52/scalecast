@@ -102,10 +102,8 @@ class SeriesTransformer:
                 "TestSetActuals",
                 "FittedVals",
             ):
-                if k in h:
+                if h[k]:
                     h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).ffill().to_list()
-                elif not k.endswith('CI'):
-                    h[k] = []
             for met in self.f.metrics:
                 h['TestSet' + met.name.upper()] = EvaluatedMetric(
                     store=met,
@@ -302,7 +300,7 @@ class SeriesTransformer:
             if m in exclude_models:
                 continue
             for k,v in fvs.items():
-                if k in h:
+                if h[k]:
                     h[k] = [i + fvs for i, fvs in zip(h[k],v)]
                 elif not k.endswith('CI'):
                     h[k] = []
@@ -818,7 +816,7 @@ class SeriesTransformer:
             if mod in exclude_models:
                 continue
             for a, v in atts.items():
-                if a in h:
+                if h[a]:
                     h[a] = [
                         (i + s) if params['model'] in ('add','additive') 
                         else (i * s) for i, s in zip(h[a],v[-len(h[a]):])

@@ -1495,7 +1495,6 @@ class Naive:
 class Combo:
     """ Forecasts using a combination of other evaluated forecasts from multiple models. The forecasts are combined with either simple or weighted averaging.
 
-    
     Args:
         f (Forecaster): The Forecaster object storing the actual series and associated dates.
         model (str): The Combo model to use. Must be 'auto'.
@@ -1511,10 +1510,13 @@ class Combo:
         replace_negative_weights (bool|float): Whether to replace negative-scoring metrics with some positive (or 0) value to avoid situations where predictions might become nonsensical.
             This will be ignored in situations where lower scores are better (R2 is the main use-case).
             Change this to False to turn it off. 0 is an acceptable replacement value.
-        exclude_models_with_no_fvs (bool): Whether to exclude models that have no fitted values stored in the history when generating the combined forecast. 
+        exclude_models_with_no_fvs (bool): Default True. Whether to exclude models that have no fitted values stored in the history when generating the combined forecast. 
             This is relevant because if a model has no fitted values, it cannot generate in-sample predictions, 
             which means it can only contribute to the future forecast and not the in-sample fitted values. 
             This can lead to situations where the combined forecast is essentially just the forecast from that one model, which may not be desirable. Default True.
+        exclude_last_model_history (bool): Default True. Whether to exclude the last model added to the object's history.
+            Usually, when this model is called, a combo model will have already been added to the object's history, but it's the combo model that will be evaluated here.
+            Therefore, this should usually be kept True. But, when evaluating models manually, you may want to change it to False.
     """
     def __init__(
         self,
@@ -1527,6 +1529,7 @@ class Combo:
         weights:Optional[Sequence[float|int]]=None,
         replace_negative_weights:bool|float=.001,
         exclude_models_with_no_fvs:bool = True,
+        exclude_last_model_history:bool=True,
     ):
         if model != 'auto':
             raise ValueError(f'Unrecognized value passed to model: {model}')
@@ -1534,15 +1537,17 @@ class Combo:
         self.f = f
         self.test_set_actuals = test_set_actuals
         self.how = how
+        self.exclude_last_model_history = exclude_last_model_history
         self.models = self._parse_models(models=models, determine_best_by=determine_best_by)
         self.weights = weights
         self.replace_negative_weights = replace_negative_weights
-        if how == 'weighted' and not weights:
-            self.metrics = [f.history[m][determine_best_by] for m in self.models]
-            self.lower_is_better = self.metrics[0].store.lower_is_better
-        elif how == 'weighted' and weights:
-            if len(self.weights) != len(self.models):
-                raise ValueError('When how is weighted and weights are provided, the number of provided weights must match the number of provided models')
+        if how == 'weighted':
+            if not weights:
+                self.metrics = [f.history[m][determine_best_by] for m in self.models]
+                self.lower_is_better = self.metrics[0].store.lower_is_better
+            else:
+                if len(self.weights) != len(self.models):
+                    raise ValueError('When how is weighted and weights are provided, the number of provided weights must match the number of provided models')
         else:
             self.metrics = None
         self.exclude_models_with_no_fvs = exclude_models_with_no_fvs
@@ -1552,7 +1557,9 @@ class Combo:
             raise ValueError(f'Argument passed to how not recognized: {how}')
     
     def _parse_models(self, models:ModelValues, determine_best_by:DetermineBestBy):
-        all_models = [m for m in self.f.history][:-1] # exclude last model because it's the one just created (combo)
+        all_models:list[str] = [m for m in self.f.history]
+        if self.exclude_last_model_history:
+            all_models = all_models[:-1] # usually when we get here we will want to exclude the last model because it's the combo model just created
         match models:
             case 'all':
                 return all_models
@@ -1566,12 +1573,12 @@ class Combo:
         return models
     
     def generate_current_X(self):
-        """ Generates the matrix of the current input dataset by extracting the fitted values for each model in the combination from the Forecaster's history.
+        """ Generates the matrix of the current input dataset by extracting the fitted values for each model in the combination from the Forecaster object's history.
         """
         lengths = []
         all_fvs = []
         for m in self.models:
-            fvs = self.f.history[m].get('FittedVals',[])
+            fvs = self.f.history[m]['FittedVals']
             if not fvs and self.exclude_models_with_no_fvs:
                 continue
             else:   
