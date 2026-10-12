@@ -1566,12 +1566,12 @@ class Combo:
         return models
     
     def generate_current_X(self):
-        """ Generates the matrix of the current input dataset by extracting the fitted values for each model in the combination from the Forecaster's history.
+        """ Generates the matrix of the current input dataset by extracting the fitted values for each model in the combination from the Forecaster object's history.
         """
         lengths = []
         all_fvs = []
         for m in self.models:
-            fvs = self.f.history[m].get('FittedVals',[])
+            fvs = self.f.history[m]['FittedVals']
             if not fvs and self.exclude_models_with_no_fvs:
                 continue
             else:   

@@ -19,7 +19,7 @@ from .types import (
     XvarValues,
 )
 from .typing_utils import ScikitLike, NormalizerLike
-from .classes import AR, Estimator, EvaluatedMetric, DetermineBestBy, MetricStore, ValidatedList
+from .classes import AR, Estimator, ModelHistory, EvaluatedMetric, DetermineBestBy, MetricStore, ValidatedList
 from .models import SKLearnUni, SKLearnMV
 from collections import Counter
 import copy
@@ -406,9 +406,9 @@ class Forecaster_parent:
         )
         
         if not models:
-            models = [m for m, v in self.history.items() if determine_best_by in v]
+            models = [m for m, v in self.history.items() if v[determine_best_by]]
         
-        metrics = {m:self.history[m][determine_best_by] for m in models}
+        metrics = {m:self.history[m][determine_best_by] for m in models if self.history[m][determine_best_by]}
         if not self.determine_if_MVForecaster():
             sunk_metrics = metrics
         else:
@@ -1008,9 +1008,6 @@ class Forecaster_parent:
                 dynamic_testing=dynamic_testing,
                 call_me=call_me,
             )
-        elif bank_history:
-            if self.call_me not in self.history.keys():
-                self.history[self.call_me] = {}
 
         try:
             self.init_estimator(**kwargs,dynamic_testing=dynamic_testing)
@@ -1019,7 +1016,7 @@ class Forecaster_parent:
             if predict_fitted:
                 fvs = self.predict_fitted_vals()
             elif self.determine_if_MVForecaster():
-                fvs = {k:{} for k in self.y}
+                fvs = {k:[] for k in self.y}
             else:
                 fvs = []
         except:
@@ -1602,21 +1599,23 @@ class Forecaster_parent:
         is_Forecaster = not self.determine_if_MVForecaster()
         call_me = self.estimator if call_me is None else call_me
 
+        if is_Forecaster:
+            actuals:list[float] = self.y.to_list()[-self.test_length:]
+        else:
+            actuals:list[list[float]] = [
+                v.to_list()[-self.test_length:]
+                for _, v in self.y.items()
+            ]
+
         already_existed = False
         if call_me not in self.history:
-            self.history[call_me] = {}
+            self.history[call_me] = None
+        elif not self.history[call_me]:
+            pass
         elif self.history[call_me]['Forecast'] is not None:
             already_existed = True
 
         try:
-            if is_Forecaster:
-                actuals:list[float] = self.y.to_list()[-self.test_length:]
-            else:
-                actuals:list[list[float]] = [
-                    self.y[k].to_list()[-self.test_length:]
-                    for k in self.y
-                ]
-
             f1 = copy.deepcopy(self)
             f1.chop_from_front(
                 self.test_length,
@@ -1633,12 +1632,18 @@ class Forecaster_parent:
                 **kwargs,
             )
         except:
-            self.history.pop(call_me)
+            if call_me in self.history:
+                self.history.pop(call_me)
             raise
 
         if not already_existed:
-            attrs_to_copy = ['Estimator','Xvars','HyperParams','Lags']
-            self.history[call_me] = {k:(v if k in attrs_to_copy else None) for k, v in f1.history[call_me].items()}
+            self.history[call_me] = ModelHistory(
+                Estimator = f1.history[call_me].Estimator,
+                Xvars = f1.history[call_me].Xvars,
+                HyperParams = f1.history[call_me].HyperParams,
+                Observations = f1.history[call_me].Observations,
+                Lags = f1.history[call_me].Lags,
+            )            
         self.call_me = call_me
         self.history[call_me]['TestSetLength'] = self.test_length
         self.history[call_me]['TestSetPredictions'] = fcst
@@ -1654,6 +1659,8 @@ class Forecaster_parent:
             else:
                 test_resids = {k:np.array(p) - np.array(test_actuals[k]) for k, p in test_preds.items()}
                 ci_range = {k:np.percentile(np.abs(r), 100 * self.cilevel) for k,r in test_resids.items()}
+
+            self.history[call_me]['ci_range'] = ci_range
             self._set_cis(
                 "TestSetUpperCI",
                 "TestSetLowerCI",

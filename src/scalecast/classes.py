@@ -1,8 +1,9 @@
-from dataclasses import dataclass
-from .types import PositiveInt, MetricCall
+from dataclasses import dataclass, fields
+from .types import PositiveInt, MetricCall, DynamicTesting, ConfInterval
 from .typing_utils import ScikitLike, ForecasterEstimatorLike
-from typing import Literal, Self, Generic, TypeVar, Optional, Any
+from typing import Literal, Self, Generic, TypeVar, Optional, Any, Iterator
 from collections import Counter
+import pandas as pd
 import numpy as np
 from functools import total_ordering
 
@@ -137,6 +138,92 @@ class NoScaler:
             np.ndarray: The object passed to X.
         """
         return X
+
+@dataclass
+class ModelHistory:
+    """ Object used to store history of each tested/forecasted model.
+
+    Attributes:
+        Estimator (str): Name of the estimator matched against estimators attribute in Forecaster object.
+        HyperParams (dict[str,Any]): The hyperparameters used to evaluate the model. Empty means default.
+        Observations (int): Number of observations the model was trained on.
+        Forecast (list[float]|dict[str,list[float]]): The forecasted values that matches the length of the future_dates attribute in the Forecaster or MVForecaster object.
+        Lags (int|list[int]|dict[str,int|list[int]]): The lags used to train the model. Used only in MVForecaster objects.
+        FittedVals (list[float]|dict[str,list[float]]): In-sample fitted values from the trained model.
+        TestSetLength (int): Length of the test set if one was specified.
+        TestSetPredictions (list[float]|dict[str,list[float]]): Predictions on the held-out values if model testing was performed.
+
+
+    """
+    Estimator: str
+    HyperParams: dict[str,Any]
+    Observations: int
+    Forecast: Optional[list[float]|dict[str,list[float]]] = None
+    Lags: Optional[int|list[int]|dict[str,int|list[int]]] = None
+    FittedVals: Optional[list[float]|dict[str,list[float]]] = None
+    TestSetLength: Optional[int] = None
+    TestSetPredictions: Optional[list[float]|dict[str,list[float]]] = None
+    TestSetActuals: Optional[list[float]|dict[str,list[float]]] = None
+    DynamicallyTested: Optional[DynamicTesting] = None
+    Xvars: Optional[list[str]] = None
+    ValidationMetric: Optional[str] = None
+    ValidationMetricValue: Optional[float] = None
+    CILevel: Optional[ConfInterval] = None
+    TestSetUpperCI: Optional[list[float]|dict[str,list[float]]] = None
+    TestSetLowerCI: Optional[list[float]|dict[str,list[float]]] = None
+    UpperCI: Optional[list[float]|dict[str,list[float]]] = None
+    LowerCI: Optional[list[float]|dict[str,list[float]]] = None
+    ci_range: Optional[float|dict[str,float]] = None
+    call_estimator: Optional[ForecasterEstimatorLike|dict[str,ForecasterEstimatorLike]] = None
+    grid: Optional[dict[str,Any]] = None
+    grid_evaluated: Optional[np.ndarray] = None
+    models: Optional[list[str]] = None
+    weights: Optional[list[float]] = None
+    feature_importance_explainer: Optional[str] = None
+    feature_importance: Optional[pd.DataFrame] = None
+    _AllowSetPrefix: tuple[str,...] = ('InSample','TestSet')
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        match key:
+            case i if i.startswith(self._AllowSetPrefix):
+                pass
+            case i if i not in {f.name for f in fields(self)}:
+                raise KeyError(f"Cannot store {key!r} in model history")
+
+        setattr(self, key, value)
+
+    def __contains__(self, key):
+        return key in {f.name for f in fields(self)}
+
+    def __iter__(self):
+        for field in fields(self):
+            yield getattr(self, field.name)
+
+    def get(self, key:str, default:Any) -> Any:
+        """ Fetches an attribute's value using a key. If key does not exist in the object, returns a default value.
+
+        Args:
+            key (str): The attribute to search for in the object.
+            default (Any): The object to return if they key is not found.
+        
+        Returns:
+            Any: Either the attribute value or the default argument.
+        """
+        if key in self:
+            return self[key]
+        return default
+
+    def items(self) -> Iterator[tuple[str,Any]]:
+        """ Returns all attributes and corresponding values.
+        """
+        return zip([i for i in self],[self[i] for i in self])
+
+    def to_list(self) -> list[str]:
+        """Converts object attributes into a list."""
+        return [i for i in self]
     
 class ValidatedList(Generic[T]):
     """ A list-like object that allows storing specialized classes that have a name attribute. Enforces no duplication and that each element in the list is one of the specialized types.

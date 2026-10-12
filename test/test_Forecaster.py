@@ -94,7 +94,7 @@ def test_statistical_tests():
     f.normality_test(diffy=True)
 
 def test_modeling():
-    for tl in (0,48): # make sure 0 and non-0 length test sets work
+    for tl in (48,0): # make sure 0 and non-0 length test sets work
         print(f'testing test length {tl}')
         f = build_Forecaster(test_length=tl)
         f.add_normalizer('robust',RobustScaler)
