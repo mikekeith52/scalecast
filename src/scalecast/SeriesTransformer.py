@@ -102,10 +102,8 @@ class SeriesTransformer:
                 "TestSetActuals",
                 "FittedVals",
             ):
-                if k in h:
+                if h[k]:
                     h[k] = pd.Series(revert_func(h[k], **kwargs),dtype=float).ffill().to_list()
-                elif not k.endswith('CI'):
-                    h[k] = []
             for met in self.f.metrics:
                 h['TestSet' + met.name.upper()] = EvaluatedMetric(
                     store=met,

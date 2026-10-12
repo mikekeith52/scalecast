@@ -155,9 +155,9 @@ class ModelHistory:
 
 
     """
-    Estimator: str
-    HyperParams: dict[str,Any]
-    Observations: int
+    Estimator: str = None
+    HyperParams: dict[str,Any] = None
+    Observations: int = None
     Forecast: Optional[list[float]|dict[str,list[float]]] = None
     Lags: Optional[int|list[int]|dict[str,int|list[int]]] = None
     FittedVals: Optional[list[float]|dict[str,list[float]]] = None
@@ -196,11 +196,17 @@ class ModelHistory:
         setattr(self, key, value)
 
     def __contains__(self, key):
-        return key in {f.name for f in fields(self)}
+        return key in self._regather_items()
 
     def __iter__(self):
-        for field in fields(self):
-            yield getattr(self, field.name)
+        for field in self._regather_items():
+            yield field
+
+    def _regather_items(self):
+        """ Since metrics can be set after the object is initiated, we use this method to get all the attributes back.
+        """
+        methods = ['get','items','to_list'] # not critical to maintain this, but nice
+        return [i for i in dir(self) if not i.startswith('_') and i not in methods]
 
     def get(self, key:str, default:Any) -> Any:
         """ Fetches an attribute's value using a key. If key does not exist in the object, returns a default value.

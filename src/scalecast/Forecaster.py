@@ -122,7 +122,7 @@ class Forecaster(Forecaster_parent):
         list(self.current_xreg.keys()),
         self.test_length,
         self.validation_metric.name,
-        self.history.to_list(),
+        list(self.history.keys()),
         self.cilevel if self.cis is True else None,
         None if not hasattr(self, "estimator") else self.estimator,
         self.grids_file,
@@ -153,14 +153,17 @@ class Forecaster(Forecaster_parent):
         """
         # since test only, what gets saved to history is relevant to the train set only, the genesis of the next line
         call_me = self.call_me
-        self.history[call_me] = ModelHistory(
-            Estimator = self.estimator,
-            HyperParams = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS},
-            Observations = len(self.y),
-            Forecast = self.forecast[:],
-            FittedVals = self.fitted_values[:],
-            DynamicallyTested = self.dynamic_testing,
-        )
+
+        if call_me not in self.history:
+            self.history[call_me] = ModelHistory()
+
+        self.history[call_me].Estimator = self.estimator
+        self.history[call_me].HyperParams = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
+        self.history[call_me].Observations = len(self.y)
+        self.history[call_me].Forecast = self.forecast[:]
+        self.history[call_me].FittedVals = self.fitted_values[:]
+        self.history[call_me].DynamicallyTested = self.dynamic_testing
+        
         if hasattr(self.call_estimator,'Xvars'):
             self.history[call_me]['Xvars'] = self.call_estimator.Xvars
         if self.cis:
@@ -267,7 +270,7 @@ class Forecaster(Forecaster_parent):
         if determine_best_by is None:
             match models:
                 case "all":
-                    models = self.history.to_list()
+                    models = list(self.history.keys())
                 case str():
                     if models.startswith("top_"):
                         raise ValueError('Cannot use models starts with "top_" unless the determine_best_by or order_by argument is specified.')
@@ -2140,7 +2143,7 @@ class Forecaster(Forecaster_parent):
         match best_model:
             case 'auto':
                 if determine_best_by is None:
-                    best_fcst_name = self.history.to_list()[0] # first evaluated model
+                    best_fcst_name = list(self.history.keys())[0] # first evaluated model
                 else:
                     best_fcst_name = self.order_fcsts(models, determine_best_by)[0]
             case _:
@@ -2173,7 +2176,7 @@ class Forecaster(Forecaster_parent):
                     else:
                         model_summary_m[c] = [self.history[m][c]]
                 for c in self.determine_best_by:
-                    if c in self.history[m]:
+                    if c in self.history[m] and self.history[m][c]:
                         model_summary_m[c] = self.history[m][c].score
                     else:
                         model_summary_m[c] = pd.NA
@@ -2253,12 +2256,12 @@ class Forecaster(Forecaster_parent):
             out_path = Path(out_path)
             with pd.ExcelWriter(out_path/excel_name, engine="openpyxl") as writer:
                 for m in self.history.keys():
-                    if "feature_importance" in self.history[m].keys():
+                    if isinstance(self.history[m]["feature_importance"],pd.DataFrame):
                         self.history[m]["feature_importance"].to_excel(
                             writer, sheet_name=f"{m}_feature_importance"
                         )
         except IndexError:
-            raise ForecastError( "No saved feature importance could be found.")
+            raise ForecastError("No saved feature importance could be found.")
 
     def all_validation_grids_to_excel(
         self,

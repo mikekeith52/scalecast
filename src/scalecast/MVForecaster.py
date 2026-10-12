@@ -206,7 +206,7 @@ class MVForecaster(Forecaster_parent):
         self.test_length,
         self.validation_length,
         self.validation_metric,
-        self.history.to_list(),
+        list(self.history.keys()),
         self.cilevel if self.cis is True else None,
         self.estimator,
         self.optimize_on,
@@ -460,15 +460,16 @@ class MVForecaster(Forecaster_parent):
         call_me = self.call_me
         fitted_val_actuals = {k: (v.to_list()[-len(self.fitted_values[k]):]) for k, v in self.y.items()}
 
-        self.history[call_me] = ModelHistory(
-            Estimator = self.estimator,
-            HyperParams = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS},
-            Observations = len(self.current_dates),
-            Forecast = self.forecast,
-            FittedVals = self.fitted_values,
-            DynamicallyTested = self.dynamic_testing,
-            Lags = self.call_estimator.lags,
-        )
+        if call_me not in self.history:
+            self.history[call_me] = ModelHistory()
+
+        self.history[call_me].Estimator = self.estimator
+        self.history[call_me].HyperParams = {k: v for k, v in kwargs.items() if k not in IGNORE_AS_HYPERPARAMS}
+        self.history[call_me].Observations = len(self.current_dates)
+        self.history[call_me].Forecast = self.forecast
+        self.history[call_me].FittedVals = self.fitted_values
+        self.history[call_me].DynamicallyTested = self.dynamic_testing
+        self.history[call_me].Lags = self.call_estimator.lags
         
         if hasattr(self.call_estimator,'Xvars'):
             self.history[call_me]['Xvars'] = self.call_estimator.Xvars
@@ -489,7 +490,10 @@ class MVForecaster(Forecaster_parent):
 
         for met in self.metrics:
             self.history[call_me]["InSample" + met.name.upper()] = {
-                series: EvaluatedMetric(store=met,score=_developer_utils._return_na_if_len_zero(a, self.fitted_values[series], met.eval_func))
+                series: EvaluatedMetric(
+                    store=met,
+                    score=_developer_utils._return_na_if_len_zero(a, self.fitted_values[series], met.eval_func)
+                )
                 for series, a in fitted_val_actuals.items()
             }
 
@@ -536,7 +540,7 @@ class MVForecaster(Forecaster_parent):
     def _parse_models(self, models:ModelValues, put_best_on_top:bool) -> list[EvaluatedModel]:
         match models:
             case 'all':
-                models = self.history.to_list()
+                models = list(self.history.keys())
             case str():
                 models = [models]
             case _:
@@ -919,10 +923,8 @@ class MVForecaster(Forecaster_parent):
                             model_summary_sm[c] = pd.NA
                     
                     for c in self.determine_best_by:
-                        if c in self.history[m]:
-                            match self.history[m][c]:
-                                case dict():
-                                    model_summary_sm[c] = self.history[m][c][s].score
+                        if c in self.history[m] and isinstance(self.history[m][c],dict):
+                            model_summary_sm[c] = self.history[m][c][s].score
 
                     model_summaries.append(model_summary_sm)
             model_summaries = pd.concat(model_summaries)

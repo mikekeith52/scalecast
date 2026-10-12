@@ -1495,7 +1495,6 @@ class Naive:
 class Combo:
     """ Forecasts using a combination of other evaluated forecasts from multiple models. The forecasts are combined with either simple or weighted averaging.
 
-    
     Args:
         f (Forecaster): The Forecaster object storing the actual series and associated dates.
         model (str): The Combo model to use. Must be 'auto'.

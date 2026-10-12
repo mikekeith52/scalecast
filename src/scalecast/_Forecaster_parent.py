@@ -1008,6 +1008,9 @@ class Forecaster_parent:
                 dynamic_testing=dynamic_testing,
                 call_me=call_me,
             )
+        elif bank_history:
+            if self.call_me not in self.history:
+                self.history[self.call_me] = ModelHistory()
 
         try:
             self.init_estimator(**kwargs,dynamic_testing=dynamic_testing)
@@ -1609,9 +1612,7 @@ class Forecaster_parent:
 
         already_existed = False
         if call_me not in self.history:
-            self.history[call_me] = None
-        elif not self.history[call_me]:
-            pass
+            self.history[call_me] = ModelHistory()
         elif self.history[call_me]['Forecast'] is not None:
             already_existed = True
 
@@ -1632,8 +1633,7 @@ class Forecaster_parent:
                 **kwargs,
             )
         except:
-            if call_me in self.history:
-                self.history.pop(call_me)
+            self.history.pop(call_me)
             raise
 
         if not already_existed:
@@ -1957,7 +1957,7 @@ class Forecaster_parent:
         self.call_me = call_me
 
         if save_to_history:
-            self.history[call_me] = {}
+            self.history[call_me] = ModelHistory()
             for copy_attr, set_attr in [
                 ('Estimator','estimator'),
                 ('DynamicallyTested','dynamic_testing'),
